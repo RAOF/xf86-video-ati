@@ -2,8 +2,9 @@ xserver-xorg-video-ati (1:6.5.8.0-1) unstable; urgency=low
 
   * New upstream release
   * Use dh_install with --list-missing
+  * Add build-dep on quilt
 
- -- David Nusinow <dnusinow@debian.org>  Tue, 25 Apr 2006 21:47:41 -0400
+ -- David Nusinow <dnusinow@debian.org>  Tue, 25 Apr 2006 21:56:09 -0400
 
 xserver-xorg-video-ati (1:6.5.7.3-3) unstable; urgency=low
 
