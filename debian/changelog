@@ -1,0 +1,69 @@
+xserver-xorg-video-ati (1:6.5.8.0-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- David Nusinow <dnusinow@debian.org>  Tue, 25 Apr 2006 21:45:35 -0400
+
+xserver-xorg-video-ati (1:6.5.7.3-3) unstable; urgency=low
+
+  * Upload to modular
+
+ -- David Nusinow <dnusinow@debian.org>  Sun, 26 Mar 2006 20:25:26 -0500
+
+xserver-xorg-video-ati (1:6.5.7.3-2) experimental; urgency=low
+
+  * Port patches from trunk
+    + general/043_ati_r128_update_chip_identification.diff
+  * Apply ppc-fix.patch and incorporate it in to our patch system instead of
+    just having it sit in the debian directory
+
+ -- David Nusinow <dnusinow@debian.org>  Sun, 26 Feb 2006 17:46:59 -0500
+
+xserver-xorg-video-ati (1:6.5.7.3-1) experimental; urgency=low
+
+  * First upload to Debian
+  * Change source package, package, and provides names to denote the
+    type of driver and that they are for xserver-xorg
+
+ -- David Nusinow <dnusinow@debian.org>  Fri, 13 Jan 2006 00:35:49 -0500
+
+xserver-xorg-driver-ati (1:6.5.7.3-0ubuntu1) dapper; urgency=low
+
+  * New upstream release.
+  * Also install Rage Theatre multimedia modules.
+
+ -- Daniel Stone <daniel.stone@ubuntu.com>  Wed,  4 Jan 2006 17:21:27 +1100
+
+xserver-xorg-driver-ati (1:6.5.7-0ubuntu3) dapper; urgency=low
+
+  * Add missing Build-Depends (x11proto-fonts-dev, x11proto-randr-dev,
+    x11proto-render-dev, libdrm (>> 1.0.5), x11proto-xf86dri-dev).
+
+ -- Daniel Stone <daniel.stone@ubuntu.com>  Mon,  5 Dec 2005 14:52:47 +1100
+
+xserver-xorg-driver-ati (1:6.5.7-0ubuntu2) dapper; urgency=low
+
+  * Apply patch from https://bugs.freedesktop.org/attachment.cgi?id=3620 to
+    fix hard crash on powerpc. The patch is also stored in
+    debian/ppc-fix.patch.
+    NOTE: according to benh the patch still needs some extra polishing.
+
+ -- Fabio M. Di Nitto <fabbione@ubuntu.com>  Fri, 25 Nov 2005 11:34:33 +0100
+
+xserver-xorg-driver-ati (1:6.5.7-0ubuntu1) dapper; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Stone <daniel.stone@ubuntu.com>  Tue, 22 Nov 2005 13:25:16 +1100
+
+xserver-xorg-driver-ati (1:6.5.6.1-1) dapper; urgency=low
+
+  * New upstream release.
+
+ -- Daniel Stone <daniel.stone@ubuntu.com>  Tue, 25 Oct 2005 18:01:13 +1000
+
+xserver-xorg-driver-ati (1:6.5.6-1) breezy; urgency=low
+
+  * First xserver-xorg-driver-ati release.
+
+ -- Daniel Stone <daniel.stone@ubuntu.com>  Wed,  6 Jul 2005 15:48:17 +1000
