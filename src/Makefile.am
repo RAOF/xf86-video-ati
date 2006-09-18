@@ -41,6 +41,11 @@ if ATIMISC_DGA
 ATIMISC_DGA_SOURCES = atidga.c
 endif
 
+if USE_EXA
+ATIMISC_EXA_SOURCES = atimach64exa.c
+RADEON_EXA_SOURCES = radeon_exa.c
+endif
+
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
 
 ati_drv_la_LTLIBRARIES = ati_drv.la
@@ -61,7 +66,7 @@ atimisc_drv_la_SOURCES = \
 	atimach64i2c.c atimach64io.c atimach64xv.c atimode.c atipreinit.c \
 	atiprint.c atirgb514.c atiscreen.c atituner.c atiutil.c ativalid.c \
 	atixv.c atiload.c atimisc.c $(ATIMISC_DRI_SRCS) $(ATIMISC_DGA_SOURCES) \
-	$(ATIMISC_CPIO_SOURCES)
+	$(ATIMISC_CPIO_SOURCES) $(ATIMISC_EXA_SOURCES)
 
 r128_drv_la_LTLIBRARIES = r128_drv.la
 r128_drv_la_LDFLAGS = -module -avoid-version
@@ -76,7 +81,7 @@ radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = \
 	radeon_accel.c radeon_mergedfb.c radeon_cursor.c radeon_dga.c \
 	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
-	radeon_vip.c radeon_misc.c radeon_exa.c $(RADEON_DRI_SRCS)
+	radeon_vip.c radeon_misc.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES)
 
 theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
 theatre_detect_drv_la_LDFLAGS = -module -avoid-version
@@ -133,12 +138,12 @@ EXTRA_DIST = \
 	atimach64.h \
 	atimach64i2c.h \
 	atimach64io.h \
+	atimach64render.c \
 	atimach64xv.h \
 	atimode.h \
 	atimodule.h \
 	atimono.h \
 	atioption.h \
-	atipciids.h \
 	atipreinit.h \
 	atiprint.h \
 	atipriv.h \
@@ -188,4 +193,5 @@ EXTRA_DIST = \
 	theatre200.h \
 	theatre_detect.h \
 	theatre.h \
-	theatre_reg.h
+	theatre_reg.h \
+	atipciids.h

@@ -26,6 +26,9 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+#include <stdio.h>
+
 #include "ati.h"
 #include "atiadapter.h"
 #include "atiadjust.h"

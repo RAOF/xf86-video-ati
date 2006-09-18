@@ -30,6 +30,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
@@ -552,6 +554,17 @@ Bool RADEONGetTMDSInfoFromBIOS (ScrnInfoPtr pScrn)
 		for (i=0; i<n; i++) {
 		    info->tmds_pll[i].value = RADEON_BIOS32(tmp+i*10+0x08);
 		    info->tmds_pll[i].freq = RADEON_BIOS16(tmp+i*10+0x10);
+		}
+		return TRUE;
+	    } else if (RADEON_BIOS8(tmp) == 4) {
+	        int stride = 0;
+		n = RADEON_BIOS8(tmp + 5) + 1;
+		if (n > 4) n = 4;
+		for (i=0; i<n; i++) {
+		    info->tmds_pll[i].value = RADEON_BIOS32(tmp+stride+0x08);
+		    info->tmds_pll[i].freq = RADEON_BIOS16(tmp+stride+0x10);
+		    if (i == 0) stride += 10;
+		    else stride += 6;
 		}
 		return TRUE;
 	    }

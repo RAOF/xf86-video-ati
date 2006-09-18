@@ -43,6 +43,8 @@
  *
  */
 
+#include <string.h>
+
 				/* Driver data structures */
 #include "radeon.h"
 #include "radeon_probe.h"
@@ -59,9 +61,9 @@ static Bool RADEON_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool RADEON_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  RADEON_GetViewport(ScrnInfoPtr);
 static void RADEON_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef USE_XAA
 static void RADEON_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void RADEON_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
-#ifdef USE_XAA
 static void RADEON_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int,
 				 unsigned long);
 #endif
@@ -361,6 +363,8 @@ static void RADEON_SetViewport(ScrnInfoPtr pScrn, int x, int y, int flags)
 }
 
 
+#ifdef USE_XAA
+
 static void RADEON_FillRect(ScrnInfoPtr pScrn,
 			    int x, int y, int w, int h,
 			    unsigned long color)
@@ -420,7 +424,6 @@ static void RADEON_BlitRect(ScrnInfoPtr pScrn,
 #endif /* USE_XAA */
 }
 
-#ifdef USE_XAA
 static void RADEON_BlitTransRect(ScrnInfoPtr pScrn,
 				 int srcx, int srcy, int w, int h,
 				 int dstx, int dsty, unsigned long color)
@@ -441,6 +444,7 @@ static void RADEON_BlitTransRect(ScrnInfoPtr pScrn,
     if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
         RADEON_MARK_SYNC(info, pScrn);
 }
+
 #endif /* USE_XAA */
 
 static Bool RADEON_OpenFramebuffer(ScrnInfoPtr pScrn,

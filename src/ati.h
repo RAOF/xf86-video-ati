@@ -24,12 +24,12 @@
 #ifndef ___ATI_H___
 #define ___ATI_H___ 1
 
+#include <unistd.h>
 #include "xf86Pci.h"
 #include "atipciids.h"
 
 #include "xf86.h"
 
-#include "xf86_ansic.h"
 #include "xf86_OSproc.h"
 
 extern DriverRec ATI;

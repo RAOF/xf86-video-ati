@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "ati.h"
 #include "atiadapter.h"
 #include "atichip.h"
@@ -998,7 +1000,7 @@ ATISetVBEMode
 #endif
 	default:
 	    xf86DrvMsg(pScreenInfo->scrnIndex, X_INFO, 
-		       "Mode not supported for TV-Out: depth: %ld HDisplay: %ld\n", 
+		       "Mode not supported for TV-Out: depth: %d HDisplay: %d\n", 
 		       modekey>>16, modekey & 0xffff);
 	    return;
 	}

@@ -157,10 +157,10 @@ static Bool RADEONGetOffsetPitch(PixmapPtr pPix, int bpp, CARD32 *pitch_offset,
 {
 	RINFO_FROM_SCREEN(pPix->drawable.pScreen);
 
-	if (pitch % info->exa.card.pixmapPitchAlign != 0)
+	if (pitch % info->exa->pixmapPitchAlign != 0)
 		RADEON_FALLBACK(("Bad pitch 0x%08x\n", pitch));
 
-	if (offset % info->exa.card.pixmapOffsetAlign != 0)
+	if (offset % info->exa->pixmapOffsetAlign != 0)
 		RADEON_FALLBACK(("Bad offset 0x%08x\n", offset));
 
 	pitch = pitch >> 6;
@@ -197,7 +197,7 @@ static Bool RADEONPrepareAccess(PixmapPtr pPix, int index)
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
     unsigned char *RADEONMMIO = info->MMIO;
     CARD32 offset = exaGetPixmapOffset(pPix);
-    int bpp, rc, soff;
+    int bpp, soff;
     CARD32 size, flags;
 
     /* Front buffer is always set with proper swappers */
@@ -231,6 +231,7 @@ static Bool RADEONPrepareAccess(PixmapPtr pPix, int index)
 #if defined(XF86DRI)
     if (info->directRenderingEnabled && info->allowColorTiling) {
 	drmRadeonSurfaceAlloc drmsurfalloc;
+	int rc;
 
         drmsurfalloc.address = offset;
         drmsurfalloc.size = size;
@@ -262,7 +263,7 @@ static void RADEONFinishAccess(PixmapPtr pPix, int index)
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
     unsigned char *RADEONMMIO = info->MMIO;
     CARD32 offset = exaGetPixmapOffset(pPix);
-    int bpp, soff;
+    int soff;
 
     /* Front buffer is always set with proper swappers */
     if (offset == 0)
@@ -292,27 +293,34 @@ static void RADEONFinishAccess(PixmapPtr pPix, int index)
 
 #define RADEON_SWITCH_TO_2D()						\
 do {									\
-        /*if (info->engineMode == EXA_ENGINEMODE_2D)*/                      \
-            /*break;*/                                                      \
-	BEGIN_ACCEL(2);							\
-	OUT_ACCEL_REG(RADEON_RB2D_DSTCACHE_CTLSTAT,  RADEON_RB2D_DC_FLUSH); \
-	OUT_ACCEL_REG(RADEON_WAIT_UNTIL,				\
-		RADEON_WAIT_HOST_IDLECLEAN |				\
-		RADEON_WAIT_3D_IDLECLEAN);				\
+	CARD32 wait_until = 0;			\
+	BEGIN_ACCEL(1);							\
+	switch (info->engineMode) {					\
+	case EXA_ENGINEMODE_UNKNOWN:					\
+	    wait_until |= RADEON_WAIT_HOST_IDLECLEAN | RADEON_WAIT_2D_IDLECLEAN;	\
+	case EXA_ENGINEMODE_3D:						\
+	    wait_until |= RADEON_WAIT_3D_IDLECLEAN;			\
+	case EXA_ENGINEMODE_2D:						\
+	    break;							\
+	}								\
+	OUT_ACCEL_REG(RADEON_WAIT_UNTIL, wait_until);			\
 	FINISH_ACCEL();							\
         info->engineMode = EXA_ENGINEMODE_2D;                           \
 } while (0);
 
 #define RADEON_SWITCH_TO_3D()						\
 do {									\
-        /*if (info->engineMode == EXA_ENGINEMODE_3D)*/                      \
-            /*break;*/                                                      \
-	BEGIN_ACCEL(2);							\
-	OUT_ACCEL_REG(RADEON_RB2D_DSTCACHE_CTLSTAT,  RADEON_RB2D_DC_FLUSH); \
-	OUT_ACCEL_REG(RADEON_WAIT_UNTIL,				\
-		RADEON_WAIT_HOST_IDLECLEAN |				\
-		RADEON_WAIT_2D_IDLECLEAN |				\
-		RADEON_WAIT_3D_IDLECLEAN);				\
+	CARD32 wait_until = 0;			\
+	BEGIN_ACCEL(1);							\
+	switch (info->engineMode) {					\
+	case EXA_ENGINEMODE_UNKNOWN:					\
+	    wait_until |= RADEON_WAIT_HOST_IDLECLEAN | RADEON_WAIT_3D_IDLECLEAN;	\
+	case EXA_ENGINEMODE_2D:						\
+	    wait_until |= RADEON_WAIT_2D_IDLECLEAN;			\
+	case EXA_ENGINEMODE_3D:						\
+	    break;							\
+	}								\
+	OUT_ACCEL_REG(RADEON_WAIT_UNTIL, wait_until);			\
 	FINISH_ACCEL();							\
         info->engineMode = EXA_ENGINEMODE_3D;                           \
 } while (0);
@@ -367,9 +375,16 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     RADEONInfoPtr info = RADEONPTR(pScrn);
     int cpp = info->CurrentLayout.pixel_bytes;
-    int l;
-    int next, screen_size;
+    int screen_size;
     int byteStride = pScrn->displayWidth * cpp;
+
+    if (info->exa != NULL) {
+	xf86DrvMsg(pScreen->myNum, X_ERROR, "Memory map already initialized\n");
+	return FALSE;
+    }
+    info->exa = exaDriverAlloc();
+    if (info->exa == NULL)
+	return FALSE;
 
     /* Need to adjust screen size for 16 line tiles, and then make it align to.
      * the buffer alignment requirement.
@@ -379,20 +394,33 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
     else
 	screen_size = pScrn->virtualY * byteStride;
 
-    info->exa.card.memoryBase = info->FB + pScrn->fbOffset;
-    info->exa.card.memorySize = info->FbMapSize - info->FbSecureSize;
-    info->exa.card.offScreenBase = screen_size;
+    info->exa->memoryBase = info->FB + pScrn->fbOffset;
+    info->exa->memorySize = info->FbMapSize - info->FbSecureSize;
+    info->exa->offScreenBase = screen_size;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Allocating from a screen of %ld kb\n",
-	       info->exa.card.memorySize / 1024);
+	       info->exa->memorySize / 1024);
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use %d kb for front buffer at offset 0x%08x\n",
 	       screen_size / 1024, 0);
 
+    /* Reserve static area for hardware cursor */
+    if (!xf86ReturnOptValBool(info->Options, OPTION_SW_CURSOR, FALSE)) {
+	int cursor_size = 64 * 4 * 64;
+
+	info->cursor_offset = info->exa->offScreenBase;
+
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "Will use %d kb for hardware cursor at offset 0x%08x\n",
+		   cursor_size / 1024, (unsigned int)info->cursor_offset);
+
+	info->exa->offScreenBase += cursor_size;
+    }
+
 #if defined(XF86DRI)
     if (info->directRenderingEnabled) {
-	int depth_size;
+	int depthCpp = (info->depthBits - 8) / 4, l, next, depth_size;
 
 	info->frontOffset = 0;
 	info->frontPitch = pScrn->displayWidth;
@@ -412,12 +440,12 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	 * offscreen locations does.
 	 */
 	info->backPitch = pScrn->displayWidth;
-	next = RADEON_ALIGN(info->exa.card.offScreenBase, RADEON_BUFFER_ALIGN);
+	next = RADEON_ALIGN(info->exa->offScreenBase, RADEON_BUFFER_ALIGN);
 	if (!info->noBackBuffer &&
-	    next + screen_size <= info->exa.card.memorySize)
+	    next + screen_size <= info->exa->memorySize)
 	{
 	    info->backOffset = next;
-	    info->exa.card.offScreenBase = next + screen_size;
+	    info->exa->offScreenBase = next + screen_size;
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Will use %d kb for back buffer at offset 0x%08x\n",
 		       screen_size / 1024, info->backOffset);
@@ -427,27 +455,27 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	 * handle tiling.
 	 */
 	info->depthPitch = RADEON_ALIGN(pScrn->displayWidth, 32);
-	depth_size = RADEON_ALIGN(pScrn->virtualY, 16) * info->depthPitch * cpp;
-	next = RADEON_ALIGN(info->exa.card.offScreenBase, RADEON_BUFFER_ALIGN);
-	if (next + depth_size <= info->exa.card.memorySize)
+	depth_size = RADEON_ALIGN(pScrn->virtualY, 16) * info->depthPitch * depthCpp;
+	next = RADEON_ALIGN(info->exa->offScreenBase, RADEON_BUFFER_ALIGN);
+	if (next + depth_size <= info->exa->memorySize)
 	{
 	    info->depthOffset = next;
-	    info->exa.card.offScreenBase = next + depth_size;
+	    info->exa->offScreenBase = next + depth_size;
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Will use %d kb for depth buffer at offset 0x%08x\n",
 		       depth_size / 1024, info->depthOffset);
 	}
 	
-	info->textureSize *= (info->exa.card.memorySize -
-			      info->exa.card.offScreenBase) / 100;
+	info->textureSize *= (info->exa->memorySize -
+			      info->exa->offScreenBase) / 100;
 
 	l = RADEONLog2(info->textureSize / RADEON_NR_TEX_REGIONS);
 	if (l < RADEON_LOG_TEX_GRANULARITY)
 	    l = RADEON_LOG_TEX_GRANULARITY;
 	info->textureSize = (info->textureSize >> l) << l;
 	if (info->textureSize >= 512 * 1024) {
-	    info->textureOffset = info->exa.card.offScreenBase;
-	    info->exa.card.offScreenBase += info->textureSize;
+	    info->textureOffset = info->exa->offScreenBase;
+	    info->exa->offScreenBase += info->textureSize;
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Will use %d kb for textures at offset 0x%08x\n",
 		       info->textureSize / 1024, info->textureOffset);
@@ -460,8 +488,8 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use %ld kb for X Server offscreen at offset 0x%08lx\n",
-	       (info->exa.card.memorySize - info->exa.card.offScreenBase) /
-	       1024, info->exa.card.offScreenBase);
+	       (info->exa->memorySize - info->exa->offScreenBase) /
+	       1024, info->exa->offScreenBase);
 
     return TRUE;
 }

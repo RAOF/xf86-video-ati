@@ -1,3 +1,44 @@
+xserver-xorg-video-ati (1:6.6.2-2) UNRELEASED; urgency=low
+
+  * Include upstream ChangeLog. Closes: #365104.
+
+ -- Drew Parsons <dparsons@debian.org>  Thu, 31 Aug 2006 22:21:12 +1000
+
+xserver-xorg-video-ati (1:6.6.2-1) experimental; urgency=low
+
+  * New upstream version. Happy birthday.
+  * Use debhelper 5.
+  * Standards version 3.7.2.
+  * Add reference to /usr/share/common-licenses/GPL to debian/copyright.
+  * Use dh_installman to install man pages.
+  * Exclude .la files from dh_install.
+
+ -- Drew Parsons <dparsons@debian.org>  Thu, 31 Aug 2006 21:36:05 +1000
+
+xserver-xorg-video-ati (1:6.6.1-2) experimental; urgency=low
+
+  [ Drew Parsons ]
+  *  Provides: xserver-xorg-video-1.0 not xserver-xorg-video.
+
+  [ David Nusinow ]
+  * Bump xserver (build-)depends epochs to 2: to deal with botched
+    server upload
+
+ -- David Nusinow <dnusinow@debian.org>  Tue, 22 Aug 2006 23:46:26 +0000
+
+xserver-xorg-video-ati (1:6.6.1-1) experimental; urgency=low
+
+  [ Andres Salomon ]
+  * Test for obj-$(DEB_BUILD_GNU_TYPE) before creating it during build;
+    idempotency fix.
+
+  [ David Nusinow ]
+  * New upstream release
+  * Bump dependency on xserver-xorg-core to >= 1:1.1.1. Do the same thing for
+    the build-dep on xserver-xorg-dev.
+
+ -- David Nusinow <dnusinow@debian.org>  Sun,  6 Aug 2006 20:15:19 +0000
+
 xserver-xorg-video-ati (1:6.5.8.0-1) unstable; urgency=low
 
   * New upstream release

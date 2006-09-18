@@ -84,6 +84,8 @@
 #define R128_TRAPEZOIDS 0       /* Trapezoids don't work               */
 
 				/* Driver data structures */
+#include <errno.h>
+
 #include "r128.h"
 #include "r128_reg.h"
 #include "r128_probe.h"
@@ -219,6 +221,9 @@ void R128WaitForIdle(ScrnInfoPtr pScrn)
 		   INREG(R128_GUI_PROBE)));
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Idle timed out, resetting engine...\n");
+#ifdef XF86DRI
+        R128CCE_STOP(pScrn, info);
+#endif
 	R128EngineReset(pScrn);
 #ifdef XF86DRI
 	R128CCE_RESET(pScrn, info);

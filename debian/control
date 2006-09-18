@@ -2,16 +2,16 @@ Source: xserver-xorg-video-ati
 Section: x11
 Priority: optional
 Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
-Uploaders: David Nusinow <dnusinow@debian.org>, Branden Robinson <branden@debian.org>, Fabio M. Di Nitto <fabbione@fabbione.net>
-Build-Depends: debhelper (>= 4.0.0), pkg-config, xserver-xorg-dev, x11proto-gl-dev, x11proto-xext-dev, x11proto-core-dev, x11proto-video-dev, x11proto-xinerama-dev, x11proto-xf86misc-dev, libgl1-mesa-dev | libgl-dev, x11proto-fonts-dev, x11proto-randr-dev, x11proto-render-dev, libdrm-dev (>> 1.0.5), x11proto-xf86dri-dev, quilt
-Standards-Version: 3.6.1.0
+Uploaders: David Nusinow <dnusinow@debian.org>, Branden Robinson <branden@debian.org>, Fabio M. Di Nitto <fabbione@fabbione.net>, Drew Parsons <dparsons@debian.org>
+Build-Depends: debhelper (>= 5), pkg-config, xserver-xorg-dev (>= 2:1.1.1), x11proto-gl-dev, x11proto-xext-dev, x11proto-core-dev, x11proto-video-dev, x11proto-xinerama-dev, x11proto-xf86misc-dev, libgl1-mesa-dev | libgl-dev, x11proto-fonts-dev, x11proto-randr-dev, x11proto-render-dev, libdrm-dev (>> 1.0.5), x11proto-xf86dri-dev, quilt
+Standards-Version: 3.7.2
 
 Package: xserver-xorg-video-ati
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, xserver-xorg-core (>= 1:0.99.0-1)
+Depends: ${shlibs:Depends}, ${misc:Depends}, xserver-xorg-core (>= 2:1.1.1-1)
 Replaces: xserver-xorg (<< 6.8.2-35), xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
 Conflicts: xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
-Provides: xserver-xorg-video, xf86-video-driver-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
+Provides: xserver-xorg-video-1.0, xf86-video-driver-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
 Description: X.Org X server -- ATI display driver
  This driver for the X.Org X server (see xserver-xorg for a further description)
  provides support for the ATI Mach, Rage, Radeon, and FireGL series.  It

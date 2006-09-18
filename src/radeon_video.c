@@ -4,6 +4,11 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+
 #include "radeon.h"
 #include "radeon_reg.h"
 #include "radeon_macros.h"
@@ -24,13 +29,6 @@
 #include "fi1236.h"
 #include "msp3430.h"
 #include "tda9885.h"
-
-#ifdef USE_EXA
-/* FIXME : the video code hasn't been ported so this is a hack to make
- * it compile at all without too much ifdefing */
-#include "xaa.h"
-#include "xf86fbman.h"
-#endif
 
 #define OFF_DELAY       250  /* milliseconds */
 #define FREE_DELAY      15000
@@ -85,7 +83,8 @@ static void RADEONQueryBestSize(ScrnInfoPtr, Bool, short, short, short, short,
 			unsigned int *, unsigned int *, pointer);
 static int  RADEONPutImage(ScrnInfoPtr, short, short, short, short, short,
 			short, short, short, int, unsigned char*, short,
-			short, Bool, RegionPtr, pointer);
+			short, Bool, RegionPtr, pointer,
+			DrawablePtr);
 static int  RADEONQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
 			unsigned short *,  int *, int *);
 static void RADEONFreeMemory(ScrnInfoPtr pScrn, void *mem_struct);
@@ -93,7 +92,7 @@ static void RADEONFreeMemory(ScrnInfoPtr pScrn, void *mem_struct);
 static void RADEONVideoTimerCallback(ScrnInfoPtr pScrn, Time now);
 static int RADEONPutVideo(ScrnInfoPtr pScrn, short src_x, short src_y, short drw_x, short drw_y,
                         short src_w, short src_h, short drw_w, short drw_h, 
-			RegionPtr clipBoxes, pointer data);
+			RegionPtr clipBoxes, pointer data, DrawablePtr pDraw);
 
 static void RADEON_board_setmisc(RADEONPortPrivPtr pPriv);
 static void RADEON_RT_SetEncoding(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
@@ -410,7 +409,7 @@ typedef struct tagREF_TRANSFORM
 } REF_TRANSFORM;
 
 /* Parameters for ITU-R BT.601 and ITU-R BT.709 colour spaces */
-REF_TRANSFORM trans[2] =
+static REF_TRANSFORM trans[2] =
 {
     {1.1678, 0.0, 1.6007, -0.3929, -0.8154, 2.0232, 0.0}, /* BT.601 */
     {1.1678, 0.0, 1.7980, -0.2139, -0.5345, 2.1186, 0.0}  /* BT.709 */
@@ -478,7 +477,7 @@ typedef struct tagGAMMA_CURVE_R200
 
 
 /* Preset gammas */
-GAMMA_CURVE_R100 gamma_curve_r100[8] = 
+static GAMMA_CURVE_R100 gamma_curve_r100[8] = 
 {
 	/* Gamma 1.0 */
 	{0x100, 0x0, 
@@ -546,7 +545,7 @@ GAMMA_CURVE_R100 gamma_curve_r100[8] =
 	 0.9135}
 };
 
-GAMMA_CURVE_R200 gamma_curve_r200[8] =
+static GAMMA_CURVE_R200 gamma_curve_r200[8] =
  {
 	/* Gamma 1.0 */
       {0x00000040, 0x00000000,
@@ -1263,7 +1262,7 @@ static void RADEONSetupTheatre(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
                         xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                                 "Unsupported reference clock frequency, Rage Theatre disabled\n");
                         t->theatre_num=-1;
-			xf86free(pPriv->theatre);
+			xfree(pPriv->theatre);
 			pPriv->theatre = NULL;
 			return;
                 }
@@ -2042,7 +2041,8 @@ RADEONCopyData(
     if ( info->directRenderingEnabled && info->DMAForXv )
     {
 	CARD8 *buf;
-	CARD32 bufPitch;
+	CARD32 bufPitch, dstPitchOff;
+	int x, y;
 	unsigned int hpass;
 
 	/* Get the byte-swapping right for big endian systems */
@@ -2052,8 +2052,10 @@ RADEONCopyData(
 	    bpp = 1;
 	}
 
-	while ( buf = RADEONHostDataBlit( pScrn, bpp, w, dstPitch,
-					  &bufPitch, &dst, &h, &hpass ) )
+	RADEONHostDataParams( pScrn, dst, dstPitch, bpp, &dstPitchOff, &x, &y );
+
+	while ( (buf = RADEONHostDataBlit( pScrn, bpp, w, dstPitchOff, &bufPitch,
+					   x, &y, &h, &hpass )) )
 	{
 	    RADEONHostDataBlitCopyPass( pScrn, bpp, buf, src, hpass, bufPitch,
 					srcPitch );
@@ -2100,6 +2102,7 @@ RADEONCopyData(
     }
 }
 
+#ifdef XF86DRI
 static void RADEON_420_422(
     unsigned int *d,
     unsigned char *s1,
@@ -2114,7 +2117,7 @@ static void RADEON_420_422(
 	n--;
     }
 }
-
+#endif
 
 static void
 RADEONCopyRGB24Data(
@@ -2134,23 +2137,25 @@ RADEONCopyRGB24Data(
 
     if ( info->directRenderingEnabled && info->DMAForXv )
     {
-	CARD32 bufPitch;
+	CARD32 bufPitch, dstPitchOff;
+	int x, y;
 	unsigned int hpass;
 
 	/* XXX Fix endian flip on R300 */
 
-	while ( dptr = ( CARD32* )RADEONHostDataBlit( pScrn, 4, w, dstPitch,
-						      &bufPitch, &dst, &h,
-						      &hpass ) )
+	RADEONHostDataParams( pScrn, dst, dstPitch, 4, &dstPitchOff, &x, &y );
+
+	while ( (dptr = ( CARD32* )RADEONHostDataBlit( pScrn, 4, w, dstPitch,
+						       &bufPitch, x, &y, &h,
+						       &hpass )) )
 	{
 	    for( j = 0; j < hpass; j++ )
 	    {
 		sptr = src;
 
-		for ( i = 0 ; i < w; i++ )
+		for ( i = 0 ; i < w; i++, sptr += 3 )
 		{
-		    *dptr++ = ( ( *sptr++ ) << 24 ) | ( ( *sptr++ ) << 16 ) |
-			      ( *sptr++ );
+		    *dptr++ = (sptr[0] << 24) | (sptr[1] << 16) | sptr[2];
 		}
 
 		src += hpass * srcPitch;
@@ -2209,13 +2214,16 @@ RADEONCopyMungedData(
     if ( info->directRenderingEnabled && info->DMAForXv )
     {
 	CARD8 *buf;
-	CARD32 y = 0, bufPitch;
+	CARD32 y = 0, bufPitch, dstPitchOff;
+	int blitX, blitY;
 	unsigned int hpass;
 
 	/* XXX Fix endian flip on R300 */
 
-	while ( buf = RADEONHostDataBlit( pScrn, 4, w/2, dstPitch,
-					  &bufPitch, &dst1, &h, &hpass ) )
+	RADEONHostDataParams( pScrn, dst1, dstPitch, 4, &dstPitchOff, &blitX, &blitY );
+
+	while ( (buf = RADEONHostDataBlit( pScrn, 4, w/2, dstPitchOff, &bufPitch,
+					   blitX, &blitY, &h, &hpass )) )
 	{
 	    while ( hpass-- )
 	    {
@@ -2410,7 +2418,7 @@ RADEONDisplayVideo(
 ){
     RADEONInfoPtr info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    int v_inc, h_inc, h_inc_uv, step_by_y, step_by_uv, tmp;
+    CARD32 v_inc, h_inc, h_inc_uv, step_by_y, step_by_uv, tmp;
     double h_inc_d;
     int p1_h_accum_init, p23_h_accum_init;
     int p1_v_accum_init;
@@ -2699,7 +2707,8 @@ RADEONPutImage(
   int id, unsigned char* buf,
   short width, short height,
   Bool Sync,
-  RegionPtr clipBoxes, pointer data
+  RegionPtr clipBoxes, pointer data,
+  DrawablePtr pDraw
 ){
    RADEONInfoPtr info = RADEONPTR(pScrn);
    RADEONPortPrivPtr pPriv = (RADEONPortPrivPtr)data;
@@ -2710,9 +2719,6 @@ RADEONPutImage(
    int top, left, npixels, nlines, bpp;
    BoxRec dstBox;
    CARD32 tmp;
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-   unsigned char *RADEONMMIO = info->MMIO;
-#endif
 
    /*
     * s2offset, s3offset - byte offsets into U and V plane of the
@@ -2909,6 +2915,18 @@ RADEONQueryImageAttributes(
 	if(offsets) offsets[2] = size;
 	size += tmp;
 	break;
+    case FOURCC_RGBA32:
+	size = *w << 2;
+	if(pitches) pitches[0] = size;
+	size *= *h;
+	break;
+    case FOURCC_RGB24:
+	size = *w * 3;
+	if(pitches) pitches[0] = size;
+	size *= *h;
+	break;
+    case FOURCC_RGBT16:
+    case FOURCC_RGB16:
     case FOURCC_UYVY:
     case FOURCC_YUY2:
     default:
@@ -3178,7 +3196,8 @@ RADEONPutVideo(
   short drw_x, short drw_y,
   short src_w, short src_h,
   short drw_w, short drw_h,
-  RegionPtr clipBoxes, pointer data
+  RegionPtr clipBoxes, pointer data,
+  DrawablePtr pDraw
 ){
    RADEONInfoPtr info = RADEONPTR(pScrn);
    RADEONPortPrivPtr pPriv = (RADEONPortPrivPtr)data;

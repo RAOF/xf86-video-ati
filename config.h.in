@@ -2,6 +2,15 @@
 
 #include "xorg-server.h"
 
+/* Major version */
+#undef ATI_VERSION_MAJOR
+
+/* Minor version */
+#undef ATI_VERSION_MINOR
+
+/* Patch version */
+#undef ATI_VERSION_PATCH
+
 /* Avoid PIO and use MMIO for atimisc. */
 #undef AVOID_CPIO
 
