@@ -1,0 +1,25 @@
+Index: src/radeon_driver.c
+===================================================================
+--- src/radeon_driver.c.orig	2006-10-03 10:49:31.000000000 -0400
++++ src/radeon_driver.c	2006-10-13 17:50:41.000000000 -0400
+@@ -2461,6 +2461,7 @@
+     GDevPtr        dev    = pEnt->device;
+     unsigned char *RADEONMMIO = info->MMIO;
+     MessageType    from = X_PROBED;
++    CARD32         accessible, bar_size;
+ 
+     if (info->FBDev)
+ 	pScrn->videoRam      = fbdevHWGetVidmem(pScrn) / 1024;
+@@ -2474,11 +2475,9 @@
+ 
+ 	OUTREG(RADEON_CONFIG_MEMSIZE, pScrn->videoRam * 1024);
+     } else {
+-	CARD32 accessible;
+-	CARD32 bar_size;
+-
+ 	/* Read VRAM size from card */
+         pScrn->videoRam      = INREG(RADEON_CONFIG_MEMSIZE) / 1024;
++    }
+ 
+ 	/* Some production boards of m6 will return 0 if it's 8 MB */
+ 	if (pScrn->videoRam == 0) {

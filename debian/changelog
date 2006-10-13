@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.6.3-2) UNRELEASED; urgency=low
+
+  * Add 02_radeon_memmap_fbdev.diff. Thanks Michel Dänzer. Closes: #369167
+
+ -- David Nusinow <dnusinow@debian.org>  Fri, 13 Oct 2006 17:50:50 -0400
+
 xserver-xorg-video-ati (1:6.6.3-1) unstable; urgency=low
 
   * New upstream release
