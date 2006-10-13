@@ -1,3 +1,122 @@
+commit 7be2dce975d60d68dd962d4928b2971cd9e011af
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Oct 4 01:01:48 2006 +1000
+
+    update configure.ac for new 6.6.3 release
+
+commit 6831297d79623d55c57cd7cd8ff90f08b8c68432
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Tue Sep 12 03:33:35 2006 +1000
+
+    radeon: fallback render repeat for XAA, this fixes corruptions seen on ubuntu
+    
+    This isn't the correct fix, we should just fix the repeat case, but for a
+    stable release this is much better idea
+    (cherry picked from 84e574986f61c4f250d6ecb938bab20847618906 commit)
+
+commit ddaacf78455290ffc31b41cd809b03ffbeadd69b
+Author: Ronald Wahl <rwahl@gmx.de>
+Date:   Wed Oct 4 00:55:43 2006 +1000
+
+    Hook up DFP power to DPMS events.
+    (cherry picked from f96ddd32d3a9e64dc0adec5c50386d6db5b182ee commit)
+
+commit 14f6d58d4b5a277a68d9d8ddee7f79be2179f34f
+Author: Roland Scheidegger <rscheidegger_lists@hispeed.ch>
+Date:   Sat Sep 30 15:14:42 2006 +0200
+
+    radeon: Check ROM more thoroughly before treating it as an x86 BIOS.
+    
+    This prevents the ROMs on some Mac cards getting treated as x86 BIOSen,
+    resulting in garbage values.
+    (cherry picked from c979c7f87fc449cc9631820101edff82c3013e66 commit)
+
+commit 4921228fb76ec26249aa0f6f0f1ddebf26661b82
+Author: David Woodhouse <dwmw2@infradead.org>
+Date:   Sun Oct 1 18:22:14 2006 +0200
+
+    Fix radeon vs fbdev pitch calculation.
+    
+    Fetch the correct displayWidth from fbdevhw after setting the mode.
+    (cherry picked from 145c716de6d42778e447581578f3e4db13c9a653 commit)
+
+commit 9fa176c7989030e7340cc9b85d0b6a7b34303091
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Sep 19 13:58:17 2006 -0400
+
+    Provide all resolutions (instead only the largest one) in MergedFB clone
+    mode without config file (Henry Zhao)
+
+commit e742aeb28c7d9d6e75932c408bcc7c44af52e303
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Sep 19 13:45:33 2006 -0400
+
+    fix large negative refresh rates with mergedfb (Henry Zhao)
+    fixes bug 6966
+
+commit 9c0c805704f1df1b66adc2a6b9313597ae5b86cc
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 18 19:41:21 2006 +1000
+
+    radeon: fix rn50 memmap
+    
+    This should fixup the rn50/m6/m7 memory map problem that has been reported
+    since BenH's memory mapping changes
+
+commit 25fa71ca0a24190cc8be2e80769443e0e09303b3
+Author: Henry Zhao <henryz@ati.com>
+Date:   Mon Sep 18 03:15:54 2006 +1000
+
+    Power up DAC around check for CRT connectedness
+
+commit 39fcac431eba60adf2d4e357cfc811dbae36a4e1
+Author: Henry Zhao <henryz@ati.com>
+Date:   Mon Sep 18 03:09:43 2006 +1000
+
+    Bump up clock rate for ES1000 to allow higher resolutions
+
+commit 7d9e2b450f0fa42553156f57572a6dab70a0ea13
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Tue Sep 12 07:04:23 2006 +1000
+
+    radeon: this stops mergedfb working on my ATI M7 development board
+    
+    I've no idea what this is for, it came from an ATI codedrop and it may
+    fix some laptop or production system, but it looks to me more like a dirty
+    hack than a true fix, as I have an M7 which I need to specify CRT for the
+    second head and it breaks mergedfb for me.
+
+commit ad1778eb1eb59de14ec309b99131931cbccf64e9
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Sep 10 23:32:44 2006 +0200
+
+    Revert "* [ Bug 6966 ] large negative refresh rates reported"
+    
+    This reverts caaed927a07ffbac68b08246185ef93c1e7bb98c commit.
+    
+    See https://bugs.freedesktop.org/show_bug.cgi?id=8137 .
+
+commit 6e92981b024b59c2237f949321f6b2591dada519
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun Sep 3 21:11:10 2006 +0200
+
+    Removed the warning re. the r300 DRI driver status.
+
+commit caaed927a07ffbac68b08246185ef93c1e7bb98c
+Author: Henry Zhao <henryz@localhost.localdomain>
+Date:   Thu Aug 31 13:27:45 2006 -0700
+
+    * [ Bug 6966 ] large negative refresh rates reported
+    * [ Bug 6309 ] radeon/r128 fails to read hsync/vsync rates when rang
+    *              descriptor is missing
+    * [ Bug 5473 ] Blank screen with Radeon Mobility X700 (Acer Ferrari 4005)
+    * Reboot should not be needed for external CRT to function when connected
+      later on Ferrari 4000
+    * Modes need to be sorted, and sorted correctly
+    * Provide all resolutions (instead only the largest one) in MergedFB clone
+      mode without config file
+    * Bump up clock rate for ES1000 to allow higher resolution
+
 commit 6d2028b84ff2b82c849b74776258f8e52c952e36
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Aug 25 10:05:44 2006 +1000

@@ -1082,6 +1082,7 @@ RADEONCrtIsPhysicallyConnected(ScrnInfoPtr pScrn, int IsCrtDac)
     if(IsCrtDac) {
 	unsigned long ulOrigVCLK_ECP_CNTL;
 	unsigned long ulOrigDAC_CNTL;
+	unsigned long ulOrigDAC_MACRO_CNTL;
 	unsigned long ulOrigDAC_EXT_CNTL;
 	unsigned long ulOrigCRTC_EXT_CNTL;
 	unsigned long ulData;
@@ -1116,6 +1117,15 @@ RADEONCrtIsPhysicallyConnected(ScrnInfoPtr pScrn, int IsCrtDac)
 	OUTREG(RADEON_DAC_EXT_CNTL, ulData);
 
 	ulOrigDAC_CNTL     = INREG(RADEON_DAC_CNTL);
+
+	if (ulOrigDAC_CNTL & RADEON_DAC_PDWN) {
+	    /* turn on power so testing can go through */
+	    ulOrigDAC_MACRO_CNTL = INREG(RADEON_DAC_MACRO_CNTL);
+	    ulOrigDAC_MACRO_CNTL &= ~(RADEON_DAC_PDWN_R | RADEON_DAC_PDWN_G |
+		RADEON_DAC_PDWN_B);
+	    OUTREG(RADEON_DAC_MACRO_CNTL, ulOrigDAC_MACRO_CNTL);
+	}
+
 	ulData             = ulOrigDAC_CNTL;
 	ulData            |= RADEON_DAC_CMP_EN;
 	ulData            &= ~(RADEON_DAC_RANGE_CNTL_MASK
@@ -1135,6 +1145,18 @@ RADEONCrtIsPhysicallyConnected(ScrnInfoPtr pScrn, int IsCrtDac)
 	OUTREG(RADEON_DAC_CNTL,      ulOrigDAC_CNTL     );
 	OUTREG(RADEON_DAC_EXT_CNTL,  ulOrigDAC_EXT_CNTL );
 	OUTREG(RADEON_CRTC_EXT_CNTL, ulOrigCRTC_EXT_CNTL);
+
+	if (!bConnected) {
+	    /* Power DAC down if CRT is not connected */
+            ulOrigDAC_MACRO_CNTL = INREG(RADEON_DAC_MACRO_CNTL);
+            ulOrigDAC_MACRO_CNTL |= (RADEON_DAC_PDWN_R | RADEON_DAC_PDWN_G |
+	    	RADEON_DAC_PDWN_B);
+            OUTREG(RADEON_DAC_MACRO_CNTL, ulOrigDAC_MACRO_CNTL);
+
+	    ulData     = INREG(RADEON_DAC_CNTL);
+	    ulData     |= RADEON_DAC_PDWN ;
+	    OUTREG(RADEON_DAC_CNTL, ulData);
+    	}
     } else { /* TV DAC */
 
         /* This doesn't seem to work reliably (maybe worse on some OEM cards),
@@ -1694,9 +1716,12 @@ static void RADEONGetClockInfo(ScrnInfoPtr pScrn)
     if (info->ChipFamily == CHIP_FAMILY_RV100 && !info->HasCRTC2) {
         /* Avoid RN50 corruption due to memory bandwidth starvation.
          * 18 is an empirical value based on the databook and Windows driver.
-        */
+         *
+	 * Empirical value changed to 24 to raise pixel clock limit and
+	 * allow higher resolution modes on capable monitors
+	 */
         pll->max_pll_freq = min(pll->max_pll_freq,
-                               18 * info->mclk * 100 / pScrn->bitsPerPixel *
+                               24 * info->mclk * 100 / pScrn->bitsPerPixel *
                                info->RamWidth / 16);
     }
 
@@ -1973,7 +1998,7 @@ static BOOL RADEONQueryConnectedMonitors(ScrnInfoPtr pScrn)
 
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
 		   "MonitorLayout Option: \n\tMonitor1--Type %s, Monitor2--Type %s\n\n", s1, s2);
-
+#if 0
 	if (pRADEONEnt->PortInfo[1].MonType == MT_CRT) {
 	    pRADEONEnt->PortInfo[1].DACType = DAC_PRIMARY;
 	    pRADEONEnt->PortInfo[1].TMDSType = TMDS_UNKNOWN;
@@ -1985,6 +2010,7 @@ static BOOL RADEONQueryConnectedMonitors(ScrnInfoPtr pScrn)
 	    pRADEONEnt->PortInfo[0].ConnectorType = pRADEONEnt->PortInfo[0].MonType+1;
 	    pRADEONEnt->PortInfo[0].MonInfo = NULL;
         }
+#endif
 
         if (!ignore_edid) {
             if ((pRADEONEnt->PortInfo[0].MonType > MT_NONE) &&
@@ -2247,6 +2273,7 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     unsigned long mem_size;
+    CARD32 aper_size;
 
     /* Default to existing values */
     info->mc_fb_location = INREG(RADEON_MC_FB_LOCATION);
@@ -2256,13 +2283,18 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
      * but the real video RAM instead
      */
     mem_size = INREG(RADEON_CONFIG_MEMSIZE);
+    aper_size = INREG(RADEON_CONFIG_APER_SIZE);
     if (mem_size == 0)
 	    mem_size = 0x800000;
+
+    /* Fix for RN50, M6, M7 with 8/16/32(??) MBs of VRAM - 
+       Novell bug 204882 + along with lots of ubuntu ones */
+    if (aper_size > mem_size)
+	mem_size = aper_size;
 
 #ifdef XF86DRI
     /* Apply memory map limitation if using an old DRI */
     if (info->directRenderingEnabled && !info->newMemoryMap) {
-	    CARD32 aper_size = INREG(RADEON_CONFIG_APER_SIZE);
 	    if (aper_size < mem_size)
 		mem_size = aper_size;
     }
@@ -4106,7 +4138,8 @@ static Bool RADEONPreInitModes(ScrnInfoPtr pScrn, xf86Int10InfoPtr pInt10)
 
 	if (modesFound < 1 && info->FBDev) {
 	    fbdevHWUseBuildinMode(pScrn);
-	    pScrn->displayWidth = pScrn->virtualX; /* FIXME: might be wrong */
+	    pScrn->displayWidth = fbdevHWGetLineLength(pScrn)
+				/ info->CurrentLayout.pixel_bytes;
 	    modesFound = 1;
 	}
 
@@ -5783,15 +5816,6 @@ _X_EXPORT Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		       (pScrn->displayWidth * pScrn->virtualY *
 			info->CurrentLayout.pixel_bytes * 3 + 1023) / 1024);
 	    info->directRenderingEnabled = FALSE;
-	} else if (info->ChipFamily >= CHIP_FAMILY_R300)  {
-	       xf86DrvMsg(scrnIndex, X_WARNING,
-	              "Enabling DRM support\n\n"
-                      "\t*** Direct rendering support is highly experimental for Radeon 9500\n"
-		      "\t*** and newer cards. The 3d mesa driver is not provided in this tree.\n"
-		      "\t*** A very experimental (and incomplete) version is available from Mesa CVS.\n" "\t*** Additional information can be found on http://r300.sourceforge.net\n"
-		      "\t*** This message has been last modified on 2005-08-07.\n\n"
-		      );
-               info->directRenderingEnabled = RADEONDRIScreenInit(pScreen);
 	} else {
 	    info->directRenderingEnabled = RADEONDRIScreenInit(pScreen);
 	}
@@ -5836,6 +5860,8 @@ _X_EXPORT Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 	unsigned char *RADEONMMIO = info->MMIO;
 
 	if (!fbdevHWModeInit(pScrn, pScrn->currentMode)) return FALSE;
+	pScrn->displayWidth = fbdevHWGetLineLength(pScrn)
+		/ info->CurrentLayout.pixel_bytes;
 	RADEONSaveMemMapRegisters(pScrn, &info->ModeReg);
 	info->fbLocation = (info->ModeReg.mc_fb_location & 0xffff) << 16;
 	info->ModeReg.surface_cntl = INREG(RADEON_SURFACE_CNTL);
@@ -8812,6 +8838,8 @@ _X_EXPORT Bool RADEONSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 	RADEONSaveFBDevRegisters(pScrn, &info->ModeReg);
 
 	ret = fbdevHWSwitchMode(scrnIndex, mode, flags);
+	pScrn->displayWidth = fbdevHWGetLineLength(pScrn)
+		/ info->CurrentLayout.pixel_bytes;
 
 	RADEONRestoreFBDevRegisters(pScrn, &info->ModeReg);
     } else {
