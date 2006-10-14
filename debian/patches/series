@@ -1,2 +1,2 @@
 01_ati_r128_update_chip_identification.diff
-02_radeon_memmap_fbdev.diff -p0
+02_radeon_memmap_fbdev.diff
