@@ -3,7 +3,7 @@ Section: x11
 Priority: optional
 Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
 Uploaders: David Nusinow <dnusinow@debian.org>, Branden Robinson <branden@debian.org>, Fabio M. Di Nitto <fabbione@fabbione.net>, Drew Parsons <dparsons@debian.org>
-Build-Depends: debhelper (>= 5), pkg-config, xserver-xorg-dev (>= 2:1.1.1), x11proto-gl-dev, x11proto-xext-dev, x11proto-core-dev, x11proto-video-dev, x11proto-xinerama-dev, x11proto-xf86misc-dev, libgl1-mesa-dev | libgl-dev, x11proto-fonts-dev, x11proto-randr-dev, x11proto-render-dev, libdrm-dev (>> 1.0.5), x11proto-xf86dri-dev, quilt
+Build-Depends: debhelper (>= 5), pkg-config, xserver-xorg-dev (>= 2:1.1.1), x11proto-gl-dev, x11proto-xext-dev, x11proto-core-dev, x11proto-video-dev, x11proto-xinerama-dev, x11proto-xf86misc-dev, libgl1-mesa-dev | libgl-dev, x11proto-fonts-dev, x11proto-randr-dev, x11proto-render-dev, libdrm-dev (>> 1.0.5) [!hurd-i386], x11proto-xf86dri-dev, quilt
 Standards-Version: 3.7.2
 
 Package: xserver-xorg-video-ati

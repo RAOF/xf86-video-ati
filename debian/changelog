@@ -1,8 +1,11 @@
-xserver-xorg-video-ati (1:6.6.3-2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.6.3-2) unstable; urgency=low
 
-  * Add 02_radeon_memmap_fbdev.diff. Thanks Michel Dänzer. Closes: #369167
+  * Add 02_radeon_memmap_fbdev.diff. This should fix breakage when using
+    fbdev. Thanks Michel Dänzer. Closes: #369167
+  * Don't require libdrm-dev on hurd-i386. Thanks Michael Banck.
+    Closes: #392876
 
- -- David Nusinow <dnusinow@debian.org>  Fri, 13 Oct 2006 17:50:50 -0400
+ -- David Nusinow <dnusinow@debian.org>  Sat, 14 Oct 2006 14:30:22 -0400
 
 xserver-xorg-video-ati (1:6.6.3-1) unstable; urgency=low
 
