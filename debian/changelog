@@ -1,3 +1,12 @@
+xserver-xorg-video-ati (1:6.6.3-3) UNRELEASED; urgency=low
+
+  * Add link to xserver-xorg-core bug script, so that bugreports contain
+    the user's config and log files.
+  * Bump dependency on xserver-xorg-core to >= 2:1.1.1-11, as previous
+    versions don't have the bug script.
+
+ -- Julien Cristau <julien.cristau@ens-lyon.org>  Tue,  7 Nov 2006 07:30:39 +0100
+
 xserver-xorg-video-ati (1:6.6.3-2) unstable; urgency=low
 
   * Add 02_radeon_memmap_fbdev.diff. This should fix breakage when using
