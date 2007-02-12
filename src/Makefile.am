@@ -52,7 +52,7 @@ ati_drv_la_LTLIBRARIES = ati_drv.la
 ati_drv_la_LDFLAGS = -module -avoid-version
 ati_drv_ladir = @moduledir@/drivers
 ati_drv_la_SOURCES = \
-	ati.c atiadapter.c atibus.c atichip.c atiident.c atioption.c \
+	ati.c atibus.c atichip.c atiident.c atioption.c \
 	atiprobe.c atividmem.c atimodule.c $(ATI_CPIO_SOURCES) \
 	radeon_probe.c r128_probe.c
 
@@ -60,12 +60,12 @@ atimisc_drv_la_LTLIBRARIES = atimisc_drv.la
 atimisc_drv_la_LDFLAGS = -module -avoid-version
 atimisc_drv_ladir = @moduledir@/drivers
 atimisc_drv_la_SOURCES = \
-	atiaccel.c atiadjust.c atiaudio.c aticlock.c aticonfig.c aticonsole.c \
-	aticursor.c atidac.c atidecoder.c atidsp.c atifillin.c atii2c.c \
+	atiadjust.c atiaudio.c aticlock.c aticonfig.c aticonsole.c \
+	atidac.c atidecoder.c atidsp.c atifillin.c atii2c.c \
 	atilock.c atimach64.c atimach64accel.c atimach64cursor.c \
 	atimach64i2c.c atimach64io.c atimach64xv.c atimode.c atipreinit.c \
 	atiprint.c atirgb514.c atiscreen.c atituner.c atiutil.c ativalid.c \
-	atixv.c atiload.c atimisc.c $(ATIMISC_DRI_SRCS) $(ATIMISC_DGA_SOURCES) \
+	atiload.c atimisc.c $(ATIMISC_DRI_SRCS) $(ATIMISC_DGA_SOURCES) \
 	$(ATIMISC_CPIO_SOURCES) $(ATIMISC_EXA_SOURCES)
 
 r128_drv_la_LTLIBRARIES = r128_drv.la
@@ -81,7 +81,7 @@ radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = \
 	radeon_accel.c radeon_mergedfb.c radeon_cursor.c radeon_dga.c \
 	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
-	radeon_vip.c radeon_misc.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES)
+	radeon_vip.c radeon_misc.c radeon_display.c radeon_modes.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES)
 
 theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
 theatre_detect_drv_la_LDFLAGS = -module -avoid-version
@@ -108,8 +108,6 @@ EXTRA_DIST = \
 	radeon_render.c \
 	radeon_accelfuncs.c \
 	\
-	atiaccel.h \
-	atiadapter.h \
 	atiadjust.h \
 	atiaudio.h \
 	atibank.h \
@@ -130,19 +128,15 @@ EXTRA_DIST = \
 	ati.h \
 	atii2c.h \
 	atiident.h \
-	atiio.h \
 	atiload.h \
 	atilock.h \
 	atimach64accel.h \
-	atimach64cursor.h \
 	atimach64.h \
 	atimach64i2c.h \
 	atimach64io.h \
 	atimach64render.c \
-	atimach64xv.h \
 	atimode.h \
 	atimodule.h \
-	atimono.h \
 	atioption.h \
 	atipreinit.h \
 	atiprint.h \

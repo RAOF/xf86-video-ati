@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atiload.h,v 1.6 2003/07/24 22:08:28 tsi Exp $ */
 /*
  * Copyright 2000 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -34,12 +33,6 @@
 #include "xf86str.h"
 
 extern const char *ATIint10Symbols[], *ATIddcSymbols[], *ATIvbeSymbols[],
-
-#ifndef AVOID_CPIO
-
-                  *ATIxf1bppSymbols[], *ATIxf4bppSymbols[],
-
-#endif /* AVOID_CPIO */
 
 #ifdef XF86DRI_DEVEL
  

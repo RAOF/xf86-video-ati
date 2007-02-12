@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/ativga.h,v 1.10 2003/01/01 19:16:34 tsi Exp $ */
 /*
  * Copyright 1997 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -32,11 +31,9 @@
 
 extern void ATIVGAPreInit(ATIPtr, ATIHWPtr);
 extern void ATIVGASave(ATIPtr, ATIHWPtr);
-extern void ATIVGACalculate(ATIPtr, ATIHWPtr, DisplayModePtr);
 extern void ATIVGASet(ATIPtr, ATIHWPtr);
 
 extern void ATIVGASaveScreen(ATIPtr, int);
-extern void ATIVGASetDPMSMode(ATIPtr, int);
 
 #endif /* AVOID_CPIO */
 

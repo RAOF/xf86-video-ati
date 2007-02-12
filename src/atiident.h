@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atiident.h,v 1.10 2003/01/01 19:16:32 tsi Exp $ */
 /*
  * Copyright 1997 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -24,30 +23,6 @@
 #ifndef ___ATIIDENT_H___
 #define ___ATIIDENT_H___ 1
 
-typedef enum
-{
-    ATI_CHIPSET_ATI,
-
-#ifndef AVOID_CPIO
-
-    ATI_CHIPSET_ATIVGA,
-    ATI_CHIPSET_IBMVGA,
-    ATI_CHIPSET_IBM8514,
-    ATI_CHIPSET_VGAWONDER,
-    ATI_CHIPSET_MACH8,
-    ATI_CHIPSET_MACH32,
-
-#endif /* AVOID_CPIO */
-
-    ATI_CHIPSET_MACH64,
-    ATI_CHIPSET_RAGE128,
-    ATI_CHIPSET_RADEON,
-    ATI_CHIPSET_MAX             /* Must be last */
-} ATIChipsetType;
-
-extern const char *ATIChipsetNames[];
-
 extern void ATIIdentify(int);
-extern int  ATIIdentProbe(const char *);
 
 #endif /* ___ATIIDENT_H___ */

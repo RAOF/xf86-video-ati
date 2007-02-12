@@ -1,4 +1,4 @@
-/* $XFree86$ */ /* -*- mode: c; c-basic-offset: 3 -*- */
+/* -*- mode: c; c-basic-offset: 3 -*- */
 /*
  * Copyright 2000 Gareth Hughes
  * All Rights Reserved.
@@ -121,7 +121,7 @@ static Bool ATIInitVisualConfigs( ScreenPtr pScreen )
       }
 
       i = 0;
-      for (db = 0; db <= 1; db++) {
+      for (db = 1; db >= 0; db--) {
 	 for ( accum = 0 ; accum <= ATI_USE_ACCUM ; accum++ ) {
 	    for ( stencil = 0 ; stencil <= ATI_USE_STENCIL ; stencil++ ) {
 	       pATIConfigPtrs[i] = &pATIConfigs[i];
@@ -202,7 +202,7 @@ static Bool ATIInitVisualConfigs( ScreenPtr pScreen )
       }
 
       i = 0;
-      for (db = 0; db <= 1; db++) {
+      for (db = 1; db >= 0; db--) {
 	 for ( accum = 0 ; accum <= ATI_USE_ACCUM ; accum++ ) {
 	    for ( stencil = 0 ; stencil <= ATI_USE_STENCIL ; stencil++ ) {
 	       pATIConfigPtrs[i] = &pATIConfigs[i];
@@ -408,7 +408,6 @@ static void ATIDRITransitionTo2d_EXA(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
    ATIPtr pATI = ATIPTR(pScreenInfo);
-#if 0
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
    exaEnableDisableFBAccess(pScreen->myNum, FALSE);
@@ -416,7 +415,6 @@ static void ATIDRITransitionTo2d_EXA(ScreenPtr pScreen)
    pATI->pExa->offScreenBase = pATIDRIServer->backOffset;
 
    exaEnableDisableFBAccess(pScreen->myNum, TRUE);
-#endif
 
    pATI->have3DWindows = FALSE;
 }
@@ -425,7 +423,6 @@ static void ATIDRITransitionTo3d_EXA(ScreenPtr pScreen)
 {
    ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
    ATIPtr pATI = ATIPTR(pScreenInfo);
-#if 0
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
    exaEnableDisableFBAccess(pScreen->myNum, FALSE);
@@ -434,7 +431,6 @@ static void ATIDRITransitionTo3d_EXA(ScreenPtr pScreen)
 			       pATIDRIServer->textureSize;
 
    exaEnableDisableFBAccess(pScreen->myNum, TRUE);
-#endif
 
    pATI->have3DWindows = TRUE;
 }
@@ -688,6 +684,36 @@ static int Mach64MinBits(int val)
     return bits;
 }
 
+static Bool ATIDRISetBufSize( ScreenPtr pScreen, unsigned int maxSize )
+{
+   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ATIPtr pATI = ATIPTR(pScreenInfo);
+   ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
+
+   if (pATI->OptionBufferSize) {
+      if (pATI->OptionBufferSize < 1 || pATI->OptionBufferSize > maxSize  ) {
+	 xf86DrvMsg( pScreen->myNum, X_ERROR, "[drm] Illegal DMA buffers size: %d MB\n",
+		     pATI->OptionBufferSize );
+	 return FALSE;
+      }
+      if (pATI->OptionBufferSize > 2) {
+	 xf86DrvMsg( pScreen->myNum, X_WARNING, "[drm] Illegal DMA buffers size: %d MB\n",
+		     pATI->OptionBufferSize );
+	 xf86DrvMsg( pScreen->myNum, X_WARNING, "[drm] Clamping DMA buffers size to 2 MB\n");
+	 pATIDRIServer->bufferSize = 2;
+      } else {
+	 pATIDRIServer->bufferSize = pATI->OptionBufferSize;
+	 xf86DrvMsg( pScreen->myNum, X_CONFIG, "[drm] Using %d MB for DMA buffers\n",
+		     pATIDRIServer->bufferSize );
+      }
+   } else {
+      xf86DrvMsg( pScreen->myNum, X_DEFAULT, "[drm] Using %d MB for DMA buffers\n",
+		  pATIDRIServer->bufferSize );
+   }
+
+   return TRUE;
+}
+
 static Bool ATIDRISetAgpMode( ScreenPtr pScreen )
 {
    ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
@@ -809,26 +835,8 @@ static Bool ATIDRIAgpInit( ScreenPtr pScreen )
    xf86DrvMsg(pScreen->myNum, X_INFO,
 	      "[agp] Using %d kB for DMA descriptor ring\n", pATIDRIServer->ringSize);
 
-   if (pATI->OptionBufferSize) {
-      if (pATI->OptionBufferSize < 1 || pATI->OptionBufferSize > pATIDRIServer->agpSize  ) {
-	 xf86DrvMsg( pScreen->myNum, X_ERROR, "[agp] Illegal DMA buffers size: %d MB\n",
-		     pATI->OptionBufferSize );
-	 return FALSE;
-      }
-      if (pATI->OptionBufferSize > 2) {
-	 xf86DrvMsg( pScreen->myNum, X_WARNING, "[agp] Illegal DMA buffers size: %d MB\n",
-		     pATI->OptionBufferSize );
-	 xf86DrvMsg( pScreen->myNum, X_WARNING, "[agp] Clamping DMA buffers size to 2 MB\n");
-	 pATIDRIServer->bufferSize = 2;
-      } else {
-	 pATIDRIServer->bufferSize = pATI->OptionBufferSize;
-	 xf86DrvMsg( pScreen->myNum, X_CONFIG, "[agp] Using %d MB for DMA buffers\n",
-		     pATIDRIServer->bufferSize );
-      }
-   } else {
-      xf86DrvMsg( pScreen->myNum, X_DEFAULT, "[agp] Using %d MB for DMA buffers\n",
-		  pATIDRIServer->bufferSize );
-   }
+   if ( !ATIDRISetBufSize( pScreen, pATIDRIServer->agpSize ) )
+      return FALSE;
 
    pATIDRIServer->agpTexSize    = pATIDRIServer->agpSize - pATIDRIServer->bufferSize;
 
@@ -874,7 +882,7 @@ static Bool ATIDRIAgpInit( ScreenPtr pScreen )
 
    /* Map vertex buffers */
    if ( drmAddMap( pATI->drmFD, pATIDRIServer->bufferStart, pATIDRIServer->bufferMapSize,
-		   DRM_AGP, 0, &pATIDRIServer->bufferHandle ) < 0 ) {
+		   DRM_AGP, DRM_READ_ONLY, &pATIDRIServer->bufferHandle ) < 0 ) {
       xf86DrvMsg( pScreen->myNum, X_ERROR,
 		  "[agp] Could not add vertex buffers mapping\n" );
       return FALSE;
@@ -947,6 +955,55 @@ static Bool ATIDRIAgpInit( ScreenPtr pScreen )
 
    outm( AGP_BASE, drmAgpBase(pATI->drmFD) );
    outm( AGP_CNTL, cntl );
+
+   return TRUE;
+}
+
+static Bool ATIDRIPciInit( ScreenPtr pScreen )
+{
+   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ATIPtr pATI = ATIPTR(pScreenInfo);
+   ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
+
+   pATIDRIServer->bufferSize = ATI_DEFAULT_BUFFER_SIZE;
+   pATIDRIServer->ringSize = 16; /* 16 kB ring */
+
+   if ( !ATIDRISetBufSize( pScreen, (unsigned)(-1) ) )
+      return FALSE;
+
+   /* Set size of the DMA descriptor ring */
+   pATIDRIServer->ringStart   = 0;
+   pATIDRIServer->ringMapSize = pATIDRIServer->ringSize*1024; /* ringSize is in kB */
+
+   /* Set size of the vertex buffer */
+   pATIDRIServer->bufferStart   = 0;
+   pATIDRIServer->bufferMapSize = pATIDRIServer->bufferSize*1024*1024;
+
+   /* Map DMA descriptor ring */
+   if ( drmAddMap( pATI->drmFD, 0, pATIDRIServer->ringMapSize,
+		   DRM_CONSISTENT, DRM_RESTRICTED, &pATIDRIServer->ringHandle ) < 0 ) {
+      xf86DrvMsg( pScreen->myNum, X_ERROR,
+		  "[pci] Could not add ring mapping\n" );
+      return FALSE;
+   }
+   xf86DrvMsg( pScreen->myNum, X_INFO, "[pci] ring handle = 0x%08x\n",
+	       pATIDRIServer->ringHandle );
+
+   if ( drmMap( pATI->drmFD, pATIDRIServer->ringHandle,
+		pATIDRIServer->ringMapSize, &pATIDRIServer->ringMap ) < 0 ) {
+      xf86DrvMsg( pScreen->myNum, X_ERROR,
+		  "[pci] Could not map ring\n" );
+      return FALSE;
+   }
+   xf86DrvMsg( pScreen->myNum, X_INFO,
+	       "[pci] Ring mapped at 0x%08lx\n",
+	       (unsigned long)pATIDRIServer->ringMap );
+
+   /* Disable AGP for ForcePCIMode */
+   if ( pATI->BusType != ATI_BUS_PCI ) {
+       outm( AGP_BASE, 0 );
+       outm( AGP_CNTL, 0 );
+   }
 
    return TRUE;
 }
@@ -1027,9 +1084,9 @@ static Bool ATIDRIAddBuffers( ScreenPtr pScreen )
    /* Initialize vertex buffers */
    if ( pATIDRIServer->IsPCI ) {
       pATIDRIServer->numBuffers = drmAddBufs( pATI->drmFD,
-					      (pATIDRIServer->bufferSize*1024*1024)/MACH64_BUFFER_SIZE,
+					      pATIDRIServer->bufferMapSize/MACH64_BUFFER_SIZE,
 					      MACH64_BUFFER_SIZE,
-					      0,
+					      DRM_PCI_BUFFER_RO,
 					      0 );
    } else {
       pATIDRIServer->numBuffers = drmAddBufs( pATI->drmFD,
@@ -1316,12 +1373,12 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
    /* Check the mach64 DRM version */
    version = drmGetVersion( pATI->drmFD );
    if ( version ) {
-      if ( version->version_major != 1 ||
+      if ( version->version_major != 2 ||
 	   version->version_minor < 0 ) {
 	 /* Incompatible DRM version */
 	 xf86DrvMsg( pScreen->myNum, X_ERROR,
 		     "[dri] ATIDRIScreenInit failed because of a version mismatch.\n"
-		     "[dri] mach64.o kernel module version is %d.%d.%d, but version 1.0 or greater is needed.\n"
+		     "[dri] mach64.o kernel module version is %d.%d.%d, but version 2.x is needed (with 2.x >= 2.0).\n"
 		     "[dri] Disabling DRI.\n",
 		     version->version_major,
 		     version->version_minor,
@@ -1350,46 +1407,20 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
    pATIDRIServer->IsPCI = (pATI->BusType == ATI_BUS_PCI || pATI->OptionIsPCI) ? TRUE : FALSE;
 
    if ( pATI->BusType != ATI_BUS_PCI && pATI->OptionIsPCI ) {
-       outm( AGP_BASE, 0 );
-       outm( AGP_CNTL, 0 );
        xf86DrvMsg(pScreen->myNum, X_CONFIG, "[dri] Forcing PCI mode\n");
-   }
-
-   /* Check buffer size option for PCI, since it won't be done in ATIDRIAgpInit */
-   if ( pATIDRIServer->IsPCI) {
-      pATIDRIServer->bufferSize = ATI_DEFAULT_BUFFER_SIZE;
-      if (pATI->OptionBufferSize) {
-      	 if (pATI->OptionBufferSize < 1) {
-	    xf86DrvMsg( pScreen->myNum, X_ERROR, "[pci] Illegal DMA buffers size: %d MB\n",
-			pATI->OptionBufferSize );
-	    ATIDRICloseScreen( pScreen );
-	    return FALSE;
-	 }
-	 if (pATI->OptionBufferSize > 2) {
-	    xf86DrvMsg( pScreen->myNum, X_WARNING, "[pci] Illegal DMA buffers size: %d MB\n",
-			pATI->OptionBufferSize );
-	    xf86DrvMsg( pScreen->myNum, X_WARNING, "[pci] Clamping DMA buffers size to 2 MB\n");
-	    pATIDRIServer->bufferSize = 2;
-	 } else {
-	    pATIDRIServer->bufferSize = pATI->OptionBufferSize;
-	    xf86DrvMsg( pScreen->myNum, X_CONFIG, "[pci] Using %d MB DMA buffer size\n",
-			pATIDRIServer->bufferSize );
-	 }
-      } else {
-	 xf86DrvMsg( pScreen->myNum, X_DEFAULT, "[pci] Using %d MB DMA buffer size\n",
-		     pATIDRIServer->bufferSize );
-      }
    }
 
    /* Initialize AGP */
    if ( !pATIDRIServer->IsPCI && !ATIDRIAgpInit( pScreen ) ) {
       pATIDRIServer->IsPCI = TRUE;
-      if ( pATI->BusType != ATI_BUS_PCI ) {
-	 outm( AGP_BASE, 0 );
-	 outm( AGP_CNTL, 0 );
-      }
       xf86DrvMsg( pScreen->myNum, X_WARNING, "[agp] AGP failed to initialize -- falling back to PCI mode.\n" );
       xf86DrvMsg( pScreen->myNum, X_WARNING, "[agp] Make sure you have the agpgart kernel module loaded.\n" );
+   }
+
+   /* Initialize PCI */
+   if ( pATIDRIServer->IsPCI && !ATIDRIPciInit( pScreen ) ) {
+      ATIDRICloseScreen( pScreen );
+      return FALSE;
    }
 
    if ( !ATIDRIMapInit( pScreen ) ) {
@@ -1567,11 +1598,21 @@ void ATIDRICloseScreen( ScreenPtr pScreen )
       drmUnmap( pATIDRIServer->bufferMap, pATIDRIServer->bufferMapSize );
       pATIDRIServer->bufferMap = NULL;
    }
+   if ( pATIDRIServer->ringMap ) {
+      drmUnmap( pATIDRIServer->ringMap, pATIDRIServer->ringMapSize );
+      pATIDRIServer->ringMap = NULL;
+   }
    if ( pATIDRIServer->agpHandle ) {
       drmAgpUnbind( pATI->drmFD, pATIDRIServer->agpHandle );
       drmAgpFree( pATI->drmFD, pATIDRIServer->agpHandle );
       pATIDRIServer->agpHandle = 0;
       drmAgpRelease( pATI->drmFD );
+   }
+
+   /* De-allocate all PCI resources */
+   if ( pATIDRIServer->IsPCI && pATIDRIServer->ringHandle ) {
+      drmRmMap( pATI->drmFD, pATIDRIServer->ringHandle );
+      pATIDRIServer->ringHandle = 0;
    }
 
    /* De-allocate all DRI resources */

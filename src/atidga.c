@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atidga.c,v 1.10 2003/04/23 21:51:27 tsi Exp $ */
 /*
  * Copyright 2000 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -415,19 +414,6 @@ ATIDGAInit
 
     if (!pATI->nDGAMode)
     {
-
-#ifndef AVOID_CPIO
-
-        /*
-         * Contrary to previous extension versions, DGA 2 does not support
-         * banked framebuffers.  Also, disable DGA when non-DGA server modes
-         * are planar.
-         */
-        if (pATI->BankInfo.BankSize || (pScreenInfo->depth <= 4))
-            return FALSE;
-
-#endif /* AVOID_CPIO */
-
         /* Set up DGA callbacks */
         pATI->ATIDGAFunctions.OpenFramebuffer = ATIDGAOpenFramebuffer;
         pATI->ATIDGAFunctions.SetMode         = ATIDGASetMode;
@@ -460,8 +446,7 @@ ATIDGAInit
         ATIDGAAddModes(pScreenInfo, pATI, flags,
             8, 8, 0, 0, 0, PseudoColor);
 
-        if ((pATI->Chip >= ATI_CHIP_264CT) &&
-            (pATI->Chipset == ATI_CHIPSET_ATI))
+        if ((pATI->Chip >= ATI_CHIP_264CT))
         {
             ATIDGAAddModes(pScreenInfo, pATI, flags,
                 15, 16, 0x7C00U, 0x03E0U, 0x001FU, TrueColor);

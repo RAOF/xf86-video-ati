@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_dri.c,v 1.39 2003/11/06 18:38:00 tsi Exp $ */
 /*
  * Copyright 2000 ATI Technologies Inc., Markham, Ontario,
  *                VA Linux Systems Inc., Fremont, California.
@@ -55,8 +54,6 @@
 #include "xf86PciInfo.h"
 #include "windowstr.h"
 
-
-#include "shadowfb.h"
 				/* GLX/DRI/DRM definitions */
 #define _XF86DRI_SERVER_
 #include "GL/glxtokens.h"
@@ -71,7 +68,7 @@ static void RADEONDRITransitionTo3d(ScreenPtr pScreen);
 static void RADEONDRITransitionMultiToSingle3d(ScreenPtr pScreen);
 static void RADEONDRITransitionSingleToMulti3d(ScreenPtr pScreen);
 
-#ifdef USE_XAA
+#ifdef DAMAGE
 static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 #endif
 
@@ -360,52 +357,29 @@ static void RADEONEnterServer(ScreenPtr pScreen)
     RADEON_MARK_SYNC(info, pScrn);
 
     pSAREAPriv = DRIGetSAREAPrivate(pScrn->pScreen);
-    if (pSAREAPriv->ctxOwner != DRIGetContext(pScrn->pScreen))
+    if (pSAREAPriv->ctxOwner != DRIGetContext(pScrn->pScreen)) {
 	info->XInited3D = FALSE;
+	info->needCacheFlush = (info->ChipFamily >= CHIP_FAMILY_R300);
+    }
 
+#ifdef DAMAGE
+    if (!info->pDamage && info->allowPageFlip) {
+	PixmapPtr pPix  = pScreen->GetScreenPixmap(pScreen);
+	info->pDamage = DamageCreate(NULL, NULL, DamageReportNone, TRUE,
+				     pScreen, pPix);
 
-    /* TODO: Fix this more elegantly.
-     * Sometimes (especially with multiple DRI clients), this code
-     * runs immediately after a DRI client issues a rendering command.
-     *
-     * The accel code regularly inserts WAIT_UNTIL_IDLE into the
-     * command buffer that is sent with the indirect buffer below.
-     * The accel code fails to set the 3D cache flush registers for
-     * the R300 before sending WAIT_UNTIL_IDLE. Sending a cache flush
-     * on these new registers is not necessary for pure 2D functionality,
-     * but it *is* necessary after 3D operations.
-     * Without the cache flushes before WAIT_UNTIL_IDLE, the R300 locks up.
-     *
-     * The CP_IDLE call into the DRM indirectly flushes all caches and
-     * thus avoids the lockup problem, but the solution is far from ideal.
-     * Better solutions could be:
-     *  - always flush caches when entering the X server
-     *  - track the type of rendering commands somewhere and issue
-     *    cache flushes when they change
-     * However, I don't feel confident enough with the control flow
-     * inside the X server to implement either fix. -- nh
-     */
-    
-    /* On my computer (Radeon Mobility M10)
-       The fix below results in x11perf -shmput500 rate of 245.0/sec
-       which is lower than 264.0/sec I get without it.
-       
-       Doing the same each time before indirect buffer is submitted
-       results in x11perf -shmput500 rate of 225.0/sec.
-       
-       On the other hand, not using CP acceleration at all benchmarks
-       at 144.0/sec.
-      
-       For now let us accept this as a lesser evil, especially as the
-       DRM driver for R300 is still in flux.
-       
-       Once the code is more stable this should probably be moved into DRM driver.
-    */ 
-     
-    if (info->ChipFamily>=CHIP_FAMILY_R300)
-        drmCommandNone(info->drmFD, DRM_RADEON_CP_IDLE);
+	if (info->pDamage == NULL) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "No screen damage record, page flipping disabled\n");
+	    info->allowPageFlip = 0;
+	} else {
+	    DamageRegister(&pPix->drawable, info->pDamage);
 
-
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Damage tracking initialized for page flipping\n");
+	}
+    }
+#endif
 }
 
 /* Called when the X server goes to sleep to allow the X server's
@@ -420,6 +394,17 @@ static void RADEONLeaveServer(ScreenPtr pScreen)
     ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     RING_LOCALS;
+
+#ifdef DAMAGE
+    if (info->pDamage) {
+	RegionPtr pDamageReg = DamageRegion(info->pDamage);
+
+	if (pDamageReg) {
+	    RADEONDRIRefreshArea(pScrn, REGION_NUM_RECTS(pDamageReg),
+				 REGION_RECTS(pDamageReg));
+	}
+    }
+#endif
 
     /* The CP is always running, but if we've generated any CP commands
      * we must flush them to the kernel module now.
@@ -738,10 +723,61 @@ static Bool RADEONSetAgpMode(RADEONInfoPtr info, ScreenPtr pScreen)
     unsigned long mode   = drmAgpGetMode(info->drmFD);	/* Default mode */
     unsigned int  vendor = drmAgpVendorId(info->drmFD);
     unsigned int  device = drmAgpDeviceId(info->drmFD);
+    CARD32 agp_status = INREG(RADEON_AGP_STATUS) & mode;
+    Bool is_v3 = (agp_status & RADEON_AGPv3_MODE);
+    unsigned int defaultMode;
+    MessageType from;
+
+    if (is_v3) {
+	defaultMode = (agp_status & RADEON_AGPv3_8X_MODE) ? 8 : 4;
+    } else {
+	if (agp_status & RADEON_AGP_4X_MODE) defaultMode = 4;
+	else if (agp_status & RADEON_AGP_2X_MODE) defaultMode = 2;
+	else defaultMode = 1;
+    }
+
+    from = X_DEFAULT;
+
+    if (xf86GetOptValInteger(info->Options, OPTION_AGP_MODE, &info->agpMode)) {
+	if ((info->agpMode < (is_v3 ? 4 : 1)) ||
+            (info->agpMode > (is_v3 ? 8 : 4)) ||
+	    (info->agpMode & (info->agpMode - 1))) {
+	    xf86DrvMsg(pScreen->myNum, X_ERROR,
+		       "Illegal AGP Mode: %d (valid values: %s), leaving at "
+		       "%dx\n", info->agpMode, is_v3 ? "4, 8" : "1, 2, 4",
+		       defaultMode);
+	    info->agpMode = defaultMode;
+	} else
+	    from = X_CONFIG;
+    } else
+	info->agpMode = defaultMode;
+
+    xf86DrvMsg(pScreen->myNum, from, "Using AGP %dx\n", info->agpMode);
+
+    info->agpFastWrite = 0; // Always off by default as it sucks
+
+    from = xf86GetOptValInteger(info->Options, OPTION_AGP_FW,
+				&info->agpFastWrite) ? X_CONFIG : X_DEFAULT;
+
+    if (info->agpFastWrite &&
+	(vendor == PCI_VENDOR_AMD) &&
+	(device == PCI_CHIP_AMD761)) {
+
+	/* Disable fast write for AMD 761 chipset, since they cause
+	 * lockups when enabled.
+	 */
+	info->agpFastWrite = FALSE;
+	from = X_DEFAULT;
+	xf86DrvMsg(pScreen->myNum, X_WARNING,
+		   "[agp] Not enabling Fast Writes on AMD 761 chipset to avoid "
+		   "lockups");
+    }
+
+    xf86DrvMsg(pScreen->myNum, from, "AGP Fast Writes %sabled\n",
+	       info->agpFastWrite ? "en" : "dis");
 
     mode &= ~RADEON_AGP_MODE_MASK;
-    if ((mode & RADEON_AGPv3_MODE) &&
-	(INREG(RADEON_AGP_STATUS) & RADEON_AGPv3_MODE)) {
+    if (is_v3) {
 	/* only set one mode bit for AGPv3 */
 	switch (info->agpMode) {
 	case 8:          mode |= RADEON_AGPv3_8X_MODE; break;
@@ -758,20 +794,8 @@ static Bool RADEONSetAgpMode(RADEONInfoPtr info, ScreenPtr pScreen)
 	}
     }
 
-    if (info->agpFastWrite &&
-	(vendor == PCI_VENDOR_AMD) &&
-	(device == PCI_CHIP_AMD761)) {
-
-	/* Disable fast write for AMD 761 chipset, since they cause
-	 * lockups when enabled.
-	 */
-	info->agpFastWrite = FALSE;
-	xf86DrvMsg(pScreen->myNum, X_WARNING,
-		   "[agp] Not enabling Fast Writes on AMD 761 chipset to avoid "
-		   "lockups");
-    }
-
     if (info->agpFastWrite) mode |= RADEON_AGP_FW_MODE;
+    else mode &= ~RADEON_AGP_FW_MODE;
 
     xf86DrvMsg(pScreen->myNum, X_INFO,
 	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x; Card 0x%04x/0x%04x]\n",
@@ -1397,7 +1421,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     				RADEON_VERSION_MAJOR_TILED : RADEON_VERSION_MAJOR;
     pDRIInfo->ddxDriverMinorVersion      = RADEON_VERSION_MINOR;
     pDRIInfo->ddxDriverPatchVersion      = RADEON_VERSION_PATCH;
-    pDRIInfo->frameBufferPhysicalAddress = (void *)info->LinearAddr;
+    pDRIInfo->frameBufferPhysicalAddress = (void *)info->LinearAddr + info->frontOffset;
     pDRIInfo->frameBufferSize            = info->FbMapSize - info->FbSecureSize;
     pDRIInfo->frameBufferStride          = (pScrn->displayWidth *
 					    info->CurrentLayout.pixel_bytes);
@@ -1625,30 +1649,6 @@ Bool RADEONDRIFinishScreenInit(ScreenPtr pScreen)
     return TRUE;
 }
 
-void RADEONDRIInitPageFlip(ScreenPtr pScreen)
-{
-    ScrnInfoPtr         pScrn = xf86Screens[pScreen->myNum];
-    RADEONInfoPtr       info  = RADEONPTR(pScrn);
-
-#ifdef USE_XAA
-   /* Have shadowfb run only while there is 3d active. This must happen late,
-     * after XAAInit has been called 
-     */
-    if (!info->useEXA) {
-	if (!ShadowFBInit( pScreen, RADEONDRIRefreshArea )) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "ShadowFB init failed, Page Flipping disabled\n");
-	    info->allowPageFlip = 0;
-	} else
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		       "ShadowFB initialized for Page Flipping\n");
-    } else
-#endif /* USE_XAA */
-    {
-       info->allowPageFlip = 0;
-    }
-}
-
 /**
  * This function will attempt to get the Radeon hardware back into shape
  * after a resume from disc.
@@ -1799,8 +1799,6 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
     }
 }
 
-#ifdef USE_XAA
-
 /* Use callbacks from dri.c to support pageflipping mode for a single
  * 3d context without need for any specific full-screen extension.
  *
@@ -1809,11 +1807,11 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
  */
 
 
-/* Use the shadowfb module to maintain a list of dirty rectangles.
+#ifdef DAMAGE
+
+/* Use the damage layer to maintain a list of dirty rectangles.
  * These are blitted to the back buffer to keep both buffers clean
  * during page-flipping when the 3d application isn't fullscreen.
- *
- * Unlike most use of the shadowfb code, both buffers are in video memory.
  *
  * An alternative to this would be to organize for all on-screen drawing
  * operations to be duplicated for the two buffers.  That might be
@@ -1825,9 +1823,13 @@ static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
     RADEONInfoPtr       info       = RADEONPTR(pScrn);
     int                 i;
-    RADEONSAREAPrivPtr  pSAREAPriv = DRIGetSAREAPrivate(pScrn->pScreen);
+    ScreenPtr           pScreen    = pScrn->pScreen;
+    RADEONSAREAPrivPtr  pSAREAPriv = DRIGetSAREAPrivate(pScreen);
+#ifdef USE_EXA
+    PixmapPtr           pPix = pScreen->GetScreenPixmap(pScreen);
+#endif
 
-    if (!info->directRenderingInited)
+    if (!info->directRenderingInited || !info->CPStarted)
 	return;
 
     /* Don't want to do this when no 3d is active and pages are
@@ -1836,64 +1838,87 @@ static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
     if (!pSAREAPriv->pfAllowPageFlip && pSAREAPriv->pfCurrentPage == 0)
 	return;
 
-    /* XXX: implement for EXA */
     /* pretty much a hack. */
 
-    /* Make sure accel has been properly inited */
-    if (info->accel == NULL || info->accel->SetupForScreenToScreenCopy == NULL)
-	return;
-    if (info->tilingEnabled)
-       info->dst_pitch_offset |= RADEON_DST_TILE_MACRO;
-    (*info->accel->SetupForScreenToScreenCopy)(pScrn,
-					       1, 1, GXcopy,
-					       (CARD32)(-1), -1);
+#ifdef USE_EXA
+    if (info->useEXA) {
+	CARD32 src_pitch_offset, dst_pitch_offset, datatype;
+
+	RADEONGetPixmapOffsetPitch(pPix, &src_pitch_offset);
+	dst_pitch_offset = src_pitch_offset + (info->backOffset >> 10);
+	RADEONGetDatatypeBpp(pScrn->bitsPerPixel, &datatype);
+	info->xdir = info->ydir = 1;
+
+	RADEONDoPrepareCopyCP(pScrn, src_pitch_offset, dst_pitch_offset, datatype,
+			      GXcopy, ~0);
+    }
+#endif
+
+#ifdef USE_XAA
+    if (!info->useEXA) {
+	/* Make sure accel has been properly inited */
+	if (info->accel == NULL || info->accel->SetupForScreenToScreenCopy == NULL)
+	    return;
+	if (info->tilingEnabled)
+	    info->dst_pitch_offset |= RADEON_DST_TILE_MACRO;
+	(*info->accel->SetupForScreenToScreenCopy)(pScrn,
+						   1, 1, GXcopy,
+						   (CARD32)(-1), -1);
+    }
+#endif
 
     for (i = 0 ; i < num ; i++, pbox++) {
 	int xa = max(pbox->x1, 0), xb = min(pbox->x2, pScrn->virtualX-1);
 	int ya = max(pbox->y1, 0), yb = min(pbox->y2, pScrn->virtualY-1);
 
 	if (xa <= xb && ya <= yb) {
-	    (*info->accel->SubsequentScreenToScreenCopy)(pScrn, xa, ya,
-							 xa + info->backX,
-							 ya + info->backY,
-							 xb - xa + 1,
-							 yb - ya + 1);
+#ifdef USE_EXA
+	    if (info->useEXA) {
+		RADEONCopyCP(pPix, xa, ya, xa, ya, xb - xa + 1, yb - ya + 1);
+	    }
+#endif
+
+#ifdef USE_XAA
+	    if (!info->useEXA) {
+		(*info->accel->SubsequentScreenToScreenCopy)(pScrn, xa, ya,
+							     xa + info->backX,
+							     ya + info->backY,
+							     xb - xa + 1,
+							     yb - ya + 1);
+	    }
+#endif
 	}
     }
+
+#ifdef USE_XAA
     info->dst_pitch_offset &= ~RADEON_DST_TILE_MACRO;
+#endif
+
+    DamageEmpty(info->pDamage);
 }
 
-#endif /* USE_XAA */
+#endif /* DAMAGE */
 
 static void RADEONEnablePageFlip(ScreenPtr pScreen)
 {
-#ifdef USE_XAA
+#ifdef DAMAGE
     ScrnInfoPtr         pScrn      = xf86Screens[pScreen->myNum];
     RADEONInfoPtr       info       = RADEONPTR(pScrn);
-    RADEONSAREAPrivPtr  pSAREAPriv = DRIGetSAREAPrivate(pScreen);
 
-    /* XXX: Fix in EXA case */
     if (info->allowPageFlip) {
-        /* pretty much a hack. */
-	if (info->tilingEnabled)
-	    info->dst_pitch_offset |= RADEON_DST_TILE_MACRO;
-	/* Duplicate the frontbuffer to the backbuffer */
-	(*info->accel->SetupForScreenToScreenCopy)(pScrn,
-						   1, 1, GXcopy,
-						   (CARD32)(-1), -1);
+	RADEONSAREAPrivPtr pSAREAPriv = DRIGetSAREAPrivate(pScreen);
 
-	(*info->accel->SubsequentScreenToScreenCopy)(pScrn,
-						     0,
-						     0,
-						     info->backX,
-						     info->backY,
-						     pScrn->virtualX,
-						     pScrn->virtualY);
-
-	info->dst_pitch_offset &= ~RADEON_DST_TILE_MACRO;
 	pSAREAPriv->pfAllowPageFlip = 1;
+
+#ifdef USE_XAA
+	if (!info->useEXA) {
+	    BoxRec box = { .x1 = 0, .y1 = 0, .x2 = pScrn->virtualX - 1,
+			   .y2 = pScrn->virtualY - 1 };
+	    RADEONDRIRefreshArea(pScrn, 1, &box);
+	}
+#endif
     }
-#endif /* USE_XAA */
+#endif
 }
 
 static void RADEONDisablePageFlip(ScreenPtr pScreen)

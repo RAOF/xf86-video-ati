@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atimach64accel.h,v 1.1 2003/04/23 21:51:29 tsi Exp $ */
 /*
  * Copyright 2003 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -36,7 +35,7 @@
 extern Bool ATIMach64ExaInit(ScreenPtr);
 #endif
 #ifdef USE_XAA
-extern int  ATIMach64AccelInit(ATIPtr, XAAInfoRecPtr);
+extern Bool ATIMach64AccelInit(ScreenPtr);
 #endif
 extern void ATIMach64Sync(ScrnInfoPtr);
 

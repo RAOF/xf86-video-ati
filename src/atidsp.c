@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atidsp.c,v 1.21 2003/09/24 02:43:18 dawes Exp $ */
 /*
  * Copyright 1997 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -26,7 +25,6 @@
 #endif
 #include "ati.h"
 #include "atichip.h"
-#include "aticrtc.h"
 #include "atidsp.h"
 #include "atimach64io.h"
 #include "atividmem.h"
@@ -223,25 +221,12 @@ ATIDSPCalculate
         pATI->ClockDescriptor.PostDividers[pATIHW->PostDivider];
     Divider = pATIHW->FeedbackDivider * pATI->XCLKReferenceDivider;
 
-#ifndef AVOID_CPIO
-
-    if (pATI->depth >= 8)
-
-#endif /* AVOID_CPIO */
-
     {
         Divider *= pATI->bitsPerPixel / 4;
     }
 
     /* Start by assuming a display FIFO width of 64 bits */
     vshift = (6 - 2) - pATI->XCLKPostDivider;
-
-#ifndef AVOID_CPIO
-
-    if (pATIHW->crtc == ATI_CRTC_VGA)
-        vshift--;               /* Nope, it's 32 bits wide */
-
-#endif /* AVOID_CPIO */
 
     if (pATI->OptionPanelDisplay && (pATI->LCDPanelID >= 0))
     {
@@ -270,21 +255,6 @@ ATIDSPCalculate
         vshift, -1) - ATIDivide(1, 1, vshift - xshift, 1);
 
     /* Next is dsp_on */
-
-#ifndef AVOID_CPIO
-
-    if ((pATIHW->crtc == ATI_CRTC_VGA) /* && (dsp_precision < 3) */)
-    {
-        /*
-         * TODO:  I don't yet know why something like this appears necessary.
-         *        But I don't have time to explore this right now.
-         */
-        dsp_on = ATIDivide(Multiplier * 5, Divider, vshift + 2, 1);
-    }
-    else
-
-#endif /* AVOID_CPIO */
-
     {
         dsp_on = ATIDivide(Multiplier, Divider, vshift, 1);
         tmp = ATIDivide(RASMultiplier, RASDivider, xshift, 1);

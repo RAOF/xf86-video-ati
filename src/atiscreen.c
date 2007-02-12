@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atiscreen.c,v 1.30 2003/04/23 21:51:30 tsi Exp $ */
 /*
  * Copyright 1999 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -35,7 +34,6 @@
 #include "ati.h"
 #include "atibus.h"
 #include "atichip.h"
-#include "atiaccel.h"
 #include "aticonsole.h"
 #include "aticursor.h"
 #include "atidac.h"
@@ -62,12 +60,8 @@
 #include "shadowfb.h"
 #include "xf86cmap.h"
 
-#include "xf1bpp.h"
-#include "xf4bpp.h"
-
 #include "fb.h"
 
-#include "mibank.h"
 #include "micmap.h"
 #include "mipointer.h"
 
@@ -140,11 +134,6 @@ ATIMach64SetupMemXAA_NoDRI
     int maxScanlines = ATIMach64MaxY;
     int maxPixelArea, PixelArea;
 
-#ifndef AVOID_CPIO
-
-    if (!pATI->BankInfo.BankSize)
-
-#endif /* AVOID_CPIO */
     {
         /*
          * Note:  If PixelArea exceeds the engine's maximum, the excess is
@@ -458,23 +447,6 @@ ATIScreenInit
     /* Initialise framebuffer layer */
     switch (pATI->bitsPerPixel)
     {
-
-#ifndef AVOID_CPIO
-
-        case 1:
-            pATI->Closeable = xf1bppScreenInit(pScreen, pFB,
-                pScreenInfo->virtualX, pScreenInfo->virtualY,
-                pScreenInfo->xDpi, pScreenInfo->yDpi, pATI->displayWidth);
-            break;
-
-        case 4:
-            pATI->Closeable = xf4bppScreenInit(pScreen, pFB,
-                pScreenInfo->virtualX, pScreenInfo->virtualY,
-                pScreenInfo->xDpi, pScreenInfo->yDpi, pATI->displayWidth);
-            break;
-
-#endif /* AVOID_CPIO */
-
         case 8:
         case 16:
         case 24:
@@ -513,7 +485,6 @@ ATIScreenInit
     }
 
     /* If applicable, initialise RENDER extension */
-    if (pATI->bitsPerPixel > 4)
     {
         if (pATI->OptionShadowFB)
         {
@@ -522,19 +493,6 @@ ATIScreenInit
                     "RENDER extension not supported with a shadowed"
                     " framebuffer.\n");
         }
-
-#ifndef AVOID_CPIO
-
-        else if (pATI->BankInfo.BankSize)
-        {
-            if (serverGeneration == 1)
-                xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-                    "RENDER extension not supported with a banked"
-                    " framebuffer.\n");
-        }
-
-#endif /* AVOID_CPIO */
-
         else if (!fbPictureInit(pScreen, NULL, 0) &&
                  (serverGeneration == 1))
         {
@@ -544,16 +502,6 @@ ATIScreenInit
     }
 
     xf86SetBlackWhitePixels(pScreen);
-
-#ifndef AVOID_CPIO
-
-    /* Initialise banking if needed */
-    if (!miInitializeBanking(pScreen,
-                             pScreenInfo->virtualX, pScreenInfo->virtualY,
-                             pATI->displayWidth, &pATI->BankInfo))
-        return FALSE;
-
-#endif /* AVOID_CPIO */
 
 #ifdef USE_XAA
 
@@ -576,7 +524,7 @@ ATIScreenInit
 
     /* Setup acceleration */
 
-    if (!ATIInitializeAcceleration(pScreen, pScreenInfo, pATI))
+    if (pATI->OptionAccel && !ATIMach64AccelInit(pScreen))
         return FALSE;
 
     }
@@ -606,30 +554,17 @@ ATIScreenInit
     xf86SetBackingStore(pScreen);
 
     /* Initialise cursor */
-    if (!ATIInitializeCursor(pScreen, pATI))
+    if (!ATIMach64CursorInit(pScreen))
         return FALSE;
 
     /* Create default colourmap */
     if (!miCreateDefColormap(pScreen))
         return FALSE;
 
-#ifdef AVOID_CPIO
-
     if (!xf86HandleColormaps(pScreen, 256, pATI->rgbBits, ATILoadPalette, NULL,
                              CMAP_PALETTED_TRUECOLOR |
                              CMAP_LOAD_EVEN_IF_OFFSCREEN))
             return FALSE;
-
-#else /* AVOID_CPIO */
-
-    if (pATI->depth > 1)
-        if (!xf86HandleColormaps(pScreen, (pATI->depth == 4) ? 16 : 256,
-                                 pATI->rgbBits, ATILoadPalette, NULL,
-                                 CMAP_PALETTED_TRUECOLOR |
-                                 CMAP_LOAD_EVEN_IF_OFFSCREEN))
-            return FALSE;
-
-#endif /* AVOID_CPIO */
 
     /* Initialise shadow framebuffer */
     if (pATI->OptionShadowFB &&

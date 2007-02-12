@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atimach64xv.c,v 1.7 2003/11/10 18:22:18 tsi Exp $ */
 /*
  * Copyright 2003 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -28,14 +27,14 @@
 #include <string.h>
 
 #include "ati.h"
-#include "atiaccel.h"
 #include "atichip.h"
 #include "atimach64accel.h"
 #include "atimach64io.h"
-#include "atimach64xv.h"
+#include "atixv.h"
 
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
+#include "xf86xv.h"
 
 #define MAKE_ATOM(string) MakeAtom(string, strlen(string), TRUE)
 #define MaxScale          (CARD32)(CARD16)(-1)
@@ -1406,17 +1405,21 @@ static XF86OffscreenImageRec ATIMach64Surface_C[] =
  * This function is called to make a Mach64's hardware overlay support
  * available as an XVideo adaptor.
  */
-int
+static int
 ATIMach64XVInitialiseAdaptor
 (
-    ScreenPtr           pScreen,
     ScrnInfoPtr         pScreenInfo,
-    ATIPtr              pATI,
     XF86VideoAdaptorPtr **pppAdaptor
 )
 {
+    ScreenPtr           pScreen    = screenInfo.screens[pScreenInfo->scrnIndex];
+    ATIPtr              pATI       = ATIPTR(pScreenInfo);
+    XF86VideoAdaptorPtr *ppAdaptor = NULL;
     XF86VideoAdaptorPtr pAdaptor;
     int                 Index;
+
+    if (pppAdaptor)
+        *pppAdaptor = NULL;
 
     if (!pATI->Block1Base)
         return 0;
@@ -1424,8 +1427,8 @@ ATIMach64XVInitialiseAdaptor
     if (!(pAdaptor = xf86XVAllocateVideoAdaptorRec(pScreenInfo)))
         return 0;
 
-    *pppAdaptor = xnfalloc(sizeof(pAdaptor));
-    **pppAdaptor = pAdaptor;
+    ppAdaptor = xnfalloc(sizeof(pAdaptor));
+    ppAdaptor[0] = pAdaptor;
 
     pAdaptor->nPorts = 1;
     pAdaptor->pPortPrivates = pATI->XVPortPrivate;
@@ -1501,7 +1504,78 @@ ATIMach64XVInitialiseAdaptor
             ATIMach64Surface_C, nATIMach64Surface_C);
     }
 
+    if (pppAdaptor)
+        *pppAdaptor = ppAdaptor;
+    else {
+        xfree(ppAdaptor[0]);
+        xfree(ppAdaptor);
+    }
+
     return 1;
+}
+
+/*
+ * ATIXVPreInit --
+ *
+ * This function is called by ATIPreInit() to set up the environment required
+ * to support the XVideo extension.
+ */
+void
+ATIXVPreInit
+(
+    ATIPtr      pATI
+)
+{
+    (void)xf86XVRegisterGenericAdaptorDriver(ATIMach64XVInitialiseAdaptor);
+}
+
+/*
+ * ATIXVFreeAdaptorInfo --
+ *
+ * Free XVideo adaptor information.
+ */
+static void
+ATIXVFreeAdaptorInfo
+(
+    XF86VideoAdaptorPtr *ppAdaptor,
+    int                 nAdaptor
+)
+{
+    if (!ppAdaptor)
+        return;
+
+    while (nAdaptor > 0)
+        xfree(ppAdaptor[--nAdaptor]);
+
+    xfree(ppAdaptor);
+}
+
+/*
+ * ATIInitializeXVideo --
+ *
+ * This function is called to initialise XVideo extension support on a screen.
+ */
+Bool
+ATIInitializeXVideo
+(
+    ScreenPtr   pScreen,
+    ScrnInfoPtr pScreenInfo,
+    ATIPtr      pATI
+)
+{
+    XF86VideoAdaptorPtr *ppAdaptor;
+    int                 nAdaptor;
+    Bool                result;
+
+    pScreenInfo->memPhysBase = pATI->LinearBase;
+    pScreenInfo->fbOffset = 0;
+
+    nAdaptor = xf86XVListGenericAdaptors(pScreenInfo, &ppAdaptor);
+    result = xf86XVScreenInit(pScreen, ppAdaptor, nAdaptor);
+
+    ATIXVFreeAdaptorInfo(ppAdaptor, nAdaptor);
+
+    return result;
 }
 
 /*
@@ -1511,7 +1585,7 @@ ATIMach64XVInitialiseAdaptor
  * initialisation of Mach64 XVideo support.
  */
 void
-ATIMach64CloseXVideo
+ATICloseXVideo
 (
     ScreenPtr   pScreen,
     ScrnInfoPtr pScreenInfo,
@@ -1522,6 +1596,57 @@ ATIMach64CloseXVideo
 
     REGION_UNINIT(pScreen, &pATI->VideoClip);
 }
+
+/* Functions for offscreen memory management */
+
+#ifdef USE_XAA
+static FBLinearPtr
+ATIResizeOffscreenLinear
+(
+    ScreenPtr   pScreen,
+    FBLinearPtr pLinear,
+    int         Size
+)
+{
+    if (Size <= 0)
+    {
+        xf86FreeOffscreenLinear(pLinear);
+        return NULL;
+    }
+
+    if (pLinear)
+    {
+        if ((pLinear->size >= Size) ||
+            xf86ResizeOffscreenLinear(pLinear, Size))
+        {
+            pLinear->MoveLinearCallback = NULL;
+            pLinear->RemoveLinearCallback = NULL;
+            return pLinear;
+        }
+
+        xf86FreeOffscreenLinear(pLinear);
+    }
+
+    pLinear = xf86AllocateOffscreenLinear(pScreen, Size, 16, NULL, NULL, NULL);
+
+    if (!pLinear)
+    {
+        int maxSize;
+
+        xf86QueryLargestOffscreenLinear(pScreen, &maxSize, 16,
+            PRIORITY_EXTREME);
+
+        if (maxSize < Size)
+            return NULL;
+
+        xf86PurgeUnlockedOffscreenAreas(pScreen);
+        pLinear =
+            xf86AllocateOffscreenLinear(pScreen, Size, 16, NULL, NULL, NULL);
+    }
+
+    return pLinear;
+}
+#endif /* USE_XAA */
 
 static pointer
 ATIMach64XVMemAlloc

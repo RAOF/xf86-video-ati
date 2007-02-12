@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atividmem.c,v 1.15 2003/04/23 21:51:31 tsi Exp $ */
 /*
  * Copyright 1997 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -26,7 +25,6 @@
 #endif
 
 #include "ati.h"
-#include "atiadapter.h"
 #include "atistruct.h"
 #include "atividmem.h"
 
@@ -88,7 +86,7 @@ ATIUnmapVGA
 
     xf86UnMapVidMem(iScreen, pATI->pBank, 0x00010000U);
 
-    pATI->pBank = pATI->BankInfo.pBankA = pATI->BankInfo.pBankB = NULL;
+    pATI->pBank = NULL;
 }
 
 #endif /* AVOID_CPIO */
@@ -105,18 +103,7 @@ ATIUnmapLinear
     ATIPtr pATI
 )
 {
-
-#ifdef AVOID_CPIO
-
-    if (!pATI->pMemory)
-        return;
-
-#else /* AVOID_CPIO */
-
-    if (pATI->pMemory != pATI->pBank)
-
-#endif /* AVOID_CPIO */
-
+    if (pATI->pMemory)
     {
         xf86UnMapVidMem(iScreen, pATI->pMemory, pATI->LinearSize);
 
@@ -180,53 +167,27 @@ ATIMapApertures
     ATIPtr pATI
 )
 {
-    pciVideoPtr   pVideo;
-    PCITAG        Tag;
-    unsigned long PageSize;
+    pciVideoPtr   pVideo = pATI->PCIInfo;
+    PCITAG        Tag = ((pciConfigPtr)(pVideo->thisCard))->tag;
+    unsigned long PageSize = getpagesize();
 
     if (pATI->Mapped)
         return TRUE;
 
 #ifndef AVOID_CPIO
 
-    if (pATI->VGAAdapter == ATI_ADAPTER_NONE)
-
-#endif /* AVOID_CPIO */
-
-    {
-        if (!pATI->LinearBase && !pATI->Block0Base)
-            return FALSE;
-    }
-
-    PageSize = getpagesize();
-
-    if ((pVideo = pATI->PCIInfo))
-        Tag = ((pciConfigPtr)(pVideo->thisCard))->tag;
-    else
-        Tag = 0;
-
-#ifndef AVOID_CPIO
-
     /* Map VGA aperture */
-    if (pATI->VGAAdapter != ATI_ADAPTER_NONE)
+    if (pATI->VGAAdapter)
     {
         /*
          * No relocation, resizing, caching or write-combining of this
          * aperture is supported.  Hence, the hard-coded values here...
          */
-        if (pVideo)
-            pATI->pBank = xf86MapPciMem(iScreen, VIDMEM_MMIO,
+            pATI->pBank = xf86MapDomainMemory(iScreen, VIDMEM_MMIO_32BIT,
                 Tag, 0x000A0000U, 0x00010000U);
-        else
-            pATI->pBank = xf86MapVidMem(iScreen, VIDMEM_MMIO,
-                0x000A0000U, 0x00010000U);
 
         if (!pATI->pBank)
             return FALSE;
-
-        pATI->pMemory =
-            pATI->BankInfo.pBankA =
-            pATI->BankInfo.pBankB = pATI->pBank;
 
         pATI->Mapped = TRUE;
     }
@@ -236,12 +197,8 @@ ATIMapApertures
     /* Map linear aperture */
     if (pATI->LinearBase)
     {
-        if (pVideo)
             pATI->pMemory = xf86MapPciMem(iScreen, VIDMEM_FRAMEBUFFER,
                 Tag, pATI->LinearBase, pATI->LinearSize);
-        else
-            pATI->pMemory = xf86MapVidMem(iScreen, VIDMEM_FRAMEBUFFER,
-                pATI->LinearBase, pATI->LinearSize);
 
         if (!pATI->pMemory)
         {
@@ -272,7 +229,6 @@ ATIMapApertures
          * Map the little-endian aperture (used for video, etc.).  Note that
          * caching of this area is _not_ wanted.
          */
-        if (pVideo)
         {
             pATI->pMemoryLE = xf86MapPciMem(iScreen, VIDMEM_MMIO, Tag,
                 pATI->LinearBase - 0x00800000U, pATI->LinearSize);
@@ -301,12 +257,8 @@ ATIMapApertures
     {
         unsigned long MMIOBase = pATI->Block0Base & ~(PageSize - 1);
 
-        if (pVideo)
             pATI->pMMIO = xf86MapPciMem(iScreen, VIDMEM_MMIO,
                 Tag, MMIOBase, PageSize);
-        else
-            pATI->pMMIO = xf86MapVidMem(iScreen, VIDMEM_MMIO,
-                MMIOBase, PageSize);
 
         if (!pATI->pMMIO)
         {
@@ -356,12 +308,8 @@ ATIMapApertures
     {
         unsigned long CursorBase = pATI->CursorBase & ~(PageSize - 1);
 
-        if (pVideo)
             pATI->pCursorPage = xf86MapPciMem(iScreen, VIDMEM_FRAMEBUFFER,
                 Tag, CursorBase, PageSize);
-        else
-            pATI->pCursorPage = xf86MapVidMem(iScreen, VIDMEM_FRAMEBUFFER,
-                CursorBase, PageSize);
 
         if (!pATI->pCursorPage)
         {

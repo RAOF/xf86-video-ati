@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atimach64accel.c,v 1.1 2003/04/23 21:51:28 tsi Exp $ */
 /*
  * Copyright 2003 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -971,27 +970,26 @@ ATIMach64SubsequentColorExpandScanline
  * This function fills in structure fields needed for acceleration on Mach64
  * variants.
  */
-int
+Bool
 ATIMach64AccelInit
 (
-    ATIPtr        pATI,
-    XAAInfoRecPtr pXAAInfo
+    ScreenPtr pScreen
 )
 {
+    ScrnInfoPtr   pScreenInfo = xf86Screens[pScreen->myNum];
+    ATIPtr        pATI        = ATIPTR(pScreenInfo);
+    XAAInfoRecPtr pXAAInfo;
+
+    if (!(pATI->pXAAInfo = XAACreateInfoRec()))
+        return FALSE;
+
+    pXAAInfo = pATI->pXAAInfo;
+
     /* This doesn't seem quite right... */
     if (pATI->XModifier == 1)
     {
         pXAAInfo->Flags = PIXMAP_CACHE | OFFSCREEN_PIXMAPS;
-
-#ifndef AVOID_CPIO
-
-        if (!pATI->BankInfo.BankSize)
-
-#endif /* AVOID_CPIO */
-
-        {
-            pXAAInfo->Flags |= LINEAR_FRAMEBUFFER;
-        }
+        pXAAInfo->Flags |= LINEAR_FRAMEBUFFER;
     }
 
     /* Sync */
@@ -1050,7 +1048,7 @@ ATIMach64AccelInit
 
     /* The engine does not support the following primitives for 24bpp */
     if (pATI->XModifier != 1)
-        return ATIMach64MaxY;
+        goto XAAInit;
 
     /* Solid lines */
     pXAAInfo->SetupForSolidLine = ATIMach64SetupForSolidLine;
@@ -1058,6 +1056,13 @@ ATIMach64AccelInit
     pXAAInfo->SubsequentSolidBresenhamLine =
         ATIMach64SubsequentSolidBresenhamLine;
 
-    return ATIMach64MaxY;
+XAAInit:
+    if (!XAAInit(pScreen, pATI->pXAAInfo)) {
+        XAADestroyInfoRec(pATI->pXAAInfo);
+        pATI->pXAAInfo = NULL;
+        return FALSE;
+    }
+
+    return TRUE;
 }
 #endif /* USE_XAA */

@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_probe.h,v 1.13 2003/10/30 17:37:00 tsi Exp $ */
 /*
  * Copyright 2000 ATI Technologies Inc., Markham, Ontario, and
  *                VA Linux Systems Inc., Fremont, California.
@@ -105,18 +104,34 @@ typedef enum
 
 typedef struct
 {
+    Bool IsUsed;
+    Bool IsActive;
+    int binding; // which instance of the driver "owns" this controller
+    DisplayModePtr pCurMode;
+} RADEONController;
+
+typedef struct
+{
     RADEONDDCType DDCType;
     RADEONDacType DACType;
     RADEONTmdsType TMDSType;
     RADEONConnectorType ConnectorType;
     RADEONMonitorType MonType;
     xf86MonPtr MonInfo;
+
+    /* one connector can be bound to one CRTC */
+    int crtc_num;
 } RADEONConnector;
+
+
+
+#define RADEON_MAX_CONNECTOR 2
+#define RADEON_MAX_CRTC 2
 
 typedef struct
 {
     Bool HasSecondary;
-
+    Bool              HasCRTC2;         /* All cards except original Radeon  */
     /*
      * The next two are used to make sure CRTC2 is restored before CRTC_EXT,
      * otherwise it could lead to blank screens.
@@ -127,13 +142,10 @@ typedef struct
     ScrnInfoPtr pSecondaryScrn;
     ScrnInfoPtr pPrimaryScrn;
 
-    int MonType1;
-    int MonType2;
-    xf86MonPtr MonInfo1;
-    xf86MonPtr MonInfo2;
     Bool ReversedDAC;	  /* TVDAC used as primary dac */
     Bool ReversedTMDS;    /* DDC_DVI is used for external TMDS */
-    RADEONConnector PortInfo[2];
+    RADEONConnector *PortInfo[RADEON_MAX_CONNECTOR];
+    RADEONController *Controller[RADEON_MAX_CRTC]; /* pointer to a controller */
 } RADEONEntRec, *RADEONEntPtr;
 
 /* radeon_probe.c */

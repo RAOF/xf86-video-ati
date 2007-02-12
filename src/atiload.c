@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atiload.c,v 1.15 2003/08/29 21:07:57 tsi Exp $ */
 /*
  * Copyright 2000 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -62,22 +61,6 @@ const char *ATIvbeSymbols[] =
     "vbeFree",
     NULL
 };
-
-#ifndef AVOID_CPIO
-
-const char *ATIxf1bppSymbols[] =
-{
-    "xf1bppScreenInit",
-    NULL
-};
-
-const char *ATIxf4bppSymbols[] =
-{
-    "xf4bppScreenInit",
-    NULL
-};
-
-#endif /* AVOID_CPIO */
 
 #ifdef XF86DRI_DEVEL
 
@@ -229,19 +212,6 @@ ATILoadModules
     /* Load depth-specific entry points */
     switch (pATI->bitsPerPixel)
     {
-
-#ifndef AVOID_CPIO
-
-        case 1:
-            fbPtr = ATILoadModule(pScreenInfo, "xf1bpp", ATIxf1bppSymbols);
-            break;
-
-        case 4:
-            fbPtr = ATILoadModule(pScreenInfo, "xf4bpp", ATIxf4bppSymbols);
-            break;
-
-#endif /* AVOID_CPIO */
-
         case 8:
         case 16:
         case 24:

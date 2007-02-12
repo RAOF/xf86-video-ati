@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atioption.h,v 1.12 2003/04/23 21:51:29 tsi Exp $ */
 /*
  * Copyright 1999 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -34,16 +33,11 @@
  */
 typedef enum
 {
+    ATI_OPTION_PROBE_SPARSE,
     ATI_OPTION_ACCEL,
     ATI_OPTION_CRT_DISPLAY,
     ATI_OPTION_CSYNC,
     ATI_OPTION_HWCURSOR,
-
-#ifndef AVOID_CPIO
-
-    ATI_OPTION_LINEAR,
-
-#endif /* AVOID_CPIO */
 
 #ifdef XF86DRI_DEVEL
 
@@ -66,7 +60,6 @@ typedef enum
     ATI_OPTION_MMIO_CACHE,
     ATI_OPTION_TEST_MMIO_CACHE,
     ATI_OPTION_PANEL_DISPLAY,
-    ATI_OPTION_PROBE_CLOCKS,
     ATI_OPTION_REFERENCE_CLOCK,
     ATI_OPTION_SHADOW_FB,
     ATI_OPTION_SWCURSOR,

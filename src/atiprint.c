@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atiprint.c,v 1.28 2003/11/07 13:45:26 tsi Exp $ */
 /*
  * Copyright 1997 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -29,7 +28,6 @@
 #include <ctype.h>
 
 #include "ati.h"
-#include "atiadapter.h"
 #include "atichip.h"
 #include "atidac.h"
 #include "atimach64io.h"
@@ -357,8 +355,8 @@ ATIPrintRegisters
     ATIPtr pATI
 )
 {
-    pciVideoPtr  pVideo;
-    pciConfigPtr pPCI;
+    pciVideoPtr  pVideo = pATI->PCIInfo;
+    pciConfigPtr pPCI = pVideo->thisCard;
     int          Index;
     CARD32       lcd_index, tv_out_index, lcd_gen_ctrl;
     CARD8        dac_read, dac_mask, dac_write;
@@ -366,11 +364,11 @@ ATIPrintRegisters
 
 #ifndef AVOID_CPIO
 
-    CARD8 genmo, seq1 = 0;
+    CARD8 genmo;
 
     crtc = ATI_CRTC_VGA;
 
-    if (pATI->VGAAdapter != ATI_ADAPTER_NONE)
+    if (pATI->VGAAdapter)
     {
         xf86ErrorFVerb(4, "\n Miscellaneous output register value:  0x%02X.\n",
             genmo = inb(R_GENMO));
@@ -470,35 +468,9 @@ ATIPrintRegisters
         ATIPrintIndexedRegisters(SEQX, 0, 8, "Sequencer", 0);
 
         if (pATI->CPIO_VGAWonder)
-            ATIPrintIndexedRegisters(pATI->CPIO_VGAWonder,
-                xf86ServerIsOnlyProbing() ? 0x80U : pATI->VGAOffset, 0xC0U,
+            ATIPrintIndexedRegisters(pATI->CPIO_VGAWonder, 0x80U, 0xC0U,
                 "ATI extended VGA", 0);
     }
-
-    if (pATI->ChipHasSUBSYS_CNTL)
-    {
-        xf86ErrorFVerb(4, "\n 8514/A register values:");
-        for (Index = 0x02E8U;  Index <= 0x0FEE8;  Index += 0x0400U)
-        {
-            if (!((Index - 0x02E8U) & 0x0C00U))
-                xf86ErrorFVerb(4, "\n 0x%04X: ", Index);
-            xf86ErrorFVerb(4, " %04X", inw(Index));
-        }
-
-        if (pATI->Adapter >= ATI_ADAPTER_MACH8)
-        {
-            xf86ErrorFVerb(4, "\n\n Mach8/Mach32 register values:");
-            for (Index = 0x02EEU;  Index <= 0x0FEEE;  Index += 0x0400U)
-            {
-                if (!((Index - 0x02EEU) & 0x0C00U))
-                    xf86ErrorFVerb(4, "\n 0x%04X: ", Index);
-                xf86ErrorFVerb(4, " %04X", inw(Index));
-            }
-        }
-
-        xf86ErrorFVerb(4, "\n");
-    }
-    else
 
 #endif /* AVOID_CPIO */
 
@@ -566,13 +538,6 @@ ATIPrintRegisters
         xf86ErrorFVerb(4, "\n");
     }
     else
-
-#ifndef AVOID_CPIO
-
-    if (pATI->Chip >= ATI_CHIP_88800GXC)
-
-#endif /* AVOID_CPIO */
-
     {
 
 #ifdef AVOID_CPIO
@@ -635,14 +600,6 @@ ATIPrintRegisters
 
     ATISetDACIOPorts(pATI, crtc);
 
-    /* Temporarily turn off CLKDIV2 while reading DAC's LUT */
-    if (pATI->Adapter == ATI_ADAPTER_NONISA)
-    {
-        seq1 = GetReg(SEQX, 0x01U);
-        if (seq1 & 0x08U)
-            PutReg(SEQX, 0x01U, seq1 & ~0x08U);
-    }
-
     dac_read = inb(pATI->CPIO_DAC_READ);
     DACDelay;
     dac_write = inb(pATI->CPIO_DAC_WRITE);
@@ -679,14 +636,9 @@ ATIPrintRegisters
     outb(pATI->CPIO_DAC_READ, dac_read);
     DACDelay;
 
-    if ((pATI->Adapter == ATI_ADAPTER_NONISA) && (seq1 & 0x08U))
-        PutReg(SEQX, 0x01U, seq1);
-
 #endif /* AVOID_CPIO */
 
-    if ((pVideo = pATI->PCIInfo))
     {
-        pPCI = pVideo->thisCard;
         xf86ErrorFVerb(4, "\n\n PCI configuration register values:");
         for (Index = 0;  Index < 256;  Index+= 4)
         {
@@ -707,18 +659,9 @@ ATIPrintRegisters
     else
         xf86ErrorFVerb(4, "\n No banked aperture.");
 
-    if (pATI->pMemory == pATI->pBank)
-    {
-        xf86ErrorFVerb(4, "\n No linear aperture.\n");
-    }
-    else
-
-#else /* AVOID_CPIO */
-
-    if (pATI->pMemory)
-
 #endif /* AVOID_CPIO */
 
+    if (pATI->pMemory)
     {
         xf86ErrorFVerb(4, "\n Linear aperture at %p.\n", pATI->pMemory);
     }

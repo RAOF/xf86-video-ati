@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atii2c.c,v 1.3 2003/11/10 18:41:20 tsi Exp $ */
 /*
  * Copyright 2003 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -25,7 +24,6 @@
 #include "config.h"
 #endif
 
-#include "atiadapter.h"
 #include "atii2c.h"
 #include "atiload.h"
 #include "atimach64i2c.h"
@@ -367,18 +365,10 @@ ATII2CPreInit
     ATIPtr      pATI
 )
 {
-    switch (pATI->Adapter)
-    {
-        case ATI_ADAPTER_MACH64:
             if (!ATILoadModule(pScreenInfo, "i2c", ATIi2cSymbols))
                 return;
 
             ATIMach64I2CPreInit(pScreenInfo, pATI);
-            break;
-
-        default:
-            break;
-    }
 }
 
 /*

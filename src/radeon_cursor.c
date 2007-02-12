@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/radeon_cursor.c,v 1.25 2003/08/29 21:07:57 tsi Exp $ */
 /*
  * Copyright 2000 ATI Technologies Inc., Markham, Ontario, and
  *                VA Linux Systems Inc., Fremont, California.
@@ -110,7 +109,7 @@ static CARD32 mono_cursor_color[] = {
 static void RADEONSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
-    CARD32        *pixels     = (CARD32 *)(pointer)(info->FB + info->cursor_offset);
+    CARD32        *pixels     = (CARD32 *)(pointer)(info->FB + info->cursor_offset + pScrn->fbOffset);
     int            pixel, i;
     CURSOR_SWAPPING_DECL_MMIO
 
@@ -181,8 +180,9 @@ static void RADEONSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 					   | ((xorigin ? 0 : x) << 16)
 					   | (yorigin ? 0 : y)));
 	RADEONCTRACE(("cursor_offset: 0x%x, yorigin: %d, stride: %d\n",
-		     info->cursor_offset, yorigin, stride));
-	OUTREG(RADEON_CUR_OFFSET, info->cursor_offset + yorigin * stride);
+		     info->cursor_offset + pScrn->fbOffset, yorigin, stride));
+	OUTREG(RADEON_CUR_OFFSET,
+		info->cursor_offset + pScrn->fbOffset + yorigin * stride);
     } else {
 	OUTREG(RADEON_CUR2_HORZ_VERT_OFF,  (RADEON_CUR2_LOCK
 					    | (xorigin << 16)
@@ -204,7 +204,7 @@ static void RADEONLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *image)
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     CARD8         *s          = (CARD8 *)(pointer)image;
-    CARD32        *d          = (CARD32 *)(pointer)(info->FB + info->cursor_offset);
+    CARD32        *d          = (CARD32 *)(pointer)(info->FB + info->cursor_offset + pScrn->fbOffset);
     CARD32         save1      = 0;
     CARD32         save2      = 0;
     CARD8	   chunk;
@@ -312,7 +312,7 @@ static void RADEONLoadCursorARGB (ScrnInfoPtr pScrn, CursorPtr pCurs)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32        *d          = (CARD32 *)(pointer)(info->FB + info->cursor_offset);
+    CARD32        *d          = (CARD32 *)(pointer)(info->FB + info->cursor_offset + pScrn->fbOffset);
     int            x, y, w, h;
     CARD32         save1      = 0;
     CARD32         save2      = 0;

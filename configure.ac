@@ -22,18 +22,9 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-ati],
-        6.6.3,
+        6.6.99,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-ati)
-AC_DEFINE_UNQUOTED([ATI_VERSION_MAJOR],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^\([[0-9]]\)\.[[0-9]]\.[[0-9]]/\1/')],
-		   [Major version])
-AC_DEFINE_UNQUOTED([ATI_VERSION_MINOR],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.\([[0-9]]\)\.[[0-9]]/\1/')],
-		   [Minor version])
-AC_DEFINE_UNQUOTED([ATI_VERSION_PATCH],
-		   [$(echo $PACKAGE_VERSION | sed -e 's/^[[0-9]]\.[[0-9]]\.\([[0-9]]\)/\1/')],
-		   [Patch version])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
@@ -91,6 +82,8 @@ if test "$DRI" != no; then
                       [have_sarea_h="yes"], [have_sarea_h="no"])
 	AC_CHECK_FILE([${sdkdir}/dristruct.h],
                       [have_dristruct_h="yes"], [have_dristruct_h="no"])
+	AC_CHECK_FILE([${sdkdir}/damage.h],
+                      [have_damage_h="yes"], [have_damage_h="no"])
 fi
 
 AC_MSG_CHECKING([whether to include DRI support])
@@ -107,9 +100,12 @@ AC_MSG_RESULT([$DRI])
 
 AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
-	PKG_CHECK_MODULES(DRI, [libdrm >= 2.0 xf86driproto])
+	PKG_CHECK_MODULES(DRI, [libdrm >= 2.2 xf86driproto])
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
+	if test "$have_damage_h" = yes; then
+		AC_DEFINE(DAMAGE,1,[Use Damage extension])
+	fi
 fi
 
 # Note that this is sort of inverted from drivers/ati/Imakefile in
@@ -119,14 +115,10 @@ fi
 
 # AVOID_CPIO: Only x86, amd64, and alpha are cool with CPIO.  It needs a
 # little-endian, undirected PIO space of at least 64kB.
-# AVOID_NON_PCI: Platforms which don't deal with PCI master aborts should
-# stick to PCI-only probing, stick their fingers in their ears, and pretend
-# that ISA cards simply don't exist.
 # AVOID_DGA: ???
 # ATI_TV_OUT: This only works on x86.
 
 ATIMISC_CPIO=no
-ATIMISC_NON_PCI=yes
 ATIMISC_DGA=yes
 ATIMISC_TV_OUT=no
 
@@ -141,9 +133,6 @@ case $host_cpu in
   sparc)
     ATIMISC_DGA=no
     ;;
-  powerpc)
-    ATIMISC_NON_PCI=no
-    ;;
   *)
     ;;
 esac
@@ -155,15 +144,6 @@ if test "x$ATIMISC_CPIO" = xyes; then
 else
 	AC_DEFINE(AVOID_CPIO, 1, [Avoid PIO and use MMIO for atimisc.])
 	AC_MSG_RESULT([no, MMIO])
-fi
-
-AC_MSG_CHECKING([whether to include support for non-PCI devices])
-AM_CONDITIONAL(ATIMISC_NON_PCI, test "x$ATIMISC_NON_PCI" = xyes)
-if test "x$ATI_AVOID_NON_PCI" = xyes; then
-	AC_MSG_RESULT([yes, PCI and ISA])
-else
-	AC_DEFINE(AVOID_NON_PCI, 1, [Only probe PCI cards; do not probe ISA.])
-	AC_MSG_RESULT([no, PCI only])
 fi
 
 AC_MSG_CHECKING([whether to include DGA support])
@@ -214,6 +194,12 @@ if test "x$have_exa_h" = xyes; then
                 AC_DEFINE(USE_EXA, 1, [Build support for Exa])
         fi
 fi
+
+AC_CHECK_DECL(xf86XVFillKeyHelperDrawable,
+	      [AC_DEFINE(HAVE_XV_DRAWABLE_HELPER, 1, [Have xf86XVFillKeyHelperDrawable prototype])],
+	      [],
+	      [#include <xf86xv.h>])
+
 CPPFLAGS="$SAVE_CPPFLAGS"
 
 AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)

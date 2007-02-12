@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/ati/atimach64cursor.c,v 1.1 2003/04/23 21:51:29 tsi Exp $ */
 /*
  * Copyright 2003 through 2004 by Marc Aurele La France (TSI @ UQV), tsi@xfree86.org
  *
@@ -26,9 +25,8 @@
 #endif
 
 #include "ati.h"
-#include "aticrtc.h"
+#include "aticursor.h"
 #include "atimach64accel.h"
-#include "atimach64cursor.h"
 #include "atimach64io.h"
 
 /*
@@ -354,20 +352,6 @@ ATIMach64UseHWCursor
     if (!pATI->CursorBase)
         return FALSE;
 
-#ifndef AVOID_CPIO
-
-    /*
-     * For some reason, the hardware cursor isn't vertically scaled when a VGA
-     * doublescanned or multiscanned mode is in effect.
-     */
-    if (pATI->NewHW.crtc == ATI_CRTC_MACH64)
-        return TRUE;
-    if ((pScreenInfo->currentMode->Flags & V_DBLSCAN) ||
-        (pScreenInfo->currentMode->VScan > 1))
-        return FALSE;
-
-#endif /* AVOID_CPIO */
-
     return TRUE;
 }
 
@@ -380,9 +364,26 @@ ATIMach64UseHWCursor
 Bool
 ATIMach64CursorInit
 (
-    xf86CursorInfoPtr pCursorInfo
+    ScreenPtr pScreen
 )
 {
+    ScrnInfoPtr       pScreenInfo = xf86Screens[pScreen->myNum];
+    ATIPtr            pATI        = ATIPTR(pScreenInfo);
+    xf86CursorInfoPtr pCursorInfo;
+
+    /* Initialise software cursor */
+    if (!miDCInitialize(pScreen, xf86GetPointerScreenFuncs()))
+        return FALSE;
+
+    if (pATI->Cursor == ATI_CURSOR_SOFTWARE)
+        return TRUE;
+
+    /* Initialise hardware cursor */
+    if (!(pATI->pCursorInfo = xf86CreateCursorInfoRec()))
+        return FALSE;
+
+    pCursorInfo = pATI->pCursorInfo;
+
     /*
      * For Mach64 variants, toggling hardware cursors off and on causes display
      * artifacts.  Ask the cursor support layers to always paint the cursor
@@ -413,5 +414,13 @@ ATIMach64CursorInit
     pCursorInfo->ShowCursor = ATIMach64ShowCursor;
     pCursorInfo->UseHWCursor = ATIMach64UseHWCursor;
 
+    if (!xf86InitCursor(pScreen, pATI->pCursorInfo))
+    {
+        xf86DestroyCursorInfoRec(pATI->pCursorInfo);
+        pATI->pCursorInfo = NULL;
+        return FALSE;
+    }
+
+    xf86SetSilkenMouse(pScreen);
     return TRUE;
 }
