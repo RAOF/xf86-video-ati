@@ -181,11 +181,12 @@ ATIPreInit
     int              MinX, MinY;
     ClockRange       ATIClockRange = {NULL, 0, 80000, -1, TRUE, TRUE, 1, 1, 0};
     int              DefaultmaxClock = 0;
-    int              minPitch, maxPitch = 0xFFU, maxHeight = 0;
+    int              minPitch, maxPitch = 0xFFU, pitchInc, maxHeight = 0;
     int              ApertureSize = 0x00010000U;
     int              ModeType = M_T_BUILTIN;
     LookupModeFlags  Strategy = LOOKUP_CLOSEST_CLOCK;
     int              DefaultDepth;
+    Bool             PreInitSuccess = FALSE;
 
 #   define           pATIHW     (&pATI->OldHW)
 
@@ -1070,10 +1071,7 @@ ATIPreInit
     {
         xf86DrvMsg(pScreenInfo->scrnIndex, X_ERROR,
             "A linear aperture is not available.\n");
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
+        goto bail;
     }
 
     /*
@@ -1086,12 +1084,7 @@ ATIPreInit
         pScreenInfo->rgbBits = 8;
     pATI->rgbBits = pScreenInfo->rgbBits;
     if (!xf86SetWeight(pScreenInfo, defaultWeight, defaultWeight))
-    {
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
-    }
+        goto bail;
 
     if ((pScreenInfo->depth > 8) &&
         ((pScreenInfo->weight.red != pScreenInfo->weight.blue) ||
@@ -1104,10 +1097,7 @@ ATIPreInit
             "Driver does not support weight %d%d%d for depth %d.\n",
             (int)pScreenInfo->weight.red, (int)pScreenInfo->weight.green,
             (int)pScreenInfo->weight.blue, pScreenInfo->depth);
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
+        goto bail;
     }
 
     /*
@@ -1115,12 +1105,7 @@ ATIPreInit
      */
 
     if (!xf86SetDefaultVisual(pScreenInfo, -1))
-    {
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
-    }
+        goto bail;
 
     if ((pScreenInfo->depth > 8) &&
         (((pScreenInfo->defaultVisual | DynamicClass) != DirectColor) ||
@@ -1131,22 +1116,15 @@ ATIPreInit
             "Driver does not support default visual %s for depth %d.\n",
             xf86GetVisualName(pScreenInfo->defaultVisual),
             pScreenInfo->depth);
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
+        goto bail;
     }
 
     /*
      * Set colour gamma.
      */
-        if (!xf86SetGamma(pScreenInfo, defaultGamma))
-        {
-            ATILock(pATI);
-            ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-            ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-            return FALSE;
-        }
+
+    if (!xf86SetGamma(pScreenInfo, defaultGamma))
+        goto bail;
 
     pATI->depth = pScreenInfo->depth;
     pATI->bitsPerPixel = pScreenInfo->bitsPerPixel;
@@ -1709,10 +1687,7 @@ ATIPreInit
                     xf86DrvMsg(pScreenInfo->scrnIndex, X_ERROR,
                         "Unable to determine dimensions of panel.\n");
 
-                ATILock(pATI);
-                ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-                ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-                return FALSE;
+                goto bail;
             }
 
             /* If the mode on entry wasn't stretched, adjust timings */
@@ -1941,10 +1916,7 @@ ATIPreInit
         {
                 xf86DrvMsg(pScreenInfo->scrnIndex, X_ERROR,
                     "Linear aperture not available.\n");
-                ATILock(pATI);
-                ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-                ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-                return FALSE;
+                goto bail;
         }
 
         if (pATI->Block0Base)
@@ -2095,12 +2067,7 @@ ATIPreInit
     /* 264VT-B's and later have DSP registers */
     if ((pATI->Chip >= ATI_CHIP_264VTB) &&
         !ATIDSPPreInit(pScreenInfo->scrnIndex, pATI))
-    {
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
-    }
+        goto bail;
 
     /*
      * Determine minClock and maxClock.  For adapters with supported
@@ -2253,9 +2220,7 @@ ATIPreInit
     {
         xf86DrvMsg(pScreenInfo->scrnIndex, X_ERROR,
             "Unsupported or non-programmable clock generator.\n");
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
+        goto bail;
     }
 
     ATIClockPreInit(pScreenInfo, pATI);
@@ -2274,35 +2239,27 @@ ATIPreInit
         minPitch = 16;
     }
 
-    pATI->pitchInc = minPitch;
+    pitchInc = minPitch * pATI->bitsPerPixel;
 
+    pScreenInfo->maxHValue = (MaxBits(CRTC_H_TOTAL) + 1) << 3;
+
+    if (pATI->Chip < ATI_CHIP_264VT)
     {
-        pATI->pitchInc *= pATI->bitsPerPixel;
+        /*
+         * ATI finally fixed accelerated doublescanning in the 264VT
+         * and later.  On 88800's, the bit is documented to exist, but
+         * only doubles the vertical timings.  On the 264CT and 264ET,
+         * the bit is ignored.
+         */
+        ATIClockRange.doubleScanAllowed = FALSE;
+
+        /* CRTC_H_TOTAL is one bit narrower */
+        pScreenInfo->maxHValue >>= 1;
     }
 
-    {
-            pScreenInfo->maxHValue = (MaxBits(CRTC_H_TOTAL) + 1) << 3;
+    pScreenInfo->maxVValue = MaxBits(CRTC_V_TOTAL) + 1;
 
-            if (pATI->Chip < ATI_CHIP_264VT)
-            {
-                /*
-                 * ATI finally fixed accelerated doublescanning in the 264VT
-                 * and later.  On 88800's, the bit is documented to exist, but
-                 * only doubles the vertical timings.  On the 264CT and 264ET,
-                 * the bit is ignored.
-                 */
-                ATIClockRange.doubleScanAllowed = FALSE;
-
-                /* CRTC_H_TOTAL is one bit narrower */
-                pScreenInfo->maxHValue >>= 1;
-            }
-
-            pScreenInfo->maxVValue = MaxBits(CRTC_V_TOTAL) + 1;
-
-            maxPitch = MaxBits(CRTC_PITCH);
-    }
-
-    maxPitch *= minPitch;
+    maxPitch = minPitch * MaxBits(CRTC_PITCH);
 
     if (pATI->OptionAccel)
     {
@@ -2312,6 +2269,7 @@ ATIPreInit
          */
         if (maxPitch > (ATIMach64MaxX / pATI->XModifier))
             maxPitch = ATIMach64MaxX / pATI->XModifier;
+
         maxHeight = ATIMach64MaxY;
 
         /*
@@ -2321,7 +2279,7 @@ ATIPreInit
         if ((pATI->Chip >= ATI_CHIP_264CT) &&
             ((pATI->Chip >= ATI_CHIP_264VTB) ||
              (pATI->MemoryType >= MEM_264_SGRAM)))
-            pATI->pitchInc = pATI->XModifier * (64 * 8);
+            pitchInc = pATI->XModifier * (64 * 8);
     }
 
     if (pATI->OptionPanelDisplay && (pATI->LCDPanelID >= 0))
@@ -2450,16 +2408,11 @@ ATIPreInit
     i = xf86ValidateModes(pScreenInfo,
             pScreenInfo->monitor->Modes, pScreenInfo->display->modes,
             &ATIClockRange, NULL, minPitch, maxPitch,
-            pATI->pitchInc, 0, maxHeight,
+            pitchInc, 0, maxHeight,
             pScreenInfo->display->virtualX, pScreenInfo->display->virtualY,
             ApertureSize, Strategy);
     if (i <= 0)
-    {
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
-    }
+        goto bail;
 
     /* Remove invalid modes */
     xf86PruneDriverModes(pScreenInfo);
@@ -2475,12 +2428,7 @@ ATIPreInit
 
     /* Load required modules */
     if (!ATILoadModules(pScreenInfo, pATI))
-    {
-        ATILock(pATI);
-        ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
-        ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
-        return FALSE;
-    }
+        goto bail;
 
     pATI->displayWidth = pScreenInfo->displayWidth;
 
@@ -2521,9 +2469,12 @@ ATIPreInit
     if (!pScreenInfo->chipset || !*pScreenInfo->chipset)
         pScreenInfo->chipset = "mach64";
 
+    PreInitSuccess = TRUE;
+
+bail:
     ATILock(pATI);
     ATIPrintNoiseIfRequested(pATI, BIOS, BIOSSize);
     ATIUnmapApertures(pScreenInfo->scrnIndex, pATI);
 
-    return TRUE;
+    return PreInitSuccess;
 }
