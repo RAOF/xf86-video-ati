@@ -1,9 +1,9 @@
 xserver-xorg-video-ati (1:6.6.99-1) UNRELEASED; urgency=low
 
-  * Bump xserver ABI metadata to 1.1 for use with server 1.2
+  * Generate server dependencies automatically from the ABI
   * Merge changes from upstream pre-release
 
- -- David Nusinow <dnusinow@debian.org>  Sun, 11 Feb 2007 21:15:57 -0500
+ -- David Nusinow <dnusinow@debian.org>  Tue, 20 Feb 2007 22:13:01 -0500
 
 xserver-xorg-video-ati (1:6.6.3-3) UNRELEASED; urgency=low
 

@@ -8,7 +8,7 @@ Standards-Version: 3.7.2
 
 Package: xserver-xorg-video-ati
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, xserver-xorg-core (>= 2:1.2.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${xserver:Depends}
 Replaces: xserver-xorg (<< 6.8.2-35), xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
 Conflicts: xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
 Provides: xserver-xorg-video-1.1, xf86-video-driver-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
