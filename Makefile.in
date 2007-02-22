@@ -58,7 +58,7 @@ host_triplet = @host@
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog compile config.guess \
-	config.sub depcomp install-sh ltmain.sh missing
+	config.sub depcomp install-sh ltmain.sh missing mkinstalldirs
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -66,7 +66,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(install_sh) -d
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
@@ -104,8 +104,6 @@ ATIMISC_CPIO_FALSE = @ATIMISC_CPIO_FALSE@
 ATIMISC_CPIO_TRUE = @ATIMISC_CPIO_TRUE@
 ATIMISC_DGA_FALSE = @ATIMISC_DGA_FALSE@
 ATIMISC_DGA_TRUE = @ATIMISC_DGA_TRUE@
-ATIMISC_NON_PCI_FALSE = @ATIMISC_NON_PCI_FALSE@
-ATIMISC_NON_PCI_TRUE = @ATIMISC_NON_PCI_TRUE@
 ATIMISC_TV_OUT_FALSE = @ATIMISC_TV_OUT_FALSE@
 ATIMISC_TV_OUT_TRUE = @ATIMISC_TV_OUT_TRUE@
 AUTOCONF = @AUTOCONF@
@@ -145,6 +143,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -187,13 +186,9 @@ USE_EXA_TRUE = @USE_EXA_TRUE@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -210,24 +205,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -235,8 +237,6 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 EXTRA_DIST = README.ati README.r128 README.ati.sgml README.r128.sgml ChangeLog
-
-# Always regenerate the changelog
 CLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -479,6 +479,9 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -661,7 +664,7 @@ uninstall-info: uninstall-info-recursive
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
 	check-am clean clean-generic clean-libtool clean-recursive \
 	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
-	dist-shar dist-tarZ dist-zip distcheck distclean \
+	dist-hook dist-shar dist-tarZ dist-zip distcheck distclean \
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
@@ -679,9 +682,11 @@ uninstall-info: uninstall-info-recursive
 
 @BUILD_LINUXDOC_TRUE@README.r128: README.r128.sgml
 @BUILD_LINUXDOC_TRUE@	$(MAKE_TEXT) README.r128.sgml && mv README.r128.txt README.r128
-ChangeLog: FORCE
-	git-log > ChangeLog
-FORCE:
+
+ChangeLog:
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

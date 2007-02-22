@@ -2,23 +2,14 @@
 
 #include "xorg-server.h"
 
-/* Major version */
-#undef ATI_VERSION_MAJOR
-
-/* Minor version */
-#undef ATI_VERSION_MINOR
-
-/* Patch version */
-#undef ATI_VERSION_PATCH
-
 /* Avoid PIO and use MMIO for atimisc. */
 #undef AVOID_CPIO
 
 /* Do not build DGA support. */
 #undef AVOID_DGA
 
-/* Only probe PCI cards; do not probe ISA. */
-#undef AVOID_NON_PCI
+/* Use Damage extension */
+#undef DAMAGE
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
@@ -50,6 +41,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Have xf86XVFillKeyHelperDrawable prototype */
+#undef HAVE_XV_DRAWABLE_HELPER
+
 /* Name of package */
 #undef PACKAGE
 
@@ -67,6 +61,15 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Major version of this package */
+#undef PACKAGE_VERSION_MAJOR
+
+/* Minor version of this package */
+#undef PACKAGE_VERSION_MINOR
+
+/* Patch version of this package */
+#undef PACKAGE_VERSION_PATCHLEVEL
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
