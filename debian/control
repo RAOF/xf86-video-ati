@@ -11,7 +11,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${xserver:Depends}
 Replaces: xserver-xorg (<< 6.8.2-35), xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
 Conflicts: xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
-Provides: xserver-xorg-video-1.1, xf86-video-driver-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
+Provides: ${xviddriver:Provides}, xf86-video-driver-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
 Description: X.Org X server -- ATI display driver
  This driver for the X.Org X server (see xserver-xorg for a further description)
  provides support for the ATI Mach, Rage, Radeon, and FireGL series.  It
