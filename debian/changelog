@@ -1,10 +1,10 @@
-xserver-xorg-video-ati (1:6.6.3-4) unstable; urgency=low
+xserver-xorg-video-ati (1:6.6.3-4) experimental; urgency=low
 
   * Generate server dependencies automatically from the ABI
   * Merge changes from upstream pre-release
   * Remove obsolete 02_radeon_memmap_fbdev.diff
 
- -- David Nusinow <dnusinow@debian.org>  Tue, 20 Feb 2007 23:27:58 -0500
+ -- David Nusinow <dnusinow@debian.org>  Wed, 21 Feb 2007 22:54:17 -0500
 
 xserver-xorg-video-ati (1:6.6.3-3) UNRELEASED; urgency=low
 
