@@ -2,8 +2,10 @@ xserver-xorg-video-ati (1:6.6.3-5) experimental; urgency=low
 
   * Bump build-dep on libdrm-dev to >= 2.2 to fix FTBFS (closes: #413100).
     Thanks, Frank Lichtenheld!
+  * Add patch 02_radeon_manpage.diff to replace non-ascii character with the
+    corresponding groff escape sequence in the radeon manpage.
 
- -- Julien Cristau <jcristau@debian.org>  Fri,  2 Mar 2007 17:30:58 +0100
+ -- Julien Cristau <jcristau@debian.org>  Fri,  2 Mar 2007 22:44:03 +0100
 
 xserver-xorg-video-ati (1:6.6.3-4) experimental; urgency=low
 
