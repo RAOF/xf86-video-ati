@@ -97,56 +97,54 @@ LTLIBRARIES = $(ati_drv_la_LTLIBRARIES) $(atimisc_drv_la_LTLIBRARIES) \
 	$(theatre_detect_drv_la_LTLIBRARIES) \
 	$(theatre_drv_la_LTLIBRARIES)
 ati_drv_la_LIBADD =
-am__ati_drv_la_SOURCES_DIST = ati.c atibus.c atichip.c atiident.c \
-	atioption.c atiprobe.c atividmem.c atimodule.c ativgaio.c \
-	radeon_probe.c r128_probe.c
-@ATIMISC_CPIO_TRUE@am__objects_1 = ativgaio.lo
-am_ati_drv_la_OBJECTS = ati.lo atibus.lo atichip.lo atiident.lo \
-	atioption.lo atiprobe.lo atividmem.lo atimodule.lo \
-	$(am__objects_1) radeon_probe.lo r128_probe.lo
+am_ati_drv_la_OBJECTS = ati.lo atimodule.lo
 ati_drv_la_OBJECTS = $(am_ati_drv_la_OBJECTS)
 atimisc_drv_la_LIBADD =
-am__atimisc_drv_la_SOURCES_DIST = atiadjust.c atiaudio.c aticlock.c \
-	aticonfig.c aticonsole.c atidac.c atidecoder.c atidsp.c \
-	atifillin.c atii2c.c atilock.c atimach64.c atimach64accel.c \
-	atimach64cursor.c atimach64i2c.c atimach64io.c atimach64xv.c \
-	atimode.c atipreinit.c atiprint.c atirgb514.c atiscreen.c \
-	atituner.c atiutil.c ativalid.c atiload.c atimisc.c atidri.c \
-	atidga.c ativga.c atibank.c atiwonder.c atiwonderio.c \
+am__atimisc_drv_la_SOURCES_DIST = atibus.c atichip.c atiprobe.c \
+	atividmem.c atiadjust.c atiaudio.c aticlock.c aticonfig.c \
+	aticonsole.c atidac.c atidecoder.c atidsp.c atii2c.c atilock.c \
+	atimach64.c atimach64accel.c atimach64cursor.c atimach64i2c.c \
+	atimach64io.c atimach64xv.c atimode.c atipreinit.c atiprint.c \
+	atirgb514.c atiscreen.c atituner.c atiutil.c ativalid.c \
+	atiload.c atimisc.c atimach64probe.c ativga.c ativgaio.c \
+	atibank.c atiwonder.c atiwonderio.c atidga.c atidri.c \
 	atimach64exa.c
-@DRI_TRUE@am__objects_2 = atidri.lo
-@ATIMISC_DGA_TRUE@am__objects_3 = atidga.lo
-@ATIMISC_CPIO_TRUE@am__objects_4 = ativga.lo atibank.lo atiwonder.lo \
-@ATIMISC_CPIO_TRUE@	atiwonderio.lo
-@USE_EXA_TRUE@am__objects_5 = atimach64exa.lo
-am_atimisc_drv_la_OBJECTS = atiadjust.lo atiaudio.lo aticlock.lo \
-	aticonfig.lo aticonsole.lo atidac.lo atidecoder.lo atidsp.lo \
-	atifillin.lo atii2c.lo atilock.lo atimach64.lo \
-	atimach64accel.lo atimach64cursor.lo atimach64i2c.lo \
-	atimach64io.lo atimach64xv.lo atimode.lo atipreinit.lo \
-	atiprint.lo atirgb514.lo atiscreen.lo atituner.lo atiutil.lo \
-	ativalid.lo atiload.lo atimisc.lo $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4) $(am__objects_5)
+@ATIMISC_CPIO_TRUE@am__objects_1 = ativga.lo ativgaio.lo atibank.lo \
+@ATIMISC_CPIO_TRUE@	atiwonder.lo atiwonderio.lo
+@ATIMISC_DGA_TRUE@am__objects_2 = atidga.lo
+@DRI_TRUE@am__objects_3 = atidri.lo
+@USE_EXA_TRUE@am__objects_4 = atimach64exa.lo
+am_atimisc_drv_la_OBJECTS = atibus.lo atichip.lo atiprobe.lo \
+	atividmem.lo atiadjust.lo atiaudio.lo aticlock.lo aticonfig.lo \
+	aticonsole.lo atidac.lo atidecoder.lo atidsp.lo atii2c.lo \
+	atilock.lo atimach64.lo atimach64accel.lo atimach64cursor.lo \
+	atimach64i2c.lo atimach64io.lo atimach64xv.lo atimode.lo \
+	atipreinit.lo atiprint.lo atirgb514.lo atiscreen.lo \
+	atituner.lo atiutil.lo ativalid.lo atiload.lo atimisc.lo \
+	atimach64probe.lo $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3) $(am__objects_4)
 atimisc_drv_la_OBJECTS = $(am_atimisc_drv_la_OBJECTS)
 r128_drv_la_LIBADD =
 am__r128_drv_la_SOURCES_DIST = r128_accel.c r128_cursor.c r128_dga.c \
-	r128_driver.c r128_video.c r128_misc.c r128_dri.c
-@DRI_TRUE@am__objects_6 = r128_dri.lo
+	r128_driver.c r128_video.c r128_misc.c r128_probe.c r128_dri.c
+@DRI_TRUE@am__objects_5 = r128_dri.lo
 am_r128_drv_la_OBJECTS = r128_accel.lo r128_cursor.lo r128_dga.lo \
-	r128_driver.lo r128_video.lo r128_misc.lo $(am__objects_6)
+	r128_driver.lo r128_video.lo r128_misc.lo r128_probe.lo \
+	$(am__objects_5)
 r128_drv_la_OBJECTS = $(am_r128_drv_la_OBJECTS)
 radeon_drv_la_LIBADD =
 am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_mergedfb.c \
 	radeon_cursor.c radeon_dga.c radeon_driver.c radeon_video.c \
 	radeon_bios.c radeon_mm_i2c.c radeon_vip.c radeon_misc.c \
-	radeon_display.c radeon_modes.c radeon_dri.c radeon_exa.c
-@DRI_TRUE@am__objects_7 = radeon_dri.lo
-@USE_EXA_TRUE@am__objects_8 = radeon_exa.lo
+	radeon_probe.c radeon_display.c radeon_modes.c radeon_dri.c \
+	radeon_exa.c
+@DRI_TRUE@am__objects_6 = radeon_dri.lo
+@USE_EXA_TRUE@am__objects_7 = radeon_exa.lo
 am_radeon_drv_la_OBJECTS = radeon_accel.lo radeon_mergedfb.lo \
 	radeon_cursor.lo radeon_dga.lo radeon_driver.lo \
 	radeon_video.lo radeon_bios.lo radeon_mm_i2c.lo radeon_vip.lo \
-	radeon_misc.lo radeon_display.lo radeon_modes.lo \
-	$(am__objects_7) $(am__objects_8)
+	radeon_misc.lo radeon_probe.lo radeon_display.lo \
+	radeon_modes.lo $(am__objects_6) $(am__objects_7)
 radeon_drv_la_OBJECTS = $(am_radeon_drv_la_OBJECTS)
 theatre200_drv_la_LIBADD =
 am_theatre200_drv_la_OBJECTS = theatre200_drv_la-theatre200.lo \
@@ -174,7 +172,7 @@ SOURCES = $(ati_drv_la_SOURCES) $(atimisc_drv_la_SOURCES) \
 	$(r128_drv_la_SOURCES) $(radeon_drv_la_SOURCES) \
 	$(theatre200_drv_la_SOURCES) $(theatre_detect_drv_la_SOURCES) \
 	$(theatre_drv_la_SOURCES)
-DIST_SOURCES = $(am__ati_drv_la_SOURCES_DIST) \
+DIST_SOURCES = $(ati_drv_la_SOURCES) \
 	$(am__atimisc_drv_la_SOURCES_DIST) \
 	$(am__r128_drv_la_SOURCES_DIST) \
 	$(am__radeon_drv_la_SOURCES_DIST) $(theatre200_drv_la_SOURCES) \
@@ -328,8 +326,7 @@ target_alias = @target_alias@
 @DRI_TRUE@ATIMISC_DRI_SRCS = atidri.c
 @DRI_TRUE@R128_DRI_SRCS = r128_dri.c
 @DRI_TRUE@RADEON_DRI_SRCS = radeon_dri.c
-@ATIMISC_CPIO_TRUE@ATI_CPIO_SOURCES = ativgaio.c
-@ATIMISC_CPIO_TRUE@ATIMISC_CPIO_SOURCES = ativga.c atibank.c atiwonder.c atiwonderio.c
+@ATIMISC_CPIO_TRUE@ATIMISC_CPIO_SOURCES = ativga.c ativgaio.c atibank.c atiwonder.c atiwonderio.c
 @ATIMISC_DGA_TRUE@ATIMISC_DGA_SOURCES = atidga.c
 @USE_EXA_TRUE@ATIMISC_EXA_SOURCES = atimach64exa.c
 @USE_EXA_TRUE@RADEON_EXA_SOURCES = radeon_exa.c
@@ -338,28 +335,27 @@ ati_drv_la_LTLIBRARIES = ati_drv.la
 ati_drv_la_LDFLAGS = -module -avoid-version
 ati_drv_ladir = @moduledir@/drivers
 ati_drv_la_SOURCES = \
-	ati.c atibus.c atichip.c atiident.c atioption.c \
-	atiprobe.c atividmem.c atimodule.c $(ATI_CPIO_SOURCES) \
-	radeon_probe.c r128_probe.c
+	ati.c atimodule.c
 
 atimisc_drv_la_LTLIBRARIES = atimisc_drv.la
 atimisc_drv_la_LDFLAGS = -module -avoid-version
 atimisc_drv_ladir = @moduledir@/drivers
 atimisc_drv_la_SOURCES = \
+	atibus.c atichip.c atiprobe.c atividmem.c \
 	atiadjust.c atiaudio.c aticlock.c aticonfig.c aticonsole.c \
-	atidac.c atidecoder.c atidsp.c atifillin.c atii2c.c \
+	atidac.c atidecoder.c atidsp.c atii2c.c \
 	atilock.c atimach64.c atimach64accel.c atimach64cursor.c \
 	atimach64i2c.c atimach64io.c atimach64xv.c atimode.c atipreinit.c \
 	atiprint.c atirgb514.c atiscreen.c atituner.c atiutil.c ativalid.c \
-	atiload.c atimisc.c $(ATIMISC_DRI_SRCS) $(ATIMISC_DGA_SOURCES) \
-	$(ATIMISC_CPIO_SOURCES) $(ATIMISC_EXA_SOURCES)
+	atiload.c atimisc.c atimach64probe.c $(ATIMISC_CPIO_SOURCES) \
+	$(ATIMISC_DGA_SOURCES) $(ATIMISC_DRI_SRCS) $(ATIMISC_EXA_SOURCES)
 
 r128_drv_la_LTLIBRARIES = r128_drv.la
 r128_drv_la_LDFLAGS = -module -avoid-version
 r128_drv_ladir = @moduledir@/drivers
 r128_drv_la_SOURCES = \
 	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
-	r128_video.c r128_misc.c $(R128_DRI_SRCS)
+	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
 
 radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
@@ -367,7 +363,8 @@ radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = \
 	radeon_accel.c radeon_mergedfb.c radeon_cursor.c radeon_dga.c \
 	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
-	radeon_vip.c radeon_misc.c radeon_display.c radeon_modes.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES)
+	radeon_vip.c radeon_misc.c radeon_probe.c radeon_display.c \
+	radeon_modes.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES)
 
 theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
 theatre_detect_drv_la_LDFLAGS = -module -avoid-version
@@ -391,6 +388,7 @@ theatre200_drv_la_SOURCES = \
 	theatre200.c theatre200_module.c
 
 EXTRA_DIST = \
+	atimach64render.c \
 	radeon_render.c \
 	radeon_accelfuncs.c \
 	\
@@ -400,7 +398,6 @@ EXTRA_DIST = \
 	atibus.h \
 	atichip.h \
 	aticlock.h \
-	aticonfig.h \
 	aticonsole.h \
 	aticrtc.h \
 	aticursor.h \
@@ -410,17 +407,15 @@ EXTRA_DIST = \
 	atidri.h \
 	atidripriv.h \
 	atidsp.h \
-	atifillin.h \
 	ati.h \
 	atii2c.h \
-	atiident.h \
 	atiload.h \
 	atilock.h \
 	atimach64accel.h \
 	atimach64.h \
 	atimach64i2c.h \
 	atimach64io.h \
-	atimach64render.c \
+	atimach64probe.h \
 	atimode.h \
 	atimodule.h \
 	atioption.h \
@@ -733,9 +728,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidsp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atifillin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atii2c.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiident.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiload.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atilock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64.Plo@am__quote@
@@ -744,11 +737,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64exa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64i2c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64probe.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64xv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimisc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimodule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atioption.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atipreinit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiprint.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiprobe.Plo@am__quote@
