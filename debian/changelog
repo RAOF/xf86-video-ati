@@ -1,8 +1,8 @@
-xserver-xorg-video-ati (1:6.6.99-1) experimental; urgency=low
+xserver-xorg-video-ati (1:6.6.191-1) UNRELEASED; urgency=low
 
-  * Fix version to match configure.ac.
+  * New upstream release candidate.
 
- -- Michel Dänzer <daenzer@debian.org>  Mon, 12 Mar 2007 08:16:53 +0100
+ -- Brice Goglin <Brice.Goglin@ens-lyon.org>  Tue, 27 Mar 2007 20:30:01 +0200
 
 xserver-xorg-video-ati (1:6.6.3-5) experimental; urgency=low
 
