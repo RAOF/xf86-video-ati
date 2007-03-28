@@ -4,7 +4,11 @@ xserver-xorg-video-ati (1:6.6.191-1) experimental; urgency=low
   * New upstream release candidate.
   * autoreconf.
 
- -- Julien Cristau <jcristau@debian.org>  Wed, 28 Mar 2007 13:53:10 +0200
+  [ Julien Cristau ]
+  * Drop Fabio and Branden from Uploaders, with their permission.  Hopefully
+    they'll come back when they have more time!
+
+ -- Julien Cristau <jcristau@debian.org>  Wed, 28 Mar 2007 14:26:43 +0200
 
 xserver-xorg-video-ati (1:6.6.3-5) experimental; urgency=low
 
