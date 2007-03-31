@@ -30,3 +30,18 @@ Description: X.Org X server -- ATI display driver
  .
  This module can be found as the module 'driver/xf86-video-ati' at
  :pserver:anoncvs@cvs.freedesktop.org:/cvs/xorg
+
+Package: xserver-xorg-video-ati-dbg
+Architecture: any
+Depends: xserver-xorg-video-ati (= ${Source-Version})
+Priority: extra
+Description: X.Org X server -- ATI display driver (debugging symbols)
+ This driver for the X.Org X server (see xserver-xorg for a further description)
+ provides support for the ATI Mach, Rage, Radeon, and FireGL series.  It
+ provides the 'atimisc', 'r128' and 'radeon' sub-drivers.
+ .
+ This driver provides support for Mach, Rage, Rage128, Radeon, and most
+ FireGL series ATI cards.
+ .
+ This package provides debugging symbols for the Xorg X server ATI display
+ driver.
