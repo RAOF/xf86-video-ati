@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.6.192-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.6.192-1) experimental; urgency=low
 
   [ Brice Goglin ]
   * Build a xserver-xorg-video-ati-dbg package with debugging symbols.
@@ -18,7 +18,7 @@ xserver-xorg-video-ati (1:6.6.192-1) UNRELEASED; urgency=low
   * New upstream release candidate
   * Refresh patch 02_radeon_manpage.diff.
 
- -- Julien Cristau <jcristau@debian.org>  Mon, 21 May 2007 01:02:30 +0200
+ -- Julien Cristau <jcristau@debian.org>  Mon, 21 May 2007 01:28:33 +0200
 
 xserver-xorg-video-ati (1:6.6.191-1) experimental; urgency=low
 
