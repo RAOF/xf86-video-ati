@@ -1,27 +1,1218 @@
-commit 7be2dce975d60d68dd962d4928b2971cd9e011af
-Author: Dave Airlie <airlied@linux.ie>
-Date:   Wed Oct 4 01:01:48 2006 +1000
+commit 09bfc8ed000f95ede5b73f2bad69edc1a4d9bac6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 20 18:06:22 2007 -0400
 
-    update configure.ac for new 6.6.3 release
+    update to 6.6.192 for rc release
 
-commit 6831297d79623d55c57cd7cd8ff90f08b8c68432
-Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
-Date:   Tue Sep 12 03:33:35 2006 +1000
+commit 764cb73e8dec4040cdd418d249fc504399fca3ee
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 20 17:26:26 2007 -0400
 
-    radeon: fallback render repeat for XAA, this fixes corruptions seen on ubuntu
+    Fix regular/"xinerama"/zaphod dualhead mode
     
-    This isn't the correct fix, we should just fix the repeat case, but for a
-    stable release this is much better idea
-    (cherry picked from 84e574986f61c4f250d6ecb938bab20847618906 commit)
+    - logic in RADEONUnblank() was wrong
+    - Calling RADEONSetupConnectors() on second instance screwed up the port info
+    - still seem to be HW cursor issues with zaphod mode
 
-commit ddaacf78455290ffc31b41cd809b03ffbeadd69b
-Author: Ronald Wahl <rwahl@gmx.de>
-Date:   Wed Oct 4 00:55:43 2006 +1000
+commit a3ee42207aab77d93655a82fdcb32be38268b85f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Apr 25 09:52:22 2007 +1000
 
-    Hook up DFP power to DPMS events.
-    (cherry picked from f96ddd32d3a9e64dc0adec5c50386d6db5b182ee commit)
+    radeon: another attempt at fixing the mergedfb refresh rate
+    
+    This attempts to keep it inside the 32-bit limit when multiplying things out
+    later in the randr tree.
+    
+    Let me know if I screwed this up..
 
-commit 14f6d58d4b5a277a68d9d8ddee7f79be2179f34f
+commit 3828237200fc16d4d32664fb8358950c213d4897
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Sun Apr 22 11:36:00 2007 +1000
+
+    radeon: add support for DDC on some laptop chipsets
+    
+    I noticed fglrx has DDC for the panel in the rs480 laptop, however radeon
+    didn't pick it up, so I valgrinded fglrx and spotted 0x1a0/0x1a4 accesses
+    I actually noticed this before from the BIOS but never figured it out.
+    
+    So now I get DDC from the LCD on this laptop.
+
+commit c81ed9bd7b37c9d02141d10f6c7bad3d0c57032f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Apr 21 18:58:40 2007 +1000
+
+    radeon: fix build on older server
+
+commit 406eec71116a58d42288a7f1c809a92d5bda7350
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Apr 21 18:56:28 2007 +1000
+
+    radeon: fix build since patches for IBM don't actually build
+
+commit ad119960095b4b64f4c6793f65950c9967ce4989
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 19 11:54:46 2007 +0200
+
+    Disable RMX for IBM Lewis server.
+    
+    Due to the hardware layout RMX ddc_mode has to be set.
+    If ddc_mode is set, RADEONValdiateFPModes() shouldn't be called.
+    Bugzilla #10620 (3).
+
+commit 16ef77df4ebaf5ea13baa82972aaf98e71ac32ee
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Apr 18 17:36:15 2007 +0200
+
+    Set sync polarity restriction flags even for non-"digital separate" monitors.
+    
+    According to Lisa Wu, this is correct regarding the VESA EEDID standard.
+    Bugzilla #10620 (2), original patch by Lisa Wu @ATI
+
+commit 0abce69f0d826a7ca1a41d963cd4730b6e01c145
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Apr 18 17:32:52 2007 +0200
+
+    Fix inconsistent use of Mode lists.
+    
+    Some scans used to only check every second entry, some stopped at the entry
+    before the last entry.
+    Bugzilla #10620 (1), original patch by Lisa Wu @ATI
+
+commit aea801cf9a5ce519a53d6fffd9a3a2e526ec79ea
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Apr 13 16:16:05 2007 +0200
+
+    Fix crash if MergedFB and secondary head not found
+    
+    If the secondary head isn't found (Monitor unplugged etc.) but MergedFB
+    is configured, the driver segfaults because it tries to access the mode
+    list private structures, which are not filled in.
+
+commit 07ddffb32e6293c77b32c94b87ec468caef3d6f5
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Apr 11 14:36:51 2007 +0200
+
+    Fixed typo in mode list generation.
+
+commit 4effa67ea75736a31b9e78a7b35acf74b067c43e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Apr 9 22:08:31 2007 +1000
+
+    radeon: add support for enabling direct rendering on RS480
+    
+    Thanks to Matthew Garrett and Ubuntu for the hw loan to get this working.
+    
+    Still no 3D driver support but at least you should get CP acceleration for
+    2D now.
+
+commit 6b25a4c48796e022a093f3072574ffe9709ecaf4
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Wed Apr 4 10:47:29 2007 +0200
+
+    radeon: Link nearest modes by default for clone mode.
+    
+    This makes sure all modes of both CRTCs will be available by default with
+    MergedFB.
+
+commit 3c892f163ec1fa9be6e733aab091c9b718f41efc
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Wed Apr 4 09:52:37 2007 +0200
+
+    radeon: Always sort modes when adding to list.
+    
+    This makes sure mode lists will always be sorted from larger to smaller.
+
+commit 3a8190ccc79969925257e7b980b78d79053d208d
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Wed Apr 4 09:47:07 2007 +0200
+
+    radeon: Don't shrink virtual size based on secondary modes.
+
+commit 9b1e97284ce185d358ca756a235d2cee346fa53f
+Author: Henry Zhao <henryz@localhost.localdomain>
+Date:   Sat Mar 31 23:01:52 2007 -0800
+
+    10205: Radeon driver's own mode validation code does not work properly
+
+commit 9c2dcd19be8fc2cc29e637d1e9748e66196e3900
+Author: Henry Zhao <henryz@localhost.localdomain>
+Date:   Sat Mar 31 20:10:03 2007 -0800
+
+    9337: EDID modes do not participate in validation for CRT monitor
+
+commit 1acd6d6fa42acec07fb11aeb189f492ddb021cb4
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Mar 30 11:06:10 2007 +0200
+
+    radeon: Guard some MergedFB specific code with info->MergedFB tests.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=10442 .
+
+commit 1a71106c0e4fe5f650239dc694163fdf52d33663
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 27 10:13:21 2007 +0200
+
+    radeon: Fix typo.
+
+commit f87e57d4d773a019d1cc8a10425c57480430f6a4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Mar 27 18:08:54 2007 +1000
+
+    radeon: fix up crtc debug dereference problem
+
+commit 66b4a571a4e7960da6807d3f30955aa08e89ccc6
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Mar 27 17:00:37 2007 +1000
+
+    update number to 6.6.191 for rc release
+
+commit fca30a6b581cb6c1466ab1bc316df8fed5d82b60
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Mar 26 23:26:51 2007 -0400
+
+    fix NULL dereference
+    
+    when IsSecondary is true, crtc1 is NULL
+    Noticed by Sverre Froyen.
+
+commit 97d8d1ed10d069343f2b3172ba64ca421821a602
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Mar 24 20:02:12 2007 +0200
+
+    Move atichip.c from ati to atimisc.
+
+commit aa8f5b02ebc9be60df48722588261627d6a457e8
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Mar 24 19:53:02 2007 +0200
+
+    [mach64] Use Mach64Chipsets[] instead of ATIChipNames[].
+    
+    atimisc is PCI-only now, we can get the chip name with xf86TokenToString().
+
+commit 39e896a1e688ea2d2d21f88c1c5d34c5810aac1c
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Mar 24 19:47:18 2007 +0200
+
+    [mach64] Set pATI->ChipRevision correctly, instead of overriding.
+    
+    There is no need to override pATI->ChipRevision for GX/CX, as it is only
+    reported with a printf.
+
+commit f046a910ca117279fbabc6281b2e23439ec9ea4e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Mar 23 22:19:17 2007 +0200
+
+    Drop probing by driver name from "Device" section.
+    
+    atimisc is PCI-only now, so we only need to scan the PCI space.
+
+commit 9cd175d9cd4ed710fccb303664c77519ecaf1e21
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Mar 23 22:12:48 2007 +0200
+
+    Fold FillIn() back to Probe().
+
+commit d7a8cd0e476034796fc38e25a28cd28d05ea4a13
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Mar 23 22:10:03 2007 +0200
+
+    Drop now unneeded _X_EXPORT's.
+
+commit 58626d8b78f26f0d9c480033d3c3a12e541342b1
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Mar 23 21:30:19 2007 +0200
+
+    Move {atimach64,r128,radeon}_probe.c from ati to subdrivers.
+    
+    Subdrivers are now loaded from the wrapper Probe function rather than at screen
+    creation time.
+    
+    The wrapper Identify callback only prints chip families now, chip lists are
+    printed when a subdriver is loaded. This also avoids duplication of subdriver
+    Identify callbacks.
+    
+    Unknown radeons should still get a list of known radeon and then probe fails...
+    
+    Probe for atimisc last to avoid needless loading in most cases (r128, radeon).
+
+commit 166c760a86165330175023e07c4b2bd6891633c5
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 20 09:16:02 2007 +0100
+
+    Fix advertised minimum minor version of the DRI module.
+    
+    We don't automatically require bumped minor versions.
+
+commit 1bdd376dbd57de8925244f0808f974d6d8cff39d
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 20 09:14:39 2007 +0100
+
+    radeon: Only sync to hardware when really necessary with EXA.
+    
+    In particular, don't sync again after accelerated DownloadFromScreen, which
+    syncs implicitly. This avoids calling into the kernel when it's not necessary,
+    which can be relevant in some situations.
+
+commit 3cfa3a5c8daf03aaad6fc30d275709f6eb717d29
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 20 09:13:24 2007 +0100
+
+    radeon: Unify code to release the CP.
+
+commit e174d8df8c801fad95e5f79cff69187c200bee6e
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 20 09:12:51 2007 +0100
+
+    radeon: Minor BlockHandler cleanups.
+    
+    Don't flush indirect buffer in BlockHandler; it's done in LeaveServer.
+    
+    Also set the EXA engine mode to unknown only at the end.
+
+commit 113fb4b61e709a9b54fc2ef73efce06011e771c1
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 20 09:12:09 2007 +0100
+
+    radeon: Disable CP line acceleration on RV280s.
+    
+    There have been several reports of stability issues with things like the
+    xscreensaver hack hypercube.
+
+commit 4651d00b183cb498879d605c4b93cd3a0c63cb33
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Mar 20 09:10:19 2007 +0100
+
+    radeon: Make sure 3D clients will re-upload textures to video RAM after LeaveVT.
+    
+    Walk the SAREA texList and bump the age of every active object, so their owners
+    will consider them kicked out when they grab the HW lock next time.
+
+commit 2d2fb54ba370c1df9ef5102e83c17a7ff5c55403
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Mar 15 17:26:56 2007 +0100
+
+    atimisc: Fix strict aliasing violation flagged by -Wall.
+
+commit cfb82631fb683a0dc9bbc8f2d214646a8f1bca0b
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Mar 15 17:12:43 2007 +0100
+
+    radeon: Fix build warnings.
+
+commit 50a524445ed1ea3c4fab56de772921ba86a21d35
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Mar 8 17:43:48 2007 +0200
+
+    Move atioption.c from ati to atimisc.
+
+commit 52684241ba1ffb393cb655ecc09cbd0cef5b1717
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Mar 8 07:07:02 2007 +0200
+
+    Move atiprobe.c from ati to atimisc.
+
+commit 1e270b411cf691c69194932b864ee2c9db292263
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 4 18:21:49 2007 +0200
+
+    [mach64] Bug 5586: overlay scaler limited to 720 pixels on ATI Rage Pro.
+
+commit 54f9b8c1d01ecb97e2d4d247918f0efc86ed6037
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 4 18:16:40 2007 +0200
+
+    [mach64] Xv: use single surface and encoding structs.
+
+commit e1e55b533d3ae528c8da37dcb77ed906d05697fb
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Mar 4 19:11:34 2007 +1100
+
+    radeon: add option to set pci aperture size from config file
+    
+    This requires a drm > 1.26 to work
+
+commit 4374895d393bf170134ccffc188521fe515d5a77
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Feb 24 21:25:13 2007 +0200
+
+    [mach64] Consolidate adjustments of mode timings, part 3.
+    
+    Cosmetic.
+
+commit 8b9a4ec8af90b2f9f0d0a3a7f6627061df7e01b3
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Feb 24 21:22:49 2007 +0200
+
+    [mach64] Consolidate adjustments of mode timings, part 2.
+    
+    Factor out to seperate function.
+
+commit bb226c9e7218d2a65c056fe74cb7eece0550670f
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Feb 24 21:20:53 2007 +0200
+
+    [mach64] Consolidate adjustments of mode timings, part 1.
+    
+    Move LCD block from atimode.c to atimach64.c .
+
+commit 31c018ca4a18ce426b29006f103f56eee7f985fa
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Wed Feb 21 13:47:37 2007 +0100
+
+    add missing part of last commit...
+
+commit df07fa14da73e92d1a6ee0173468ab5c075d1cbb
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Wed Feb 21 13:05:42 2007 +0100
+
+    fix alignment issues with planar yuv and a bug with packed uyvy
+    
+    respect that all source planar yuv planes are already dword aligned.
+    Some attempts to fix up odd widths and odd heights (which are a bit strange
+    for 4:2:0 formats). They still don't quite work 100% correctly (at the borders)
+    but neither do they with packed yuv formats.
+    While here, fix totally broken packed UYVY format by inserting missing break...
+    Both bugs reported by Felipe Contreras.
+
+commit dfcb431adfbbaaee0d262d32735585555a0cbde4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Feb 20 21:20:28 2007 +1100
+
+    radeon: move some i2c registers out into common register file
+    
+    These regs are more useful than just multimedia
+
+commit 7a25512415bb40b772491bb4a773dfe02ac8b71a
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri Feb 16 00:44:11 2007 -0500
+
+    Add "DRI" option
+    
+    This option allows you to disable the DRI per card.  It also
+    removes the "RN50Force3D" option as it is now covered by this
+    option. RN50 users should set this to TRUE if they want to force
+    the DRI on.
+
+commit fa30ec6d5cd9bf4eb1a960592ca7311175219e4b
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Feb 13 15:35:32 2007 +0200
+
+    [mach64] PreInit: maxPitch, minor cosmetic.
+
+commit 1777dcc1956d910073e13322767d9a3de41a949b
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Feb 13 15:03:40 2007 +0200
+
+    [mach64] PreInit: pitchInc is local.
+
+commit 9cdf4fcc3a93a4e20244286392dc31a0b8e6a10a
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Feb 13 11:53:42 2007 +0200
+
+    [mach64] PreInit: Use goto bail.
+    
+    Match ATILock - ATIUnlock.
+
+commit 482b85144fee42b6543dcc97a75899e363e05e9e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Feb 12 14:27:37 2007 +0200
+
+    [mach64] Enable RENDER acceleration on the Pro variants.
+
+commit eda9fb15e8bc042661a91a3d8c921006dfb3ddd9
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Nov 21 04:02:41 2006 +0200
+
+    Consolidate atixv.c w/ atimach64xv.c, part 2.
+    
+    Move {Initialize,Close}XVideo from atixv.c to atimach64xv.c .
+
+commit 67b240ddd4a6549a23885afc723b6efa7c52db4c
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Oct 31 16:44:10 2006 +0200
+
+    Consolidate atixv.c w/ atimach64xv.c, part 1.
+    
+    Merge ATIXVInitializeAdaptor() in ATIMach64XVInitialiseAdaptor().
+
+commit 4dac7896549392f7378cad9620618cec28f41a16
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Oct 29 03:55:39 2006 +0200
+
+    Consolidate aticursor.c w/ atimach64cursor.c
+
+commit 23b12b9ff55224e8c3c45eb58ea5fbf2f747d82e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Oct 31 16:10:07 2006 +0200
+
+    Consolidate atiaccel.c w/ atimach64accel.c, part 2.
+    
+    Merge ATIInitializeAcceleration() in ATIMach64AccelInit().
+
+commit bc3b222b57d7edf7bdce00a53e8abd9047c314a4
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Oct 28 19:29:12 2006 +0300
+
+    Consolidate atiaccel.c w/ atimach64accel.c, part 1.
+    
+    Move ATIResizeOffscreenLinear() from atiaccel.c to atimach64xv.c and make it
+    static. It is only used by XV memory management functions.
+
+commit d876889add41c8052d4f3feaa21ddf384f5a7054
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Nov 21 04:47:06 2006 +0200
+
+    Drop non-PCI support from atividmem.c
+    
+    - we require a PCI device (pVideo != NULL)
+    - map the VGA framebuffer with xf86MapDomainMemory()
+
+commit 2c8b33b761e4411451aea1eea3a89d629aeea40d
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Nov 21 04:51:02 2006 +0200
+
+    Minor refactoring of pATI->Block0Base computation.
+
+commit a659b7235332e19659c56cc9d7af362bd8885a29
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Feb 4 11:28:54 2007 +0200
+
+    Cleanup checks for pATI->PCIInfo.
+    
+    Fixes a bug where shadowfb would not be enabled by default in the non-accel
+    case because pATI->PCIInfo is now set after ATIProcessOptions() is called.
+
+commit 9d77aabdff919360f0c9333105436c31f1f5749a
+Merge: ff8ea19... 57822be...
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Feb 5 19:16:51 2007 +0200
+
+    Merge branch 'mach64-pci-1'
+
+commit ff8ea19fcdce099732f9359e53cd62b9a04bfa6d
+Author: Alex Deucher <alex@botch2.hsd1.va.comcast.net>
+Date:   Tue Jan 30 21:11:09 2007 -0500
+
+    add option to force the DRI on for RN50 chips
+    
+    Allow user to force the DRI on for RN50 chips.
+    3D is not guaranteed to work on these chips,
+    however in some cases it does.
+    fixes bug 9802.
+
+commit 57822be75740f339445f2375d44632560f4bbe57
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Nov 21 03:08:26 2006 +0200
+
+    Drop pATI->Chipset, no longer used.
+
+commit 8b7c88e9ed549777413136c0f2ccc61747b010d8
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Dec 28 14:46:10 2006 +0200
+
+    Add option "probe_sparse" to force probing sparse I/O bases.
+
+commit 3654b786f1ad1f4e6bfb2fff5ff057254958f7c0
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Dec 27 17:59:14 2006 +0200
+
+    Sane probe, based on work by Luc Verhaegen <libv@skynet.be>.
+
+commit 0117c9bde0d0bbb487bc259cf55e8066ebd63f6a
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Dec 27 17:49:45 2006 +0200
+
+    Drop checking of sparse I/O bases conflicts
+    
+    This will be handled with an option somehow.
+
+commit 87cf2f1874ca8a7cc492d2e2b6918ba69a8aa713
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Aug 14 17:55:14 2006 +0300
+
+    Minor refactoring of module (un)loading for TV_OUT.
+
+commit 0b31333c9147af21c50493872779da12a3668e5d
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Nov 20 22:08:49 2006 +0200
+
+    Drop support for non-programmable clocks.
+    
+    From README.ati:
+    
+    Clocks for supported programmable clock generators:
+    
+      The driver currently supports all programmable clock generators known
+      to exist on Mach64 adapters.
+    
+    Clocks for unsupported programmable clock generators:
+    
+      This case is unlikely to occur, but is documented for the sake of
+      completeness.
+    
+    Thus:
+    
+    - check for (pATI->ProgrammableClock > ATI_CLOCK_FIXED) &&
+                (pATI->ProgrammableClock < ATI_CLOCK_MAX)
+    
+    - drop "probe_clocks" option
+    
+    - pATIHW->ClockUnmap is no longer used
+    
+    - pATIHW->ClockMap is only used with NewHW.crtc which is always ATI_CRTC_MACH64
+      and has the identity map, so drop it
+    
+    - (pATI->ProgrammableClock != ATI_CLOCK_INTERNAL) => (pATI->depth <= 8)
+
+commit c9a9ea5ebd1c27881c1fac19842cfa3af55c126e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Nov 20 15:09:41 2006 +0200
+
+    Banked memory is no longer needed.
+    
+    - (pATI->BankInfo.BankSize = 0) in all cases, cull pATI->BankInfo
+    
+    - only keep the minimal pATIHW.SetBank interface for save/restore
+    
+    - clean ATISwap() a little, (NewHW.crtc != ATI_CRTC_VGA)
+    
+    - (UseSmallApertures == TRUE) <=> pATI->VGAAdapter
+
+commit 383e963e275d351ea3631c352f5795340162d69f
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Jan 28 00:44:31 2007 +0200
+
+    Always use the linear aperture.
+    
+    - drop (pATI->OptionLinear == FALSE)
+    
+    - AcceleratorVideoRAM is always set, i.e. VGAVideoRAM is not used
+    
+    - pATI->LinearBase is always set
+    
+    - xf86LinearVidMem() is now checked in atipreinit() for both CPIO and MMIO
+
+commit 9b126f45db27496c1ad16db65a61fe641a018983
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Nov 20 20:38:59 2006 +0200
+
+    We always use the accelerator CRTC within the xserver.
+    
+    - cull (pATI->NewHW.crtc != ATI_CRTC_MACH64).
+
+commit 0abcb2b2c84a50e64bb6aa9e94760659ecf33add
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Jan 28 00:19:15 2007 +0200
+
+    Clean pATI->Adapter and pATI->VGAAdapter.
+    
+    - cull (pATI->Adapter != ATI_ADAPTER_MACH64)
+    
+    - treat pATI->VGAAdapter as Bool
+
+commit 817b4b5338dba4d8eb862f1f79ef0edb75aad7f4
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Dec 27 21:16:18 2006 +0200
+
+    Keep PCI mach64 only, drop:
+    
+    - Chip < ATI_CHIP_88800GXC
+    - Chipset != ATI_CHIPSET_ATI
+    - Adapter != ATI_ADAPTER_MACH64
+    
+    - depth < 8
+
+commit d350860e29f043e98bfb1da74b26280f1755ab6f
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Dec 27 20:56:45 2006 +0200
+
+    Keep PCI mach64 only (atipreinit.c, atimode.c), drop:
+    
+    - Chip < ATI_CHIP_88800GXC
+    - Chipset != ATI_CHIPSET_ATI
+    - Adapter != ATI_ADAPTER_MACH64
+    
+    - depth < 8
+    
+    atimode.c only:
+    
+    - NewHW.crtc != ATI_CRTC_MACH64
+    
+      This allows to drop VGACalculate(), VGAWonderCalculate() cruft early.
+
+commit 5fa77f2d122e7267911a15235338d8d3f9eece2e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Dec 27 14:50:48 2006 +0200
+
+    Drop probing for VGA, VGAWonder, 8514, Mach32.
+    
+    - ChipHasSUBSYS_CNTL
+    - Coprocessor
+    - SharedAccelerator
+    - SharedVGA <=> (VGAAdapter != ATI_ADAPTER_NONE)
+
+commit 1b2a9e1735da63bbb8cb41939668f789cee22579
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Nov 20 02:35:56 2006 +0200
+
+    Drop AVOID_NON_PCI.
+    
+    This was not set anyway, because configure.ac would compute ATIMISC_NON_PCI and
+    then test ATI_AVOID_NON_PCI to set AVOID_NON_PCI...
+
+commit 2fb84dd2fc1a663c7b9d77e706189439ffe08381
+Author: Alex Deucher <alex@botch2.hsd1.va.comcast.net>
+Date:   Thu Jan 25 02:01:42 2007 -0500
+
+    I think we can say r300 support is not experimental
+
+commit e155659f4b006edff31f1fda88b32bf608dbeece
+Author: Alex Deucher <alex@botch2.hsd1.va.comcast.net>
+Date:   Thu Jan 25 01:59:27 2007 -0500
+
+    update man page.  fixes bug 6457
+    
+    Most cards support 2D and 3D now
+
+commit f5ffb9fb3bdd7cec020240c5831ae92ee744972c
+Author: Timo Jyrinki <timo.jyrinki@hut.fi>
+Date:   Fri Jan 12 23:08:50 2007 +1100
+
+    ati: fix detection of some newer radeons using ati wrapper
+    
+    This is mainly due to the cards having a different resource 1.
+    Fixes 6796
+
+commit 1e690c57ad1dfaeb760ef6e799faa6398e9a0551
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jan 12 23:03:10 2007 +1100
+
+    always create a second CRTC I think this should solve any problems
+
+commit c54a31565e3ea50f1af7b81b1bf0c0e437099f47
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 10:39:01 2007 +1100
+
+    radeon: fixup fastwrites to be always off
+    
+    My 8500 in i845 doesn't work with fastwrites even setup by the firmware.
+
+commit dda2bbfdc2e0da6e8b9cb8d1bf78b91f1bb8131f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 10:29:54 2007 +1100
+
+    radeon: don't touch Controller[1] on single CRTC cards.
+    
+    This might fix bug 9371
+
+commit 9506f7015a1e442f4ca0bd3bfae555ec7e8a5f37
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Wed Jan 3 15:56:23 2007 +0100
+
+    fix uninitialized mode regs (bug 9495)
+    
+    Since the reorganization of the mode setting code, the mode registers relying
+    on state already set (by bios) were not read, thus clearing out all bits the
+    driver does not touch. At the very least, this could lead to completely
+    nonfunctional to misbehaving dvi output (see bug 9495). Fix this by using the
+    SavedReg values, which also makes it more obvious that those are bits which
+    were not set by the driver previously, but come from register readback.
+
+commit d5c6306385cbc7b13a132ae72ed04e04e24d9886
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Dec 19 09:45:24 2006 +0200
+
+    Use portable XORG_RELEASE_VERSION macro.
+
+commit 97df0a32b14e34f22dce9cd3b375c1ac5fb1c5eb
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Dec 19 11:28:21 2006 +0100
+
+    radeon: Advertise 2D engine limits to EXA when we're not using the 3D engine.
+    
+    Also round up to the maximum width and height, as that's what EXA compares.
+
+commit 295823d0879a5b574bb79843a6acd43adb9259e5
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Dec 19 11:19:20 2006 +0100
+
+    radeon: Default to leaving AGP transfer mode and fast writes unchanged.
+    
+    Based on the assumption that firmware should have set up the card and host
+    bridge appropriately for these settings, this may actually be safer, at least
+    for the transfer rate; leaving fast writes enabled is hopefully safe as well,
+    it certainly is on my sytem.
+    
+    See https://bugs.freedesktop.org/show_bug.cgi?id=9284 .
+
+commit 81f3b4070b70483d6da4f7587e52a64ac69c8ca0
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Mon Dec 18 14:06:15 2006 -0500
+
+    Revert "Convert callers of LookupWindow() to dixLookupWindow()."
+    
+    This reverts commit 48ff33a1770f3684cd50184db8f1944a456d9974.
+
+commit 48ff33a1770f3684cd50184db8f1944a456d9974
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Fri Dec 15 17:43:39 2006 -0500
+
+    Convert callers of LookupWindow() to dixLookupWindow().
+
+commit 120c854f185c1e7711cf0dee19303fdb8894d49d
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Fri Dec 8 02:51:52 2006 +0100
+
+    radeon: avoid unnecessary OUTPLL/INPLL calls when displaying video
+    
+    It is not necessary to always emit a OUTPLL/INPLL pair when we display
+    a video frame. On some chips there are erratas for which the workarounds
+    cause a 10ms delay by those calls. This is related to #5876 though those
+    affected may suffer from other slowness issues too.
+
+commit ccd37b3e88cdcfe03b7c707b6082339eb8f11e6b
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Dec 7 18:41:48 2006 +0100
+
+    radeon: Move Xv option handling code into RADEONPreInitXv().
+    
+    This unclutters RADEONPreInit() somewhat, but more importantly moves comparison
+    against info->ChipFamily after that's initialized.
+
+commit 02be8c04a268eaa71bdfe891331758715fef4e71
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Dec 7 18:31:58 2006 +0100
+
+    radeon: Make cache flushing for R300 series less invasive.
+    
+    Instead of calling the DRM CP idle ioctl, just emit the cache flush commands
+    into the CP stream.
+
+commit be46f7b6f7a729695a0affe2328077666283af12
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Dec 7 16:27:10 2006 +0100
+
+    Fix radeon compile warnings.
+
+commit 59c5b4f69c97fb233144677ab18095f88aed006b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:48:55 2006 +0200
+
+    Makefile.am: re-add ChangeLog to CLEANFILES
+
+commit 7611f14dc697b75cd7bb6493bb65b3a7ead379b8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Dec 6 18:47:33 2006 +0200
+
+    Makefile.am: fix changelog hook
+    Make changelog hook safe for all situations.
+
+commit f2a9d2d61addc4e3d5e128d8078a04c9a136be6a
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Wed Dec 6 00:16:41 2006 +0100
+
+    radeon: fix up packed yuv broken by planar yuv patch
+    
+    fix the forgotten leftuv value for packed yuv which is
+    needed to get correct uv starting pixel (fixes broken clipping /
+    non-null src start pixel as tvtime uses)
+
+commit d2aa57a4bdd4a0deb2c659bb07f3f57d1116f0d1
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Tue Dec 5 01:30:13 2006 +0100
+
+    radeon: use overlay scaler native planar yuv capability.
+    
+    Radeons can do planar yuv just fine, there is no need to convert all data
+    to packed yuv manually. This saves some cpu cycles as well as some
+    (graphic card) ram.
+
+commit 9cfa82e1670ad85746926995972a535ddf03ee07
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 3 15:56:38 2006 +1100
+
+    move monitor detection into single function
+
+commit 032a00d155ecdcdcab3ca0d047f552fe6b338a97
+Author: airlied <airlied@optimus.localdomain>
+Date:   Sat Nov 18 10:23:12 2006 +1100
+
+    make DDC function more generic
+
+commit 2632ae24b3b50c69567e92611ce7c2cd2ee98baa
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 3 15:22:38 2006 +1100
+
+    re-program bios 4 scratch so we know if the LCD panel is there post startup
+
+commit ddec94e8f2f5746bad0e998d15303e771803d22b
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 3 11:07:23 2006 +1100
+
+    move crtc to connector mapping to a connector to crtc mapping.
+    
+    Still not allowing any clone modes, but heading in the correct direction
+    I hope... there is a chance this will regress something from superpatch..
+
+commit 218cb7f8db35d0ce8f9fc4ece72bd5ec3f52106f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 3 09:53:35 2006 +1100
+
+    radeon: dynamically allocate connectors
+
+commit f22fd02bc7f7ef67e33c9bd93eae2d7488669b5e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Dec 2 19:48:00 2006 +1100
+
+    make CRTCs malloc'ed rather than part of Ent
+    
+    This is leading towards randr-1.2 believe me :-)
+
+commit 13efd1f75fbd29a4d1f69d7d5a5bb2b8d90ad820
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Dec 2 19:16:41 2006 +1100
+
+    move HasCRTC2 to pRADEONEnt from info
+
+commit 3933b86390eb2f4198d490acd4914fb470c40f47
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Dec 1 18:00:17 2006 +0100
+
+    Make log file output clear about origin of used overlay scaler buffer width.
+
+commit 563dfb52f5b24d2f765fae0394e599c11dcf0b5b
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Dec 1 17:56:19 2006 +0100
+
+    Increase default overlay scaler buffer width for RV350.
+    
+    Works with 1920x1080 video on my M10.
+
+commit 984ea3d9b7c27d8183ca94ad9d7905f03613fe10
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Dec 1 17:42:23 2006 +0100
+
+    Fix build warning.
+
+commit 9f5ea3981449f29ff204eb154166e8fc813205fa
+Author: Roland Scheidegger <rscheidegger_lists@hispeed.ch>
+Date:   Wed Nov 29 16:46:57 2006 +0100
+
+    radeon: bug #1462, predownscale to make HD video work.
+    
+    Use the overlay scaler's predownscale capability to make videos with large
+    horizontal resolution work if it exceeds the scaler buffer width. Make the
+    scaler buffer width user-configurable since we don't know it for all chips,
+    and using predownscaling may otherwise reduce quality even if it wouldn't
+    be needed. This should fix bug #1462.
+
+commit 35a5eaf5adf103ef57f8d4590dae25b0c50bd780
+Author: airlied <airlied@optimus.localdomain>
+Date:   Tue Nov 28 17:31:05 2006 +1100
+
+    fixup EXA after previous commit
+
+commit ba047ae863aac869595a31ea94f102084636fd29
+Author: airlied <airlied@optimus.localdomain>
+Date:   Tue Nov 28 17:26:10 2006 +1100
+
+    radeon: initial move framebuffer away from zero prep.
+    
+    In theory the driver should be able to handle the front buffer not at VRAM 0
+    In practice it didn't.. this is cleanup for at least XAA parts of the driver
+    to allow for the frontbuffer to move. It has to re-organise a large part of ScreenInit so things happen in the correct order otherwise some things get setup in-correctly. (not sure EXA with fb not at 0 works yet...)
+
+commit 0d42cab2d889070ab6de05990e2b19724595f7af
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Wed Nov 22 13:44:49 2006 -0500
+
+    clean up previous VIP commit.
+
+commit 8e0f57571228729cc40ed59266484ecc43819f44
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Wed Nov 22 13:38:01 2006 -0500
+
+    Don't mess with the VIP bus on mobility chips.  Seems to cause fan
+    problems on asus laptops (see bug 7463).  We don't support video-in
+    on any laptops at the moment anyway.
+
+commit e4850610596a08082a528c38186268b72012e78c
+Author: Alain Péteut <alain.peteut@gmx.ch>
+Date:   Wed Nov 22 12:54:55 2006 -0500
+
+    enable i2c for PCI_CHIP_RV250_If.  allows AIW fuctionality to work.
+    patch and testing from Alain Péteut
+
+commit ff38c2c9cf0c6acbdaf53b681ec721487cf411f8
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Nov 19 17:11:46 2006 +0100
+
+    radeon: Bug #8989: Fix page flipping artifacts with XAA.
+    
+    We still have to force-sync the pages on enabling page flipping with XAA as the
+    second page may have been clobbered by the offscreen pixmap cache since they
+    were last synced.
+
+commit 2dd0892817090709b2fb7ffba920595ada00fcad
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Nov 19 17:09:11 2006 +0100
+
+    Fix compile warnings.
+
+commit 8c1b9269aaac746989bdb9be02915722bcf6fec0
+Author: airlied <airlied@optimus.localdomain>
+Date:   Fri Nov 17 18:47:50 2006 +1100
+
+    forgot SetPitch function is called
+
+commit 3a0338bb487739a1740ddfb4d36d53cfa7f798c6
+Author: airlied <airlied@optimus.localdomain>
+Date:   Fri Nov 17 18:37:00 2006 +1100
+
+    split mode handling code into separate modes source file
+
+commit 13e0a95564220d42ad8060b43b0aaaba3002157a
+Author: David Airlie <airlied@asimov.stargames.com.au>
+Date:   Mon Nov 13 09:35:18 2006 +1100
+
+    fix up issue with bindings and mergedfb
+
+commit 63444770ff30afeb134befed5bb3a5c28b7bc4e9
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Nov 9 22:01:28 2006 +0200
+
+    [mach64] Prefer double-buffered visuals for GLX.
+    
+    So that 3D apps apropriately fail in DRI...
+
+commit 0411f68d71c75cda38ad46ad5c0f5cc3cda64464
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Nov 9 22:00:56 2006 +0200
+
+    [mach64] Use asynchronous DMA mode by default.
+
+commit 8dd668db05e8f1282fa0e29a91e38c7cbdc97aa1
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Nov 12 16:33:21 2006 +1100
+
+    radeon: abstract init display bandwidth from mergedfb
+
+commit 45a9f434b77ad892efcdba267a935135b972dd42
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Nov 12 16:12:56 2006 +1100
+
+    add radeon Init2 function, to abstract some mergedfb mode setting
+
+commit d0828804aec0852afaca44ee41c4792edc40dbb4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Nov 12 15:59:02 2006 +1100
+
+    add initial controller binding, remove uses of mergedfb test
+
+commit 78061ca460c9d6fd338ccf273bbfa152f471622e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Oct 23 16:49:59 2006 +1000
+
+    radeon: separate static controller setup from non-static
+
+commit f917f65e8d2b13d8b9bfc4320f4a935f5a5c4bff
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Nov 2 21:16:53 2006 +0200
+
+    Officially require libdrm 2.2.0
+    
+    Note that this is only for the headers at compile-time. The driver still
+    uses libdrm 1.2.0 from Xserver at run-time.
+
+commit ca8c148942371c9445f32985625ce38eabc016e1
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Oct 26 15:40:46 2006 +0300
+
+    Handle .99 in version patch level.
+
+commit 23cec754158c94b43225b2070fc0a0b003e7bd25
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Oct 26 15:39:49 2006 +0300
+
+    [mach64] EXA: reserve DRI buffers only when DRI is active.
+
+commit 9cd78af1d06f753e7bd7e1acaff25398bde45f6e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Oct 23 16:52:07 2006 +1000
+
+    radeon: set preferred modes
+
+commit 914a5f0117ccb76292bdd81ea4a2a79d33319550
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Oct 23 10:13:24 2006 +0200
+
+    radeon: Pitch doesn't matter when height == 1.
+
+commit 2bcb51d66edaa944379cf8c8ca1ba91fffdc20a8
+Author: Michel Daenzer <michel@tungstengraphics.com>
+Date:   Sun Oct 22 17:26:28 2006 +0200
+
+    Bug #6756: Attempt to fix repeat picture acceleration.
+    
+    Always use normalized texture coordinates on R200 and fall back if a POT
+    texture pitch doesn't match the HW's implicit pitch.
+
+commit dabffb8335027b60ca1fc554423e196dfb9acd6d
+Author: Henry Zhao <henry.zhao@sun.com>
+Date:   Tue Oct 17 21:17:47 2006 -0400
+
+    improved results for mergedfb xrandr refresh rates - bug 6966
+
+commit 831fc4a009841f68fe161b6e0db5b212d7d8079b
+Author: Henry Zhao <henry.zhao@sun.com>
+Date:   Sun Oct 15 17:12:06 2006 -0400
+
+    fix bug 6966 (Henry Zhao, Shem Multinymous)
+
+commit 5425be996692425e57884e5a4c159fc79510e89f
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Sun Oct 15 16:49:24 2006 -0400
+
+    clean up magic number
+
+commit 457178f418983041ea59df703a17513a47d17044
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Sun Oct 15 16:40:08 2006 -0400
+
+    Disable all ouputs on initial mode set.  The ones we want will get
+    enabled by RADEONEnableDisplay().
+
+commit 3fb3f410931a13542fdd4c51c4c9ecada7b37d76
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Sun Oct 15 13:29:48 2006 -0400
+
+    Rework the output init code.  Divide into separate functions
+    for each output.
+
+commit 45e13f3c8786e75276cce85de4af653713d9b4d8
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Sun Oct 15 13:18:01 2006 -0400
+
+    Remove paneloff option.  This is already covered by monitorlayout and
+    shouldn't be needed with xrandr++.
+    Also remove commented out Bioshotkey code.
+
+commit 4abb5b7afea8d37e95461335e52b16168e555dab
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Sun Oct 15 13:10:22 2006 -0400
+
+    Remove Bioshotkeys option.  Leave the bios as configured at boot.
+    Most distros enable this option by defalt anyway, and with xrandr++
+    it won't be an issue anyway.
+
+commit 2933140b5f1f8a6e270460d8918a14943bd0f174
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Oct 15 17:05:02 2006 +0200
+
+    radeon: Use xf86XVFillKeyHelperDrawable() when available.
+
+commit 4edbfb9eb952f9b3f5f597749192c17baf15cdce
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Oct 15 17:03:13 2006 +0200
+
+    radeon: Track screen damage all the time for page flipping.
+    
+    This way we don't ever have to forcedly synchronize the pages so we hopefully
+    never clobber one page's contents when we shouldn't.
+
+commit c9c2ac2b42398f5bfad909f3289e2545bb7b3888
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Oct 14 15:49:22 2006 +0200
+
+    radeon: Don't try to synchronize pages when the CP isn't running.
+    
+    Also move the DamageEmpty() call into RADEONDRIRefreshArea().
+
+commit c19915a401ccf69046bed03c8d5067f2e72a094e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Oct 6 09:55:40 2006 +1000
+
+    always turn on DAC for scanning the CRT connect.
+    
+    Ubuntu 63994 - myself and BenH discussed this as a good idea on irc
+
+commit b8547aa89f93a7fefbefb1c0d2743999930ac785
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Oct 4 01:44:24 2006 +1000
+
+    update version number to 6.6.99 in preparation for a 6.7 branch at some stage
+
+commit 23a6f97e08fd49e1cae03cd97cae67a5f06b7634
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Oct 3 13:48:09 2006 -0400
+
+    FP timing regs required for both internal and external TMDS
+
+commit 829be884702043fe4c9e349488d2585bf0561ae9
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Oct 3 13:41:21 2006 -0400
+
+    remove bogus registers
+
+commit cd900580dbc8928ebc28514162b4c1dbfe9fd5ae
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Oct 3 00:32:22 2006 +0300
+
+    [mach64] Fix build for !defined(USE_EXA).
+
+commit 22860a3c0685a25f982983654303ad02aedc02ec
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Jul 16 19:23:56 2006 +0300
+
+    Bug 6242: [mach64] Use private DMA buffers.
+    
+    Map the DMA buffers read-only. This eliminates a security problem where a
+    client can alter the contents of the DMA buffer after submission to the DRM.
+
+commit cb53fe7c1e45937746e43437ae6adb0355306ae9
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Sun Oct 1 18:46:05 2006 -0400
+
+    fix LVDS plus internal TMDS
+
+commit 145c716de6d42778e447581578f3e4db13c9a653
+Author: David Woodhouse <dwmw2@infradead.org>
+Date:   Sun Oct 1 18:22:14 2006 +0200
+
+    Fix radeon vs fbdev pitch calculation.
+    
+    Fetch the correct displayWidth from fbdevhw after setting the mode.
+
+commit d43ad88fa3913437f6987ab5ab46a38f0cb555a8
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Sep 30 19:25:20 2006 +0200
+
+    radeon: Add support for page flipping with EXA.
+    
+    Also use the damage layer directly instead of via shadowfb and blit dirty
+    rectangles to the second page in LeaveServer in order to try and improve the
+    tradeoff between performance and correctness.
+
+commit 146ea328b7962f56c6ab47fbe2adc7561b36189c
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Sep 30 19:22:26 2006 +0200
+
+    radeon: Fix function name typo which could probably lead to an unresolved symbol.
+    
+    Also remove declaration of an unused variable.
+
+commit 6671c1b01bf29d8f1cacf9306ef658b967d8a3cf
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Sep 30 18:29:45 2006 +0200
+
+    radeon: Always call RADEONGetAccessibleVRAM().
+    
+    This fixes issues with Option "UseFBDev" and the new memmap code.
+    
+    OTOH, there is potential for this to break IGPs, but that's what Bugzilla and
+    git-bisect are for...
+
+commit c979c7f87fc449cc9631820101edff82c3013e66
 Author: Roland Scheidegger <rscheidegger_lists@hispeed.ch>
 Date:   Sat Sep 30 15:14:42 2006 +0200
 
@@ -29,16 +1220,213 @@ Date:   Sat Sep 30 15:14:42 2006 +0200
     
     This prevents the ROMs on some Mac cards getting treated as x86 BIOSen,
     resulting in garbage values.
-    (cherry picked from c979c7f87fc449cc9631820101edff82c3013e66 commit)
 
-commit 4921228fb76ec26249aa0f6f0f1ddebf26661b82
-Author: David Woodhouse <dwmw2@infradead.org>
-Date:   Sun Oct 1 18:22:14 2006 +0200
+commit 37c114acbabe35881c39642e293519e2635907aa
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Sep 30 15:11:42 2006 +0200
 
-    Fix radeon vs fbdev pitch calculation.
+    Remove some dead code.
     
-    Fetch the correct displayWidth from fbdevhw after setting the mode.
-    (cherry picked from 145c716de6d42778e447581578f3e4db13c9a653 commit)
+    Fix two compile warnings.
+
+commit 6d7b0763173f56050411d7bdf9a583b9bfc050c4
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Sep 29 18:50:44 2006 -0400
+
+    Undo unintended configure.ac change.
+    
+    Dammit, git, grow a sensible UI already.
+
+commit f96ddd32d3a9e64dc0adec5c50386d6db5b182ee
+Author: Ronald Wahl <rwahl@gmx.de>
+Date:   Fri Sep 29 17:51:42 2006 -0400
+
+    Hook up DFP power to DPMS events.
+
+commit f6b42149c5a3fee663575fe6bbe78b62695bdbc8
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Sep 29 00:44:36 2006 -0400
+
+    tvdac handling was reversed between r200 and other chips
+
+commit c0660495080719c052d6393ede707755929102cd
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Sep 27 18:12:52 2006 +1000
+
+    radeon: check DDC info for both connectors not just the pScrn one.
+    
+    Otherwise we disable DDC before we've checked the CRT if LVDS is in use
+
+commit 5b98545618141e86164f3ce66469f9e16b1cf6d4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Sep 27 18:10:30 2006 +1000
+
+    radeon: don't move connectors around if LVDS connector is connector 1
+    
+    On my laptop this allow me to plug or not plug a monitor without affecting
+    my lvds
+
+commit 74c725bd86348b5bf9bba0c50e8a6a7885d7ff7b
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 25 11:35:32 2006 +1000
+
+    radeon: cleanup some bits from superpatch
+
+commit 9827afaa40720a58e2fc029c0bf92ad2fe223d11
+Merge: 10b4b46... ad8259c...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 25 11:25:17 2006 +1000
+
+    Merge branch 'radeon-sp'
+
+commit ad8259c814629e741ed5567923f40879cc0c7051
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 25 11:25:03 2006 +1000
+
+    radeon : add back tv-dac register write
+
+commit 10b4b46c16ff3748856b732f9a39de40ba197112
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 25 09:08:47 2006 +1000
+
+    remove all CVS annotations from the ATI driver files
+
+commit 976dec04786e9b050945c290840b4cdc978c0b23
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 25 09:00:21 2006 +1000
+
+    radeon: put back in reverseddc code
+    
+    BenH claims it is needed, agd5f can fix it up later if it isn't.
+
+commit 980fb2f6bd7641c8c57769b0c67e3561903e89a9
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 08:31:56 2006 +1000
+
+    radeon: add some missing bits of superpatch for crtc registers
+
+commit 1ba4f36821e60289cad937abbb0edb273c88436c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 08:25:42 2006 +1000
+
+    radeon: finish radeon_driver.c import for register changes
+
+commit 547543bbefe605a453bfa5ae6d063ae02c5f040e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Sep 23 08:21:59 2006 +1000
+
+    radeon: re-organise FP and CRTC register setting routines
+
+commit fd978140bcb7670f28c684c06c2b6c611c26bef4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 08:09:57 2006 +1000
+
+    radeon: initial CRTC register setting alignment
+
+commit 406f4911e7ce821002c111d6bcdec35f5b56c943
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:59:24 2006 +1000
+
+    radeon: setup the radeon init function to use secondary
+
+commit 452f0f8079d65679905ed5178a256534ef0db0e4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:41:57 2006 +1000
+
+    radeon: bring over final set of changes for radeon_display.c from susperpatch
+    
+    This brings over Alex's final set of changes...
+    
+    i'm unsure about the disappearance of reverseddc - alex to review
+
+commit a8b9aa69259a0706d0688d2656ece5a292799242
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:38:25 2006 +1000
+
+    radeon: align tabs and make display detection like superpatch
+
+commit 8d4ae98c528a2309dc3c545893dbba2e7f76916c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:26:44 2006 +1000
+
+    radeon: align some output with superpatch
+
+commit 65b54847c5e79b2ec3cb1a08b265229443c9deb9
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:22:31 2006 +1000
+
+    radeon: change function name to Displays rather than Monitors
+
+commit 7e16d9fff96dcdff8c25dbbe2a51be0023b7985a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:21:15 2006 +1000
+
+    radeon: make GetConnectedMonitors a static void
+
+commit 6f63b3dc8b3e2299f5f02abc1c565176d2d46cee
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 23 07:19:43 2006 +1000
+
+    radeon: some minor alignments and cleanups for info->
+
+commit c9f3ced3b1c194cacf1ab9436ee6c2d4efd3a8e9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Sep 23 07:16:10 2006 +1000
+
+    radeon: add reverse display option to switch displays on non-mobility cards
+
+commit e752443c540d9a94522050c61ef7c33d912fece5
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 07:10:10 2006 +1000
+
+    radeon: flesh out mapcontrollers
+
+commit 7a0e4eb47655c4701fc3a4b33b6c8e9f378ccc9e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 07:05:56 2006 +1000
+
+    radeon: add some info to the map controllers
+
+commit 75bf69c868be6164d0041a32f52244f1ef83e050
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 07:03:52 2006 +1000
+
+    radeon: add simple map controllers call
+
+commit 8ba5abd1329347c7fbf4b4d09c95da0d23b4884a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 06:58:41 2006 +1000
+
+    radeon: move comment
+
+commit e8d77b7c36fa791a2350a6f4b15728b15d8f3de0
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 06:55:51 2006 +1000
+
+    radeon: refactor blank/unblank
+
+commit 8534723f5710e2916b4a22efe22a6b7365cc8db6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Sep 22 06:36:03 2006 +1000
+
+    radeon: make DVI_I default connector
+
+commit d7fc79fd9f094ac462de0883af7e6030cb6195a6
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 06:35:34 2006 +1000
+
+    radeon: add enable display function
+
+commit 4a54886d510f26b29d27e5c9a73647554291b1a6
+Merge: 70264d6... 9fa176c...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Sep 22 06:00:04 2006 +1000
+
+    Merge branch 'master' into radeon-spm1
+    
+    Conflicts:
+    
+    	src/radeon_driver.c
 
 commit 9fa176c7989030e7340cc9b85d0b6a7b34303091
 Author: Alex Deucher <alex@samba.(none)>
@@ -62,6 +1450,116 @@ Date:   Mon Sep 18 19:41:21 2006 +1000
     
     This should fixup the rn50/m6/m7 memory map problem that has been reported
     since BenH's memory mapping changes
+
+commit 70264d645724718a48ca229fedc04e33681b7d31
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 09:56:25 2006 +1000
+
+    radeon; put back old TV DAC code for now
+
+commit 53eb843ad8ec5a292dff0844330ecfa9b7b2a0cb
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 07:55:21 2006 +1000
+
+    radeon: move code around in InitCrtcRegisters
+
+commit bcae4352079109a9dd16117bf9ec19dd215180bf
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 07:33:48 2006 +1000
+
+    radeon: cleanup DPMS set on/off code to use new controller structure
+
+commit 87622f56b3dd7e2d2f00ad71e5b569eac31fb2b1
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 07:15:54 2006 +1000
+
+    radeon: cleanup DacPowerSet
+
+commit a417fa081926b2f84e2cbdc355cc7462d1ebdfad
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 07:15:41 2006 +1000
+
+    radeon: fixup InitFPRegisters function call to not pass info
+
+commit 8bff57a938e92dfc8729e40f7aa9ad9a96262131
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 07:02:35 2006 +1000
+
+    radeon: copy of overupdated bios hotkeys code from Alex
+
+commit 76352c684d5e840c9f7ac0781e3ecb32951b32db
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:54:28 2006 +1000
+
+    radeon: minor cleanup of masking for crtc registers
+
+commit a7b97697ed13ac25844890439ffba31524e03a16
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:53:23 2006 +1000
+
+    radeon: initialise controller structures
+
+commit 362ee3778764633cb4c9388aa329c5b715885038
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:41:14 2006 +1000
+
+    radeon: move InitFPRegisters up to align with superpatch
+
+commit 11fb9a14741746c752b0001c1b1d39a54e69657a
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:35:50 2006 +1000
+
+    radeon: add tv dac adj lookup
+
+commit a15ac59c4d1a15380910be2a7438111b09161c81
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:35:28 2006 +1000
+
+    radeon: re-add ATI patch for rn50 modes
+
+commit d80ea2d67b63ea2f2ce0277952af186b69b19e7d
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:30:30 2006 +1000
+
+    radeon: re-add DAC power on/off code around detect
+
+commit 0a93936f9f048b8837f1c765fea7ccb61f072697
+Author: Dave Airlie <airlied@starflyer-ubuntu.(none)>
+Date:   Mon Sep 18 06:25:15 2006 +1000
+
+    radeon: restore secondary head behaviour
+
+commit 6da5a0bfdedb2062ec835f45514c22917abdcf4c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Sep 18 06:16:58 2006 +1000
+
+    radeon: move to using Alex's controller structure
+
+commit cd1bc1d1febf0a79d835c7dc8b353123278dec51
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Sep 18 02:44:09 2006 +1000
+
+    radeon: add save/restore of some new registers
+    
+    move some registers about
+
+commit 9b5c4cf8a98b0c20bb821f5003495481fbd0c10c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Sep 18 02:28:32 2006 +1000
+
+    radeon: add pre init controller function
+
+commit 311e776c4429485d29aaf11d350cab8e6fe7564b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Sep 18 02:21:49 2006 +1000
+
+    radeon: add missing tv-out registers to register list
+
+commit 65cb77c79c2c5cb536494200d4fba6815d7e771c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Sep 18 02:21:29 2006 +1000
+
+    radeon: restructure files along lines of Alex's superpatch
 
 commit 25fa71ca0a24190cc8be2e80769443e0e09303b3
 Author: Henry Zhao <henryz@ati.com>
