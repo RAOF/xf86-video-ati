@@ -9,7 +9,7 @@ xserver-xorg-video-ati (1:6.6.191-2) UNRELEASED; urgency=low
     (needed to let xsfbs get access to serverminver).
   * Add XS-Vcs-*.
   * Add a link to www.X.org and a reference to the xf86-video-tga
-    module in the long description.
+    module in the long description (closes: #425321).
 
   [ Timo Aaltonen ]
   * Replaces/Conflicts: xserver-xorg-driver-ati.
