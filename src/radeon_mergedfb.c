@@ -215,8 +215,13 @@ RADEONCopyModeNLink(ScrnInfoPtr pScrn, DisplayModePtr dest,
       * extension to allow selecting among a number of modes whose merged result
       * looks identical but consists of different modes for CRT1 and CRT2
       */
-    mode->VRefresh = (float)((i->Clock * 1000.0 / i->HTotal / i->VTotal) * 100 +
-	(j->Clock * 1000.0 / j->HTotal / j->VTotal));
+    {
+	float ref1, ref2;
+	ref1 = ((float)i->Clock * 100.0 / i->HTotal / i->VTotal) * 50.0;
+	ref2 = ((float)j->Clock * 100.0 / j->HTotal / j->VTotal) / 2.0;
+
+        mode->VRefresh = (float) ref1 + ref2;
+    }
 
     mode->Clock = (int)(mode->VRefresh * 0.001 * mode->HTotal * mode->VTotal);
 
@@ -389,7 +394,7 @@ RADEONGenerateModeListFromLargestModes(ScrnInfoPtr pScrn,
     if(srel != radeonClone) {
        if(mode3 && mode4 && !info->NonRect) {
 	  mode1 = mode3;
-	  mode2 = mode2;
+	  mode2 = mode4;
        }
     }
 
@@ -536,12 +541,33 @@ RADEONGenerateModeList(ScrnInfoPtr pScrn, char* str,
            DisplayModePtr p, q, result = NULL;
 
            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                "Clone mode, list all common modes\n");
-           for (p = i; p->next != i; p = p->next)
-                for (q = j; q->next != j; q = q->next)
-                   if ((p->HDisplay == q->HDisplay) &&
-                        (p->VDisplay == q->VDisplay))
-                        result = RADEONCopyModeNLink(pScrn, result, p, q, srel);
+                      "Clone mode, linking all nearest modes\n");
+
+           p = i;
+           q = j;
+
+           result = RADEONCopyModeNLink(pScrn, result, p, q, srel);
+
+           while (p->next != i || q->next != j) {
+              DisplayModePtr next_p = p;
+
+              if (q->next == j || (p->next != i &&
+                                   (p->HDisplay > q->HDisplay ||
+                                    (p->HDisplay == q->HDisplay &&
+                                     p->VDisplay >= q->VDisplay))))
+                 next_p = p->next;
+
+              if (p->next == i || (q->next != j &&
+                                   (q->HDisplay > p->HDisplay ||
+                                    (q->HDisplay == p->HDisplay &&
+                                     q->VDisplay >= p->VDisplay))))
+                 q = q->next;
+
+              p = next_p;
+
+              result = RADEONCopyModeNLink(pScrn, result, p, q, srel);
+           }
+
            return result;
         } else {
            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -581,8 +607,10 @@ RADEONRecalcDefaultVirtualSize(ScrnInfoPtr pScrn)
   	               info->CRT1XOffs = info->CRT2XOffs = 0;
   	               maxh -= (info->CRT1XOffs + info->CRT2XOffs);
   	}
-  	pScrn->virtualX = maxh;
-  	pScrn->displayWidth = maxh;
+	if (maxh > pScrn->virtualX)
+	    pScrn->virtualX = maxh;
+	if (maxh > pScrn->displayWidth)
+	    pScrn->displayWidth = maxh;
   	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, str, "width", maxh);
     } else {
   	if(maxh < pScrn->display->virtualX) {
@@ -592,7 +620,8 @@ RADEONRecalcDefaultVirtualSize(ScrnInfoPtr pScrn)
     }
 
     if(!(pScrn->display->virtualY)) {
-        pScrn->virtualY = maxv;
+	if (maxv > pScrn->virtualY)
+	    pScrn->virtualY = maxv;
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, str, "height", maxv);
     } else {
 	if(maxv < pScrn->display->virtualY) {
