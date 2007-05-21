@@ -8,7 +8,7 @@ xserver-xorg-video-ati (1:6.6.192-1) experimental; urgency=low
   * Bump Build-Depends: xserver-xorg-dev to >= 2:1.2.99.902
     (needed to let xsfbs get access to serverminver).
   * Add XS-Vcs-*.
-  * Add a link to www.X.org and a reference to the xf86-video-tga
+  * Add a link to www.X.org and a reference to the xf86-video-ati
     module in the long description (closes: #425321).
 
   [ Timo Aaltonen ]
