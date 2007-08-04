@@ -1,3 +1,242 @@
+commit 1de52d91ff3a04b9b587b858e1e5be40d3a7fd0a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Aug 4 17:58:58 2007 +1000
+
+    update configure.ac for 6.6.193 release
+
+commit 371001c0433db1d17e468f3ea99ea57f922145a3
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Aug 4 17:51:19 2007 +1000
+
+    radeon: remove unused variables
+
+commit 90946c53d7a4b23d03270ad6da0450759a11de3d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Aug 4 17:51:06 2007 +1000
+
+    ati: add -Wall for gcc
+    
+    As per luc's "suggestion" in Novell bug.
+    
+    This may generate warnings on 64-bit until we get rid of CARD32
+
+commit e30a145934df8f6a7f71290d6c75e4239f9d52f7
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Aug 4 17:44:46 2007 +1000
+
+    radeon: cleanup some pieces of the dpms/blank register programming
+
+commit a156db5e8b037ed12a448f70045453baf9d0c504
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sat Aug 4 17:37:18 2007 +1000
+
+    Clean up PortInfo to CRTC mapping
+    
+    Also sanitise blanking and DPMS functions
+    
+    Fixes from Novell Bug 264720, and fd.o 10772
+
+commit 165a07cbbfcd94e3d1fac434b8fada8d29428a09
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Wed Jul 25 19:01:02 2007 +0200
+
+    Minor fixes in the manpages
+    
+    - ati.man
+      . add references to radeon and r128 manpages in SEE ALSO
+        (Xavier Bestel in Debian bug #386001).
+      . remove the manpage suffix from atimisc reference in the text
+        since there is no such manpage for now.
+    - radeon.man
+      . typo in "specifying" (reported by A. Costa in Debian bug #432059).
+      . replace a non-ascii character with the corresponding groff escape
+        sequence so that it works whatever the locale (Julien Cristau).
+
+commit 18b00b47a483e7854727e99126808ddf361e7a4a
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jul 19 19:01:42 2007 -0400
+
+    R128: don't clip modes to panel on laptops when only using the CRT port
+    
+    fixes bug 5832
+
+commit 882fe7631586b0a7919f808588a2ea4fb555f7e8
+Author: Brice Goglin <brice.goglin@ens-lyon.org>
+Date:   Thu Jul 19 18:44:27 2007 -0400
+
+    MACH64: avoid crash in Xv code
+    
+    fixes bug 11054
+
+commit ac9cbaf32176cf144bc694ac879e7c9e2920f762
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Jul 2 10:06:02 2007 +0200
+
+    radeon: Fully zero-initialize info->CRT2pScrn->monitor.
+    
+    This prevents modes from getting rejected due to the uninitialized maxPixClock
+    value.
+    
+    Fixes http://bugs.freedesktop.org/show_bug.cgi?id=9816 .
+
+commit 5b5b90c2cea7e36895354f5872acd3fc769653f9
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 25 16:27:54 2007 -0400
+
+    RADEON: fix possible segfault on mobility chips with MM tables
+    
+    spotted by Stefan Buehler
+
+commit 92e65d5e0d6817ff4c9a08020a0a9b3a8c3c98b0
+Author: Andrew Randrianasulu <randrik@mail.ru>
+Date:   Fri Jun 22 00:55:00 2007 -0400
+
+    RADEON: Fix VT switch hangs
+    
+    - reorder RADEONDRISetVBlankInterrupt() and RADEONDRIResume()
+    - see bug 11287
+
+commit b72ff160f908bf3aa9f64705377e92d80360a4f7
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 18 21:51:45 2007 -0400
+
+    RADEON: only touch LVDS on mobility chips
+
+commit 80313621ffa8c409ae63fc1b28c15fc4abdc3a7b
+Author: Henry Zhao <henryz@localhost.localdomain>
+Date:   Fri Jun 15 17:00:05 2007 -0700
+
+    Update CRT2pScrn->monitor->Last to reflect the
+    last mode of CRT2pScrn. See bug 11278.
+
+commit f19a6f7ee5bf4ec632e7813359f167599c08e823
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 12 23:44:41 2007 -0400
+
+    RADEON: additional LVDS off fix (missed in previous commit)
+
+commit 44748a826b52924a6e050215d8d62755e0ac7fb2
+Author: Tormod Volden <bugzi06.fdo.tormod@xoxy.net>
+Date:   Tue Jun 12 23:23:49 2007 -0400
+
+    RADEON: limit PanelPwrDly to 2000 ms on ATOM bios as per legacy bios
+    
+    - fixes bug 11238
+
+commit c292fc64499ff4cc135c07deda99cf4169f8fef4
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 12 23:20:18 2007 -0400
+
+    RADEON: make sure RADEON_LVDS_ON is cleared when turning LVDS off
+    
+    - fixes bug 3483
+
+commit c6a3286d6f6ddda89115d98d45665dadd78bf41d
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Jun 11 09:39:38 2007 +0200
+
+    radeon: Fix panel size detection from registers with stretched mode programmed.
+
+commit 7a6b3c0f77c69019268f585c51c3dcbcc99014d4
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Jun 11 09:39:38 2007 +0200
+
+    radeon: Don't loop indefinitely if no mode matches detected panel size.
+
+commit f31fd9ce598841c505a0b5ed32bf124f49fea332
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Jun 11 09:39:38 2007 +0200
+
+    radeon: Fix some more ErrorFs when setting mode.
+
+commit 2d40fa55e8d7a1cfb204d66ca4a4d95a3b13d5b5
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jun 3 17:32:43 2007 +1000
+
+    radeon: disable irqs at server start until 3D app starts
+
+commit dcb64a4d3947e5a9fbda4b72e29a5b6102370f07
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jun 3 17:10:49 2007 +1000
+
+    radeon: disable vbl interrupts when no 3d is running on a new enough drm
+
+commit 4c61c0ee91a2ffeefce30972a584486f1df1d1ae
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Tue May 29 21:35:35 2007 -0600
+
+    Fix build without XF86DRI
+
+commit 5337e7bd0069a3f2c4ab22b21a19471427ad3d81
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Wed May 30 08:10:44 2007 +1000
+
+    radeon: add bios quirk for nx6125 monid
+
+commit bff809dc8ed07ac39e9b576a87916486a5e37156
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Wed May 30 08:02:26 2007 +1000
+
+    rs480: more unknown regs
+    
+    Hardcode the values from a working fglrx run, this works for me now
+    
+    I've no idea what it might do for anyone else
+
+commit 104105fee5c3945d3f210e6a4cb73ab492c61543
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Tue May 29 19:09:33 2007 +1000
+
+    rs480: make second crtc work with magic number in magic register.
+    
+    I've no idea why or what this does.
+
+commit 5aa603bcabbb077dec169c48438c2e2ebe1195d7
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Tue May 29 07:23:24 2007 +1000
+
+    rs480: only has single dac
+
+commit c52322354fe64725733842b3356798c50e7735d5
+Merge: dd6a966... 975da59...
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Tue May 29 07:21:48 2007 +1000
+
+    Merge branch 'origin'
+
+commit 975da595f032c145ad74079ff8edeaead779dc7b
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue May 22 10:56:47 2007 +0200
+
+    radeon: Provide new DRI texOffsetStart hook when available with EXA.
+
+commit 8275151baac22c34149cef0b7d922771d24abc3e
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon May 21 10:25:48 2007 +0200
+
+    radeon: HW cursor cleanup.
+    
+    Don't needlessly turn the HW cursor on/off in RADEONLoadCursor*().
+    
+    Besides cleaning up the code, this semms to avoid some HW cursor related 3D
+    lockups, see https://bugs.freedesktop.org/show_bug.cgi?id=10815 . My best
+    guess is that this is because the engine is now always idled before touching
+    the CRTC registers.
+
+commit 137e3fc1899078af0f72303ab0a4e6cf35804a7b
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon May 21 10:25:48 2007 +0200
+
+    radeon: Suppress debugging output by default.
+    
+    It can be enabled at runtime by increasing the log verbosity level.
+    
+    Also change the prefix from (**) to (II) to make grepping the log file for
+    defaults overridden by xorg.conf more useful again.
+    
+    Turn some MC related debugging output into normal informational output as it's
+    useful for recognizing corner cases that can cause stability issues.
+
 commit 09bfc8ed000f95ede5b73f2bad69edc1a4d9bac6
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Sun May 20 18:06:22 2007 -0400
@@ -26,6 +265,18 @@ Date:   Wed Apr 25 09:52:22 2007 +1000
     Let me know if I screwed this up..
 
 commit 3828237200fc16d4d32664fb8358950c213d4897
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Sun Apr 22 11:36:00 2007 +1000
+
+    radeon: add support for DDC on some laptop chipsets
+    
+    I noticed fglrx has DDC for the panel in the rs480 laptop, however radeon
+    didn't pick it up, so I valgrinded fglrx and spotted 0x1a0/0x1a4 accesses
+    I actually noticed this before from the BIOS but never figured it out.
+    
+    So now I get DDC from the LCD on this laptop.
+
+commit dd6a966e862b774a8e8b9e1a085309219673efad
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Sun Apr 22 11:36:00 2007 +1000
 
