@@ -1352,6 +1352,25 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
+Bool RADEONDRISetVBlankInterrupt(ScrnInfoPtr pScrn, Bool on)
+{
+    RADEONInfoPtr  info    = RADEONPTR(pScrn);
+    int value = 0;
+
+    if (info->directRenderingEnabled && info->pKernelDRMVersion->version_minor >= 28) {
+	/* we could do something with mergedfb here I'm sure */
+        if (on)
+	        value = DRM_RADEON_VBLANK_CRTC1;
+
+	if (RADEONDRISetParam(pScrn, RADEON_SETPARAM_VBLANK_CRTC, value)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "RADEON Vblank Crtc Setup Failed %d\n", value);
+	    return FALSE;
+	}
+    }
+    return TRUE;
+}
+
+
 /* Initialize the screen-specific data structures for the DRI and the
  * Radeon.  This is the main entry point to the device-specific
  * initialization code.  It calls device-independent DRI functions to
@@ -1474,6 +1493,22 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
 
     pDRIInfo->createDummyCtx     = TRUE;
     pDRIInfo->createDummyCtxPriv = FALSE;
+
+#ifdef USE_EXA
+    if (info->useEXA) {
+#if DRIINFO_MAJOR_VERSION == 5 && DRIINFO_MINOR_VERSION >= 3
+       int major, minor, patch;
+
+       DRIQueryVersion(&major, &minor, &patch);
+
+       if (minor >= 3)
+#endif
+#if DRIINFO_MAJOR_VERSION > 5 || \
+    (DRIINFO_MAJOR_VERSION == 5 && DRIINFO_MINOR_VERSION >= 3)
+	  pDRIInfo->texOffsetStart = RADEONTexOffsetStart;
+#endif
+    }
+#endif
 
     if (!DRIScreenInit(pScreen, pDRIInfo, &info->drmFD)) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR,
@@ -1640,6 +1675,9 @@ Bool RADEONDRIFinishScreenInit(ScreenPtr pScreen)
     info->DRICloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = RADEONDRIDoCloseScreen;
 
+    /* disable vblank at startup */
+    RADEONDRISetVBlankInterrupt (pScrn, FALSE);
+
     return TRUE;
 }
 
@@ -1690,7 +1728,8 @@ void RADEONDRIStop(ScreenPtr pScreen)
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     RING_LOCALS;
 
-    RADEONTRACE(("RADEONDRIStop\n"));
+    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+		   "RADEONDRIStop\n");
 
     /* Stop the CP */
     if (info->directRenderingInited) {
@@ -1712,9 +1751,11 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     drmRadeonInit  drmInfo;
 
-     RADEONTRACE(("RADEONDRICloseScreen\n"));
+     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+		    "RADEONDRICloseScreen\n");
     
      if (info->irq) {
+	RADEONDRISetVBlankInterrupt (pScrn, FALSE);
 	drmCtlUninstHandler(info->drmFD);
 	info->irq = 0;
 	info->ModeReg.gen_int_cntl = 0;
@@ -2011,6 +2052,9 @@ static void RADEONDRITransitionTo3d(ScreenPtr pScreen)
 
     RADEONChangeSurfaces(pScrn);
     RADEONEnablePageFlip(pScreen);
+    
+    info->want_vblank_interrupts = TRUE;
+    RADEONDRISetVBlankInterrupt(pScrn, TRUE);
 
     if (info->cursor)
 	xf86ForceHWCursor (pScreen, TRUE);
@@ -2049,6 +2093,9 @@ static void RADEONDRITransitionTo2d(ScreenPtr pScreen)
     info->have3DWindows = 0;
 
     RADEONChangeSurfaces(pScrn);
+
+    info->want_vblank_interrupts = FALSE;
+    RADEONDRISetVBlankInterrupt(pScrn, FALSE);
 
     if (info->cursor)
 	xf86ForceHWCursor (pScreen, FALSE);

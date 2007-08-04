@@ -186,7 +186,6 @@ typedef struct _region {
 
 /* ------------------------------------- */
 
-#define RADEON_DEBUG            1 /* Turn off debugging output               */
 #define RADEON_IDLE_RETRY      16 /* Fall out of idle loops after this count */
 #define RADEON_TIMEOUT    2000000 /* Fall out of wait loops after this count */
 
@@ -198,15 +197,7 @@ typedef struct _region {
 				   * for something else.
 				   */
 
-#if RADEON_DEBUG
-#define RADEONTRACE(x)						\
-do {									\
-    ErrorF("(**) %s(%d): ", RADEON_NAME, pScrn->scrnIndex);		\
-    ErrorF x;								\
-} while(0)
-#else
-#define RADEONTRACE(x) do { } while(0)
-#endif
+#define RADEON_LOGLEVEL_DEBUG 4
 
 
 /* Other macros */
@@ -327,6 +318,10 @@ typedef struct {
 
     CARD32            tv_dac_cntl;
 
+    CARD32            rs480_unk_e30;
+    CARD32            rs480_unk_e34;
+    CARD32            rs480_unk_e38;
+    CARD32            rs480_unk_e3c;
 } RADEONSaveRec, *RADEONSavePtr;
 
 typedef struct {
@@ -823,6 +818,7 @@ typedef struct {
 
     CARD32            tv_dac_adj;
 
+    Bool want_vblank_interrupts;
 } RADEONInfoRec, *RADEONInfoPtr;
 
 #define RADEONWaitForFifo(pScrn, entries)				\
@@ -860,6 +856,7 @@ extern Bool        RADEONAccelInit(ScreenPtr pScreen);
 extern Bool        RADEONSetupMemEXA (ScreenPtr pScreen);
 extern Bool        RADEONDrawInitMMIO(ScreenPtr pScreen);
 #ifdef XF86DRI
+extern unsigned long long RADEONTexOffsetStart(PixmapPtr pPix);
 extern Bool        RADEONGetDatatypeBpp(int bpp, CARD32 *type);
 extern Bool        RADEONGetPixmapOffsetPitch(PixmapPtr pPix,
 					      CARD32 *pitch_offset);
@@ -907,14 +904,12 @@ extern void        RADEONEnableDisplay(ScrnInfoPtr pScrn, RADEONConnector* pPort
 extern void        RADEONDisableDisplays(ScrnInfoPtr pScrn);
 extern void        RADEONGetPanelInfo(ScrnInfoPtr pScrn);
 extern void        RADEONGetTVDacAdjInfo(ScrnInfoPtr pScrn);
-extern void        RADEONUnblank(ScrnInfoPtr pScrn);
-extern void        RADEONBlank(ScrnInfoPtr pScrn);
+extern void        RADEONBlank(ScrnInfoPtr pScrn, Bool Blank);
 extern void        RADEONDisplayPowerManagementSet(ScrnInfoPtr pScrn,
 						   int PowerManagementMode,
 						   int flags);
 extern Bool RADEONAllocateControllers(ScrnInfoPtr pScrn);
 extern Bool RADEONAllocateConnectors(ScrnInfoPtr pScrn);
-extern RADEONConnector *RADEONGetCrtcConnector(ScrnInfoPtr pScrn, int crtc_num);
 extern int RADEONValidateMergeModes(ScrnInfoPtr pScrn);
 extern int RADEONValidateDDCModes(ScrnInfoPtr pScrn1, char **ppModeName,
 				  RADEONMonitorType DisplayType, int crtc2);
@@ -939,6 +934,7 @@ extern drmBufPtr   RADEONCPGetBuffer(ScrnInfoPtr pScrn);
 extern void        RADEONCPFlushIndirect(ScrnInfoPtr pScrn, int discard);
 extern void        RADEONCPReleaseIndirect(ScrnInfoPtr pScrn);
 extern int         RADEONCPStop(ScrnInfoPtr pScrn,  RADEONInfoPtr info);
+extern Bool RADEONDRISetVBlankInterrupt(ScrnInfoPtr pScrn, Bool on);
 
 extern void        RADEONHostDataParams(ScrnInfoPtr pScrn, CARD8 *dst,
 					CARD32 pitch, int cpp,
