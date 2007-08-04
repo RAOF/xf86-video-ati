@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.6.193-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.6.193-1) experimental; urgency=low
 
   [ Brice Goglin ]
   * New upstream release candidate.
