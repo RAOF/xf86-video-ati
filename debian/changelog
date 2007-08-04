@@ -6,6 +6,11 @@ xserver-xorg-video-ati (1:6.6.193-1) UNRELEASED; urgency=low
       in the ati(4) manpage (closes: #386001).
     + Fix typo in "specifying" in the radeon(4) manpage
       (closes: #432059).
+    + Drop 01_ati_r128_update_chip_identification.diff since
+      this information is redundant and does not matter anyway
+      since the driver auto-detects how the card is connected
+      to the system.
+    + Drop 02_radeon_manpage.diff, merged upstream.
 
   [ Julien Cristau ]
   * Add upstream URL to debian/copyright.  Thanks, Loïc Minier.
