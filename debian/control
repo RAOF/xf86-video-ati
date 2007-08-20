@@ -35,7 +35,7 @@ Description: X.Org X server -- ATI display driver
 
 Package: xserver-xorg-video-ati-dbg
 Architecture: any
-Depends: xserver-xorg-video-ati (= ${Source-Version})
+Depends: xserver-xorg-video-ati (= ${binary:Version})
 Priority: extra
 Description: X.Org X server -- ATI display driver (debugging symbols)
  This driver for the X.Org X server (see xserver-xorg for a further description)
