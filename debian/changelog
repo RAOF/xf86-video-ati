@@ -1,3 +1,12 @@
+xserver-xorg-video-ati (1:6.7.191-1) experimental; urgency=low
+
+  * New upstream release candidate.
+    + TV-output support, closes: #332410, #360186, #378594, #435691.
+    + Bump x11proto-randr-dev build-dependency to >= 1.2 for RandR-1.2
+      support.
+
+ -- Brice Goglin <bgoglin@debian.org>  Thu, 23 Aug 2007 08:15:03 +0200
+
 xserver-xorg-video-ati (1:6.6.193-2) experimental; urgency=low
 
   * Build against xserver 1.3.99.0.

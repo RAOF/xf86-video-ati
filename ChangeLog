@@ -1,3 +1,318 @@
+commit 9d38c8aa1a7d6fb1af41ee8abdb4a95f94843538
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Thu Aug 23 20:10:24 2007 +1000
+
+    radeon: cleanup some warnings
+
+commit e4c8969b48a6c8dcc4e7f9852479d24a0204fc0d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Aug 23 19:56:21 2007 +1000
+
+    updated release numbering for randr 1.2
+
+commit 81a8093f2ffdce59d4e8a44f65f3d5c771fd6425
+Merge: c08e6ec... 53a67e3...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Aug 23 19:51:47 2007 +1000
+
+    Merge remote branch 'origin/randr-1.2'
+
+commit c08e6ec9e7ac06caee53689b0ec50ef6a7a0ba37
+Merge: 5793e87... a0d0fcd...
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Thu Aug 23 19:42:19 2007 +1000
+
+    Merge branch 'master' into randr-merge
+    
+    Conflicts:
+    
+    	src/radeon.h
+    	src/radeon_bios.c
+    	src/radeon_display.c
+    	src/radeon_dri.c
+    	src/radeon_driver.c
+    	src/radeon_modes.c
+    	src/radeon_probe.h
+    	src/radeon_video.c
+
+commit 53a67e31904bec9a3aa1bd24de8034dcafea1d2a
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 21 21:20:41 2007 -0400
+
+    RADEON: Fix color problem on pre-R3xx chips tv-out
+
+commit e9719e8e02eef46717ae9b4d8c7998466dac30cb
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 21 21:17:20 2007 -0400
+
+    RADEON: more tv out fixes and clean up
+
+commit 36c22a49580d86a6518b67f31a78bd53d39491af
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 21 20:28:39 2007 -0400
+
+    RADEON: fix tv-out on R3xx
+    
+    R3xx apparently needs the tv clock forced on.
+
+commit 9470bd67731059f26859ed5f0bea3ade09e2c80c
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Aug 20 20:54:06 2007 -0400
+
+    RADEON: Add DefaultConnectorTable option
+    
+    This option skips the parsing the BIOS connector table
+    and falls back to chip specific defaults.
+    Also remove man page section for the now gone bioshotkeys
+    option.
+
+commit a0d0fcd3bab765b4db25e04884fd8a342abb9c66
+Author: iLisa Wu <liswu@ati.com>
+Date:   Mon Aug 20 15:44:07 2007 +0200
+
+    Fix crash with no valid mode in xorg.conf's modelist and empty Virtual
+    
+    If the resolution defined in xorg.conf failed to find a matching mode in the
+    supported modelist, and no virtual desktop dimensions are defined the xorg.conf
+    either, virtual X and Y dimension will be set to 0 which will cause Xserver
+    crash.
+    
+    (Novell bugzilla #296856, closed)
+
+commit b275febdb0918e8cebdffbb433b0eeb3ff4d3746
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Aug 19 20:55:32 2007 -0400
+
+    RADEON: turn off TVCLK when blanking tv encoder
+
+commit a90d675832ddb02c81ace010ccbf02619b70edac
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 16 21:55:14 2007 -0400
+
+    RADEON: fix Xv clipping and overlay sourcing
+    
+    - Basically just copied from the intel driver.  I'm planning to push
+    this to the server soon, but add it now to get things working
+    and to provide compat for older servers.
+    
+    - Overlay crtc source control attribute now called XV_CRTC
+    The old attribute XV_SWITCHCRT has been removed.  If anyone cares,
+    we can add it back as an alias to XV_CRTC
+    XV_CRTC: -1 auto, 0 crtc0, 1 crtc1
+
+commit 5793e8753d11432bf95c7c6dd80c811e16aba058
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Aug 15 19:26:36 2007 -0400
+
+    RADEON: Remove RADEONRestoreMode()
+    
+    Since we no longer use it to write modes all it did
+    was restore some of the regs for a console restore.
+    Just move the relevant bits into RADEONRestore() and
+    remove it.
+
+commit 6f011aaabaf18d66ffc255ad76aaf938b2396302
+Author: Lisa Wu <Lisa.Wu@amd.com>
+Date:   Wed Aug 15 19:17:51 2007 -0400
+
+    RADEON: fix console restore on r3xx and r4xx
+    
+    When restoring the console we need to:
+    1) we need to restore DAC registers after all other registers are
+     restored and CRTCs are enabled.
+    2) we need to enable CRTC2 registers before CRTC1 registers
+
+commit c8dad98abb042c6abbbee18f9ae4db72084bc513
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Aug 15 00:55:24 2007 -0400
+
+    RADEON: make sure crtc routing is correct in r300_detect_tv()
+    
+    Also remove some unused variable
+
+commit f8cd74435f0072dbf5f6e83d67d2d5e1f4e82c91
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 14 23:50:57 2007 -0400
+
+    RADEON: minor cleanup
+
+commit 6f398cd07ea734dd66a8eac71b629e59123d75b8
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 14 23:42:32 2007 -0400
+
+    RADEON: Implement improved tv load detection for r300
+    
+    The previous implementation resulted in false positives
+    on occasion.  This method works much more reliably.
+    Based on beos code by Thomas Kurschel
+
+commit 366a1d4c240ac93622caff97b652696db99bf2e6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 14 23:25:37 2007 -0400
+
+    RADEON: Turn off tv encoder in disableoutputs()
+
+commit 5b4a04c23e3f1ec2490418b111f417c16463c709
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 14 23:11:52 2007 -0400
+
+    RADEON: Make sure RMX is always programmed for crtc1
+    
+    If the RMX registers are left as programmed by the bios
+    this can lead to a blank screen when crtc1 is feeding a
+    DAC.  Fix found and reported by Lisa Wu <liswu@ati.com>
+    Fixes bug 11985
+
+commit db2a828b2f21b92cd654b309d137204334975b89
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Aug 14 22:47:29 2007 -0400
+
+    RADEON: Add load detection
+    
+    Based on the beos driver by Thomas Kurschel and the
+    existing load detection code in this driver.
+
+commit 6fc3ddbbb6fbbee1f6076c776e5b46c0c772b6d4
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 12 12:00:20 2007 -0400
+
+    RADEON: order the VGA and DVI ports correctly
+
+commit b7738d2ef82e1759adf78e5db1291f8739b4166f
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Aug 11 17:50:42 2007 -0400
+
+    RADEON: fix connector setup when there's no bios tables
+
+commit d0895f67e327bb268fd59fcfd8fc22678d804f57
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Thu Aug 9 12:11:40 2007 +0200
+
+    AGPFastWrite risk reduction.
+    
+    Actively warn the user in the log about the effects of AGPFastWrite and
+    sanitise AGPFastWrite handling while we're here.
+
+commit c01000bc684f6a23a38a52f0808182cefaa686bb
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Aug 8 00:07:16 2007 -0400
+
+    RADEON: fix typo in comment
+
+commit 5c3f49e651c36f3bd14fa29359e24825d8f7f77f
+Author: Lisa Wu <liswu@ati.com>
+Date:   Wed Aug 8 00:05:47 2007 -0400
+
+    RADEON: make sure RADEON_CRTC2_CRT2_ON bit state is properly accounted for
+    
+    - when the TV DAC is used for crtc1 make sure to keep this bit set when
+    initializing crtc2.
+    - fixes bug 11894
+
+commit 08fe7ad00fba523775e95b5e6295fe23a5119d60
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Aug 7 23:16:05 2007 -0400
+
+    RADEON: fix ConnectorTable option after connector table re-work
+    
+    We may want to add the possiblity of more connectors to this option
+
+commit f56b90a60393ed187c0e39e149b2a3a32331ea52
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Aug 7 23:08:02 2007 -0400
+
+    RADEON: Make sure the default TV standard is supported
+
+commit a88a0e77eec514325b4d07bf7be9fb04e6f8e244
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Aug 7 00:43:20 2007 -0400
+
+    RADEON: minor fix to legacy bios connector table
+
+commit 3752808d6c08a9727370ef8d79088e787791e131
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 16:13:39 2007 -0400
+
+    RADEON: Always set MonType in radeon_detect()
+    
+    - Always set the the MonType in radeon detect even if no
+    monitor is detected so users can still force disconnected
+    outputs on.  For DVI-I users will have to set the
+    dvi_monitor_type attribute to force digital or analog,
+    everything else should just work.
+
+commit b4ec3e436afb5bc99ec755cbd96eee9a1ec492a5
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 15:37:04 2007 -0400
+
+    RADEON: add tv out properties
+
+commit 1fc2a1120e7c05938e2bd72d3c7837ecff8bc9da
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 14:41:57 2007 -0400
+
+    RADEON: switch DVI-I monitor type attribute to string
+
+commit 7d8eb3751d74bd8a1fb9fa2d2fcb9c4c895f6ba4
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 14:31:18 2007 -0400
+
+    RADEON: make backlight attribute lower case
+
+commit e71bb88bc9052af8866fb6945dbc06dbb0e6d1c0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 14:26:15 2007 -0400
+
+    RADEON: switch RMX attribute to string type
+    
+    Still not actually hooked up.
+
+commit 284323135ec04635dfa9cabd5790a35b953abca2
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 04:35:24 2007 -0400
+
+    RADEON: typo
+
+commit d1abdad167aa24ac970c69422435df443c82ebd6
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 03:45:02 2007 -0400
+
+    RADEON: fixes
+    
+    - fix output ordering
+    - set tv-out to return un-connected for now in radeon_detect()
+
+commit 0cca25d8d6a0cb0d29b68e6cd9c699d1390aede1
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 03:19:24 2007 -0400
+
+    RADEON: Fix DVI-I support in ATOM bios connector table parsing
+
+commit ba5496ae7973786802962bf649dd91c219531749
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 02:27:32 2007 -0400
+
+    RADEON: refactor output init to handle multiple DVI or VGA
+    
+    - refactor output init to handle multiple DVI or VGA with the new
+    bios table parsing
+
+commit 2ec22783ddf4c522df9e5fd1b2003854486d7a2b
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 01:39:35 2007 -0400
+
+    RADEON: attempt to do the right thing for standards other than PAL or NTSC
+
+commit cc8e1d95f1b90a259beea4e8cc4d7e29af660919
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Aug 5 01:14:36 2007 -0400
+
+    RADEON: Major rework of BIOS table parsing
+    
+    - greatly simplify ATOM and legacy connector table parsing
+    - use bios tables to detect LVDS and TV outputs
+    - add support for TV table parsing (legacy only)
+
 commit 1de52d91ff3a04b9b587b858e1e5be40d3a7fd0a
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Sat Aug 4 17:58:58 2007 +1000
@@ -36,6 +351,104 @@ Date:   Sat Aug 4 17:37:18 2007 +1000
     
     Fixes from Novell Bug 264720, and fd.o 10772
 
+commit b61a49f2a5401560f85e11bcdd005287433cad12
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri Aug 3 19:27:59 2007 -0400
+
+    RADEON: Change indexing of TV constants table in preparation for standard re-work
+
+commit 288fa627274cb399059262d4f8bd844fc220a042
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 2 02:37:16 2007 -0400
+
+    RADEON: avoid a divide by 0 and only save tv out regs if the chip has them
+
+commit b66a1bc7994b33d349c1519761e431959311c85f
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 2 02:11:20 2007 -0400
+
+    RADEON: fix tv-out enable/disable
+
+commit d86592c8d5ce45d81d8a726c263e870e94fbcf11
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 2 00:50:51 2007 -0400
+
+    RADEON: add missing break
+
+commit 971feb34843225030fff05b3f9d3801534fbf2d4
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 2 00:50:04 2007 -0400
+
+    RADEON: move tv dac enable to enabledisplay()
+
+commit 98d7e00437bea78e03180eb30ff30de3455d9d1a
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 2 00:20:50 2007 -0400
+
+    RADEON: limit tv modes to the only one we can program at the moment
+
+commit 5c549c1d42f7bbc556942af13aff2661fae856f2
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Aug 1 23:45:07 2007 -0400
+
+    RADEON: remove unused elements
+
+commit b03978028fd975eb6946503d3a56a49c5a67f339
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Aug 1 22:39:16 2007 -0400
+
+    RADEON: convert hard coded tv out values to calculations
+
+commit cf54222f1fa37366b2c2b39c82f8afc02f32e63c
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jul 31 02:01:49 2007 -0400
+
+    RADEON: more fixes...
+
+commit 22d460d3ad991223aa1fbd7e5edeb45e36c65dc0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jul 31 01:28:05 2007 -0400
+
+    RADEON: fix name of tv output
+
+commit 4822a2b837334f408f962646ab5ea4f8b0335ac9
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jul 31 01:18:40 2007 -0400
+
+    RADEON: tv-out fixes.  works now.  tested on rv350.
+    
+    VT siwtch is busted, and xrandr doesn't play nice yet.
+    uncomment code in radeon_output.c to test.
+
+commit fe494c9db2995bb8ce7a028ecf9626e0cb0cf506
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Jul 29 15:26:34 2007 -0400
+
+    RADEON: add info about tv out code and authorship
+
+commit 6b9b7a7bdc290d07de9b226691ec8025af8db896
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Jul 29 15:23:14 2007 -0400
+
+    RADEON: Initial pass at integrated tv out support
+    
+    Based on the GATOS tv-out support by Federico Ulivi <fulivi@lycos.com>
+    and information from ati with substantial rework by myself.
+    
+    Code is not actually hooked up yet.
+
+commit 8d043db1817d94edeb72ab208dfea60026715d48
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 25 20:37:58 2007 -0400
+
+    RADEON: Compute PLL VCO gain
+
+commit 62f06d89da3f7160d5e4df8d7ce6fe1a94e9d07c
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 25 20:22:25 2007 -0400
+
+    RADEON: write out saved vclk and pixclk values
+
 commit 165a07cbbfcd94e3d1fac434b8fada8d29428a09
 Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
 Date:   Wed Jul 25 19:01:02 2007 +0200
@@ -51,6 +464,31 @@ Date:   Wed Jul 25 19:01:02 2007 +0200
       . typo in "specifying" (reported by A. Costa in Debian bug #432059).
       . replace a non-ascii character with the corresponding groff escape
         sequence so that it works whatever the locale (Julien Cristau).
+
+commit 9cc3ab8320162f371bba15dc131f23c5de2013fc
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 25 02:24:14 2007 -0400
+
+    RADEON: hack around console restore hang on r4xx
+    
+    r4xx seems to hang when unblanking the crtc(s) when
+    restoring the console.  This needs to be investigated
+    further.
+
+commit 193d58b0ea9de3e326017e50b88e2f3726854506
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 25 01:27:58 2007 -0400
+
+    RADEON: fix randr on r4xx
+    
+    Seems the way we parse the ATOM connector table results
+    in reversed connectors.
+
+commit 262e32bd9ea4123b116362b33b5798753b2568fe
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jul 19 23:48:57 2007 -0400
+
+    RADEON: fix palette when depth != 24
 
 commit 18b00b47a483e7854727e99126808ddf361e7a4a
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -68,6 +506,21 @@ Date:   Thu Jul 19 18:44:27 2007 -0400
     
     fixes bug 11054
 
+commit 7b3e22e96cfc98621bd20fa76317e6d8f7242165
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jul 5 20:37:10 2007 -0400
+
+    RADEON: set default values for crtc_offset_cntls
+
+commit 2a35ccfb8ffee9f0ef6f8d4f0eeb80a471543caa
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jul 5 20:04:04 2007 -0400
+
+    RADEON: Fix tiling on r1xx and r2xx
+    
+    spotted by Andrew Randrianasulu <randrik@mail.ru>
+    fixes bug 11357
+
 commit ac9cbaf32176cf144bc694ac879e7c9e2920f762
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Mon Jul 2 10:06:02 2007 +0200
@@ -79,6 +532,72 @@ Date:   Mon Jul 2 10:06:02 2007 +0200
     
     Fixes http://bugs.freedesktop.org/show_bug.cgi?id=9816 .
 
+commit bdcae622100c81a4d9a53938542b64908bacd195
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jun 29 01:15:57 2007 -0400
+
+    RADEON: save crtc on/off state for console restore
+    
+    - prevents a possible hang if console is only using 1 crtc
+
+commit 21be0d3a1f4700572c6425800596785d6850626f
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jun 29 00:38:50 2007 -0400
+
+    RADEON: simplify console restore
+    
+    - still need to track crtcs for blank/unblank when restoring text console
+
+commit d9bf28b55d98fea2d285c9c46362aaf2175d0a46
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jun 28 23:52:28 2007 -0400
+
+    RADEON: factor out surface_cntl init into one function
+
+commit 9f193985627be8e6ea1418a424e825ddbc4957b2
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jun 28 23:43:13 2007 -0400
+
+    RADEON: move crtc base setups to new functions
+
+commit 0f361e9e80a29d287fa42436c32c657e3c102539
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jun 28 23:08:07 2007 -0400
+
+    RADEON: fix corruption after 3D apps run
+
+commit 1d4630067d293d26284d5fe230debef3913ec6cf
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jun 28 22:24:04 2007 -0400
+
+    RADEON: set info->CurrentLayout.displayWidth in RADEONSetPitch()
+
+commit 2754d1ba01fc3367019487e0c0f59d74c950aaa7
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jun 28 22:15:22 2007 -0400
+
+    RADEON: Switch cursor back to memcpy()
+
+commit 7901bcafa92dccd319ddb5de4627d806a39f15f9
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 25 18:39:14 2007 -0400
+
+    RADEON: make sure we unblank in RADEONRestore()
+    
+    reported by Andrew Randrianasulu (bugs 11357, 11146)
+
+commit 6a3599d6155d073a3116c4b13bdf04b44bb9e087
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 25 18:20:54 2007 -0400
+
+    RADEON: make sure we set the stride properly
+
+commit 771c37fcac8104b894120cc3fc0154b31b0318d1
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 25 17:53:26 2007 -0400
+
+    RADEON: attempt to fix cursor on big endian (only tested on x86)
+
 commit 5b5b90c2cea7e36895354f5872acd3fc769653f9
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Mon Jun 25 16:27:54 2007 -0400
@@ -86,6 +605,42 @@ Date:   Mon Jun 25 16:27:54 2007 -0400
     RADEON: fix possible segfault on mobility chips with MM tables
     
     spotted by Stefan Buehler
+
+commit 01bd5eb713500d3e3d4351865d460c8d1e476454
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 25 16:16:18 2007 -0400
+
+    RADEON: fix possible segfault on mobility chips with MM tables
+    
+    reported by Stefan Buehler
+
+commit 52cc1dc1491559a9055f3ba6dd54064bb382ad86
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 25 15:49:19 2007 -0400
+
+    RADEON: tiling and FB size fixes
+    
+    - fix tiling on older radeons
+    - allow the user to specify FB size using Virtual line in config
+    Current default is 1600x1200
+    - reset ecp_div for Xv in randr crtc mode set
+
+commit 3bb46c03fddd3bd79bdab887366aeeced0290a3a
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jun 22 01:12:38 2007 -0400
+
+    RADEON: bump crtc max to 1200 so 1600x1200 will work out of the box
+    
+    - a better fix will be forthcoming...
+
+commit b9fac5695bf8f123b391e3b162c4865258a685dd
+Author: Andrew Randrianasulu <randrik@mail.ru>
+Date:   Fri Jun 22 01:01:14 2007 -0400
+
+    RADEON: Fix VT switch hangs
+    
+    - re-order DRI resume functions in EnterVT()
+    - fixes bug 11287
 
 commit 92e65d5e0d6817ff4c9a08020a0a9b3a8c3c98b0
 Author: Andrew Randrianasulu <randrik@mail.ru>
@@ -95,6 +650,22 @@ Date:   Fri Jun 22 00:55:00 2007 -0400
     
     - reorder RADEONDRISetVBlankInterrupt() and RADEONDRIResume()
     - see bug 11287
+
+commit ec1fd2c388ec2c4033644776ee8588405a3d25f1
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 19 00:39:59 2007 -0400
+
+    RADEON: Split FP reg restore to only touch regs relevant to the output
+    
+    - only restore output specific regs
+    - restore fp2_gen_cntl on R200 DAC restore as R200 DAC2 is connected via
+    DVO
+
+commit 0f5a92667281ca3f80218bc67d4031125a5e4793
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 18 23:35:21 2007 -0400
+
+    RADEON: only touch LVDS on mobility chips
 
 commit b72ff160f908bf3aa9f64705377e92d80360a4f7
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -109,11 +680,45 @@ Date:   Fri Jun 15 17:00:05 2007 -0700
     Update CRT2pScrn->monitor->Last to reflect the
     last mode of CRT2pScrn. See bug 11278.
 
+commit 5868af53204e8fc210735e68e891e15085285629
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 12 23:53:48 2007 -0400
+
+    RADEON: yet another LVDS...
+
 commit f19a6f7ee5bf4ec632e7813359f167599c08e823
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Tue Jun 12 23:44:41 2007 -0400
 
     RADEON: additional LVDS off fix (missed in previous commit)
+
+commit 4f2a1ba9c2fc20042d67132f986a86a9783a245e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 12 23:41:24 2007 -0400
+
+    RADEON: additional LVDS off fix (missed in previous commit)
+
+commit 9fc416ce08cc5d74faa7b184e80ce43ed2f4fbee
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Jun 12 23:35:09 2007 -0400
+
+    radeon: Fix panel size detection from registers with stretched mode programmed.
+
+commit c4045cbc5e6975520efef422ce9df2a7d99a7ff4
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 12 23:32:18 2007 -0400
+
+    RADEON: make sure to clear RADEON_LVDS_ON when turning LVDS off
+    
+    - fixes bug 3483
+
+commit 090888d3baf61a70640d28e99afdce20952cdea0
+Author: Tormod Volden <bugzi06.fdo.tormod@xoxy.net>
+Date:   Tue Jun 12 23:30:18 2007 -0400
+
+    RADEON: limit PanelPwrDly to 2000 ms on ATOM bios as per legacy bios
+    
+    - fixes bug 11238
 
 commit 44748a826b52924a6e050215d8d62755e0ac7fb2
 Author: Tormod Volden <bugzi06.fdo.tormod@xoxy.net>
@@ -149,6 +754,75 @@ Date:   Mon Jun 11 09:39:38 2007 +0200
 
     radeon: Fix some more ErrorFs when setting mode.
 
+commit 9dd9f09a9021653e5590d27bd7aa0e7af85416ad
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Jun 7 15:32:31 2007 -0400
+
+    RADEON: fix some issues with bios table init code
+    
+    - fix some issues with bios table init code
+    - re-org preinit to better handle bios table init of cards
+
+commit 9ad311eeb0ac2b70a862dbb9de278154ba9142ec
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Thu Jun 7 11:03:02 2007 +0200
+
+    Fixed 'make dist'.
+
+commit 2527f2b69aa7dffa3ba4359c45955e3185bdf0e6
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jun 6 00:08:45 2007 -0400
+
+    RADEON: implement support for posting cards based on x86 bios tables (untested)
+    
+    This is based on the netbsd radeonfb driver by Garrett D'Amore.
+    The code is not hooked up yet, but should allow you to post cards
+    without needing to execute bios code.  This should be useful on
+    non-x86 platforms, for posting secndary cards, and for suspend/resume.
+    Works on legacy bioses only (no ATOM support).
+
+commit e67d1420bf65055ecb6fdfe6b1b1f53aae83854a
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Jun 5 22:31:50 2007 -0400
+
+    RADEON: fixup RADEONDisplayVideo() to better handle the crtc being used
+
+commit 7886405308e3288d5c86b6f2c7dbfa8ff865139c
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 4 21:16:56 2007 -0400
+
+    RADEON: fix indenting
+
+commit f54ad565a69deb52547fd04e123f56fc1294cd0a
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 4 21:13:16 2007 -0400
+
+    RADEON: no need to go through all the crtcs, we've got what we need
+
+commit 687879bff716ad01f9f158860deb8ba770faab99
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 4 21:08:40 2007 -0400
+
+    RADEON: add support for RMX on DVI, make sure RMX is only enabled on crtc1
+
+commit e6161e472ff266f69547704a61040228a8704b06
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 4 20:32:55 2007 -0400
+
+    RADEON: remove some cruft
+
+commit be0ce38232ea4f5679c5829ab663939144c6e617
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Jun 4 20:22:15 2007 -0400
+
+    RADEON: number the outputs if there are more than one of the same
+
+commit 8ec617f6493dd0aea5d11f92e3d58c3feef8c8fd
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jun 3 17:32:43 2007 +1000
+
+    radeon: disable irqs at server start until 3D app starts
+
 commit 2d40fa55e8d7a1cfb204d66ca4a4d95a3b13d5b5
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Sun Jun 3 17:32:43 2007 +1000
@@ -160,6 +834,80 @@ Author: Dave Airlie <airlied@linux.ie>
 Date:   Sun Jun 3 17:10:49 2007 +1000
 
     radeon: disable vbl interrupts when no 3d is running on a new enough drm
+
+commit 73d8e3ec8536b4777490b7ba457566f02233811f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jun 3 17:07:59 2007 +1000
+
+    randr-1.2 increase dri minor version for mesa to know we can do vbl on both
+
+commit 63f0d4ed0a98830ecbe18c6e4174689111a59b68
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jun 3 16:49:14 2007 +1000
+
+    randr-1.2: add support for vblank on both heads
+    
+    Also disable vbl when 3D isn't running
+
+commit d7775c1b38b5bdc439a27ec2c3c3a03a5b24cf57
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jun 3 12:46:31 2007 +1000
+
+    randr-1.2: make native mode preferred
+    
+    If we have a native mode from the BIOS make it preferred mode
+
+commit 5a9516fe4f17854acd4fbf3a8eadf5139081dbd4
+Author: Paul TBBle Hampson <Paul.Hampson@pobox.com>
+Date:   Sat Jun 2 14:28:18 2007 -0400
+
+    RADEONProbePLLParameters sets pll->reference_div, and
+    RADEONGetPanelInfoFromReg uses it.
+    
+    This ensures that the former is called before the latter.
+    (this should fix randr on ppc)
+
+commit 802804461ebdca9a951e7e562ec68fd08d8eae01
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Thu May 31 22:23:57 2007 -0600
+
+    Fix build whithout XF86DRI
+
+commit 0e0946e0aa2527794e07473199e851bbfbc47cb1
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Wed May 30 18:56:53 2007 +0200
+
+    radeon: Lots of warning fixes.
+    
+    Move code where it's used, remove unused variables, etc.
+
+commit 31c1be420d5277dd15505bd73e6144827a0580cd
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Wed May 30 17:49:01 2007 +1000
+
+    remove these syncs, at least on rs480 it doesn't break
+    
+    probably requires testing on other r300 based cards, with the syncs in
+    we hang when moving the cursor into the second CRTC.
+
+commit 7fc02657c4d740941fbda5a8823cf45de3eca3f8
+Merge: 800bf53... 4c61c0e...
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Wed May 30 17:27:22 2007 +1000
+
+    Merge branch 'origin' into randr-1.2-test
+    
+    Conflicts:
+    
+    	src/radeon_cursor.c
+    	src/radeon_display.c
+    	src/radeon_driver.c
+
+commit 800bf53279e2c2bf854682bbfd6fa16d03afed00
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Tue May 29 23:31:13 2007 -0600
+
+    Fix build without XF86DRI
 
 commit 4c61c0ee91a2ffeefce30972a584486f1df1d1ae
 Author: Matthieu Herrb <matthieu@deville.herrb.com>
@@ -204,11 +952,117 @@ Date:   Tue May 29 07:21:48 2007 +1000
 
     Merge branch 'origin'
 
+commit c2637a01f9aca4032262c66ade305f5fe2c54294
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 18:26:35 2007 -0400
+
+    RADEON: remove some dead code from the last commit
+
+commit bbb769c4107bfcae682e46d026e54cbfb67d62cd
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 18:25:06 2007 -0400
+
+    RADEON: more rotation work (still not there)
+    
+    - once again borrowed heavily from intel
+
+commit a69f90be9384244744fabfa76469ede9cd26ac98
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 17:54:48 2007 -0400
+
+    RADEON: first pass at rotation (not working yet)
+    
+    - based heavily on intel
+
+commit 3b619d88a65a5801c85d120f2d39704194433f10
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 17:06:18 2007 -0400
+
+    RADEON: clean up and add comment regarding clones
+
+commit 089ae4afd23322bf602d340c531c36a4c8b461ed
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 15:49:11 2007 -0400
+
+    RADEON: Switch SetOutputType() to use names rather than numbers
+
+commit c4cef0c9481257a744ac99dfc7beb988ce51a8ee
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 13:12:37 2007 -0400
+
+    RADEON: make sure we have the lock when SYNCing
+
+commit 899c62e987d5c7524817ba85675e39a8a28e0232
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 12:54:01 2007 -0400
+
+    RADEON: Make sure LVDS and FP2 routing info gets written
+
+commit 18857184ffa6847815d349c020b003f8401e36ee
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 12:27:00 2007 -0400
+
+    RADEON: fix handling of DRI lock
+
+commit 3a61453efb4f04492cef823b6dd1273b55c6a785
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat May 26 01:38:09 2007 -0400
+
+    RADEON: implement backlight control for LVDS
+    
+    This code is currently disabled as I'm not sure which
+    laptops actually use this method for backlight control.
+    My laptop seems to use another method as adjusting the
+    backlight level doesn't seem to touch LVDS_GEN_CNTL.
+    Maybe just macs?
+
+commit ceec3f62257bafe4771e75d3c4f1d2a517d7acf8
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 25 23:29:51 2007 -0400
+
+    RADEON: implement auto/analog/digital output property for DVI-I (untested)
+
+commit e3e9c608651e7cbb9851489274815f47d2a8dbbb
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 25 19:26:24 2007 -0400
+
+    RADEON: more clean of last commits
+
+commit a7d2c9c0f6155c4e65a2e73f3832c0d8ca7af5fc
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 25 19:09:11 2007 -0400
+
+    RADEON: fixup last commit and add support for ext TMDS detect
+
+commit e50ca35ce2ea79dadb38ce14e459eed836452ff7
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 25 18:56:32 2007 -0400
+
+    RADEON: clean up non-DDC probe, add detect for DVI
+
+commit abb9b57e7b4162ab6c21fd1e809d24f13f7e1ea1
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 23 21:37:58 2007 -0400
+
+    RADEON: clean up some logic
+
+commit 679236defd28bea8874004377436347950ff7bec
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 23 21:18:40 2007 -0400
+
+    RADEON: add output properties (not functional yet)
+
 commit 975da595f032c145ad74079ff8edeaead779dc7b
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Tue May 22 10:56:47 2007 +0200
 
     radeon: Provide new DRI texOffsetStart hook when available with EXA.
+
+commit e38cad5633c974467f6417051eda8d487ac3686e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue May 22 00:09:46 2007 -0400
+
+    RADEON: Only add valid connectors
 
 commit 8275151baac22c34149cef0b7d922771d24abc3e
 Author: Michel Dänzer <michel@tungstengraphics.com>
@@ -237,6 +1091,27 @@ Date:   Mon May 21 10:25:48 2007 +0200
     Turn some MC related debugging output into normal informational output as it's
     useful for recognizing corner cases that can cause stability issues.
 
+commit aed193a47a939451d9a6d05b02653b1d73e1d523
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 20 21:13:59 2007 -0400
+
+    RADEON: fix crtc1 (un)blanking code after last commit
+    
+    - crtc1 MC control is on CRTC_GEN_CNTL
+    - fix indenting
+
+commit 870c8043068a0f44b53d1148371b2cc1e3970a7b
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 20 21:03:10 2007 -0400
+
+    RADEON: several updates
+    
+    - move output init from InitCrtc() functions to the output mode_set()
+    - take the crtc off the MC when blanking
+    - move EnableDisplay() to output commit()
+    - clean up some dead code
+    - don't enable dacs in initcrtc() functions, this is taken care of in EnableDisplay()
+
 commit 09bfc8ed000f95ede5b73f2bad69edc1a4d9bac6
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Sun May 20 18:06:22 2007 -0400
@@ -252,6 +1127,338 @@ Date:   Sun May 20 17:26:26 2007 -0400
     - logic in RADEONUnblank() was wrong
     - Calling RADEONSetupConnectors() on second instance screwed up the port info
     - still seem to be HW cursor issues with zaphod mode
+
+commit 9a147fef8e0e2ede2a0008c4ecfbd9b00c8dc5f6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 18 23:45:11 2007 -0400
+
+    RADEON: if connector is VGA set TMDS to none
+
+commit bbd6faff4c6acb48970d774375c8a61861405f96
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 18 23:30:19 2007 -0400
+
+    RADEON: Change default LVDS i2c line for powerpc
+
+commit 7940ec364f3cbf02ba64b92c74cbaad4555baf38
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 18 00:23:08 2007 -0400
+
+    RADEON: cleanup
+
+commit f71bfde7352ef858c1041037d7dc77c237e315a4
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 18 00:12:03 2007 -0400
+
+    RADEON: more cleanup
+
+commit f711e266d6927dec648f6ff26f15c6f48643f78c
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu May 17 23:59:07 2007 -0400
+
+    RADEON: turn off all outputs in screeninit().  We'll turn on the ones we want later
+
+commit bfc1c372d7475b7fa6bffb8a79dec1dc2f11ec59
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu May 17 23:45:29 2007 -0400
+
+    RADEON: More cleanup
+
+commit c60b3bc9e3e7463bdb42e2478be8cc3f22c63c68
+Author: Paul TBBle Hampson <Paul.Hampson@pobox.com>
+Date:   Thu May 17 23:26:54 2007 -0400
+
+    Fix for infinite loop in RADEONGetLVDSInfo
+
+commit 11289f8206cab1a94bd64a3938cf9af50f19497e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue May 15 00:48:31 2007 -0400
+
+    RADEON: remove some debugging code
+
+commit fba1a11e287ebf04cf311645d31299896bad7283
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue May 15 00:44:29 2007 -0400
+
+    RADEON: Move DAC regs to their own Save() function
+
+commit 9ed00e959fcdab2739a7e64ca1e303a6faf28f15
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue May 15 00:36:05 2007 -0400
+
+    RADEON: Lots of small fixes
+    
+    - remove extra crtc2_base set
+    - remove some debugging code
+    - clean up RestoreMode()
+    - make sure a DDC reg gets assigned for LCD_DDC
+    - make sure we adjust the right frame in AdjustFrame()
+    - rename RADEONMapControllers() to RADEONPrintPortMap() to
+    reflect what it actually does now
+    - make i2c bus name match the DDC port
+    - remove or comment out un-needed code
+
+commit 5106c8fe5f74865cac8b00937739a4efde9fc254
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 21:48:26 2007 -0400
+
+    RADEON: Further cleanup
+
+commit 224a73e41e9be344d5644203e7ebd5a3a8272604
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 21:41:59 2007 -0400
+
+    RADEON: remove remnants of "old" multi-head support
+    
+    The old screen based multi-head code is broken at this point
+    and I have no intention of fixing it, so to clean things up
+    I've removed it.
+
+commit 9c2f20a83a5fed14225f4c3ebcd8ca41e9d4bd48
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 21:13:23 2007 -0400
+
+    RADEON: additional cleanups
+
+commit e187321ab8dd58d2b2fe92c062d070ba4820a2bf
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 19:49:10 2007 -0400
+
+    RADEON: add new ConnectorTable option and re-add PanelSize option
+
+commit e60a7bcaf5611ad4706b1d1442ce4cae49145f42
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 18:14:29 2007 -0400
+
+    RADEON: remove mergedfb, etc. cruft from man page
+
+commit 51caa5dccc4a2e14d1b41bb7868ad20468dd4cfe
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 18:10:02 2007 -0400
+
+    RADEON: remove old mergedfb and dualhead options that are no longer used
+
+commit c5da9d4040cb08598d171d20f84d3f6c20a033e0
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 18:05:38 2007 -0400
+
+    RADEON: remove more dead code
+
+commit e776fa9ecc53d63f916a5447a76fb2bb3b824167
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 15:43:39 2007 -0400
+
+    RADEON: re-org randr code
+    
+    - move crtc stuff to radeon_crtc.c
+    - move output stuff to radeon_output.c
+
+commit 58ce388452b7bc790c438d75c9cf4a0f69f0d7b2
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 15:05:01 2007 -0400
+
+    RADEON: Remove dead code
+
+commit 66e8e6c8348d007930730e90295588efe8108844
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 14:25:03 2007 -0400
+
+    RADEON: several fixes
+    
+    - give better DDC names
+    - disable DAC if connector is DVI-D
+    - fix indentation in ProbeDDCModes()
+
+commit 1c16c2ce9c5b02b03d23da965127d82eea4c4039
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 13:54:04 2007 -0400
+
+    RADEON: fix VT switch
+
+commit 7c66e903368f77ecc4d3bd1c9f08d2adbd85e83c
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 13:37:59 2007 -0400
+
+    RADEON: move crtc offset handling into init/save/restore functions
+
+commit aec078eb0740651fba8ec602e8239bd679efc8ad
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 11:57:57 2007 -0400
+
+    RADEON: fix up DDCConnected()
+
+commit 0550c37ecc434b8075fb3c367d100ff27625bb64
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 11:44:50 2007 -0400
+
+    RADEON: don't need to pass pScrn to EnableDisplay()
+
+commit 117220527de9fd3158f600645bcfcaf46847f45f
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun May 13 11:37:35 2007 -0400
+
+    RADEON: remove hardcoded output limit and PortInfo stuff
+
+commit 7e5c29961ac2a9e9dbe5d6d2d73d11cd018d62b5
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 11 18:00:40 2007 +0200
+
+    RADEON: Fix RMX after the last commit
+
+commit ab5603edd8fc3ef0560bdfb6a6d9c6af2a49d1e5
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 11 17:34:35 2007 +0200
+
+    RADEON: Move LVDS, TMDS, DAC properties to the output rec
+
+commit 94eb0681de0641e490f06486468617a727fefe86
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 11 14:39:48 2007 +0200
+
+    RADEON: switch output dpms to use RADEONEnableDisplay()
+
+commit 673ede5578d5d9caf2adf0445fe1e684b034eea5
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 11 14:28:17 2007 +0200
+
+    RADEON: re-arrange output mode setting
+
+commit 0070a7d787adaae99f7bc2659be4b0f49f439db5
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 11 13:06:15 2007 +0200
+
+    RADEON: more re-org
+    
+    - move crtc mode setting around
+    - add dri lock/unlock to crtc lock/unlock calls
+
+commit bba456232ac9a6218aa7fbd504d6093fa72860cf
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu May 10 15:33:51 2007 +0200
+
+    RADEON: fix VT switch
+
+commit 1779a12a947401e5c6bcf784b47e9b3c80d37204
+Author: Jesse Barnes <jbarnes@jbarnes-mobile.amr.corp.intel.com>
+Date:   Thu May 10 06:22:35 2007 -0700
+
+    Add cscope files to .gitignore
+
+commit 0cb23277666db3b30438c6f88840d861e04df414
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu May 10 15:20:56 2007 +0200
+
+    RADEON: randr driver re-org checkpoint
+    
+    - split the mode setting per-crtc
+    - reduce start up flicker
+
+commit 33c370b1d8350945f80ac12097d3e91243a400f2
+Author: Jesse Barnes <jbarnes@jbarnes-mobile.amr.corp.intel.com>
+Date:   Wed May 9 16:16:39 2007 -0700
+
+    RADEON:
+      - fix an ugly modesetting bug:  if we happened to set the mode on
+        CRTC1 before CRTC2, CRTC2's RestoreMode function would clobber
+        CRTC1's CRTC_OFFSET register since we never updated
+        ModeReg.crtc_offset...  so make AdjustFrame use ModeReg and pull
+        the call to it up before RestoreMode, seems to work ok here.
+
+commit 6263248a0044777a352e4ee7380b4b8f9afd091b
+Author: Jesse Barnes <jbarnes@jbarnes-mobile.amr.corp.intel.com>
+Date:   Wed May 9 14:52:00 2007 -0700
+
+    RADEON:
+      - use fixup_mode hook to set RADEON_USE_RMX flag so panel scaling
+        works
+      - use valid_mode hook to prune invalid default modes from list
+      - use adjusted_mode in crtc_mode_set (using adjusted_mode from
+        fixup hook)
+
+commit d2497009e395800fbde5777465f3087a54b94418
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 9 22:23:45 2007 +0200
+
+    randr checkpoint
+    
+    - server still hangs if you start with external monitor connected
+    - RMX not working
+    - more than 2 outputs now possible (untested)
+
+commit 4488f0737d5268168eab41440b7a3b5732efb15e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 9 16:41:13 2007 +0200
+
+    more randr re-work
+    
+    - remove RADEONQueryConnectedDisplays(); randr takes care of this now
+    - print edid after randr detection
+
+commit 4d992386e2ab9d8c50f0484445564325dfb42930
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 9 16:12:21 2007 +0200
+
+    enable all outputs on each crtc on mode restore
+
+commit 2618cf2aa8ed76411b943eb90c95869814c2f151
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 9 15:48:40 2007 +0200
+
+    More re-org to allow more than 2 outputs
+    
+    - Move radeon output crtc map into crtc_set_mode
+    - in modeinit, set up all outputs attached to crtc
+
+commit 61b9e79cbeee6f735a4c82ec8a802aee85d8b890
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 9 15:11:23 2007 +0200
+
+    start to clean up MapControllers
+
+commit 6a724dd798c1a7b461672993c02be83a7bccded6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed May 9 14:48:17 2007 +0200
+
+    minor cleanup
+
+commit 03860fed24b4f76cc7f1f4210ec8f8040fa04777
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue May 8 19:27:48 2007 +0200
+
+    remove some old mergedfb cruft
+
+commit 76670f665ebec7cdf40a04bf9379cb3ad4417507
+Merge: 83f81ed... a3ee422...
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue May 8 18:41:25 2007 +0200
+
+    Merge branch 'master' into randr-1.2 and fix conflicts
+
+commit 83f81ed5e3c33c94c80500316c37a7cbfc51f41f
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon May 7 22:54:16 2007 +0200
+
+    RADEON: Fix cursor handling for randr
+
+commit 5fc21cd34436919300018d8d4850fc67db284eb3
+Author: Jesse Barnes <jbarnes@jbarnes-mobile.amr.corp.intel.com>
+Date:   Mon May 7 13:31:20 2007 -0700
+
+    - fix randr 1.2 on pre-RV350 chips by enabling DAC_MACRO_CNTL writes
+    - set dac_cntl on non-primary crtcs
+    - set XCRT_CNT_EN in CRTC_EXT_CNTL just because
+    - fix warnings in calls to xf86PrintModeline (wants screen index not
+      pScrnInfo)
+
+commit 99b3df154317f0209618e532282a3e7ad091c00f
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon May 7 19:02:35 2007 +0200
+
+    RADEON - update randr cursor handling, LVDS setup fix
+    
+    - quick fix for the cursor handling to update to the latest
+    server bits
+    - make sure connector type is CONNECTOR_PROPRIETARY for LVDS.
 
 commit a3ee42207aab77d93655a82fdcb32be38268b85f
 Author: Dave Airlie <airlied@linux.ie>
@@ -562,6 +1769,18 @@ Date:   Thu Mar 8 07:07:02 2007 +0200
 
     Move atiprobe.c from ati to atimisc.
 
+commit 2a1cd107a593630001799d6cd9e72c64222553b2
+Author: Jesse Barnes <jbarnes@jbarnes-mobile.amr.corp.intel.com>
+Date:   Tue Mar 6 14:35:50 2007 -0800
+
+    Add prepare/commit hooks to output and crtc func table
+
+commit 703c6fc0142ffc600285c13fe6dafecf988c0a1d
+Author: Jesse Barnes <jbarnes@jbarnes-mobile.amr.corp.intel.com>
+Date:   Tue Mar 6 10:12:42 2007 -0800
+
+    Update for new CRTC resize hooks.
+
 commit 1e270b411cf691c69194932b864ee2c9db292263
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Sun Mar 4 18:21:49 2007 +0200
@@ -581,6 +1800,36 @@ Date:   Sun Mar 4 19:11:34 2007 +1100
     radeon: add option to set pci aperture size from config file
     
     This requires a drm > 1.26 to work
+
+commit 58ee31d015cf8bec0edca62a46faec0b3505be8c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Feb 25 23:29:09 2007 +1100
+
+    fix typo
+
+commit 3cfe94d5438961b869766dacbcd13fde8b770ca2
+Merge: 31c018c... 3b43788...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Feb 25 23:27:19 2007 +1100
+
+    Merge branch 'radeon-randrv12-v4'
+    
+    Conflicts:
+    
+    	src/radeon_display.c
+    	src/radeon_driver.c
+
+commit 3b43788c45f51ad2d3e8e64383c412f4ddd97207
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Feb 25 23:17:31 2007 +1100
+
+    cleanup radeon code against master server
+
+commit 24c6fa7cfac5602ba9e6e2f331bcac52fab258e5
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Feb 25 21:43:54 2007 +1100
+
+    make radeon randr build against master server
 
 commit 4374895d393bf170134ccffc188521fe515d5a77
 Author: George Sapountzis <gsap7@yahoo.gr>
@@ -670,6 +1919,24 @@ Date:   Mon Feb 12 14:27:37 2007 +0200
 
     [mach64] Enable RENDER acceleration on the Pro variants.
 
+commit 63248f0b4308a4487cda3aa22daa36e3e0d38d14
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Feb 12 19:37:36 2007 +1100
+
+    fix LVDS by moving bios reading around
+
+commit 6a25f620d40cbb063de94aa6b5267296cd5a0670
+Author: David Airlie <airlied@asimov.stargames.com.au>
+Date:   Mon Feb 12 15:59:43 2007 +1100
+
+    remove assignments to pOutput before it is created
+
+commit 9234d8045c5fefbd1a781209409e55a13e3e5370
+Author: David Airlie <airlied@asimov.stargames.com.au>
+Date:   Mon Feb 5 11:53:18 2007 +1100
+
+    remove all the locking glxgears runs fine over screen changes without it
+
 commit eda9fb15e8bc042661a91a3d8c921006dfb3ddd9
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Tue Nov 21 04:02:41 2006 +0200
@@ -739,6 +2006,62 @@ Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Mon Feb 5 19:16:51 2007 +0200
 
     Merge branch 'mach64-pci-1'
+
+commit d7317604c843e21c1df048a9253ed55a1957cccd
+Author: David Airlie <airlied@linux.ie>
+Date:   Fri Feb 2 14:54:00 2007 +1100
+
+    get rid of mergetype and displaytype from radeon.h
+
+commit 15c68ac19ff9971ae02cf52036ba36ddea1a6759
+Author: David Airlie <airlied@linux.ie>
+Date:   Fri Feb 2 14:30:16 2007 +1100
+
+    rename some variables to output from connector
+
+commit 72ef23ef7dd159d827e8e122482a58928d532268
+Author: David Airlie <airlied@linux.ie>
+Date:   Fri Feb 2 14:26:29 2007 +1100
+
+    fixup mode probing a bit neater
+
+commit 96acf6b2b242454345cc4b9cfc7ca07e0b597b43
+Author: David Airlie <airlied@linux.ie>
+Date:   Fri Feb 2 14:26:19 2007 +1100
+
+    bring over setproperty from intel code
+
+commit 76bc53f9b153880730ab61dcd2b6e4e7717e4058
+Author: David Airlie <airlied@linux.ie>
+Date:   Fri Feb 2 14:15:03 2007 +1100
+
+    move i2c buses into outputs
+
+commit 47fb9ce657f018177a35b449a4d716dc03be9327
+Author: David Airlie <airlied@linux.ie>
+Date:   Fri Feb 2 11:45:40 2007 +1100
+
+    fixup callers to crtcsetmode fixes my cursors
+
+commit 720730b1b0de632488d3b9818210ec5e9c7f07ae
+Author: David Airlie <airlied@linux.ie>
+Date:   Thu Feb 1 16:43:38 2007 +1100
+
+    add locks for crtcs and some missing lines from intel update
+
+commit 6748732658850ea506f623a3622aa7135513ffd0
+Author: David Airlie <airlied@linux.ie>
+Date:   Thu Feb 1 16:26:31 2007 +1100
+
+    update to latest intel codebase modulo using their mode set
+    
+    and it breaks my cursor
+
+commit a77f08298dc7e097025e3f7f92e3665c0ef30095
+Author: David Airlie <airlied@linux.ie>
+Date:   Mon Jan 29 16:12:24 2007 +1100
+
+    radeon: always reset cursor regs
 
 commit ff8ea19fcdce099732f9359e53cd62b9a04bfa6d
 Author: Alex Deucher <alex@botch2.hsd1.va.comcast.net>
@@ -925,6 +2248,130 @@ Date:   Thu Jan 25 01:59:27 2007 -0500
     
     Most cards support 2D and 3D now
 
+commit fa12fe1cc90dd745f3eea35a07d4f3efd652e7b4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Jan 23 19:37:51 2007 +1100
+
+    remove unused restore palette function
+
+commit 4d3649b84a3325043c38cece4499de0095cebd71
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Jan 23 19:37:21 2007 +1100
+
+    remove isused and isactive
+
+commit 9149e763865598c307cbefc753ff6ebdeeaf32ae
+Author: David Airlie <airlied@asimov.stargames.com.au>
+Date:   Tue Jan 23 15:20:11 2007 +1100
+
+    radeon: fixup problem with cursor not going off
+    
+    Also fixup secondary dac detect to return unknown for now
+
+commit 2a13a3b641d9acf4f50472e1c8ba07633c3b78d6
+Author: David Airlie <airlied@asimov.stargames.com.au>
+Date:   Tue Jan 23 10:36:06 2007 +1100
+
+    fixup init disp bandwidth
+    
+    This probably break old-style dualhead badly
+
+commit cbd84bed13582e82f8b2e84aa152602474c09cd4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Jan 22 22:19:46 2007 +1100
+
+    removed even more  mergedfb remains
+
+commit 6296882135b183425a219efb75374d3b172de370
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Jan 22 22:14:48 2007 +1100
+
+    remove more mergedfb relics
+
+commit 26e1bab2c7a4ad52710746265b3da495b54dab36
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Jan 22 22:11:55 2007 +1100
+
+    radeon: fixup some of the video code after randr
+    
+    This may not be complete, I need to test on dual-head system later
+
+commit 9008e1caa45e4a18e6f3289c7b17036730fe578a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Jan 22 21:16:47 2007 +1100
+
+    remove unused merged code
+
+commit e29a32d711553fcb4ca9928122ac285fe0b0c1a7
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Jan 22 21:09:53 2007 +1100
+
+    add back overlay CRTC chooser this may not work yet
+
+commit aa9d04ba94a3cd60b248231da517e2817591fc69
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jan 21 20:29:56 2007 +1100
+
+    remove alot more mergedfb support
+
+commit e8be0056e8ff666f63a294691661f5dab289203e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 18 16:41:25 2007 +1100
+
+    remove mergedfb
+
+commit a648050a3cc60f92b1ca0b3d707aadf93d076d91
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jan 17 17:28:07 2007 +1100
+
+    move some cursor code around for show/hide
+
+commit d2ecfb507282726122bb8b0d17fd3637d0ae7d46
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jan 17 17:16:27 2007 +1100
+
+    make dri work again
+
+commit 369f7c85ceff983defb7657b80ec9cd3e5440b07
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jan 17 11:14:09 2007 +1100
+
+    comment out unblanking on VT switch
+
+commit bdb66a2042f02c4b57bd3c0181a00b39fcbdb232
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jan 14 21:07:05 2007 +1100
+
+    radeon: get randr-1.2 mode switching mostly working on my laptop
+    
+    The main change is to fix the dac macro + cntl register writes for rv350 and
+    above, this still has a problem with resetting the same mode after connect
+    disconnect cycle, need to talk to keithp
+
+commit aa0e7337815d4daca4df0671768621330b759011
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jan 14 19:17:32 2007 +1100
+
+    use more randr-ish names for variables
+
+commit 9d37f23aea43b74a7ec640e6b03617c8392e2572
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jan 14 19:10:11 2007 +1100
+
+    radeon: move blank/unblank to use randr
+
+commit 6bd4fe42789c38e7e804826715214ce6badcca6a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jan 14 18:38:59 2007 +1100
+
+    disable dpms on/off as it was writing regs before we wanted to
+
+commit 3949288ed26a91e180b178f4796f2f7e1bdc8ed6
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Jan 14 16:26:39 2007 +1100
+
+    radeon: destroy and fixup LVDS crtc
+
 commit f5ffb9fb3bdd7cec020240c5831ae92ee744972c
 Author: Timo Jyrinki <timo.jyrinki@hut.fi>
 Date:   Fri Jan 12 23:08:50 2007 +1100
@@ -939,6 +2386,98 @@ Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Jan 12 23:03:10 2007 +1100
 
     always create a second CRTC I think this should solve any problems
+
+commit 25b36a4c56422ad8e25a4a1c55055c2f062213ca
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jan 5 16:13:16 2007 +1100
+
+    minor randr1.2 fixups
+
+commit abe8791e4f9fa3e88273897b351387cd33822734
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jan 5 15:09:43 2007 +1100
+
+    hook up DPMS through xf86
+
+commit 8a9c68c2234b91ed38555f892afdad30b9e4b455
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jan 5 15:09:15 2007 +1100
+
+    set binding for new heads
+
+commit d6a2b8aeb5a97ee907fd45b574bc6e4ab4b3aede
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jan 5 09:33:54 2007 +1100
+
+    fix LUT
+
+commit ef1d36e56dec1fec37cee2dfd9cb5bf8ce2c485c
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Wed Jan 3 15:56:23 2007 +0100
+
+    fix uninitialized mode regs (bug 9495)
+    
+    Since the reorganization of the mode setting code, the mode registers relying
+    on state already set (by bios) were not read, thus clearing out all bits the
+    driver does not touch. At the very least, this could lead to completely
+    nonfunctional to misbehaving dvi output (see bug 9495). Fix this by using the
+    SavedReg values, which also makes it more obvious that those are bits which
+    were not set by the driver previously, but come from register readback.
+    (cherry picked from 9506f7015a1e442f4ca0bd3bfae555ec7e8a5f37 commit)
+
+commit 55aa832157bdebcba2d58896777942d108c352b0
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 17:57:31 2007 +1100
+
+    fix cursor handling
+
+commit 4f8a7cafdc77e98dc44f9eced876560b1ee01117
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 16:23:39 2007 +1100
+
+    hook up crtc modesetting
+
+commit 52f749c8a613ee316044abe82156ee270412ced8
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 16:23:26 2007 +1100
+
+    fix typo
+
+commit d7ff61c6822cbede7f5b59b411048d33dbae9ee4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 13:38:26 2007 +1100
+
+    hook up detection of output
+
+commit 50439d7e9f4f6f9933bacd59f8bb3e655a35dbc2
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 13:21:57 2007 +1100
+
+    fixup some function calls
+
+commit e067bfee92f2b0877108355619b2fb9188a9d15a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 13:21:45 2007 +1100
+
+    add more files for back compat
+
+commit f1f34627ffbe2136ac3e023c01c0430412919ded
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 12:50:03 2007 +1100
+
+    make restore mode non-static
+
+commit 249ec67c296b34d0c7c1d78602628d2f7ce6a045
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 12:43:03 2007 +1100
+
+    more minor fixes to get radeon up to speed
+
+commit a43c1d55f5f855d9e6ae939dd4eec1c607b6d514
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 4 12:29:51 2007 +1100
+
+    bring radeon randr code inline with intel randr code
 
 commit c54a31565e3ea50f1af7b81b1bf0c0e437099f47
 Author: Dave Airlie <airlied@linux.ie>
@@ -1004,11 +2543,79 @@ Date:   Mon Dec 18 14:06:15 2006 -0500
     
     This reverts commit 48ff33a1770f3684cd50184db8f1944a456d9974.
 
+commit 87592ffb717da1f0a1767a38918d16d60953599c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 20:10:58 2006 +1100
+
+    add setdpi call
+
+commit 41cd50487bc85708a3f791dfa70bf85223d91a65
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 20:08:07 2006 +1100
+
+    add displayWidth set
+
+commit 555e0f988c571aa47bc62ec6d9612a71f1a1f59b
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 19:59:19 2006 +1100
+
+    add randr pre init
+
+commit 3e2c72d7ac80ed874bcf2887a5253dac1c9bb02c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 19:49:08 2006 +1100
+
+    fixup even more remnants of old code
+
+commit 4356b031886e00b3ed5ac1dbceeadebd7fc29fc2
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 19:47:45 2006 +1100
+
+    fix remnant of old code
+
+commit 17d39502a8dbea395051007aebffdf23644e9ee1
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 19:44:39 2006 +1100
+
+    use getddcmodes properly
+
+commit bf0b364cbd8682f297e2d110ece1f72e7151340d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 17:31:08 2006 +1100
+
+    fix up output namings
+
+commit 4962a5430844114de864418d803f3182b90792ff
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 17 16:58:07 2006 +1100
+
+    remove some code that moved into server
+
+commit b47013f41249516ae82e22bd75caf573da2cc13c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Dec 16 12:02:37 2006 +1100
+
+    hook up mode detect to new randr code
+
 commit 48ff33a1770f3684cd50184db8f1944a456d9974
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Dec 15 17:43:39 2006 -0500
 
     Convert callers of LookupWindow() to dixLookupWindow().
+
+commit 62a5e7565b66d7b7d65609c034f34b55bd266617
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Dec 15 19:48:42 2006 +1100
+
+    bring over latest code from Intel git repo.
+    
+    this code doesn't work yet just realigns with intel work
+
+commit 29124400c7f193317d41d8cfd748371a239cfea1
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 10 18:00:17 2006 +1100
+
+    hook up randr crtc setting
 
 commit 120c854f185c1e7711cf0dee19303fdb8894d49d
 Author: Roland Scheidegger <sroland@tungstengraphics.com>
@@ -1077,6 +2684,49 @@ Date:   Tue Dec 5 01:30:13 2006 +0100
     Radeons can do planar yuv just fine, there is no need to convert all data
     to packed yuv manually. This saves some cpu cycles as well as some
     (graphic card) ram.
+
+commit 5d5fa1b86e5179b061f0db47fe0227d1b84c37f8
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 4 18:53:33 2006 +1100
+
+    update radeon driver to Intel driver xf86Crtc interfaces
+
+commit 51d1cf19e71dd5de47f2c6467f4a1685eefd9e1e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 3 16:30:01 2006 +1100
+
+    Add radeon randr 1.2 initial attempt at support
+    
+    This doesn't do a huge amount yet
+
+commit eb17c9aed2144701ad7bd1042b2905446e4d708a
+Author: airlied <airlied@optimus.localdomain>
+Date:   Sat Nov 18 15:48:02 2006 +1100
+
+    move radeon over to not using X's mode management like the intel driver.
+    
+    this builds and at least seems to pick a mode.. might be near to hooking
+    up randr1.2 soon
+
+commit 941b5120916ebff69ec0ee4ca7a46105d5306e5d
+Author: airlied <airlied@optimus.localdomain>
+Date:   Sat Nov 18 10:41:12 2006 +1100
+
+    make radeon modes use generic code
+
+commit 608427283ea59cdfe3d85e1cf32719bc3809dc16
+Author: airlied <airlied@optimus.localdomain>
+Date:   Sat Nov 18 10:35:31 2006 +1100
+
+    add more functions from i830 driver
+    
+    This adds more generic functions from the i830 driver to the radeon
+
+commit d5b8cafc185b7d9fb909cb18a08615f81d89eaf8
+Author: airlied <airlied@optimus.localdomain>
+Date:   Sat Nov 18 10:22:38 2006 +1100
+
+    add generic mode handling code from Intel driver
 
 commit 9cfa82e1670ad85746926995972a535ddf03ee07
 Author: Dave Airlie <airlied@linux.ie>

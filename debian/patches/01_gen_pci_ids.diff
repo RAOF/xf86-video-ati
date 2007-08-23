@@ -4,9 +4,9 @@
 
 Index: xserver-xorg-video-ati/src/Makefile.am
 ===================================================================
---- xserver-xorg-video-ati.orig/src/Makefile.am	2007-08-20 18:43:45.000000000 +0200
-+++ xserver-xorg-video-ati/src/Makefile.am	2007-08-20 18:45:33.000000000 +0200
-@@ -186,3 +186,9 @@
+--- xserver-xorg-video-ati.orig/src/Makefile.am	2007-08-23 08:14:37.000000000 +0200
++++ xserver-xorg-video-ati/src/Makefile.am	2007-08-23 08:25:14.000000000 +0200
+@@ -187,3 +187,9 @@
  	theatre.h \
  	theatre_reg.h \
  	atipciids.h
