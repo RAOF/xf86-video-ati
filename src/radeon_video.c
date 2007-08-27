@@ -1325,21 +1325,21 @@ static void RADEONSetupTheatre(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
                                    } else {
                                    t->wComp0Connector=RT_COMP1;
                                    }
-                xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Composite connector is port %ld\n", t->wComp0Connector);
+                xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Composite connector is port %u\n", (unsigned)t->wComp0Connector);
                                   break;
                         case 3:  if(a & 0x4){
                                    t->wSVideo0Connector=RT_YCR_COMP4;
                                    } else {
                                    t->wSVideo0Connector=RT_YCF_COMP4;
                                    }
-                xf86DrvMsg(pScrn->scrnIndex, X_INFO, "SVideo connector is port %ld\n", t->wSVideo0Connector);
+                xf86DrvMsg(pScrn->scrnIndex, X_INFO, "SVideo connector is port %u\n", (unsigned)t->wSVideo0Connector);
                                    break;
                         default:
                                 break;
                         }
                 }
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Rage Theatre: Connectors (detected): tuner=%ld, composite=%ld, svideo=%ld\n",
-    	     t->wTunerConnector, t->wComp0Connector, t->wSVideo0Connector);
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Rage Theatre: Connectors (detected): tuner=%u, composite=%u, svideo=%u\n",
+    	     (unsigned)t->wTunerConnector, (unsigned)t->wComp0Connector, (unsigned)t->wSVideo0Connector);
         
          }
 
@@ -1347,8 +1347,8 @@ static void RADEONSetupTheatre(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     if(info->RageTheatreCompositePort>=0)t->wComp0Connector=info->RageTheatreCompositePort;
     if(info->RageTheatreSVideoPort>=0)t->wSVideo0Connector=info->RageTheatreSVideoPort;
         
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "RageTheatre: Connectors (using): tuner=%ld, composite=%ld, svideo=%ld\n",
-    	t->wTunerConnector, t->wComp0Connector, t->wSVideo0Connector);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "RageTheatre: Connectors (using): tuner=%u, composite=%u, svideo=%u\n",
+    	(unsigned)t->wTunerConnector, (unsigned)t->wComp0Connector, (unsigned)t->wSVideo0Connector);
 
     switch((info->RageTheatreCrystal>=0)?info->RageTheatreCrystal:pll->reference_freq){
                 case 2700:
@@ -1437,9 +1437,7 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
         info->ecp_div = 1;
     ecp = (INPLL(pScrn, RADEON_VCLK_ECP_CNTL) & 0xfffffCff) | (info->ecp_div << 8);
 
-    if ((info->ChipFamily == CHIP_FAMILY_RS100) || 
-	(info->ChipFamily == CHIP_FAMILY_RS200) ||
-	(info->ChipFamily == CHIP_FAMILY_RS300)) {
+    if (info->IsIGP) {
         /* Force the overlay clock on for integrated chips
 	 */
         ecp |= (1<<18);
@@ -1564,7 +1562,7 @@ RADEONSetupImageVideo(ScreenPtr pScreen)
 	return NULL;
 
     adapt->type = XvWindowMask | XvInputMask | XvImageMask;
-    adapt->flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;
+    adapt->flags = VIDEO_OVERLAID_IMAGES /*| VIDEO_CLIP_TO_VIEWPORT*/;
     adapt->name = "ATI Radeon Video Overlay";
     adapt->nEncodings = 1;
     adapt->pEncodings = &DummyEncoding;
@@ -1883,7 +1881,8 @@ RADEONSetPortAttribute(ScrnInfoPtr  pScrn,
    else if(attribute == xvAdjustment) 
    {
   	pPriv->adjustment=value;
-        xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"Setting pPriv->adjustment to %ld\n", pPriv->adjustment);
+        xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"Setting pPriv->adjustment to %u\n",
+		   (unsigned)pPriv->adjustment);
   	if(pPriv->tda9885!=0){
 		pPriv->tda9885->top_adjustment=value;
 		RADEON_TDA9885_SetEncoding(pPriv);
@@ -2589,18 +2588,17 @@ RADEONDisplayVideo(
 	y_mult = 2;
     }
 
+    v_inc = (src_h << v_inc_shift) / drw_h;
+
     for (i = 0; i < xf86_config->num_output; i++) {
 	output = xf86_config->output[i];
 	if (output->crtc == crtc) {
 	    radeon_output = output->driver_private;
+	    if (radeon_output->Flags & RADEON_USE_RMX)
+		v_inc = ((src_h * mode->CrtcVDisplay /
+			  radeon_output->PanelYRes) << v_inc_shift) / drw_h;
 	    break;
 	}
-    }
-
-    if (radeon_output->Flags & RADEON_USE_RMX) {
-	v_inc = ((src_h * mode->CrtcVDisplay / radeon_output->PanelYRes) << v_inc_shift) / drw_h;
-    } else {
-	v_inc = (src_h << v_inc_shift) / drw_h;
     }
 
     h_inc = (1 << (12 + ecp_div));
@@ -2862,7 +2860,6 @@ RADEONPutImage(
   DrawablePtr pDraw
 ){
    RADEONInfoPtr info = RADEONPTR(pScrn);
-   xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
    RADEONPortPrivPtr pPriv = (RADEONPortPrivPtr)data;
    INT32 xa, xb, ya, yb;
    unsigned char *dst_start;
@@ -2966,8 +2963,14 @@ RADEONPutImage(
 
    offset = (pPriv->video_offset) + (top * dstPitch);
 
-   if(pPriv->doubleBuffer)
+   if(pPriv->doubleBuffer) {
+	unsigned char *RADEONMMIO = info->MMIO;
+
+	/* Wait for last flip to take effect */
+	while(!(INREG(RADEON_OV0_REG_LOAD_CNTL) & RADEON_REG_LD_CTL_FLIP_READBACK));
+
 	offset += pPriv->currentBuffer * new_size;
+   }
 
    dst_start = info->FB + offset;
 
@@ -3255,7 +3258,6 @@ RADEONDisplaySurface(
 ){
     OffscreenPrivPtr pPriv = (OffscreenPrivPtr)surface->devPrivate.ptr;
     ScrnInfoPtr pScrn = surface->pScrn;
-    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONPortPrivPtr portPriv = info->adaptor->pPortPrivates[0].ptr;
 
@@ -3328,8 +3330,8 @@ RADEONInitOffscreenImages(ScreenPtr pScreen)
 	return;
 
     offscreenImages[0].image = &Images[0];
-    offscreenImages[0].flags = VIDEO_OVERLAID_IMAGES |
-			       VIDEO_CLIP_TO_VIEWPORT;
+    offscreenImages[0].flags = VIDEO_OVERLAID_IMAGES /*|
+			       VIDEO_CLIP_TO_VIEWPORT*/;
     offscreenImages[0].alloc_surface = RADEONAllocateSurface;
     offscreenImages[0].free_surface = RADEONFreeSurface;
     offscreenImages[0].display = RADEONDisplaySurface;
@@ -3358,7 +3360,6 @@ RADEONPutVideo(
 ){
    RADEONInfoPtr info = RADEONPTR(pScrn);
    RADEONPortPrivPtr pPriv = (RADEONPortPrivPtr)data;
-   xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
    INT32 xa, xb, ya, yb, top;
    unsigned int pitch, new_size, alloc_size;
@@ -3372,7 +3373,6 @@ RADEONPutVideo(
    int mult;
    int vbi_line_width, vbi_start, vbi_end;
    xf86CrtcPtr crtc;
-   RADEONCrtcPrivatePtr radeon_crtc;
 
     RADEON_SYNC(info, pScrn);
    /*
@@ -3444,7 +3444,8 @@ RADEONPutVideo(
    id = FOURCC_YUY2;
    
    top = ya>>16;
-
+#if 0
+   /* setting the ID above makes this useful - needs revisiting */
    switch(id) {
    case FOURCC_YV12:
    case FOURCC_I420:
@@ -3462,6 +3463,10 @@ RADEONPutVideo(
         srcPitch = (width<<1);
         break;
    }
+#else
+   dstPitch = ((width<<1) + 15) & ~15;
+   srcPitch = (width<<1);
+#endif
 
    new_size = dstPitch * height;
    new_size = new_size + 0x1f; /* for aligning */

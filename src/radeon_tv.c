@@ -13,7 +13,6 @@
 /* X and server generic header files */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "fbdevhw.h"
 #include "vgaHW.h"
 #include "xf86Modes.h"
 
@@ -187,9 +186,7 @@ static long SLOPE_limit[5] = { 6, 5, 4, 3, 2 };
 static Bool RADEONInitTVRestarts(xf86OutputPtr output, RADEONSavePtr save,
 				 DisplayModePtr mode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
-    RADEONInfoPtr  info = RADEONPTR(pScrn);
     int restart;
     unsigned hTotal;
     unsigned vTotal;
@@ -274,7 +271,8 @@ static Bool RADEONInitTVRestarts(xf86OutputPtr output, RADEONSavePtr save,
     save->tv_frestart = restart % fTotal;
 
     ErrorF("computeRestarts: F/H/V=%u,%u,%u\n",
-	   save->tv_frestart , save->tv_vrestart , save->tv_hrestart);
+	   (unsigned)save->tv_frestart, (unsigned)save->tv_vrestart,
+	   (unsigned)save->tv_hrestart);
 
     /* Compute H_INC from hSize */
     if (radeon_output->tvStd == TV_STD_NTSC ||
@@ -345,7 +343,7 @@ void RADEONInitTVRegisters(xf86OutputPtr output, RADEONSavePtr save,
 	                       | RADEON_SYNC_TIP_LEVEL
 	                       | RADEON_YFLT_EN
 	                       | RADEON_UVFLT_EN
-	                       | (2 << RADEON_CY_FILT_BLEND_SHIFT);
+	                       | (6 << RADEON_CY_FILT_BLEND_SHIFT);
 
     if (radeon_output->tvStd == TV_STD_NTSC ||
 	radeon_output->tvStd == TV_STD_NTSC_J) {
@@ -570,7 +568,6 @@ void RADEONUpdateHVPosition(xf86OutputPtr output, DisplayModePtr mode)
     ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    RADEONOutputPrivatePtr radeon_output = output->driver_private;
     Bool reloadTable;
     RADEONSavePtr restore = &info->ModeReg;
 

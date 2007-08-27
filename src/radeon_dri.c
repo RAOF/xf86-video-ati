@@ -69,7 +69,12 @@ static void RADEONDRITransitionMultiToSingle3d(ScreenPtr pScreen);
 static void RADEONDRITransitionSingleToMulti3d(ScreenPtr pScreen);
 
 #ifdef DAMAGE
-static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
+static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, RegionPtr pReg);
+
+#if (DRIINFO_MAJOR_VERSION > 5 ||		\
+     (DRIINFO_MAJOR_VERSION == 5 && DRIINFO_MINOR_VERSION >= 1))
+static void RADEONDRIClipNotify(ScreenPtr pScreen, WindowPtr *ppWin, int num);
+#endif
 #endif
 
 /* Initialize the visual configs that are supported by the hardware.
@@ -398,10 +403,10 @@ static void RADEONLeaveServer(ScreenPtr pScreen)
 #ifdef DAMAGE
     if (info->pDamage) {
 	RegionPtr pDamageReg = DamageRegion(info->pDamage);
+	int nrects = pDamageReg ? REGION_NUM_RECTS(pDamageReg) : 0;
 
-	if (pDamageReg) {
-	    RADEONDRIRefreshArea(pScrn, REGION_NUM_RECTS(pDamageReg),
-				 REGION_RECTS(pDamageReg));
+	if (nrects) {
+	    RADEONDRIRefreshArea(pScrn, pDamageReg);
 	}
     }
 #endif
@@ -1490,6 +1495,11 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     pDRIInfo->TransitionTo3d = RADEONDRITransitionTo3d;
     pDRIInfo->TransitionSingleToMulti3D = RADEONDRITransitionSingleToMulti3d;
     pDRIInfo->TransitionMultiToSingle3D = RADEONDRITransitionMultiToSingle3d;
+#if defined(DAMAGE) && (DRIINFO_MAJOR_VERSION > 5 ||	\
+			(DRIINFO_MAJOR_VERSION == 5 &&	\
+			 DRIINFO_MINOR_VERSION >= 1))
+    pDRIInfo->ClipNotify     = RADEONDRIClipNotify;
+#endif
 
     pDRIInfo->createDummyCtx     = TRUE;
     pDRIInfo->createDummyCtxPriv = FALSE;
@@ -1753,7 +1763,11 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
 
      xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		    "RADEONDRICloseScreen\n");
-    
+
+#ifdef DAMAGE
+     REGION_UNINIT(pScreen, &info->driRegion);
+#endif
+
      if (info->irq) {
 	RADEONDRISetVBlankInterrupt (pScrn, FALSE);
 	drmCtlUninstHandler(info->drmFD);
@@ -1848,15 +1862,17 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
  */
 
 
-static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
+static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, RegionPtr pReg)
 {
     RADEONInfoPtr       info       = RADEONPTR(pScrn);
-    int                 i;
+    int                 i, num;
     ScreenPtr           pScreen    = pScrn->pScreen;
     RADEONSAREAPrivPtr  pSAREAPriv = DRIGetSAREAPrivate(pScreen);
 #ifdef USE_EXA
     PixmapPtr           pPix = pScreen->GetScreenPixmap(pScreen);
 #endif
+    RegionRec region;
+    BoxPtr pbox;
 
     if (!info->directRenderingInited || !info->CPStarted)
 	return;
@@ -1866,6 +1882,17 @@ static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
      */
     if (!pSAREAPriv->pfAllowPageFlip && pSAREAPriv->pfCurrentPage == 0)
 	return;
+
+    REGION_NULL(pScreen, &region);
+    REGION_SUBTRACT(pScreen, &region, pReg, &info->driRegion);
+
+    num = REGION_NUM_RECTS(&region);
+
+    if (!num) {
+	goto out;
+    }
+
+    pbox = REGION_RECTS(&region);
 
     /* pretty much a hack. */
 
@@ -1887,7 +1914,7 @@ static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
     if (!info->useEXA) {
 	/* Make sure accel has been properly inited */
 	if (info->accel == NULL || info->accel->SetupForScreenToScreenCopy == NULL)
-	    return;
+	    goto out;
 	if (info->tilingEnabled)
 	    info->dst_pitch_offset |= RADEON_DST_TILE_MACRO;
 	(*info->accel->SetupForScreenToScreenCopy)(pScrn,
@@ -1923,6 +1950,8 @@ static void RADEONDRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
     info->dst_pitch_offset &= ~RADEON_DST_TILE_MACRO;
 #endif
 
+out:
+    REGION_NULL(pScreen, &region);
     DamageEmpty(info->pDamage);
 }
 
@@ -1936,16 +1965,13 @@ static void RADEONEnablePageFlip(ScreenPtr pScreen)
 
     if (info->allowPageFlip) {
 	RADEONSAREAPrivPtr pSAREAPriv = DRIGetSAREAPrivate(pScreen);
+	BoxRec box = { .x1 = 0, .y1 = 0, .x2 = pScrn->virtualX - 1,
+		       .y2 = pScrn->virtualY - 1 };
+	RegionPtr pReg = REGION_CREATE(pScreen, &box, 1);
 
 	pSAREAPriv->pfAllowPageFlip = 1;
-
-#ifdef USE_XAA
-	if (!info->useEXA) {
-	    BoxRec box = { .x1 = 0, .y1 = 0, .x2 = pScrn->virtualX - 1,
-			   .y2 = pScrn->virtualY - 1 };
-	    RADEONDRIRefreshArea(pScrn, 1, &box);
-	}
-#endif
+	RADEONDRIRefreshArea(pScrn, pReg);
+	REGION_DESTROY(pScreen, pReg);
     }
 #endif
 }
@@ -2100,6 +2126,33 @@ static void RADEONDRITransitionTo2d(ScreenPtr pScreen)
     if (info->cursor)
 	xf86ForceHWCursor (pScreen, FALSE);
 }
+
+#if defined(DAMAGE) && (DRIINFO_MAJOR_VERSION > 5 ||	\
+			(DRIINFO_MAJOR_VERSION == 5 &&	\
+			 DRIINFO_MINOR_VERSION >= 1))
+static void
+RADEONDRIClipNotify(ScreenPtr pScreen, WindowPtr *ppWin, int num)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+
+    REGION_UNINIT(pScreen, &info->driRegion);
+    REGION_NULL(pScreen, &info->driRegion);
+
+    if (num > 0) {
+	int i;
+
+	for (i = 0; i < num; i++) {
+	    WindowPtr pWin = ppWin[i];
+
+	    if (pWin) {
+		REGION_UNION(pScreen, &info->driRegion, &pWin->clipList,
+			     &info->driRegion);
+	    }
+	}
+    }
+}
+#endif
 
 void RADEONDRIAllocatePCIGARTTable(ScreenPtr pScreen)
 {

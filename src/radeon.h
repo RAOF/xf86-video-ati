@@ -39,6 +39,7 @@
 
 #include <stdlib.h>		/* For abs() */
 #include <unistd.h>		/* For usleep() */
+#include <sys/time.h>		/* For gettimeofday() */
 
 #include "xf86str.h"
 #include "compiler.h"
@@ -122,7 +123,6 @@ typedef enum {
 #endif
     OPTION_DDC_MODE,
     OPTION_IGNORE_EDID,
-    OPTION_FBDEV,
     OPTION_DISP_PRIORITY,
     OPTION_PANEL_SIZE,
     OPTION_MIN_DOTCLOCK,
@@ -158,6 +158,8 @@ typedef enum {
 
 #define RADEON_IDLE_RETRY      16 /* Fall out of idle loops after this count */
 #define RADEON_TIMEOUT    2000000 /* Fall out of wait loops after this count */
+
+#define RADEON_VSYNC_TIMEOUT	20000 /* Maximum wait for VSYNC (in usecs) */
 
 /* Buffer are aligned on 4096 byte boundaries */
 #define RADEON_BUFFER_ALIGN 0x00000fff
@@ -434,8 +436,6 @@ typedef struct {
     RADEONChipFamily  ChipFamily;
     RADEONErrata      ChipErrata;
 
-    Bool              FBDev;
-
     unsigned long     LinearAddr;       /* Frame buffer physical address     */
     unsigned long     MMIOAddr;         /* MMIO region physical address      */
     unsigned long     BIOSAddr;         /* BIOS physical address             */
@@ -605,6 +605,7 @@ typedef struct {
     Bool              allowPageFlip;    /* Enable 3d page flipping */
 #ifdef DAMAGE
     DamagePtr         pDamage;
+    RegionRec         driRegion;
 #endif
     Bool              have3DWindows;    /* Are there any 3d clients? */
 
@@ -787,6 +788,7 @@ typedef struct {
     int                MaxLines;
 
     CARD32            tv_dac_adj;
+    CARD32            tv_dac_enable_mask;
 
     Bool want_vblank_interrupts;
     RADEONBIOSConnector BiosConnector[RADEON_MAX_BIOS_CONNECTOR];
@@ -1221,6 +1223,23 @@ static __inline__ void RADEON_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
     if (!info->useEXA && info->accel)
 	info->accel->Sync(pScrn);
 #endif
+}
+
+static __inline__ void radeon_init_timeout(struct timeval *endtime,
+    unsigned int timeout)
+{
+    gettimeofday(endtime, NULL);
+    endtime->tv_usec += timeout;
+    endtime->tv_sec += endtime->tv_usec / 1000000;
+    endtime->tv_usec %= 1000000;
+}
+
+static __inline__ int radeon_timedout(const struct timeval *endtime)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return now.tv_sec == endtime->tv_sec ?
+        now.tv_usec > endtime->tv_usec : now.tv_sec > endtime->tv_sec;
 }
 
 #endif /* _RADEON_H_ */

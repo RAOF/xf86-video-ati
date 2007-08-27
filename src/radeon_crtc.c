@@ -36,7 +36,6 @@
 /* X and server generic header files */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "fbdevhw.h"
 #include "vgaHW.h"
 #include "xf86Modes.h"
 
@@ -104,7 +103,7 @@ radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
     }
   
     if (mode != DPMSModeOff)
-	radeon_crtc_load_lut(crtc);  
+	radeon_crtc_load_lut(crtc);
 }
 
 static Bool
@@ -189,7 +188,7 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
 #endif
 	save->crtc_offset_cntl = 0;
 
-    if (info->tilingEnabled) {
+    if (info->tilingEnabled && (crtc->rotatedData == NULL)) {
        if (IS_R300_VARIANT)
           save->crtc_offset_cntl |= (R300_CRTC_X_Y_MODE_EN |
 				     R300_CRTC_MICRO_TILE_BUFFER_DIS |
@@ -208,7 +207,7 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     Base = pScrn->fbOffset;
 
-    if (info->tilingEnabled) {
+    if (info->tilingEnabled && (crtc->rotatedData == NULL)) {
         if (IS_R300_VARIANT) {
 	/* On r300/r400 when tiling is enabled crtc_offset is set to the address of
 	 * the surface.  the x/y offsets are handled by the X_Y tile reg for each crtc
@@ -248,6 +247,10 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
        case 32: offset *= 4; break;
        }
        Base += offset;
+    }
+
+    if (crtc->rotatedData != NULL) {
+	Base = pScrn->fbOffset + (char *)crtc->rotatedData - (char *)info->FB;
     }
 
     Base &= ~7;                 /* 3 lower bits are always 0 */
@@ -420,7 +423,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
 #endif
 	save->crtc2_offset_cntl = 0;
 
-    if (info->tilingEnabled) {
+    if (info->tilingEnabled && (crtc->rotatedData == NULL)) {
        if (IS_R300_VARIANT)
           save->crtc2_offset_cntl |= (R300_CRTC_X_Y_MODE_EN |
 				      R300_CRTC_MICRO_TILE_BUFFER_DIS |
@@ -439,7 +442,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     Base = pScrn->fbOffset;
 
-    if (info->tilingEnabled) {
+    if (info->tilingEnabled && (crtc->rotatedData == NULL)) {
         if (IS_R300_VARIANT) {
 	/* On r300/r400 when tiling is enabled crtc_offset is set to the address of
 	 * the surface.  the x/y offsets are handled by the X_Y tile reg for each crtc
@@ -479,6 +482,10 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
        case 32: offset *= 4; break;
        }
        Base += offset;
+    }
+
+    if (crtc->rotatedData != NULL) {
+	Base = pScrn->fbOffset + (char *)crtc->rotatedData - (char *)info->FB;
     }
 
     Base &= ~7;                 /* 3 lower bits are always 0 */
@@ -561,7 +568,7 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 				      ? RADEON_CRTC2_V_SYNC_POL
 				      : 0));
 
-    save->crtc2_pitch  = ((info->CurrentLayout.displayWidth * pScrn->bitsPerPixel) +
+    save->crtc2_pitch  = ((pScrn->displayWidth * pScrn->bitsPerPixel) +
 			  ((pScrn->bitsPerPixel * 8) -1)) / (pScrn->bitsPerPixel * 8);
     save->crtc2_pitch |= save->crtc2_pitch << 16;
 
@@ -666,9 +673,9 @@ RADEONInitPLLRegisters(ScrnInfoPtr pScrn, RADEONInfoPtr info,
     save->post_div       = post_div->divider;
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "dc=%ld, of=%ld, fd=%d, pd=%d\n",
-		   save->dot_clock_freq,
-		   save->pll_output_freq,
+		   "dc=%u, of=%u, fd=%d, pd=%d\n",
+		   (unsigned)save->dot_clock_freq,
+		   (unsigned)save->pll_output_freq,
 		   save->feedback_div,
 		   save->post_div);
 
@@ -735,9 +742,9 @@ RADEONInitPLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save,
     save->post_div_2       = post_div->divider;
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "dc=%ld, of=%ld, fd=%d, pd=%d\n",
-		   save->dot_clock_freq_2,
-		   save->pll_output_freq_2,
+		   "dc=%u, of=%u, fd=%d, pd=%d\n",
+		   (unsigned)save->dot_clock_freq_2,
+		   (unsigned)save->pll_output_freq_2,
 		   save->feedback_div_2,
 		   save->post_div_2);
 
@@ -753,28 +760,34 @@ RADEONInitPLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save,
 }
 
 static void
+radeon_update_tv_routing(ScrnInfoPtr pScrn, RADEONSavePtr restore)
+{
+    /* pixclks_cntl controls tv clock routing */
+    OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, restore->pixclks_cntl);
+}
+
+static void
 radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 		     DisplayModePtr adjusted_mode, int x, int y)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
-    xf86OutputPtr output;
-    RADEONOutputPrivatePtr radeon_output;
     RADEONInfoPtr info = RADEONPTR(pScrn);
-    RADEONMonitorType montype = MT_NONE;
     Bool           tilingOld   = info->tilingEnabled;
     int i = 0;
     double         dot_clock = 0;
+    Bool no_odd_post_div = FALSE;
+    Bool update_tv_routing = FALSE;
 
 
     if (info->allowColorTiling) {
-        info->tilingEnabled = (adjusted_mode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
-#ifdef XF86DRI	
+	info->tilingEnabled = (adjusted_mode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
+#ifdef XF86DRI
 	if (info->directRenderingEnabled && (info->tilingEnabled != tilingOld)) {
 	    RADEONSAREAPrivPtr pSAREAPriv;
 	  if (RADEONDRISetParam(pScrn, RADEON_SETPARAM_SWITCH_TILING, (info->tilingEnabled ? 1 : 0)) < 0)
-  	      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			 "[drm] failed changing tiling status\n");
 	    pSAREAPriv = DRIGetSAREAPrivate(pScrn->pScreen);
 	    info->tilingEnabled = pSAREAPriv->tiling_enabled ? TRUE : FALSE;
@@ -783,11 +796,12 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     }
 
     for (i = 0; i < xf86_config->num_output; i++) {
-	output = xf86_config->output[i];
-	radeon_output = output->driver_private;
+	xf86OutputPtr output = xf86_config->output[i];
+	RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
 	if (output->crtc == crtc) {
-	    montype = radeon_output->MonType;
+	    if (radeon_output->MonType != MT_CRT)
+		no_odd_post_div = TRUE;
 	}
     }
 
@@ -820,28 +834,36 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
         dot_clock = adjusted_mode->Clock / 1000.0;
         if (dot_clock) {
 	    ErrorF("init pll2\n");
-	    RADEONInitPLL2Registers(pScrn, &info->ModeReg, &info->pll, dot_clock, montype != MT_CRT);
+	    RADEONInitPLL2Registers(pScrn, &info->ModeReg, &info->pll, dot_clock, no_odd_post_div);
         }
 	break;
     }
 
-    if (montype == MT_STV || montype == MT_CTV) {
-	switch (radeon_crtc->crtc_id) {
-	case 0:
-	    RADEONAdjustCrtcRegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
-	    RADEONAdjustPLLRegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
-	    break;
-	case 1:
-	    RADEONAdjustCrtc2RegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
-	    RADEONAdjustPLL2RegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
-	    break;
+    for (i = 0; i < xf86_config->num_output; i++) {
+	xf86OutputPtr output = xf86_config->output[i];
+	RADEONOutputPrivatePtr radeon_output = output->driver_private;
+
+	if (output->crtc == crtc) {
+	    if (radeon_output->MonType == MT_STV || radeon_output->MonType == MT_CTV) {
+		switch (radeon_crtc->crtc_id) {
+		case 0:
+		    RADEONAdjustCrtcRegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
+		    RADEONAdjustPLLRegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
+		    update_tv_routing = TRUE;
+		    break;
+		case 1:
+		    RADEONAdjustCrtc2RegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
+		    RADEONAdjustPLL2RegistersForTV(pScrn, &info->ModeReg, adjusted_mode, output);
+		    break;
+		}
+	    }
 	}
     }
 
     ErrorF("restore memmap\n");
     RADEONRestoreMemMapRegisters(pScrn, &info->ModeReg);
     ErrorF("restore common\n");
-    RADEONRestoreCommonRegisters(pScrn, &info->ModeReg);    
+    RADEONRestoreCommonRegisters(pScrn, &info->ModeReg);
 
     switch (radeon_crtc->crtc_id) {
     case 0:
@@ -859,8 +881,8 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     }
 
     /* pixclks_cntl handles tv-out clock routing */
-    if (montype == MT_STV || montype == MT_CTV)
-	RADEONRestorePLL2Registers(pScrn, &info->ModeReg);
+    if (update_tv_routing)
+	radeon_update_tv_routing(pScrn, &info->ModeReg);
 
     if (info->DispPriority)
         RADEONInitDispBandwidth(pScrn);
@@ -897,18 +919,8 @@ void radeon_crtc_load_lut(xf86CrtcPtr crtc)
 
     PAL_SELECT(radeon_crtc->crtc_id);
 
-    if (pScrn->depth == 15) {
-	for (i = 0; i < 32; i++) {
-	    OUTPAL(i * 8, radeon_crtc->lut_r[i], radeon_crtc->lut_g[i], radeon_crtc->lut_b[i]);
-	}
-    } else if (pScrn->depth == 16) {
-	for (i = 0; i < 64; i++) {
-	    OUTPAL(i * 4, radeon_crtc->lut_r[i], radeon_crtc->lut_g[i], radeon_crtc->lut_b[i]);
-	}
-    } else {
-	for (i = 0; i < 256; i++) {
-	    OUTPAL(i, radeon_crtc->lut_r[i], radeon_crtc->lut_g[i], radeon_crtc->lut_b[i]);
-	}
+    for (i = 0; i < 256; i++) {
+	OUTPAL(i, radeon_crtc->lut_r[i], radeon_crtc->lut_g[i], radeon_crtc->lut_b[i]);
     }
 
 }
@@ -920,13 +932,20 @@ radeon_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green,
 {
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     ScrnInfoPtr		pScrn = crtc->scrn;
-    int i;
+    int i, j;
 
     if (pScrn->depth == 16) {
 	for (i = 0; i < 64; i++) {
-	    radeon_crtc->lut_r[i] = red[i/2] >> 8;
-	    radeon_crtc->lut_g[i] = green[i] >> 8;
-	    radeon_crtc->lut_b[i] = blue[i/2] >> 8;
+	    if (i <= 31) {
+		for (j = 0; j < 8; j++) {
+		    radeon_crtc->lut_r[i * 8 + j] = red[i] >> 8;
+		    radeon_crtc->lut_b[i * 8 + j] = blue[i] >> 8;
+		}
+	    }
+
+	    for (j = 0; j < 4; j++) {
+		radeon_crtc->lut_g[i * 4 + j] = green[i] >> 8;
+	    }
 	}
     } else {
 	for (i = 0; i < 256; i++) {

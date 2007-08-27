@@ -36,7 +36,6 @@
 /* X and server generic header files */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "fbdevhw.h"
 #include "vgaHW.h"
 #include "xf86Modes.h"
 
@@ -77,7 +76,7 @@ const char *TMDSTypeName[4] = {
 };
 
 const char *DDCTypeName[6] = {
-  "NONE",
+  "None",
   "MONID",
   "DVI_DDC",
   "VGA_DDC",
@@ -580,7 +579,6 @@ static RADEONMonitorType RADEONPortCheckNonDDC(ScrnInfoPtr pScrn, xf86OutputPtr 
 
 
     if (radeon_output->type == OUTPUT_LVDS) {
-	if (INREG(RADEON_BIOS_4_SCRATCH) & 4)
 	    MonType =  MT_LCD;
     } else if (radeon_output->type == OUTPUT_DVI) {
 	if (radeon_output->TMDSType == TMDS_INT) {
@@ -654,8 +652,6 @@ static Bool
 radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 		    DisplayModePtr adjusted_mode)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
-    RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
     if (radeon_output->MonType == MT_LCD || radeon_output->MonType == MT_DFP) {
@@ -848,21 +844,22 @@ static void RADEONInitRMXRegisters(xf86OutputPtr output, RADEONSavePtr save,
     if (Hratio == 1.0 || !(mode->Flags & RADEON_USE_RMX)) {
 	save->fp_horz_stretch |= ((xres/8-1)<<16);
     } else {
-	save->fp_horz_stretch |= ((((unsigned long)(Hratio * RADEON_HORZ_STRETCH_RATIO_MAX +
-				     0.5)) & RADEON_HORZ_STRETCH_RATIO_MASK) |
-				    RADEON_HORZ_STRETCH_BLEND |
-				    RADEON_HORZ_STRETCH_ENABLE |
-				    ((radeon_output->PanelXRes/8-1)<<16));
+	save->fp_horz_stretch |= ((((unsigned long)
+				    (Hratio * RADEON_HORZ_STRETCH_RATIO_MAX)) &
+				   RADEON_HORZ_STRETCH_RATIO_MASK) |
+				  RADEON_HORZ_STRETCH_BLEND |
+				  RADEON_HORZ_STRETCH_ENABLE |
+				  ((radeon_output->PanelXRes/8-1)<<16));
     }
 
     if (Vratio == 1.0 || !(mode->Flags & RADEON_USE_RMX)) {
 	save->fp_vert_stretch |= ((yres-1)<<12);
     } else {
-	save->fp_vert_stretch |= ((((unsigned long)(Vratio * RADEON_VERT_STRETCH_RATIO_MAX +
-						0.5)) & RADEON_VERT_STRETCH_RATIO_MASK) |
-				      RADEON_VERT_STRETCH_ENABLE |
-				      RADEON_VERT_STRETCH_BLEND |
-				      ((radeon_output->PanelYRes-1)<<12));
+	save->fp_vert_stretch |= ((((unsigned long)(Vratio * RADEON_VERT_STRETCH_RATIO_MAX)) &
+				   RADEON_VERT_STRETCH_RATIO_MASK) |
+				  RADEON_VERT_STRETCH_ENABLE |
+				  RADEON_VERT_STRETCH_BLEND |
+				  ((radeon_output->PanelYRes-1)<<12));
     }
 
 }
@@ -1228,12 +1225,9 @@ radeon_detect_tv_dac(ScrnInfoPtr pScrn, Bool color)
 
     /* save the regs we need */
     pixclks_cntl = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
-    if (IS_R300_VARIANT) {
-	gpiopad_a = INREG(RADEON_GPIOPAD_A);
-	disp_output_cntl = INREG(RADEON_DISP_OUTPUT_CNTL);
-    } else {
-	disp_hw_debug = INREG(RADEON_DISP_HW_DEBUG);
-    }
+    gpiopad_a = IS_R300_VARIANT ? INREG(RADEON_GPIOPAD_A) : 0;
+    disp_output_cntl = IS_R300_VARIANT ? INREG(RADEON_DISP_OUTPUT_CNTL) : 0;
+    disp_hw_debug = !IS_R300_VARIANT ? INREG(RADEON_DISP_HW_DEBUG) : 0;
     crtc2_gen_cntl = INREG(RADEON_CRTC2_GEN_CNTL);
     tv_dac_cntl = INREG(RADEON_TV_DAC_CNTL);
     dac_ext_cntl = INREG(RADEON_DAC_EXT_CNTL);
@@ -2285,10 +2279,7 @@ RADEONGetTMDSInfo(xf86OutputPtr output)
 static void
 RADEONGetTVInfo(xf86OutputPtr output)
 {
-    ScrnInfoPtr pScrn = output->scrn;
-    RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
-    int i;
 
     radeon_output->hPos = 0;
     radeon_output->vPos = 0;
