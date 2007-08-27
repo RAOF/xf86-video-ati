@@ -1,3 +1,205 @@
+commit a12e4aa01bf1c5723c3c791ff9bdc26eef21d5ea
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Aug 26 18:51:29 2007 -0400
+
+    Bump for new release
+
+commit d43596e5f5d7c60f96b57bc3e743a9b40eb7109d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Aug 26 18:07:50 2007 -0400
+
+    RADEON: Fix rotation.  works now
+
+commit 47eb3327c258bb0cfd9a1d5677624b9988a39057
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Aug 26 15:43:22 2007 -0400
+
+    RADEON: minor tweak to tv out
+
+commit f36720377737210c985b196d9a988efdd767f1c7
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Aug 26 14:13:06 2007 -0400
+
+    RADEON: fix depth 16 palette for real this time
+
+commit f2b13f1457bf860b075310d3962254be0ed7bea3
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Aug 26 13:27:19 2007 -0400
+
+    RADEON: Only update pixclks_cntl when updating tv routing
+    
+    No need to re-set all of the pll2 stuff
+
+commit 5d044b9f74c7aa7e12f2822896fed881e2ca9d19
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Aug 25 21:03:08 2007 -0400
+
+    RADEON: fix crtc clipping for Xv
+
+commit 3fd2d22a02812d5f86cdc1c9503f48362b0c362b
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Aug 25 17:37:35 2007 -0400
+
+    RADEON: remove fbdev option
+    
+    FBDev support is currently broken, and it not really compatible
+    with randr
+
+commit 3469e1aa08792890fa6a5c72da52a1992a0b382c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Aug 24 20:42:13 2007 -0400
+
+    RADEON: add extra green data in depth 16
+    
+    Apparently some radeons need this?
+
+commit 71f650d1bc432514516f7ac64a5e8a54c5227881
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Aug 24 09:21:39 2007 +0200
+
+    Require xorg-server >= 1.3 for RandR 1.2.
+
+commit d7230939f523610c57f92bdfc72966bdbc6f1070
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Aug 24 09:21:14 2007 +0200
+
+    64 bit warning fixes.
+    
+    For printf vs. CARD32, use %u or %x and and a cast to unsigned.
+
+commit 91c45fedfd155a153dcd2c3f3e30986bfbd44e6f
+Author: Dave Airlie <airlied@nx6125b.(none)>
+Date:   Fri Aug 24 15:05:01 2007 +1000
+
+    radeon: don't disable dac if either tv or vga is using it
+    
+    On my rs480 I had to vt switch to get hotplug VGA working due to the tv-out
+    code turning off the dac when the vga code was actually using it.
+
+commit 056ca6bb5adf974290693b55de6cd6880d2132d1
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Aug 23 20:19:47 2007 -0400
+
+    RADEON: NONE to None to match other port info
+
+commit 13fd53286bdda2c55683bdb5f63e7d345f6c63ef
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Aug 23 20:17:51 2007 -0400
+
+    RADEON: set (hopefully) reasonable default max desktop sizes
+    
+    Based on the amount of vram.  We really need ttm...
+
+commit 53bad86ca48a9b6529c1f0989ee568d9d48841c6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Aug 23 19:24:59 2007 -0400
+
+    RADEON: clean up the logic in crtc_mode_set()
+
+commit 4712dedea225e9e07177aebda2ffc6290d1f53c7
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Aug 23 18:51:34 2007 -0400
+
+    RADEON: Always assume LVDS is connected
+    
+    Not all bioses seem to set the right scratch bits.  If we have
+    LVDS (via bios table or otherwise) assume it's connected.
+
+commit b0f170c5f736ecba1a5899d602c4173fe9b9b1fa
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 12:55:40 2007 +0200
+
+    radeon: Remove unnecessary #include <time.h>.
+
+commit ac54c0e4360099697755d14b1030def73d8235b0
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Wed Aug 22 14:33:59 2007 +0200
+
+    radeon: Warning fixes.
+
+commit de26e406f52b3b13f03eee2b8023924ec6406f0a
+Author: Alon Ziv <alonz@nolaviz.org>
+Date:   Mon Jul 30 22:47:59 2007 +0300
+
+    radeon: Sane handling of timeouts in WaitForVerticalSync(2).
+    
+    RADEONWaitForVerticalSync() and RADEONWaitForVerticalSync2() need to wait
+    for a timeout specified in milliseconds; looping around usleep() causes
+    the timeout to be unnecessarily long, as the OS may sleep longer than
+    requested (on Linux the minimum actual sleep value may be several ms).
+    
+    The new logic uses gettimeofday() in the loop to see when the (absolute)
+    timeout has arrived.
+    
+    Signed-off-by: Alon Ziv <alonz@nolaviz.org>
+
+commit c66e5de26ae93caa368213f3cce139aacec955d2
+Author: Sascha Sommer <saschasommer@freenet.de>
+Date:   Thu Aug 23 12:11:51 2007 +0200
+
+    radeon: Round down RMX stretch ratios.
+    
+    Fixes issues with RMX scaling, see
+    https://bugs.freedesktop.org/show_bug.cgi?id=8983 .
+
+commit 633c1fff10a3be4c9f48c1995e330d60bf6abbb2
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 12:11:41 2007 +0200
+
+    radeon: Sync pages when enabling page flipping with EXA as well.
+    
+    Exclude the DRI window(s) though to avoid scribbling over 3D rendering.
+
+commit 4f8010ce22043c0f8d60c0f49d270ce98c9d2466
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 12:11:12 2007 +0200
+
+    radeon: Don't synchronize DRI windows between pages when possible.
+
+commit 7b527054a7c81d1d1dbc79d41b9e53064dab68cb
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 12:10:33 2007 +0200
+
+    radeon: Restore memmap registers even if only AGP location changed.
+
+commit d7ba9f001c0ab645984526afd0e64d1c6a6d654a
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 11:39:54 2007 +0200
+
+    radeon: Change a test to info->IsIGP from several IGP families.
+
+commit 8c7c22e22b6076abc80e4e1aaa8d1f4cf2f3ed14
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 11:38:17 2007 +0200
+
+    radeon: Wait for pending overlay flip to finish before emitting new one.
+
+commit 92fa7cc00688d7bfc1fb72e645ac30c6d92669c6
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 23 11:38:16 2007 +0200
+
+    radeon: Don't call RADEONDRIRefreshArea when the damaged region is empty.
+
+commit 5cb20c2dc5eca9d7d7d78e9924ea1b90076e7253
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Aug 23 18:46:41 2007 +1000
+
+    radeon: bug 11899 + debian 435040 - test for usefbdev before calling int10
+    (cherry picked from commit 3334c247540b113f9c4a5ce1879d8648a45a959a)
+
+commit 9d6261c024c697a211da4b6300420153eb72a264
+Author: Roland Bär <roland@verifysoft.de>
+Date:   Thu Aug 23 18:33:34 2007 +1000
+
+    radeon: bug 11860 fix some mem leaks
+
+commit 7bc1f862bc5f992f213143fbafef52459ba7db4a
+Author: Roland Bär <roland@verifysoft.de>
+Date:   Thu Aug 23 18:37:35 2007 +1000
+
+    radeon: bug 11861 - dead code removal in radeon_video.c
+    (cherry picked from commit 8e3a6f83016cd8c4cfd43ceee4cbf0a8dc018b2a)
+
 commit 9d38c8aa1a7d6fb1af41ee8abdb4a95f94843538
 Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
 Date:   Thu Aug 23 20:10:24 2007 +1000

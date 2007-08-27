@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.7.192-1) experimental; urgency=low
+
+  * New upstream release candidate.
+    + UseFBDev option removed, closes: #372920.
+    + Monitor detection fixed, closes: #413500.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 27 Aug 2007 08:26:38 +0200
+
 xserver-xorg-video-ati (1:6.7.191-1) experimental; urgency=low
 
   * New upstream release candidate.
