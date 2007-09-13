@@ -152,7 +152,11 @@ typedef enum {
     OPTION_CONSTANTDPI,
     OPTION_CONNECTORTABLE,
     OPTION_DRI,
-    OPTION_DEFAULT_CONNECTOR_TABLE
+    OPTION_DEFAULT_CONNECTOR_TABLE,
+#if defined(__powerpc__)
+    OPTION_MAC_MODEL,
+#endif
+    OPTION_DEFAULT_TMDS_PLL
 } RADEONOpts;
 
 
@@ -421,6 +425,14 @@ typedef enum {
        CHIP_ERRATA_PLL_DUMMYREADS      = 0x00000002,
        CHIP_ERRATA_PLL_DELAY           = 0x00000004
 } RADEONErrata;
+
+#if defined(__powerpc__)
+typedef enum {
+       RADEON_MAC_IBOOK             = 0x00000001,
+       RADEON_MAC_POWERBOOK_DL      = 0x00000002,
+       RADEON_MAC_POWERBOOK         = 0x00000004
+} RADEONMacModel;
+#endif
 
 typedef enum {
 	CARD_PCI,
@@ -799,6 +811,11 @@ typedef struct {
     Bool              crtc2_on;
 
     Bool              InternalTVOut;
+    int               tvdac_use_count;
+
+#if defined(__powerpc__)
+    RADEONMacModel    MacModel;
+#endif
 
     Rotation rotation;
     void (*PointerMoved)(int, int, int);
