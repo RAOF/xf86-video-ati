@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.7.192-4) UNRELEASED; urgency=low
+
+  * Really build against xserver 2:1.4.
+
+ -- Brice Goglin <bgoglin@debian.org>  Thu, 13 Sep 2007 22:31:11 +0200
+
 xserver-xorg-video-ati (1:6.7.192-3) experimental; urgency=low
 
   * Build against xserver 2:1.4-1.
