@@ -242,7 +242,19 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 	    info->BiosConnector[i].ConnectorType = (tmp >> 12) & 0xf;
 	    info->BiosConnector[i].DDCType = (tmp >> 8) & 0xf;
 	    info->BiosConnector[i].DACType = tmp & 0x1;
-	    info->BiosConnector[i].TMDSType = tmp & 0x10;
+	    info->BiosConnector[i].TMDSType = (tmp >> 4) & 0x1;
+
+	    /* most XPRESS chips seem to specify DDC_CRT2 for their 
+	     * VGA DDC port, however DDC never seems to work on that
+	     * port.  Some have reported success on DDC_MONID, so 
+	     * lets see what happens with that.
+	     */
+	    if (info->ChipFamily == CHIP_FAMILY_RS400 &&
+		info->BiosConnector[i].ConnectorType == CONNECTOR_CRT &&
+		info->BiosConnector[i].DDCType == DDC_CRT2) {
+		info->BiosConnector[i].DDCType = DDC_MONID;
+	    }
+
 
 	}
     } else {

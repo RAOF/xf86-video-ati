@@ -266,7 +266,8 @@ RADEONDisplayDDCConnected(ScrnInfoPtr pScrn, xf86OutputPtr output)
 	} else if ((info->IsAtomBios && radeon_output->ConnectorType == CONNECTOR_DVI_D_ATOM) ||
 		 (!info->IsAtomBios && radeon_output->ConnectorType == CONNECTOR_DVI_D)) {
 	    MonType = MT_DFP;
-	} else if ((*MonInfo)->rawData[0x14] & 0x80) {	/* if it's digital */
+	} else if (radeon_output->type == OUTPUT_DVI &&
+		   ((*MonInfo)->rawData[0x14] & 0x80)) { /* if it's digital and DVI */
 	    MonType = MT_DFP;
 	} else {
 	    MonType = MT_CRT;
@@ -1632,9 +1633,9 @@ radeon_create_resources(xf86OutputPtr output)
 
 	if (radeon_output->DACType == DAC_PRIMARY)
 	    data = 1; /* primary dac, only drives vga */
-	else if (radeon_output->DACType == DAC_TVDAC &&
+	/*else if (radeon_output->DACType == DAC_TVDAC &&
 		 info->tvdac_use_count < 2)
-	    data = 1; /* only one output with tvdac */
+		 data = 1;*/ /* only one output with tvdac */
 	else
 	    data = 0; /* shared tvdac between vga/dvi/tv */
 
@@ -2426,7 +2427,6 @@ RADEONGetTVInfo(xf86OutputPtr output)
 void RADEONInitConnector(xf86OutputPtr output)
 {
     ScrnInfoPtr	    pScrn = output->scrn;
-    RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
     int DDCReg = 0;
     char* name = (char*) DDCTypeName[radeon_output->DDCType];
@@ -2442,9 +2442,9 @@ void RADEONInitConnector(xf86OutputPtr output)
 
     if (radeon_output->DACType == DAC_PRIMARY)
 	radeon_output->load_detection = 1; /* primary dac, only drives vga */
-    else if (radeon_output->DACType == DAC_TVDAC &&
+    /*else if (radeon_output->DACType == DAC_TVDAC &&
 	     info->tvdac_use_count < 2)
-	radeon_output->load_detection = 1; /* only one output with tvdac */
+	     radeon_output->load_detection = 1;*/ /* only one output with tvdac */
     else
 	radeon_output->load_detection = 0; /* shared tvdac between vga/dvi/tv */
 
@@ -2548,6 +2548,16 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 static void RADEONSetupGenericConnectors(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info       = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt  = RADEONEntPriv(pScrn);
+
+    if (!pRADEONEnt->HasCRTC2) {
+	info->BiosConnector[0].DDCType = DDC_VGA;
+	info->BiosConnector[0].DACType = DAC_PRIMARY;
+	info->BiosConnector[0].TMDSType = TMDS_NONE;
+	info->BiosConnector[0].ConnectorType = CONNECTOR_CRT;
+	info->BiosConnector[0].valid = TRUE;
+	return;
+    }
 
     if (info->IsMobility) {
 	/* Below is the most common setting, but may not be true */
