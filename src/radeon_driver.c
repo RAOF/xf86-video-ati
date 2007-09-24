@@ -4172,8 +4172,8 @@ void RADEONRestoreLVDSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 
     if (info->IsMobility) {
 	OUTREG(RADEON_LVDS_GEN_CNTL,  restore->lvds_gen_cntl);
-	/*OUTREG(RADEON_LVDS_PLL_CNTL,  restore->lvds_pll_cntl);  
-	OUTREG(RADEON_BIOS_4_SCRATCH, restore->bios_4_scratch);
+	OUTREG(RADEON_LVDS_PLL_CNTL,  restore->lvds_pll_cntl);  
+	/*OUTREG(RADEON_BIOS_4_SCRATCH, restore->bios_4_scratch);
 	OUTREG(RADEON_BIOS_5_SCRATCH, restore->bios_5_scratch);
 	OUTREG(RADEON_BIOS_6_SCRATCH, restore->bios_6_scratch);*/
     }
@@ -4662,9 +4662,7 @@ void RADEONRestorePLLRegisters(ScrnInfoPtr pScrn,
 	    RADEON_VCLK_SRC_SEL_PPLLCLK,
 	    ~(RADEON_VCLK_SRC_SEL_MASK));
 
-    usleep(50000);
-
-    OUTPLL(pScrn, RADEON_VCLK_ECP_CNTL, restore->vclk_ecp_cntl);
+    /*OUTPLL(pScrn, RADEON_VCLK_ECP_CNTL, restore->vclk_ecp_cntl);*/
 
     ErrorF("finished PLL1\n");
 
@@ -4738,8 +4736,6 @@ void RADEONRestorePLL2Registers(ScrnInfoPtr pScrn,
     OUTPLLP(pScrn, RADEON_PIXCLKS_CNTL,
 	    RADEON_PIX2CLK_SRC_SEL_P2PLLCLK,
 	    ~(RADEON_PIX2CLK_SRC_SEL_MASK));
-
-    usleep(5000);
 
     OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, restore->pixclks_cntl);
 

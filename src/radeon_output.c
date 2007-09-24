@@ -648,13 +648,17 @@ radeon_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 	    return MODE_CLOCK_RANGE;
     }
 
-    if (radeon_output->type != OUTPUT_LVDS)
-	return MODE_OK;
-
-    if (pMode->HDisplay > radeon_output->PanelXRes ||
-	pMode->VDisplay > radeon_output->PanelYRes)
-	return MODE_PANEL;
-
+    if (radeon_output->type == OUTPUT_LVDS) {
+	if (radeon_output->rmx_type == RMX_OFF) {
+	    if (pMode->HDisplay != radeon_output->PanelXRes ||
+		pMode->VDisplay != radeon_output->PanelYRes)
+		return MODE_PANEL;
+	}
+	if (pMode->HDisplay > radeon_output->PanelXRes ||
+	    pMode->VDisplay > radeon_output->PanelYRes)
+	    return MODE_PANEL;
+    }
+    
     return MODE_OK;
 }
 
@@ -664,7 +668,8 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 {
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
-    if (radeon_output->MonType == MT_LCD || radeon_output->MonType == MT_DFP) {
+    if ((radeon_output->MonType == MT_LCD || radeon_output->MonType == MT_DFP)
+	&& radeon_output->rmx_type != RMX_OFF) {
 	xf86CrtcPtr crtc = output->crtc;
 	RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
@@ -674,15 +679,17 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 	    adjusted_mode->Flags |= RADEON_USE_RMX;
 
 	if (adjusted_mode->Flags & RADEON_USE_RMX) {
-	    adjusted_mode->CrtcHTotal     = mode->CrtcHDisplay + radeon_output->HBlank;
-	    adjusted_mode->CrtcHSyncStart = mode->CrtcHDisplay + radeon_output->HOverPlus;
-	    adjusted_mode->CrtcHSyncEnd   = mode->CrtcHSyncStart + radeon_output->HSyncWidth;
-	    adjusted_mode->CrtcVTotal     = mode->CrtcVDisplay + radeon_output->VBlank;
-	    adjusted_mode->CrtcVSyncStart = mode->CrtcVDisplay + radeon_output->VOverPlus;
-	    adjusted_mode->CrtcVSyncEnd   = mode->CrtcVSyncStart + radeon_output->VSyncWidth;
-	    adjusted_mode->Clock          = radeon_output->DotClock;
 	    radeon_output->Flags |= RADEON_USE_RMX;
-	    adjusted_mode->Flags          = radeon_output->Flags;
+	    if (radeon_output->MonType == MT_DFP) {
+		adjusted_mode->CrtcHTotal     = mode->CrtcHDisplay + radeon_output->HBlank;
+		adjusted_mode->CrtcHSyncStart = mode->CrtcHDisplay + radeon_output->HOverPlus;
+		adjusted_mode->CrtcHSyncEnd   = mode->CrtcHSyncStart + radeon_output->HSyncWidth;
+		adjusted_mode->CrtcVTotal     = mode->CrtcVDisplay + radeon_output->VBlank;
+		adjusted_mode->CrtcVSyncStart = mode->CrtcVDisplay + radeon_output->VOverPlus;
+		adjusted_mode->CrtcVSyncEnd   = mode->CrtcVSyncStart + radeon_output->VSyncWidth;
+		adjusted_mode->Clock          = radeon_output->DotClock;
+		adjusted_mode->Flags          = radeon_output->Flags;
+	    }
 	} else
 	    radeon_output->Flags &= ~RADEON_USE_RMX;
 
@@ -766,7 +773,7 @@ static void RADEONInitFP2Registers(xf86OutputPtr output, RADEONSavePtr save,
 				   DisplayModePtr mode, BOOL IsPrimary)
 {
     ScrnInfoPtr pScrn = output->scrn;
-    RADEONInfoPtr info       = RADEONPTR(pScrn);
+    RADEONInfoPtr info = RADEONPTR(pScrn);
 
 
     if (pScrn->rgbBits == 8) 
@@ -776,26 +783,23 @@ static void RADEONInitFP2Registers(xf86OutputPtr output, RADEONSavePtr save,
 	save->fp2_gen_cntl = info->SavedReg.fp2_gen_cntl &
 				~RADEON_FP2_PANEL_FORMAT;/* 18 bit format, */
 
-    save->fp2_gen_cntl &= ~(RADEON_FP2_ON | RADEON_FP2_DVO_EN);
+    save->fp2_gen_cntl &= ~(RADEON_FP2_ON |
+			    RADEON_FP2_DVO_EN |
+			    RADEON_FP2_DVO_RATE_SEL_SDR);
 
     if (IsPrimary) {
         if ((info->ChipFamily == CHIP_FAMILY_R200) || IS_R300_VARIANT) {
-            save->fp2_gen_cntl   &= ~(R200_FP2_SOURCE_SEL_MASK | 
-                                      RADEON_FP2_DVO_EN |
-                                      RADEON_FP2_DVO_RATE_SEL_SDR);
-	if (mode->Flags & RADEON_USE_RMX) 
-	    save->fp2_gen_cntl |= R200_FP2_SOURCE_SEL_RMX;
+            save->fp2_gen_cntl &= ~R200_FP2_SOURCE_SEL_MASK;
+	    if (mode->Flags & RADEON_USE_RMX)
+		save->fp2_gen_cntl |= R200_FP2_SOURCE_SEL_RMX;
         } else {
-            save->fp2_gen_cntl   &= ~(RADEON_FP2_SRC_SEL_CRTC2 | 
-                                      RADEON_FP2_DVO_RATE_SEL_SDR);
-            }
+            save->fp2_gen_cntl &= ~RADEON_FP2_SRC_SEL_CRTC2;
+	}
     } else {
         if ((info->ChipFamily == CHIP_FAMILY_R200) || IS_R300_VARIANT) {
-            save->fp2_gen_cntl &= ~(R200_FP2_SOURCE_SEL_MASK | 
-                                    RADEON_FP2_DVO_RATE_SEL_SDR);
+            save->fp2_gen_cntl &= ~R200_FP2_SOURCE_SEL_MASK;
             save->fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC2;
         } else {
-            save->fp2_gen_cntl &= ~(RADEON_FP2_DVO_RATE_SEL_SDR);
             save->fp2_gen_cntl |= RADEON_FP2_SRC_SEL_CRTC2;
         }
     }
@@ -808,16 +812,30 @@ static void RADEONInitLVDSRegisters(xf86OutputPtr output, RADEONSavePtr save,
     ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
 
-    save->lvds_pll_cntl = info->SavedReg.lvds_pll_cntl;
+    save->lvds_pll_cntl = (info->SavedReg.lvds_pll_cntl |
+			   RADEON_LVDS_PLL_EN);
+
+    save->lvds_pll_cntl &= ~RADEON_LVDS_PLL_RESET;
 
     save->lvds_gen_cntl = info->SavedReg.lvds_gen_cntl;
     save->lvds_gen_cntl |= RADEON_LVDS_DISPLAY_DIS;
     save->lvds_gen_cntl &= ~(RADEON_LVDS_ON | RADEON_LVDS_BLON);
 
-    if (IsPrimary)
-	save->lvds_gen_cntl &= ~RADEON_LVDS_SEL_CRTC2;
-    else
-	save->lvds_gen_cntl |= RADEON_LVDS_SEL_CRTC2;
+    if (IS_R300_VARIANT)
+	save->lvds_pll_cntl &= ~(R300_LVDS_SRC_SEL_MASK);
+
+    if (IsPrimary) {
+	if (IS_R300_VARIANT) {
+	    if (mode->Flags & RADEON_USE_RMX)
+		save->lvds_pll_cntl |= R300_LVDS_SRC_SEL_RMX;
+	} else
+	    save->lvds_gen_cntl &= ~RADEON_LVDS_SEL_CRTC2;
+    } else {
+	if (IS_R300_VARIANT) {
+	    save->lvds_pll_cntl |= R300_LVDS_SRC_SEL_CRTC2;
+	} else
+	    save->lvds_gen_cntl |= RADEON_LVDS_SEL_CRTC2;
+    }
 
 }
 
@@ -1678,7 +1696,7 @@ radeon_create_resources(xf86OutputPtr output)
 
     }
 
-    /* RMX control - fullscreen, centered, keep ratio */
+    /* RMX control - fullscreen, centered, keep ratio, off */
     /* actually more of a crtc property as only crtc1 has rmx */
     if (radeon_output->type == OUTPUT_LVDS ||
 	radeon_output->type == OUTPUT_DVI) {
@@ -1691,7 +1709,10 @@ radeon_create_resources(xf86OutputPtr output)
 		       "RRConfigureOutputProperty error, %d\n", err);
 	}
 	/* Set the current value of the property */
-	s = "full";
+	if (radeon_output->type == OUTPUT_LVDS)
+	    s = "full";
+	else
+	    s = "off";
 	err = RRChangeOutputProperty(output->randr_output, rmx_atom,
 				     XA_STRING, 8, PropModeReplace, strlen(s), (pointer)s,
 				     FALSE, FALSE);
@@ -1872,24 +1893,24 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	radeon_output->load_detection = val;
 
     } else if (property == rmx_atom) {
-	xf86CrtcPtr	crtc = output->crtc;
-	RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
-	if (radeon_crtc->crtc_id == 0) {
-	    const char *s;
-	    if (value->type != XA_STRING || value->format != 8)
-		return FALSE;
-	    s = (char*)value->data;
-	    if (value->size == strlen("full") && !strncmp("full", s, strlen("full"))) {
-		return TRUE;
-	    } else if (value->size == strlen("aspect") && !strncmp("aspect", s, strlen("aspect"))) {
-		return TRUE;
-	    } else if (value->size == strlen("center") && !strncmp("center", s, strlen("center"))) {
-		return TRUE;
-	    }
-	    return FALSE;
-	} else {
-	    return FALSE;
-	}
+	const char *s;
+	if (value->type != XA_STRING || value->format != 8)
+ 	    return FALSE;
+	s = (char*)value->data;
+	if (value->size == strlen("full") && !strncmp("full", s, strlen("full"))) {
+	    radeon_output->rmx_type = RMX_FULL;
+	    return TRUE;
+	} else if (value->size == strlen("aspect") && !strncmp("aspect", s, strlen("aspect"))) {
+	    radeon_output->rmx_type = RMX_ASPECT;
+	    return TRUE;
+	} else if (value->size == strlen("center") && !strncmp("center", s, strlen("center"))) {
+	    radeon_output->rmx_type = RMX_CENTER;
+	    return TRUE;
+ 	} else if (value->size == strlen("off") && !strncmp("off", s, strlen("off"))) {
+	    radeon_output->rmx_type = RMX_OFF;
+	    return TRUE;
+ 	}
+	return FALSE;
     } else if (property == tmds_pll_atom) {
 	const char *s;
 	if (value->type != XA_STRING || value->format != 8)
@@ -2454,10 +2475,12 @@ void RADEONInitConnector(xf86OutputPtr output)
     }
 
     if (radeon_output->type == OUTPUT_LVDS) {
+	radeon_output->rmx_type = RMX_FULL;
 	RADEONGetLVDSInfo(output);
     }
 
     if (radeon_output->type == OUTPUT_DVI) {
+	radeon_output->rmx_type = RMX_OFF;
 	RADEONGetTMDSInfo(output);
     }
 
@@ -2536,6 +2559,19 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 	info->BiosConnector[2].TMDSType = TMDS_NONE;
 	info->BiosConnector[2].DDCType = DDC_NONE_DETECTED;
 	info->BiosConnector[2].valid = TRUE;
+	return TRUE;
+    case RADEON_MAC_MINI:
+	info->BiosConnector[0].DDCType = DDC_CRT2;
+	info->BiosConnector[0].DACType = DAC_TVDAC;
+	info->BiosConnector[0].TMDSType = TMDS_EXT;
+	info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_I;
+	info->BiosConnector[0].valid = TRUE;
+
+	info->BiosConnector[1].ConnectorType = CONNECTOR_STV;
+	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].TMDSType = TMDS_NONE;
+	info->BiosConnector[1].DDCType = DDC_NONE_DETECTED;
+	info->BiosConnector[1].valid = TRUE;
 	return TRUE;
     default:
 	return FALSE;
@@ -2682,6 +2718,8 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    info->MacModel = RADEON_MAC_POWERBOOK_DL;
 	else if (!strncmp("powerbook", optstr, strlen("powerbook")))
 	    info->MacModel = RADEON_MAC_POWERBOOK;
+	else if (!strncmp("mini", optstr, strlen("mini")))
+	    info->MacModel = RADEON_MAC_MINI;
 	else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Invalid Mac Model: %s\n", optstr);
 	    return FALSE;
