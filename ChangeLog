@@ -1,3 +1,333 @@
+commit 22cccb99d762567757d3fd38795f71e943f1faf9
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Sep 24 00:10:01 2007 -0400
+
+    bump for RC release
+
+commit fad9e7b00de051f632000eb2304ac23a524f7c8e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun Sep 23 23:43:26 2007 -0400
+
+    RADEON: Rework LVDS mode validation
+    
+    The old validation code wasn't really well suited to randr.
+    This fixes several issues:
+    - missing display size for panels with edid
+    - broken duplicate modes
+
+commit bf9674b9df351108e069d037ec10869a4154a881
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Sep 23 15:01:34 2007 -0400
+
+    RADEON: properly set default RMX types
+
+commit b27135bce8b41d69290613b440a338b0a7fe0200
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Sep 23 14:44:38 2007 -0400
+
+    RADEON: fix up LVDS handling for r3xx and newer
+
+commit d5cf268be2c9b3e320d7101f5213f7d5609b6308
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 22 18:31:51 2007 -0400
+
+    RADEON: Fix crash when Xv window is outside of either crtc
+
+commit 8aca0ca6be7122e0ece20985a1862553a1b225c0
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 22 17:56:50 2007 -0400
+
+    Revert "RADEON: fix crash when Xv window is outside of either crtc"
+    
+    This reverts commit 9109e62e3be7f96b41b534ab517fdf1baf458806.
+    
+    This breaks ABI.  better fix to come.
+
+commit d6e1d9be1cd5786a24ed4bb8e45fa7e04df56622
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 22 16:14:06 2007 -0400
+
+    RADEON: Don't make the entity as shareable
+    
+    This should prevent people from mistakenly trying to run
+    zaphod mode
+
+commit 81114af1cdddc0b10d076f2e38c7a00c1223cc48
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 22 15:51:23 2007 -0400
+
+    RADEON: preliminary support for mac mini
+    
+    Option "MacModel" "mini"
+    may not be 100% correct yet
+
+commit 6c482e453bc8156886294d0c1b8f3f1b3dcf4b36
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 22 15:11:20 2007 -0400
+
+    RADEON: Fix RMX on LVDS
+    
+    LVDS + RMX doesn't seem to like having the crtc values tweaked.
+
+commit 9109e62e3be7f96b41b534ab517fdf1baf458806
+Author: Michel Dänzer <daenzer@debian.org>
+Date:   Sat Sep 22 14:19:10 2007 -0400
+
+    RADEON: fix crash when Xv window is outside of either crtc
+    
+    Should fix bug 12175
+
+commit d2ce4a5003ce1291ea2327b2c00a0b24408fe26c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 22 10:41:55 2007 -0400
+
+    RADEON: RMX updates
+    
+    - add option to turn off RMX
+    - turn off RMX by default on DVI
+    - add infrastructure to support more RMX modes
+
+commit f95b9ab729376083bf0d12987ee260ec2aba721e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Sep 21 00:12:37 2007 -0400
+
+    RADEON: remove more old cruft
+
+commit 5a6f74103f0ec0d451d0e2573442efe5922848af
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Thu Sep 20 23:56:08 2007 -0400
+
+    RADEON: fix video in on RV380 (tested on X600 VIVO)
+
+commit c72a365386e19f9257db041d44b09ad499cc9f6a
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Sep 20 23:49:57 2007 -0400
+
+    RADEON: fix up dvo support (still no external chip init)
+
+commit 5e4d98470b6412a686883c554e7eb7badbe78c4d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Sep 20 23:22:48 2007 -0400
+
+    RADEON: round 3 on the PLLs.  should fix the LVDS issues
+
+commit c5e2a2f09af807006c7ea493a8e90ff77abe207c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Sep 19 19:58:28 2007 -0400
+
+    bump for RC release
+
+commit 46ff78b9f010ca24178d4363761be00eb3ecb632
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Sep 19 19:49:58 2007 -0400
+
+    RADEON: add default connector setup for single crtc chips
+
+commit 509ca0cb0e1cde905b47db2bbac6f2a58523b279
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Sep 19 19:41:17 2007 -0400
+
+    RADEON: fix external TMDS parsing in legacy bios connector table
+
+commit 5a59547ef7e986c9613023d941c3354cd476faf1
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Sep 19 19:28:09 2007 -0400
+
+    Revert "RADEON: initial pass at external TMDS support"
+    
+    This reverts commit 4000a710c93dd2d82891e4082bc7fa922ba9c5f4.
+    
+    This needs to be reworked and needs more soak time.  so revert
+    for now.
+
+commit dc333884c540d536bffe51a5ebfaf1822af6a91c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Sep 18 22:23:12 2007 -0400
+
+    RADEON: fix plls again
+    
+    previous fix seemed to break other chips.  Lets see how
+    this goes.
+
+commit 271e541088f455d1cfedff87e88c9a4fdbdbe424
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Sep 18 22:12:31 2007 -0400
+
+    RADEON: Remove more mergedfb cruft
+
+commit 8ae69c496eba701e744cca0605f73242673f7b3f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Sep 18 20:12:21 2007 -0400
+
+    RADEON: adjust pll restore
+    
+    some chips seem to be pickier than others. fixes bug 12467
+
+commit 8a84dc8ee260716026fa661a6dced2000621efa2
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Sep 18 11:53:39 2007 +0200
+
+    radeon: Remove declaration of unused variable.
+
+commit 2fbbd9c5f0ec27e72780e8b054bc59502f1e5651
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Sep 18 00:45:56 2007 -0400
+
+    RADEON: note that MergedFB support has been replaced with randr 1.2
+
+commit 81b708dbd35c29bf2d67e8c655af97b60e61498b
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Sep 17 23:54:03 2007 -0400
+
+    RADEON: turn off load detection on tv dac by default
+    
+    it's just too unreliable and even when it is most people
+    don't want it.  enable it via output attribute or force
+    the outputs on with xrandr
+
+commit c3ab53159d42157985a25e9125eaa5362273b73d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Sep 17 23:28:51 2007 -0400
+
+    RADEON: XPRESS connector tables are crap
+    
+    besides specifying the pimary DAC (which they don't have),
+    most seem to specify DDC_CRT2 for DDC, which does not seem
+    to ever work.  Some have reported success with DDC_MONID so
+    lets give that a try.
+
+commit 1fafa970fa78ddea29a8804b6cd0aea52e4fa2e1
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Sep 17 23:10:13 2007 -0400
+
+    RADEON: ignore edid digital bit on analog ports
+    
+    Some monitors have this bit set even on analog ports
+
+commit 4000a710c93dd2d82891e4082bc7fa922ba9c5f4
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Sep 17 23:04:17 2007 -0400
+
+    RADEON: initial pass at external TMDS support
+    
+    - Based on Dave Airlie's initial work and the dvo support
+    in the intel driver.
+    - Only sil164 is supported at the moment.
+    - Once we get some testing and such, we ought to move the dvo
+    drivers out of the drivers so they can be shared among all drivers
+    - Doesn't seem to work on my card (r4xx ATOM) card ATM
+    - Legacy bios table programming sequence not implemented yet
+
+commit 38515d402555eaa61c686d42973e59f659b07466
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 15 11:39:47 2007 -0400
+
+    RADEON: don't restore bios scratch regs
+    
+    Leave them as programmed by the bios
+    fixes bug 12424
+
+commit 0241cac643fa1c08a45ea44f5c670b290e760ad8
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Sep 8 00:22:40 2007 +0200
+
+    radeon: Reinstate sync in radeon_crtc_show/hide_cursor.
+    
+    Make sure the DRI lock is held though, as these can be called asynchronously.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=12245 .
+
+commit 49933e2f7d590811f2bc8c0d51a09f3b7f14845e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Sep 1 12:23:07 2007 -0400
+
+    RADEON: automatically disable tiling if requested virtual desktop exceeds surface limits
+    
+    Also, tweak default desktop sizes and add some informational messages
+
+commit d49a60bc939c9f3e9d57c23e44263f5bb52f09fb
+Author: Sjoerd Simons <sjoerd@luon.net>
+Date:   Thu Aug 30 11:40:13 2007 +0200
+
+    radeon: Fix Option "MacModel".
+
+commit 2b860726fff058623e0e8e1b0aca092c246875ce
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 30 11:38:28 2007 +0200
+
+    radeon: Don't build currently unused RADEONSavePalette.
+
+commit 12187a6aa93049c002a4171344d03c713f7f3c5d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Aug 29 23:11:30 2007 -0400
+
+    RADEON: Add quirk and connector tables for apple laptops
+    
+    As far as I can tell there are three apple laptop variants:
+    ibook              - LVDS, TVDAC drives TV or VGA via dongle
+    powerbook-duallink - LVDS, TV, External TMDS/Primary DAC
+    powerbook          - LVDS, TV, Internal TMDS/Primary DAC
+    use Option "MacModel" "<string>"
+    to enable the appropriate quirks where string is one of the above
+    
+    We can't yet init the external TMDS directly, but if OF inits it,
+    it should work. This should also fix bug 9955.
+    
+    Please test!
+
+commit 61c1fdaa8553581944f78a11e6f9aa76163a468a
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Aug 28 23:47:19 2007 -0400
+
+    RADEON: add option to force tmds pll to default table
+    
+    Also rework the tmds pll output attribute handling a bit
+
+commit 0d9087bc60bb95c770b899cfed29699c02bdac49
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Aug 28 23:08:20 2007 -0400
+
+    RADEON: remove some cruft forgotten in a previous commit
+
+commit 673f799729824f4439dd5f681f75dd5aab50947f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Aug 28 00:42:30 2007 -0400
+
+    RADEON: Update tv attributes immediately
+
+commit ad6f7ad1b2ccae0bc0a416b9b0ca22709c9d5199
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Aug 28 00:08:41 2007 -0400
+
+    RADEON: remove the "default" tv_standard option
+
+commit 17e0f9e6cbfdb115034d327bd34d46339fd632b7
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Aug 27 23:59:03 2007 -0400
+
+    RADEON: enable load detection for tvdac if output count for tvdac < 2
+
+commit 42839fb5a8584196e7b18375bff6c426ed0347d9
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Aug 27 23:44:13 2007 -0400
+
+    RADEON: make load detection an output attribute for analog outputs
+    
+    Since TV/VGA/DVI-I can share the TV DAC, we often get false detection
+    of all inputs that share that DAC.  Make load detection an output
+    attribute.  Enabled by default on primary dac and on cards where
+    tv dac is (usually) dedicated to tv (non-IGP mobilities).
+
+commit a5a1055d64ab4fa16bfb03a412ae6c4fe69ff65d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Aug 27 22:42:22 2007 -0400
+
+    RADEON: make tmds pll an output attribute
+    
+    sometimes the bios tmds plls are busted for certain
+    monitors. sometimes the dirver tables are.  Let the user
+    pick at run time.
+
 commit a12e4aa01bf1c5723c3c791ff9bdc26eef21d5ea
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Sun Aug 26 18:51:29 2007 -0400

@@ -1,3 +1,13 @@
+xserver-xorg-video-ati (1:6.7.194-1) experimental; urgency=low
+
+  * New upstream release candidate.
+    + Add MacModel "mini" option to support Mac Mini connector table,
+      closes: #443570.
+    + Fix crash when Xv window is outside of either crtc,
+      closes: #441902.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 24 Sep 2007 07:59:36 +0200
+
 xserver-xorg-video-ati (1:6.7.193-1) experimental; urgency=low
 
   * New upstream release candidate.
