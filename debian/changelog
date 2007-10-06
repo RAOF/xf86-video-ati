@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.7.195-1) experimental; urgency=low
+
+  * New upstream release candidate.
+
+ -- Julien Cristau <jcristau@debian.org>  Sat, 06 Oct 2007 02:56:56 +0200
+
 xserver-xorg-video-ati (1:6.7.194-1) experimental; urgency=low
 
   * New upstream release candidate.

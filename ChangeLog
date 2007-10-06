@@ -1,3 +1,189 @@
+commit 83d7506a603889b6c18736cff9b2cd3296c95c84
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Oct 5 20:25:04 2007 -0400
+
+    Bump for RC release
+
+commit fe66cc4e02a52e1d014ae5de192c65e8abd7f58a
+Author: Tormod Volden <bugzi06.fdo.tormod@xoxy.net>
+Date:   Fri Oct 5 20:10:55 2007 -0400
+
+    RADEON: rename to PCI_CHIP_RS485_5975 everywhere
+    
+    RS482_5975 is actually RS485.  see bug 12048
+
+commit 314e8fdbe5369e4c1786d176d03d0d2a046f25d5
+Author: Tormod Volden <bugzi06.fdo.tormod@xoxy.net>
+Date:   Fri Oct 5 20:05:54 2007 -0400
+
+    RADEON: Disable DRI by default for RS482 cards
+    
+    fixes bug 12048
+
+commit abbafe6db7c0d24efc61a05950d4214c00d3f043
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Oct 4 11:33:09 2007 +0200
+
+    radeon: Fix compile warnings.
+
+commit 1110957ba703475847b8e72023c6edcbd1068aef
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Oct 4 11:32:48 2007 +0200
+
+    radeon: Fix for pci-rework.
+    
+    Surprisingly easy, thanks to George's pci-rework changes.
+
+commit 7addf41885ec5658f531624a9c24ea5bd7d22d19
+Merge: 3a958ba... 78c6bd3...
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Oct 4 11:06:08 2007 +0200
+
+    Merge remote branch 'origin/pci-rework'
+
+commit 3a958ba136c3fae5a4ddd56373ac7cd47046f10e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Oct 3 22:59:14 2007 -0400
+
+    RADEON: remove some cruft
+
+commit b6bda79f72df5e5bf9c6b71fa3298e765da506bd
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Oct 3 22:56:27 2007 -0400
+
+    RADEON: more fixes for single crtc chips
+
+commit 5f5c4e6ad61c45c24f1443b91b4bc5375efdebc0
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Oct 3 22:46:21 2007 -0400
+
+    RADEON: remove RADEONSaveMode()
+    
+    It's only called by RADEONSave(), so just move its
+    contents into RADEONSave().  this mirrors RADEONRestore().
+
+commit bfede412b3a3cd11769a580b167c528734146096
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Oct 3 22:19:16 2007 -0400
+
+    RADEON: minor fixes for external TMDS
+
+commit 597dffce9bdc200003d0be880235258386a0bdd7
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Oct 3 21:43:08 2007 -0400
+
+    RADEON: final fix for RMX/LVDS
+    
+    It seems that on quite a few laptops the LVDS H/V timing
+    from the bios tables are way off or just doesn't work period.
+    Either we are using it wrong or we need some additional checks
+    when we parse it. Only the dot clock seems to really matter,
+    so use cvt modes and update the dotclock.  This seems to work
+    correctly in all cases.
+
+commit cc0c2d8e61600652b1f9cb3dc49db2ef62b1e40d
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Oct 3 00:59:37 2007 -0400
+
+    RADEON: Finally sort out LVDS modes
+    
+    - The panel timing from the bios tables is for the crtc,
+    not the native panel mode, so add cvt modes for the panel
+    and fix up the crtc values in mode_fixup().
+    - rename and reconfigure RADEONValidateFPModes() to what it
+    really does: add screen modes.  I suppose for backwards
+    compatibility we ought to add the screen modes to every
+    reasonable output, but everyone should really use xrandr
+    or an output monitor section to add custom modes.  Hopefully
+    this will go away at some point.
+
+commit 0ca184c3c35032df39ea7ce5d2d4aba1a97b6426
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Oct 2 19:38:18 2007 -0400
+
+    RADEON: fix RADEONInitDispBandwidth() on single crtc cards
+    
+    Should fix bug 12490
+
+commit a5fb2a5d54cdd562a97881cdea1a4af35b483aab
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Oct 1 08:48:27 2007 +1000
+
+    radeon: fix powerpc build
+
+commit 22519fde1e002f28d6036d448fcd18452d00f1bb
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Sep 30 13:11:20 2007 -0400
+
+    RADEON: add support for ext tmds table and ext tmds chip init
+    
+    This probably won't work on all chips as the various gpio lines
+    seem to need special magic to to actually talk to the i2c slave
+    chips.
+
+commit dcc376e2d2a13329dd03f1bc4b471329757a6f5f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Sep 26 23:27:38 2007 -0400
+
+    RADEON: remove cruft
+
+commit 99ceaefa18c6e07b55106cca0ea8996fa73667be
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun Sep 30 12:02:54 2007 -0400
+
+    RADEON: more work on LVDS mode validation and fixups
+    
+    Hopefully this will fix up the weird mode issues with LVDS and
+    native and RMX modes, but I can't seem to get quite the right
+    combo to fix everyone.
+
+commit d808781d48adf01e80b5bb476bae2d2f599030f1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 14:50:42 2007 +1000
+
+    rc410: disable DRI by default due to it not working
+
+commit 4d9f944e40c6b9ac7e80428dff49c6e83fda1d8f
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Sep 27 17:50:15 2007 +0200
+
+    radeon: Fix build on little endian platforms.
+    
+    This was accidentally broken when moving away from using pixmap data pointers
+    directly.
+
+commit 5902e913010a2fb0c17efe01f9aade73f9646f16
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Sep 27 12:53:34 2007 +0200
+
+    radeon: EXA pitch fixes.
+    
+    The combined pitch/offset registers only support pitches up to 16320 bytes.
+    
+    With EXA >= 2.3, set the maxPitchBytes field accordingly. With older versions,
+    limit maxX such that the pitch of 32bpp pixmaps doesn't exceed the limit.
+    
+    Also check the limit in RADEONGetOffsetPitch just in case.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=12551 .
+
+commit ca728973bce504e03bf6228d18287906c35eaa3f
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Sep 27 11:14:21 2007 +0200
+
+    radeon: Don't use pixmap data pointer directly with EXA.
+    
+    Fixes segfault with current xserver master without AccelDFS.
+
+commit 21593d04d222b05dbba9abd31eaa3bfb91d999b6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Sep 24 23:01:20 2007 -0400
+
+    RADEON: more clean up of mode code
+    
+    also print out LVDS mode info from bios for both
+    legacy and atom bioses
+
 commit 22cccb99d762567757d3fd38795f71e943f1faf9
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Sep 24 00:10:01 2007 -0400
@@ -227,6 +413,16 @@ Date:   Sat Sep 15 11:39:47 2007 -0400
     Leave them as programmed by the bios
     fixes bug 12424
 
+commit 78c6bd305f2ea70629d1dda3c0c48c067451f5fb
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Sep 10 19:00:16 2007 +0300
+
+    [mach64] Revert to multiple mappings per BAR.
+    
+    libpciaccess added subrange mappings and mtrr handling.
+    
+    compile-tested only.
+
 commit 0241cac643fa1c08a45ea44f5c670b290e760ad8
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Sat Sep 8 00:22:40 2007 +0200
@@ -288,6 +484,25 @@ Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Aug 28 23:08:20 2007 -0400
 
     RADEON: remove some cruft forgotten in a previous commit
+
+commit 6ff0645ecfe65727e8ef5d5e6215b4e03078e1a5
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Aug 28 15:37:11 2007 +0300
+
+    [mach64] Convert to pci-rework, keeping source-code compatibility.
+    
+    It still uses the old probe method though, this is due to the ati wrapper.
+
+commit 7b38d9a1209f87255e5bb0aefe46a363ce4fb6ef
+Merge: 2e3d43a... 673f799...
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Aug 28 16:01:12 2007 +0300
+
+    Merge branch 'master' into pci-rework
+    
+    Conflicts:
+    
+    	src/ati.c
 
 commit 673f799729824f4439dd5f681f75dd5aab50947f
 Author: Alex Deucher <alex@botch2.(none)>
@@ -2224,6 +2439,77 @@ Date:   Fri Mar 23 21:30:19 2007 +0200
     Unknown radeons should still get a list of known radeon and then probe fails...
     
     Probe for atimisc last to avoid needless loading in most cases (r128, radeon).
+
+commit 2e3d43af1e5077cc61dd8668551a6291368d9ed2
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Mar 19 19:05:04 2007 +0200
+
+    [mach64] Compute MMIO address once for each case (PIO, MMIO).
+    
+    For an MMIO-only driver, the extra MMIO address probing is not needed since we
+    already compute the MMIO address during probe and do not make any BIOS calls.
+    
+    For a PIO driver, this extra probing could even result in a wrong MMIO address
+    since the checking is done by reading through PIO, not MMIO. The MMIO address
+    is later corrected but having the extra probe there is useless.
+
+commit e7defc0e930f1b2d83623a769b2bfdb05c66a5fe
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Mar 19 19:04:10 2007 +0200
+
+    [mach64] Move setting of PIO and MMIO addresses up, after BIOS init.
+    
+    Partially revert "Minor refactoring of pATI->Block0Base computation."
+    
+    This parially reverts commit 2c8b33b761e4411451aea1eea3a89d629aeea40d.
+
+commit 3dfdba195f1ff794ab00585ab80e7ea6ac92fcf4
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 18 16:40:07 2007 +0200
+
+    [mach64] Make mapping code friendlier to pci-rework source-code compatibility.
+
+commit 321db6d87c9110654ab386e5ec270116eca1e04f
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 18 16:15:20 2007 +0200
+
+    [mach64] Add macros for pci-rework source-code compatibilty.
+
+commit dfd07b6e99020d1db43d7ce0cae4423d8c6b1f05
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 18 16:38:26 2007 +0200
+
+    [mach64] Drop checking that BAR base + size fits in 32 bit.
+    
+    I can't see how these tests could fail on 32-bit. OTOH they are potentially
+    problematic with 64-bit PCI addresses.
+
+commit e674338a98c50800637b8ebc01adf3aec2a3eb38
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 18 15:50:41 2007 +0200
+
+    [mach64] Single mapping per BAR.
+    
+    - We reset write-combining of the FB when MMIO registers fall in the linear
+      aperture.
+    
+    - We set MMIOInLinear in all three aperture mappings since the mapping code
+      depends on it.
+    
+    - We map the linear aperture in its entirety for MMIOInLinear also.
+      This simplifies mapping of HW cursor and the LE aperture on BE archs, as
+      they always fall in the linear aperture.
+    
+    - I assumed that BAR[2] is page-aligned (we know it's 4K-aligned for sure).
+
+commit e7969de8ec572d8801806f9525a9a081a58a03f1
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sun Mar 18 15:35:25 2007 +0200
+
+    [mach64] Drop poking the VGA MMIO aperture.
+    
+    We will not be able to handle this when we do mappings for PCI BARs only and
+    it should be handled with a CPIO driver anyway.
 
 commit 166c760a86165330175023e07c4b2bd6891633c5
 Author: Michel Dänzer <michel@tungstengraphics.com>

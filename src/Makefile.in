@@ -131,13 +131,17 @@ r128_drv_la_LIBADD =
 am__r128_drv_la_SOURCES_DIST = r128_accel.c r128_cursor.c r128_dga.c \
 	r128_driver.c r128_video.c r128_misc.c r128_probe.c r128_dri.c
 @DRI_TRUE@am__objects_5 = r128_dri.lo
-am_r128_drv_la_OBJECTS = r128_accel.lo r128_cursor.lo r128_dga.lo \
-	r128_driver.lo r128_video.lo r128_misc.lo r128_probe.lo \
-	$(am__objects_5)
+@XSERVER_LIBPCIACCESS_FALSE@am_r128_drv_la_OBJECTS = r128_accel.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	r128_cursor.lo r128_dga.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	r128_driver.lo r128_video.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	r128_misc.lo r128_probe.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	$(am__objects_5)
 r128_drv_la_OBJECTS = $(am_r128_drv_la_OBJECTS)
 r128_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(r128_drv_la_LDFLAGS) $(LDFLAGS) -o $@
+@XSERVER_LIBPCIACCESS_FALSE@am_r128_drv_la_rpath = -rpath \
+@XSERVER_LIBPCIACCESS_FALSE@	$(r128_drv_ladir)
 radeon_drv_la_LIBADD =
 am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_cursor.c \
 	radeon_dga.c radeon_driver.c radeon_video.c radeon_bios.c \
@@ -156,26 +160,39 @@ radeon_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(radeon_drv_la_LDFLAGS) $(LDFLAGS) -o $@
 theatre200_drv_la_LIBADD =
-am_theatre200_drv_la_OBJECTS = theatre200_drv_la-theatre200.lo \
-	theatre200_drv_la-theatre200_module.lo
+am__theatre200_drv_la_SOURCES_DIST = theatre200.c theatre200_module.c
+@XSERVER_LIBPCIACCESS_FALSE@am_theatre200_drv_la_OBJECTS =  \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre200_drv_la-theatre200.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre200_drv_la-theatre200_module.lo
 theatre200_drv_la_OBJECTS = $(am_theatre200_drv_la_OBJECTS)
 theatre200_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(theatre200_drv_la_CFLAGS) $(CFLAGS) \
 	$(theatre200_drv_la_LDFLAGS) $(LDFLAGS) -o $@
+@XSERVER_LIBPCIACCESS_FALSE@am_theatre200_drv_la_rpath = -rpath \
+@XSERVER_LIBPCIACCESS_FALSE@	$(theatre200_drv_ladir)
 theatre_detect_drv_la_LIBADD =
-am_theatre_detect_drv_la_OBJECTS = theatre_detect.lo \
-	theatre_detect_module.lo
+am__theatre_detect_drv_la_SOURCES_DIST = theatre_detect.c \
+	theatre_detect_module.c
+@XSERVER_LIBPCIACCESS_FALSE@am_theatre_detect_drv_la_OBJECTS =  \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre_detect.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre_detect_module.lo
 theatre_detect_drv_la_OBJECTS = $(am_theatre_detect_drv_la_OBJECTS)
 theatre_detect_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(theatre_detect_drv_la_LDFLAGS) $(LDFLAGS) -o $@
+@XSERVER_LIBPCIACCESS_FALSE@am_theatre_detect_drv_la_rpath = -rpath \
+@XSERVER_LIBPCIACCESS_FALSE@	$(theatre_detect_drv_ladir)
 theatre_drv_la_LIBADD =
-am_theatre_drv_la_OBJECTS = theatre.lo theatre_module.lo
+am__theatre_drv_la_SOURCES_DIST = theatre.c theatre_module.c
+@XSERVER_LIBPCIACCESS_FALSE@am_theatre_drv_la_OBJECTS = theatre.lo \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre_module.lo
 theatre_drv_la_OBJECTS = $(am_theatre_drv_la_OBJECTS)
 theatre_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(theatre_drv_la_LDFLAGS) $(LDFLAGS) -o $@
+@XSERVER_LIBPCIACCESS_FALSE@am_theatre_drv_la_rpath = -rpath \
+@XSERVER_LIBPCIACCESS_FALSE@	$(theatre_drv_ladir)
 DEFAULT_INCLUDES = -I. -I$(top_builddir)@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -195,8 +212,10 @@ SOURCES = $(ati_drv_la_SOURCES) $(atimisc_drv_la_SOURCES) \
 DIST_SOURCES = $(ati_drv_la_SOURCES) \
 	$(am__atimisc_drv_la_SOURCES_DIST) \
 	$(am__r128_drv_la_SOURCES_DIST) \
-	$(am__radeon_drv_la_SOURCES_DIST) $(theatre200_drv_la_SOURCES) \
-	$(theatre_detect_drv_la_SOURCES) $(theatre_drv_la_SOURCES)
+	$(am__radeon_drv_la_SOURCES_DIST) \
+	$(am__theatre200_drv_la_SOURCES_DIST) \
+	$(am__theatre_detect_drv_la_SOURCES_DIST) \
+	$(am__theatre_drv_la_SOURCES_DIST)
 pcidataDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(pcidata_DATA)
 ETAGS = etags
@@ -272,6 +291,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
+PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
@@ -361,13 +382,6 @@ atimisc_drv_la_SOURCES = \
 	atiload.c atimisc.c atimach64probe.c $(ATIMISC_CPIO_SOURCES) \
 	$(ATIMISC_DGA_SOURCES) $(ATIMISC_DRI_SRCS) $(ATIMISC_EXA_SOURCES)
 
-r128_drv_la_LTLIBRARIES = r128_drv.la
-r128_drv_la_LDFLAGS = -module -avoid-version
-r128_drv_ladir = @moduledir@/drivers
-r128_drv_la_SOURCES = \
-	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
-	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
-
 radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
 radeon_drv_ladir = @moduledir@/drivers
@@ -378,26 +392,35 @@ radeon_drv_la_SOURCES = \
 	radeon_crtc.c radeon_output.c radeon_modes.c radeon_tv.c \
 	$(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES)
 
-theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
-theatre_detect_drv_la_LDFLAGS = -module -avoid-version
-theatre_detect_drv_ladir = @moduledir@/multimedia
-theatre_detect_drv_la_SOURCES = \
-	theatre_detect.c theatre_detect_module.c
 
-theatre_drv_la_LTLIBRARIES = theatre_drv.la
-theatre_drv_la_LDFLAGS = -module -avoid-version
-theatre_drv_ladir = @moduledir@/multimedia
-theatre_drv_la_SOURCES = \
-	theatre.c theatre_module.c
+# r128 and theatre have not been ported yet
+@XSERVER_LIBPCIACCESS_FALSE@r128_drv_la_LTLIBRARIES = r128_drv.la
+@XSERVER_LIBPCIACCESS_FALSE@r128_drv_la_LDFLAGS = -module -avoid-version
+@XSERVER_LIBPCIACCESS_FALSE@r128_drv_ladir = @moduledir@/drivers
+@XSERVER_LIBPCIACCESS_FALSE@r128_drv_la_SOURCES = \
+@XSERVER_LIBPCIACCESS_FALSE@	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
+@XSERVER_LIBPCIACCESS_FALSE@	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
 
-theatre200_drv_la_LTLIBRARIES = theatre200_drv.la
-theatre200_drv_la_LDFLAGS = -module -avoid-version
-theatre200_drv_ladir = @moduledir@/multimedia
-theatre200_drv_la_CFLAGS = \
-	$(AM_CFLAGS) -DMICROC_DIR=\"$(theatre200_drv_ladir)\"
+@XSERVER_LIBPCIACCESS_FALSE@theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
+@XSERVER_LIBPCIACCESS_FALSE@theatre_detect_drv_la_LDFLAGS = -module -avoid-version
+@XSERVER_LIBPCIACCESS_FALSE@theatre_detect_drv_ladir = @moduledir@/multimedia
+@XSERVER_LIBPCIACCESS_FALSE@theatre_detect_drv_la_SOURCES = \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre_detect.c theatre_detect_module.c
 
-theatre200_drv_la_SOURCES = \
-	theatre200.c theatre200_module.c
+@XSERVER_LIBPCIACCESS_FALSE@theatre_drv_la_LTLIBRARIES = theatre_drv.la
+@XSERVER_LIBPCIACCESS_FALSE@theatre_drv_la_LDFLAGS = -module -avoid-version
+@XSERVER_LIBPCIACCESS_FALSE@theatre_drv_ladir = @moduledir@/multimedia
+@XSERVER_LIBPCIACCESS_FALSE@theatre_drv_la_SOURCES = \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre.c theatre_module.c
+
+@XSERVER_LIBPCIACCESS_FALSE@theatre200_drv_la_LTLIBRARIES = theatre200_drv.la
+@XSERVER_LIBPCIACCESS_FALSE@theatre200_drv_la_LDFLAGS = -module -avoid-version
+@XSERVER_LIBPCIACCESS_FALSE@theatre200_drv_ladir = @moduledir@/multimedia
+@XSERVER_LIBPCIACCESS_FALSE@theatre200_drv_la_CFLAGS = \
+@XSERVER_LIBPCIACCESS_FALSE@	$(AM_CFLAGS) -DMICROC_DIR=\"$(theatre200_drv_ladir)\"
+
+@XSERVER_LIBPCIACCESS_FALSE@theatre200_drv_la_SOURCES = \
+@XSERVER_LIBPCIACCESS_FALSE@	theatre200.c theatre200_module.c
 
 EXTRA_DIST = \
 	atimach64render.c \
@@ -481,7 +504,8 @@ EXTRA_DIST = \
 	theatre_detect.h \
 	theatre.h \
 	theatre_reg.h \
-	atipciids.h
+	atipciids.h \
+	atipcirename.h
 
 pcidatadir = $(datadir)/xserver-xorg/pci
 pcidata_DATA = ati.ids
@@ -712,15 +736,15 @@ ati_drv.la: $(ati_drv_la_OBJECTS) $(ati_drv_la_DEPENDENCIES)
 atimisc_drv.la: $(atimisc_drv_la_OBJECTS) $(atimisc_drv_la_DEPENDENCIES) 
 	$(atimisc_drv_la_LINK) -rpath $(atimisc_drv_ladir) $(atimisc_drv_la_OBJECTS) $(atimisc_drv_la_LIBADD) $(LIBS)
 r128_drv.la: $(r128_drv_la_OBJECTS) $(r128_drv_la_DEPENDENCIES) 
-	$(r128_drv_la_LINK) -rpath $(r128_drv_ladir) $(r128_drv_la_OBJECTS) $(r128_drv_la_LIBADD) $(LIBS)
+	$(r128_drv_la_LINK) $(am_r128_drv_la_rpath) $(r128_drv_la_OBJECTS) $(r128_drv_la_LIBADD) $(LIBS)
 radeon_drv.la: $(radeon_drv_la_OBJECTS) $(radeon_drv_la_DEPENDENCIES) 
 	$(radeon_drv_la_LINK) -rpath $(radeon_drv_ladir) $(radeon_drv_la_OBJECTS) $(radeon_drv_la_LIBADD) $(LIBS)
 theatre200_drv.la: $(theatre200_drv_la_OBJECTS) $(theatre200_drv_la_DEPENDENCIES) 
-	$(theatre200_drv_la_LINK) -rpath $(theatre200_drv_ladir) $(theatre200_drv_la_OBJECTS) $(theatre200_drv_la_LIBADD) $(LIBS)
+	$(theatre200_drv_la_LINK) $(am_theatre200_drv_la_rpath) $(theatre200_drv_la_OBJECTS) $(theatre200_drv_la_LIBADD) $(LIBS)
 theatre_detect_drv.la: $(theatre_detect_drv_la_OBJECTS) $(theatre_detect_drv_la_DEPENDENCIES) 
-	$(theatre_detect_drv_la_LINK) -rpath $(theatre_detect_drv_ladir) $(theatre_detect_drv_la_OBJECTS) $(theatre_detect_drv_la_LIBADD) $(LIBS)
+	$(theatre_detect_drv_la_LINK) $(am_theatre_detect_drv_la_rpath) $(theatre_detect_drv_la_OBJECTS) $(theatre_detect_drv_la_LIBADD) $(LIBS)
 theatre_drv.la: $(theatre_drv_la_OBJECTS) $(theatre_drv_la_DEPENDENCIES) 
-	$(theatre_drv_la_LINK) -rpath $(theatre_drv_ladir) $(theatre_drv_la_OBJECTS) $(theatre_drv_la_LIBADD) $(LIBS)
+	$(theatre_drv_la_LINK) $(am_theatre_drv_la_rpath) $(theatre_drv_la_OBJECTS) $(theatre_drv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
