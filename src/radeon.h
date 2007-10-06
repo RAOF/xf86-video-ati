@@ -88,6 +88,8 @@
 #include "picturestr.h"
 #endif
 
+#include "atipcirename.h"
+
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
@@ -456,8 +458,8 @@ typedef struct {
     CARD32            mc_fb_location;
     CARD32            mc_agp_location;
 
-    unsigned char     *MMIO;            /* Map of MMIO region                */
-    unsigned char     *FB;              /* Map of frame buffer               */
+    void              *MMIO;            /* Map of MMIO region                */
+    void              *FB;              /* Map of frame buffer               */
     CARD8             *VBIOS;           /* Video BIOS pointer                */
 
     Bool              IsAtomBios;       /* New BIOS used in R420 etc.        */
@@ -940,7 +942,6 @@ extern Bool RADEONAllocateConnectors(ScrnInfoPtr pScrn);
 extern int RADEONValidateMergeModes(ScrnInfoPtr pScrn);
 extern int RADEONValidateDDCModes(ScrnInfoPtr pScrn1, char **ppModeName,
 				  RADEONMonitorType DisplayType, int crtc2);
-extern int RADEONValidateFPModes(xf86OutputPtr output, char **ppModeName, DisplayModePtr *modeList);
 extern void RADEONSetPitch (ScrnInfoPtr pScrn);
 extern void RADEONUpdateHVPosition(xf86OutputPtr output, DisplayModePtr mode);
 
@@ -949,6 +950,15 @@ RADEONProbeOutputModes(xf86OutputPtr output);
 extern Bool RADEONInit2(ScrnInfoPtr pScrn, DisplayModePtr crtc1,
 			DisplayModePtr crtc2, int crtc_mask,
 			RADEONSavePtr save, RADEONMonitorType montype);
+
+extern Bool
+RADEONDVOReadByte(I2CDevPtr dvo, int addr, CARD8 *ch);
+extern Bool
+RADEONDVOWriteByte(I2CDevPtr dvo, int addr, CARD8 ch);
+extern Bool
+RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output);
+extern Bool
+RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output);
 
 void
 radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y);

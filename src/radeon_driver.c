@@ -525,6 +525,8 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
+#ifndef XSERVER_LIBPCIACCESS
+
     info->MMIO = xf86MapPciMem(pScrn->scrnIndex,
 			       VIDMEM_MMIO | VIDMEM_READSIDEEFFECT,
 			       info->PciTag,
@@ -532,6 +534,25 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 			       info->MMIOSize);
 
     if (!info->MMIO) return FALSE;
+
+#else
+
+    void** result = (void**)&info->MMIO;
+    int err = pci_device_map_range(info->PciInfo,
+				   info->MMIOAddr,
+				   info->MMIOSize,
+				   PCI_DEV_MAP_FLAG_WRITABLE,
+				   result);
+
+    if (err) {
+	xf86DrvMsg (pScrn->scrnIndex, X_ERROR,
+                    "Unable to map MMIO aperture. %s (%d)\n",
+                    strerror (err), err);
+	return FALSE;
+    }
+
+#endif
+
     return TRUE;
 }
 
@@ -542,7 +563,11 @@ static Bool RADEONUnmapMMIO(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, info->MMIO, info->MMIOSize);
+#else
+    pci_device_unmap_range(info->PciInfo, info->MMIO, info->MMIOSize);
+#endif
 
     info->MMIO = NULL;
     return TRUE;
@@ -555,6 +580,9 @@ static Bool RADEONMapFB(ScrnInfoPtr pScrn)
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Map: 0x%08lx, 0x%08lx\n", info->LinearAddr, info->FbMapSize);
+
+#ifndef XSERVER_LIBPCIACCESS
+
     info->FB = xf86MapPciMem(pScrn->scrnIndex,
 			     VIDMEM_FRAMEBUFFER,
 			     info->PciTag,
@@ -562,6 +590,25 @@ static Bool RADEONMapFB(ScrnInfoPtr pScrn)
 			     info->FbMapSize);
 
     if (!info->FB) return FALSE;
+
+#else
+
+    int err = pci_device_map_range(info->PciInfo,
+				   info->LinearAddr,
+				   info->FbMapSize,
+				   PCI_DEV_MAP_FLAG_WRITABLE |
+				   PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+				   &info->FB);
+
+    if (err) {
+	xf86DrvMsg (pScrn->scrnIndex, X_ERROR,
+                    "Unable to map FB aperture. %s (%d)\n",
+                    strerror (err), err);
+	return FALSE;
+    }
+
+#endif
+
     return TRUE;
 }
 
@@ -570,7 +617,12 @@ static Bool RADEONUnmapFB(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, info->FB, info->FbMapSize);
+#else
+    pci_device_unmap_range(info->PciInfo, info->FB, info->FbMapSize);
+#endif
+
     info->FB = NULL;
     return TRUE;
 }
@@ -1271,6 +1323,7 @@ static CARD32 RADEONGetAccessibleVRAM(ScrnInfoPtr pScrn)
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     CARD32	   aper_size = INREG(RADEON_CONFIG_APER_SIZE) / 1024;
+    unsigned char  byte;
 
 #ifdef XF86DRI
     /* If we use the DRI, we need to check if it's a version that has the
@@ -1311,7 +1364,8 @@ static CARD32 RADEONGetAccessibleVRAM(ScrnInfoPtr pScrn)
      * check if it's a multifunction card by reading the PCI config
      * header type... Limit those to one aperture size
      */
-    if (pciReadByte(info->PciTag, 0xe) & 0x80) {
+    PCI_READ_BYTE(info->PciInfo, &byte, 0xe);
+    if (byte & 0x80) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Generation 1 PCI interface in multifunction mode"
 		   ", accessible memory limited to one aperture\n");
@@ -1359,7 +1413,7 @@ static Bool RADEONPreInitVRAM(ScrnInfoPtr pScrn)
     accessible = RADEONGetAccessibleVRAM(pScrn);
 
     /* Crop it to the size of the PCI BAR */
-    bar_size = (1ul << info->PciInfo->size[0]) / 1024;
+    bar_size = PCI_REGION_SIZE(info->PciInfo, 0) / 1024;
     if (bar_size == 0)
 	bar_size = 0x20000;
     if (accessible > bar_size)
@@ -1419,6 +1473,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
     MessageType    from = X_PROBED;
 #ifdef XF86DRI
     const char *s;
+    uint32_t cmd_stat;
 #endif
 
     /* Chipset */
@@ -1430,7 +1485,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	info->Chipset  = dev->chipID;
 	from           = X_CONFIG;
     } else {
-	info->Chipset = info->PciInfo->chipType;
+	info->Chipset = PCI_DEV_DEVICE_ID(info->PciInfo);
     }
 
     pScrn->chipset = (char *)xf86TokenToString(RADEONChipsets, info->Chipset);
@@ -1470,17 +1525,17 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	info->ChipFamily = CHIP_FAMILY_RV100;
 
 	/* DELL triple-head configuration. */
-	if ((info->PciInfo->subsysVendor == PCI_VENDOR_DELL) &&
-	    ((info->PciInfo->subsysCard  == 0x016c) ||
-	    (info->PciInfo->subsysCard   == 0x016d) ||
-	    (info->PciInfo->subsysCard   == 0x016e) ||
-	    (info->PciInfo->subsysCard   == 0x016f) ||
-	    (info->PciInfo->subsysCard   == 0x0170) ||
-	    (info->PciInfo->subsysCard   == 0x017d) ||
-	    (info->PciInfo->subsysCard   == 0x017e) ||
-	    (info->PciInfo->subsysCard   == 0x0183) ||
-	    (info->PciInfo->subsysCard   == 0x018a) ||
-	    (info->PciInfo->subsysCard   == 0x019a))) {
+	if ((PCI_SUB_VENDOR_ID(info->PciInfo) == PCI_VENDOR_DELL) &&
+	    ((PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016c) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016d) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016e) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016f) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0170) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x017d) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x017e) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0183) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x018a) ||
+	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x019a))) {
 	    info->IsDellServer = TRUE;
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "DELL server detected, force to special setup\n");
 	}
@@ -1618,7 +1673,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
     case PCI_CHIP_RS400_5A42:
     case PCI_CHIP_RC410_5A62:
     case PCI_CHIP_RS480_5955:
-    case PCI_CHIP_RS482_5975:
+    case PCI_CHIP_RS485_5975:
         info->IsMobility = TRUE;
     case PCI_CHIP_RS400_5A41:
     case PCI_CHIP_RC410_5A61:
@@ -1702,7 +1757,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 
 
     from               = X_PROBED;
-    info->LinearAddr   = info->PciInfo->memBase[0] & 0xfe000000;
+    info->LinearAddr   = PCI_REGION_BASE(info->PciInfo, 0, REGION_MEM) & 0xfe000000;
     pScrn->memPhysBase = info->LinearAddr;
     if (dev->MemBase) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -1719,6 +1774,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
     xf86DrvMsg(pScrn->scrnIndex, from,
 	       "Linear framebuffer at 0x%08lx\n", info->LinearAddr);
 
+#ifndef XSERVER_LIBPCIACCESS
 				/* BIOS */
     from              = X_PROBED;
     info->BIOSAddr    = info->PciInfo->biosBase & 0xfffe0000;
@@ -1734,6 +1790,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	xf86DrvMsg(pScrn->scrnIndex, from,
 		   "BIOS at 0x%08lx\n", info->BIOSAddr);
     }
+#endif
 
 				/* Read registers used to determine options */
     /* Check chip errata */
@@ -1796,15 +1853,15 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 
     info->cardType = CARD_PCI;
 
-    if (pciReadLong(info->PciTag, PCI_CMD_STAT_REG) & RADEON_CAP_LIST) {
-	CARD32 cap_ptr, cap_id;
-	
-	cap_ptr = pciReadLong(info->PciTag,
-			      RADEON_CAPABILITIES_PTR_PCI_CONFIG)
-	    & RADEON_CAP_PTR_MASK;
+    PCI_READ_LONG(info->PciInfo, &cmd_stat, PCI_CMD_STAT_REG);
+    if (cmd_stat & RADEON_CAP_LIST) {
+	uint32_t cap_ptr, cap_id;
+
+	PCI_READ_LONG(info->PciInfo, &cap_ptr, RADEON_CAPABILITIES_PTR_PCI_CONFIG);
+	cap_ptr &= RADEON_CAP_PTR_MASK;
 
 	while(cap_ptr != RADEON_CAP_ID_NULL) {
-	    cap_id = pciReadLong(info->PciTag, cap_ptr);
+	    PCI_READ_LONG(info->PciInfo, &cap_id, cap_ptr);
 	    if ((cap_id & 0xff)== RADEON_CAP_ID_AGP) {
 		info->cardType = CARD_AGP;
 		break;
@@ -1938,8 +1995,8 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 
 #ifdef USE_EXA
 	if (info->useEXA) {
-	    info->exaReq.majorversion = 2;
-	    info->exaReq.minorversion = 0;
+	    info->exaReq.majorversion = EXA_VERSION_MAJOR;
+	    info->exaReq.minorversion = EXA_VERSION_MINOR;
 
 	    if (!LoadSubModule(pScrn->module, "exa", NULL, NULL, NULL,
 			       &info->exaReq, &errmaj, &errmin)) {
@@ -1991,7 +2048,7 @@ static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 	/* The VGA BIOS on the RV100/QY cannot be read when the digital output
 	 * is enabled.  Clear and restore FP2_ON around int10 to avoid this.
 	 */
-	if (info->PciInfo->chipType == PCI_CHIP_RV100_QY) {
+	if (PCI_DEV_DEVICE_ID(info->PciInfo) == PCI_CHIP_RV100_QY) {
 	    fp2_gen_ctl_save = INREG(RADEON_FP2_GEN_CNTL);
 	    if (fp2_gen_ctl_save & RADEON_FP2_ON) {
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "disabling digital out\n");
@@ -2026,15 +2083,18 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
     info->pKernelDRMVersion = NULL;
 
     if (info->Chipset == PCI_CHIP_RN50_515E ||
-	info->Chipset == PCI_CHIP_RN50_5969) {
+	info->Chipset == PCI_CHIP_RN50_5969 ||
+	info->Chipset == PCI_CHIP_RC410_5A61 ||
+	info->Chipset == PCI_CHIP_RC410_5A62 ||
+	info->Chipset == PCI_CHIP_RS485_5975) {
     	if (xf86ReturnOptValBool(info->Options, OPTION_DRI, FALSE)) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		"Direct rendering for RN50 forced on -- "
+		"Direct rendering for RN50/RC410/RS485 forced on -- "
 		"This is NOT officially supported at the hardware level "
 		"and may cause instability or lockups\n");
     	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		"Direct rendering not officially supported on RN50\n");
+		"Direct rendering not officially supported on RN50/RC410\n");
 	    return FALSE;
 	}
     }
@@ -2072,7 +2132,7 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 	info->Chipset == PCI_CHIP_RS480_5954 ||
 	info->Chipset == PCI_CHIP_RS480_5955 ||
 	info->Chipset == PCI_CHIP_RS482_5974 ||
-	info->Chipset == PCI_CHIP_RS482_5975) {
+	info->Chipset == PCI_CHIP_RS485_5975) {
 
 	if (info->pKernelDRMVersion->version_minor < 27) {
  	     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -2525,11 +2585,11 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     if (info->pEnt->location.type != BUS_PCI) goto fail;
 
     info->PciInfo = xf86GetPciInfoForEntity(info->pEnt->index);
-    info->PciTag  = pciTag(info->PciInfo->bus,
-			   info->PciInfo->device,
-			   info->PciInfo->func);
-    info->MMIOAddr   = info->PciInfo->memBase[2] & 0xffffff00;
-    info->MMIOSize  = (1 << info->PciInfo->size[2]);
+    info->PciTag  = pciTag(PCI_DEV_BUS(info->PciInfo),
+			   PCI_DEV_DEV(info->PciInfo),
+			   PCI_DEV_FUNC(info->PciInfo));
+    info->MMIOAddr = PCI_REGION_BASE(info->PciInfo, 2, REGION_MEM) & 0xffffff00;
+    info->MMIOSize = PCI_REGION_SIZE(info->PciInfo, 2);
     if (info->pEnt->device->IOBase) {
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
 		   "MMIO address override, using 0x%08lx instead of 0x%08lx\n",
@@ -2550,7 +2610,10 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     }
 
 #if !defined(__alpha__)
-    if (xf86GetPciDomain(info->PciTag) ||
+    if (
+#ifndef XSERVER_LIBPCIACCESS
+	xf86GetPciDomain(info->PciTag) ||
+#endif
 	!xf86IsPrimaryPci(info->PciInfo))
 	RADEONPreInt10Save(pScrn, &int10_save);
 #else
@@ -2572,9 +2635,9 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "PCI bus %d card %d func %d\n",
-	       info->PciInfo->bus,
-	       info->PciInfo->device,
-	       info->PciInfo->func);
+	       PCI_DEV_BUS(info->PciInfo),
+	       PCI_DEV_DEV(info->PciInfo),
+	       PCI_DEV_FUNC(info->PciInfo));
 
     if (xf86RegisterResources(info->pEnt->index, 0, ResExclusive))
 	goto fail;
@@ -2753,10 +2816,10 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
    }
 
     /* Free the video bios (if applicable) */
-    if (info->VBIOS) {
-	xfree(info->VBIOS);
-	info->VBIOS = NULL;
-    }
+    //if (info->VBIOS) {
+    //xfree(info->VBIOS);
+    //info->VBIOS = NULL;
+    //}
 
 				/* Free int10 info */
     if (pInt10)
@@ -5237,34 +5300,11 @@ static void RADEONSavePalette(ScrnInfoPtr pScrn, RADEONSavePtr save)
 }
 #endif
 
-/* Save state that defines current video mode */
-static void RADEONSaveMode(ScrnInfoPtr pScrn, RADEONSavePtr save)
-{
-    RADEONInfoPtr  info       = RADEONPTR(pScrn);
-
-    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "RADEONSaveMode(%p)\n", save);
-
-    RADEONSaveMemMapRegisters(pScrn, save);
-    RADEONSaveCommonRegisters(pScrn, save);
-    RADEONSavePLLRegisters(pScrn, save);
-    RADEONSaveCrtcRegisters(pScrn, save);
-    RADEONSaveFPRegisters(pScrn, save);
-    RADEONSaveDACRegisters(pScrn, save);
-    RADEONSaveCrtc2Registers(pScrn, save);
-    RADEONSavePLL2Registers(pScrn, save);
-    if (info->InternalTVOut)
-	RADEONSaveTVRegisters(pScrn, save);
-    /*RADEONSavePalette(pScrn, save);*/
-
-    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "RADEONSaveMode returns %p\n", save);
-}
-
 /* Save everything needed to restore the original VC state */
 static void RADEONSave(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     RADEONSavePtr  save       = &info->SavedReg;
 
@@ -5295,7 +5335,19 @@ static void RADEONSave(ScrnInfoPtr pScrn)
     save->clock_cntl_index = INREG(RADEON_CLOCK_CNTL_INDEX);
     RADEONPllErrataAfterIndex(info);
 
-    RADEONSaveMode(pScrn, save);
+    RADEONSaveMemMapRegisters(pScrn, save);
+    RADEONSaveCommonRegisters(pScrn, save);
+    RADEONSavePLLRegisters(pScrn, save);
+    RADEONSaveCrtcRegisters(pScrn, save);
+    RADEONSaveFPRegisters(pScrn, save);
+    RADEONSaveDACRegisters(pScrn, save);
+    if (pRADEONEnt->HasCRTC2) {
+	RADEONSaveCrtc2Registers(pScrn, save);
+	RADEONSavePLL2Registers(pScrn, save);
+    }
+    if (info->InternalTVOut)
+	RADEONSaveTVRegisters(pScrn, save);
+
     RADEONSaveSurfaces(pScrn, save);
 }
 
@@ -5325,15 +5377,6 @@ void RADEONRestore(ScrnInfoPtr pScrn)
     OUTREG(RADEON_DP_DATATYPE,      restore->dp_datatype);
     OUTREG(RADEON_GRPH_BUFFER_CNTL, restore->grph_buffer_cntl);
     OUTREG(RADEON_GRPH2_BUFFER_CNTL, restore->grph2_buffer_cntl);
-
-#if 0
-    /* M6 card has trouble restoring text mode for its CRT.
-     * This is fixed elsewhere and will be removed in the future.
-     */
-    if ((xf86IsEntityShared(info->pEnt->index) || info->MergedFB)
-	&& info->IsM6)
-	OUTREG(RADEON_DAC_CNTL2, restore->dac2_cntl);
-#endif
 
     RADEONRestoreMemMapRegisters(pScrn, restore);
     RADEONRestoreCommonRegisters(pScrn, restore);
@@ -5381,9 +5424,11 @@ void RADEONRestore(ScrnInfoPtr pScrn)
 #endif
 
     /* need to make sure we don't enable a crtc by accident or we may get a hang */
-    if (info->crtc2_on) {
-	crtc = xf86_config->crtc[1];
-	crtc->funcs->dpms(crtc, DPMSModeOn);
+    if (pRADEONEnt->HasCRTC2) {
+	if (info->crtc2_on) {
+	    crtc = xf86_config->crtc[1];
+	    crtc->funcs->dpms(crtc, DPMSModeOn);
+	}
     }
     if (info->crtc_on) {
 	crtc = xf86_config->crtc[0];

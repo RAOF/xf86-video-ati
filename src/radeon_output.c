@@ -154,6 +154,88 @@ static RADEONMonitorType radeon_detect_tv_dac(ScrnInfoPtr pScrn, Bool color);
 static RADEONMonitorType radeon_detect_ext_dac(ScrnInfoPtr pScrn);
 static void RADEONGetTMDSInfoFromTable(xf86OutputPtr output);
 
+Bool
+RADEONDVOReadByte(I2CDevPtr dvo, int addr, CARD8 *ch)
+{
+    if (!xf86I2CReadByte(dvo, addr, ch)) {
+	xf86DrvMsg(dvo->pI2CBus->scrnIndex, X_ERROR,
+		   "Unable to read from %s Slave %d.\n",
+		   dvo->pI2CBus->BusName, dvo->SlaveAddr);
+	return FALSE;
+    }
+    return TRUE;
+}
+
+Bool
+RADEONDVOWriteByte(I2CDevPtr dvo, int addr, CARD8 ch)
+{
+    if (!xf86I2CWriteByte(dvo, addr, ch)) {
+	xf86DrvMsg(dvo->pI2CBus->scrnIndex, X_ERROR,
+		   "Unable to write to %s Slave %d.\n",
+		   dvo->pI2CBus->BusName, dvo->SlaveAddr);
+	return FALSE;
+    }
+    return TRUE;
+}
+
+static I2CDevPtr
+RADEONDVODeviceInit(I2CBusPtr b, I2CSlaveAddr addr)
+{
+    I2CDevPtr dvo;
+
+    dvo = xcalloc(1, sizeof(I2CDevRec));
+    if (dvo == NULL)
+	return NULL;
+
+    dvo->DevName = "RADEON DVO Controller";
+    dvo->SlaveAddr = addr;
+    dvo->pI2CBus = b;
+    dvo->StartTimeout = b->StartTimeout;
+    dvo->BitTimeout = b->BitTimeout;
+    dvo->AcknTimeout = b->AcknTimeout;
+    dvo->ByteTimeout = b->ByteTimeout;
+
+    if (xf86I2CDevInit(dvo)) {
+	return dvo;
+    }
+
+    xfree(dvo);
+    return NULL;
+}
+
+void
+RADEONRestoreDVOChip(ScrnInfoPtr pScrn, xf86OutputPtr output)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+
+    if (!radeon_output->DVOChip)
+	return;
+
+    OUTREG(radeon_output->dvo_i2c_reg, INREG(radeon_output->dvo_i2c_reg) &
+	   (CARD32)~(RADEON_GPIO_A_0 | RADEON_GPIO_A_1));
+
+    if (!RADEONInitExtTMDSInfoFromBIOS(output)) {
+	/* do mac stuff here */
+#if defined(__powerpc__)
+	if (radeon_output->DVOChip) {
+	    switch(info->MacModel) {
+	    case RADEON_MAC_POWERBOOK_DL:
+		RADEONDVOWriteByte(radeon_output->DVOChip, 0x08, 0x30);
+		RADEONDVOWriteByte(radeon_output->DVOChip, 0x09, 0x00);
+		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0a, 0x90);
+		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0c, 0x89);
+		RADEONDVOWriteByte(radeon_output->DVOChip, 0x08, 0x3b);
+		break;
+	    default:
+		break;
+	    }
+	}
+#endif
+    }
+}
+
 void RADEONPrintPortMap(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info       = RADEONPTR(pScrn);
@@ -658,7 +740,7 @@ radeon_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 	    pMode->VDisplay > radeon_output->PanelYRes)
 	    return MODE_PANEL;
     }
-    
+
     return MODE_OK;
 }
 
@@ -668,31 +750,27 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 {
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
+    radeon_output->Flags &= ~RADEON_USE_RMX;
+
+    /* decide if we are using RMX */
     if ((radeon_output->MonType == MT_LCD || radeon_output->MonType == MT_DFP)
 	&& radeon_output->rmx_type != RMX_OFF) {
 	xf86CrtcPtr crtc = output->crtc;
 	RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
-	if ((mode->HDisplay < radeon_output->PanelXRes ||
-	     mode->VDisplay < radeon_output->PanelYRes) &&
-	    radeon_crtc->crtc_id == 0)
-	    adjusted_mode->Flags |= RADEON_USE_RMX;
+	if (radeon_crtc->crtc_id == 0) {
+	    if (mode->HDisplay < radeon_output->PanelXRes ||
+		mode->VDisplay < radeon_output->PanelYRes)
+		radeon_output->Flags |= RADEON_USE_RMX;
+	}
+    }
 
-	if (adjusted_mode->Flags & RADEON_USE_RMX) {
-	    radeon_output->Flags |= RADEON_USE_RMX;
-	    if (radeon_output->MonType == MT_DFP) {
-		adjusted_mode->CrtcHTotal     = mode->CrtcHDisplay + radeon_output->HBlank;
-		adjusted_mode->CrtcHSyncStart = mode->CrtcHDisplay + radeon_output->HOverPlus;
-		adjusted_mode->CrtcHSyncEnd   = mode->CrtcHSyncStart + radeon_output->HSyncWidth;
-		adjusted_mode->CrtcVTotal     = mode->CrtcVDisplay + radeon_output->VBlank;
-		adjusted_mode->CrtcVSyncStart = mode->CrtcVDisplay + radeon_output->VOverPlus;
-		adjusted_mode->CrtcVSyncEnd   = mode->CrtcVSyncStart + radeon_output->VSyncWidth;
-		adjusted_mode->Clock          = radeon_output->DotClock;
-		adjusted_mode->Flags          = radeon_output->Flags;
-	    }
-	} else
-	    radeon_output->Flags &= ~RADEON_USE_RMX;
-
+    /* update clock for LVDS always and DFP if RMX is active */
+    if ((radeon_output->MonType == MT_LCD) ||
+	((radeon_output->MonType == MT_DFP) &&
+	 (radeon_output->Flags & RADEON_USE_RMX))) {
+	adjusted_mode->Clock          = radeon_output->DotClock;
+	adjusted_mode->Flags          = radeon_output->Flags;
     }
 
     return TRUE;
@@ -786,6 +864,16 @@ static void RADEONInitFP2Registers(xf86OutputPtr output, RADEONSavePtr save,
     save->fp2_gen_cntl &= ~(RADEON_FP2_ON |
 			    RADEON_FP2_DVO_EN |
 			    RADEON_FP2_DVO_RATE_SEL_SDR);
+
+
+    /* XXX: these may be oem specific */
+    if (IS_R300_VARIANT) {
+	save->fp2_gen_cntl |= RADEON_FP2_PAD_FLOP_EN | R300_FP2_DVO_CLOCK_MODE_SINGLE;
+#if 0
+	if (mode->Clock > 165000)
+	    save->fp2_gen_cntl |= R300_FP2_DVO_DUAL_CHANNEL_EN;
+#endif
+    }
 
     if (IsPrimary) {
         if ((info->ChipFamily == CHIP_FAMILY_R200) || IS_R300_VARIANT) {
@@ -1053,6 +1141,7 @@ radeon_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 	    RADEONRestoreFPRegisters(pScrn, &info->ModeReg);
 	} else {
 	    ErrorF("restore FP2\n");
+	    RADEONRestoreDVOChip(pScrn, output);
 	    RADEONRestoreFP2Registers(pScrn, &info->ModeReg);
 	}
 	break;
@@ -2480,8 +2569,27 @@ void RADEONInitConnector(xf86OutputPtr output)
     }
 
     if (radeon_output->type == OUTPUT_DVI) {
+	I2CBusPtr pDVOBus;
 	radeon_output->rmx_type = RMX_OFF;
-	RADEONGetTMDSInfo(output);
+	if (radeon_output->TMDSType == TMDS_EXT) {
+#if defined(__powerpc__)
+	    radeon_output->dvo_i2c_reg = RADEON_GPIO_MONID;
+	    radeon_output->dvo_i2c_slave_addr = 0x70;
+#else
+	    if (!RADEONGetExtTMDSInfoFromBIOS(output)) {
+		radeon_output->dvo_i2c_reg = RADEON_GPIO_CRT2_DDC;
+		radeon_output->dvo_i2c_slave_addr = 0x70;
+	    }
+#endif
+	    if (RADEONI2CInit(pScrn, &pDVOBus, radeon_output->dvo_i2c_reg, "DVO")) {
+		radeon_output->DVOChip =
+		    RADEONDVODeviceInit(pDVOBus,
+					radeon_output->dvo_i2c_slave_addr);
+		if (!radeon_output->DVOChip)
+		    xfree(pDVOBus);
+	    }
+	} else
+	    RADEONGetTMDSInfo(output);
     }
 
     if (radeon_output->type == OUTPUT_STV ||

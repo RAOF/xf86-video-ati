@@ -241,10 +241,8 @@ static Bool
 FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 				char *src, int src_pitch)
 {
-#if X_BYTE_ORDER == X_BIG_ENDIAN || defined(ACCEL_CP)
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
-#endif
-    CARD8	   *dst	     = pDst->devPrivate.ptr;
+    CARD8	   *dst	     = info->FB + exaGetPixmapOffset(pDst);
     unsigned int   dst_pitch = exaGetPixmapPitch(pDst);
     unsigned int   bpp	     = pDst->drawable.bitsPerPixel;
 #ifdef ACCEL_CP
@@ -353,16 +351,14 @@ static Bool
 FUNC_NAME(RADEONDownloadFromScreen)(PixmapPtr pSrc, int x, int y, int w, int h,
 				    char *dst, int dst_pitch)
 {
-#if defined(ACCEL_CP) || X_BYTE_ORDER == X_BIG_ENDIAN
     RINFO_FROM_SCREEN(pSrc->drawable.pScreen);
-#endif
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     unsigned char *RADEONMMIO = info->MMIO;
     unsigned int swapper = info->ModeReg.surface_cntl &
 	    ~(RADEON_NONSURF_AP0_SWP_32BPP | RADEON_NONSURF_AP1_SWP_32BPP |
 	      RADEON_NONSURF_AP0_SWP_16BPP | RADEON_NONSURF_AP1_SWP_16BPP);
 #endif
-    CARD8	  *src	     = pSrc->devPrivate.ptr;
+    CARD8	  *src	     = info->FB + exaGetPixmapOffset(pSrc);
     int		   src_pitch = exaGetPixmapPitch(pSrc);
     int		   bpp	     = pSrc->drawable.bitsPerPixel;
 #ifdef ACCEL_CP
@@ -511,8 +507,8 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
 	return FALSE;
     }
 
-    info->exa->exa_major = 2;
-    info->exa->exa_minor = 0;
+    info->exa->exa_major = EXA_VERSION_MAJOR;
+    info->exa->exa_minor = EXA_VERSION_MINOR;
 
     info->exa->PrepareSolid = FUNC_NAME(RADEONPrepareSolid);
     info->exa->Solid = FUNC_NAME(RADEONSolid);
@@ -564,7 +560,14 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
     }
 #endif
 
+#if EXA_VERSION_MAJOR > 2 || (EXA_VERSION_MAJOR == 2 && EXA_VERSION_MINOR >= 3)
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Setting EXA maxPitchBytes\n");
+
+    info->exa->maxPitchBytes = 16320;
     info->exa->maxX = info->exa->Composite ? 2048 : 8192;
+#else
+    info->exa->maxX = info->exa->Composite ? 2048 : 16320 / 4;
+#endif
     info->exa->maxY = info->exa->Composite ? 2048 : 8192;
 
     RADEONEngineInit(pScrn);

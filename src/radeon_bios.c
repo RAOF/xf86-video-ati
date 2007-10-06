@@ -41,20 +41,6 @@
 #include "radeon_probe.h"
 #include "vbe.h"
 
-int RADEONBIOSApplyConnectorQuirks(ScrnInfoPtr pScrn, int connector_found)
-{
-    RADEONInfoPtr  info   = RADEONPTR(pScrn);
-
-    /* quirk for compaq nx6125 - the bios lies about the VGA DDC */
-    if (info->PciInfo->subsysVendor == PCI_VENDOR_HP) {
-      if (info->PciInfo->subsysCard == 0x308b) {
-	if (info->BiosConnector[1].DDCType == DDC_CRT2)
-	  info->BiosConnector[1].DDCType = DDC_MONID;
-      }
-    }
-    return connector_found;
-}
-
 /* Read the Video BIOS block and the FP registers (if applicable). */
 Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 {
@@ -62,7 +48,13 @@ Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     int tmp;
     unsigned short dptr;
 
-    if (!(info->VBIOS = xalloc(RADEON_VBIOS_SIZE))) {
+    if (!(info->VBIOS = xalloc(
+#ifdef XSERVER_LIBPCIACCESS
+			       info->PciInfo->rom_size
+#else
+			       RADEON_VBIOS_SIZE
+#endif
+			       ))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Cannot allocate space for hold Video BIOS!\n");
 	return FALSE;
@@ -72,6 +64,12 @@ Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 	    (void)memcpy(info->VBIOS, xf86int10Addr(pInt10, info->BIOSAddr),
 			 RADEON_VBIOS_SIZE);
 	} else {
+#ifdef XSERVER_LIBPCIACCESS
+	    if (pci_device_read_rom(info->PciInfo, info->VBIOS)) {
+		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			   "Failed to read PCI ROM!\n");
+	    }
+#else
 	    xf86ReadPciBIOS(0, info->PciTag, 0, info->VBIOS, RADEON_VBIOS_SIZE);
 	    if (info->VBIOS[0] != 0x55 || info->VBIOS[1] != 0xaa) {
 		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
@@ -83,6 +81,7 @@ Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 		xf86ReadDomainMemory(info->PciTag, info->BIOSAddr,
 				     RADEON_VBIOS_SIZE, info->VBIOS);
 	    }
+#endif
 	}
     }
 
@@ -332,218 +331,6 @@ Bool RADEONGetConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 	return RADEONGetLegacyConnectorInfoFromBIOS(pScrn);
 }
 
-#if 0
-Bool RADEONGetConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
-{
-    RADEONInfoPtr info = RADEONPTR (pScrn);
-    int i = 0, j, tmp, tmp0=0, tmp1=0;
-    RADEONBIOSConnector tempConnector;
-
-    if(!info->VBIOS) return FALSE;
-
-    if (info->IsAtomBios) {
-	if((tmp = RADEON_BIOS16 (info->MasterDataStart + 22))) {
-	    int crtc = 0, id[2];
-	    tmp1 = RADEON_BIOS16 (tmp + 4);
-	    for (i=0; i<8; i++) {
-		if(tmp1 & (1<<i)) {
-		    CARD16 portinfo = RADEON_BIOS16(tmp+6+i*2);
-		    if (crtc < 2) {
-			if ((i==2) || (i==6)) continue; /* ignore TV here */
-
-			if (crtc == 1) {
-			    /* sharing same port with id[0] */
-			    if (((portinfo>>8) & 0xf) == id[0]) {
-				if (i == 3) 
-				    info->BiosConnector[0].TMDSType = TMDS_INT;
-				else if (i == 7)
-				    info->BiosConnector[0].TMDSType = TMDS_EXT;
-
-				if (info->BiosConnector[0].DACType == DAC_UNKNOWN)
-				    info->BiosConnector[0].DACType = (portinfo & 0xf) - 1;
-				continue;
-			    }
-			}
-
-			id[crtc] = (portinfo>>8) & 0xf; 
-			info->BiosConnector[crtc].DACType = (portinfo & 0xf) - 1;
-			info->BiosConnector[crtc].ConnectorType = (portinfo>>4) & 0xf;
-			if (i == 3) 
-			    info->BiosConnector[crtc].TMDSType = TMDS_INT;
-			else if (i == 7)
-			    info->BiosConnector[crtc].TMDSType = TMDS_EXT;
-			
-			if((tmp0 = RADEON_BIOS16 (info->MasterDataStart + 24)) && id[crtc]) {
-			    switch (RADEON_BIOS16 (tmp0 + 4 + 27 * id[crtc]) * 4) 
-			    {
-			    case RADEON_GPIO_MONID:
-				info->BiosConnector[crtc].DDCType = DDC_MONID;
-				break;
-			    case RADEON_GPIO_DVI_DDC:
-				info->BiosConnector[crtc].DDCType = DDC_DVI;
-				break;
-			    case RADEON_GPIO_VGA_DDC:
-				info->BiosConnector[crtc].DDCType = DDC_VGA;
-				break;
-			    case RADEON_GPIO_CRT2_DDC:
-				info->BiosConnector[crtc].DDCType = DDC_CRT2;
-				break;
-			    case RADEON_LCD_GPIO_MASK:
-				info->BiosConnector[crtc].DDCType = DDC_LCD;
-				break;
-			    default:
-				info->BiosConnector[crtc].DDCType = DDC_NONE_DETECTED;
-				break;
-			    }
-
-			} else {
-			    info->BiosConnector[crtc].DDCType = DDC_NONE_DETECTED;
-			}
-			crtc++;
-		    } else {
-			/* we have already had two CRTCs assigned. the rest may share the same
-			 * port with the existing connector, fill in them accordingly.
-			 */
-			for (j=0; j<2; j++) {
-			    if (((portinfo>>8) & 0xf) == id[j]) {
-				if (i == 3) 
-				    info->BiosConnector[j].TMDSType = TMDS_INT;
-				else if (i == 7)
-				    info->BiosConnector[j].TMDSType = TMDS_EXT;
-
-				if (info->BiosConnector[j].DACType == DAC_UNKNOWN)
-				    info->BiosConnector[j].DACType = (portinfo & 0xf) - 1;
-			    }
-			}
-		    }
-		}
-	    }
-
-	    /* R4xx seem to get the connector table backwards */
-	    tempConnector = info->BiosConnector[0];
-	    info->BiosConnector[0] = info->BiosConnector[1];
-	    info->BiosConnector[1] = tempConnector;
-
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Bios Connector table: \n");
-	    for (i=0; i<2; i++) {
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Port%d: DDCType-%d, DACType-%d, TMDSType-%d, ConnectorType-%d\n",
-			   i, info->BiosConnector[i].DDCType, info->BiosConnector[i].DACType,
-			   info->BiosConnector[i].TMDSType, info->BiosConnector[i].ConnectorType);
-	    }	    
-	} else {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No Device Info Table found!\n");
-	    return FALSE;
-	}
-    } else {
-	/* Some laptops only have one connector (VGA) listed in the connector table, 
-	 * we need to add LVDS in as a non-DDC display. 
-	 * Note, we can't assume the listed VGA will be filled in PortInfo[0],
-	 * when walking through connector table. connector_found has following meaning: 
-	 * 0 -- nothing found, 
-	 * 1 -- only PortInfo[0] filled, 
-	 * 2 -- only PortInfo[1] filled,
-	 * 3 -- both are filled.
-	 */
-	int connector_found = 0;
-
-	if ((tmp = RADEON_BIOS16(info->ROMHeaderStart + 0x50))) {
-	    for (i = 1; i < 4; i++) {
-
-		if (!RADEON_BIOS16(tmp + i*2))
-			break; /* end of table */
-		
-		tmp0 = RADEON_BIOS16(tmp + i*2);
-		if (((tmp0 >> 12) & 0x0f) == 0) continue;     /* no connector */
-		if (connector_found > 0) {
-		    if (info->BiosConnector[tmp1].DDCType == ((tmp0 >> 8) & 0x0f))
-			continue;                             /* same connector */
-		}
-
-		/* internal DDC_DVI port will get assigned to PortInfo[0], or if there is no DDC_DVI (like in some IGPs). */
-		tmp1 = ((((tmp0 >> 8) & 0xf) == DDC_DVI) || (tmp1 == 1)) ? 0 : 1; /* determine port info index */
-		
-		info->BiosConnector[tmp1].DDCType        = (tmp0 >> 8) & 0x0f;
-		if (info->BiosConnector[tmp1].DDCType > DDC_CRT2)
-		    info->BiosConnector[tmp1].DDCType = DDC_NONE_DETECTED;
-		info->BiosConnector[tmp1].DACType        = (tmp0 & 0x01) ? DAC_TVDAC : DAC_PRIMARY;
-		info->BiosConnector[tmp1].ConnectorType  = (tmp0 >> 12) & 0x0f;
-		if (info->BiosConnector[tmp1].ConnectorType > CONNECTOR_UNSUPPORTED)
-		    info->BiosConnector[tmp1].ConnectorType = CONNECTOR_UNSUPPORTED;
-		info->BiosConnector[tmp1].TMDSType       = ((tmp0 >> 4) & 0x01) ? TMDS_EXT : TMDS_INT;
-
-		/* some sanity checks */
-		if (((info->BiosConnector[tmp1].ConnectorType != CONNECTOR_DVI_D) &&
-		     (info->BiosConnector[tmp1].ConnectorType != CONNECTOR_DVI_I)) &&
-		    info->BiosConnector[tmp1].TMDSType == TMDS_INT)
-		    info->BiosConnector[tmp1].TMDSType = TMDS_UNKNOWN;
-		
-		connector_found += (tmp1 + 1);
-	    }
-	} else {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No Connector Info Table found!\n");
-	    return FALSE;
-	}
-
-	if (info->IsMobility) {
-	    if ((tmp = RADEON_BIOS16(info->ROMHeaderStart + 0x42))) {
-	        if ((tmp0 = RADEON_BIOS16(tmp + 0x15))) {
-		    if ((tmp1 = RADEON_BIOS8(tmp0+2) & 0x07)) {	    
-			info->BiosConnector[0].DDCType	= tmp1;      
-			if (info->BiosConnector[0].DDCType > DDC_LCD) {
-			    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-				       "Unknown DDCType %d found\n",
-				       info->BiosConnector[0].DDCType);
-			    info->BiosConnector[0].DDCType = DDC_NONE_DETECTED;
-			}
-			xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "LCD DDC Info Table found!\n");
-		    }
-		}
-	    } 
-	} else if (connector_found == 2) {
-	    memcpy (&info->BiosConnector[0], &info->BiosConnector[1], 
-		    sizeof (info->BiosConnector[0]));	
-	    info->BiosConnector[1].DACType = DAC_UNKNOWN;
-	    info->BiosConnector[1].TMDSType = TMDS_UNKNOWN;
-	    info->BiosConnector[1].DDCType = DDC_NONE_DETECTED;
-	    info->BiosConnector[1].ConnectorType = CONNECTOR_NONE;
-	    connector_found = 1;
-	}
-
-	connector_found = RADEONBIOSApplyConnectorQuirks(pScrn, connector_found);
-	
-	if (connector_found == 0) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No connector found in Connector Info Table.\n");
-	} else {
-	    xf86DrvMsg(0, X_INFO, "Bios Connector0: DDCType-%d, DACType-%d, TMDSType-%d, ConnectorType-%d\n",
-		       info->BiosConnector[0].DDCType, info->BiosConnector[0].DACType,
-		       info->BiosConnector[0].TMDSType, info->BiosConnector[0].ConnectorType);
-	}
-	if (connector_found == 3) {
-	    xf86DrvMsg(0, X_INFO, "Bios Connector1: DDCType-%d, DACType-%d, TMDSType-%d, ConnectorType-%d\n",
-		       info->BiosConnector[1].DDCType, info->BiosConnector[1].DACType,
-		       info->BiosConnector[1].TMDSType, info->BiosConnector[1].ConnectorType);
-	}
-
-#if 0
-/* External TMDS Table, not used now */
-        if ((tmp0 = RADEON_BIOS16(info->ROMHeaderStart + 0x58))) {
-
-            //info->BiosConnector[1].DDCType = (RADEON_BIOS8(tmp0 + 7) & 0x07);
-            //info->BiosConnector[1].ConnectorType  = CONNECTOR_DVI_I;
-            //info->BiosConnector[1].TMDSType = TMDS_EXT;
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "External TMDS found.\n");
-
-        } else {
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "NO External TMDS Info found\n");
-
-        }
-#endif
-
-    }
-    return TRUE;
-}
-#endif
-
 Bool RADEONGetTVInfoFromBIOS (xf86OutputPtr output) {
     ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
@@ -715,14 +502,6 @@ Bool RADEONGetLVDSInfoFromBIOS (xf86OutputPtr output)
 		radeon_output->PanelPwrDly = 2000;
 
 	    radeon_output->Flags = 0;
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, 
-		       "LVDS Info:\n"
-		       "XRes: %d, YRes: %d, DotClock: %d\n"
-		       "HBlank: %d, HOverPlus: %d, HSyncWidth: %d\n"
-		       "VBlank: %d, VOverPlus: %d, VSyncWidth: %d\n",
-		       radeon_output->PanelXRes, radeon_output->PanelYRes, radeon_output->DotClock,
-		       radeon_output->HBlank, radeon_output->HOverPlus, radeon_output->HSyncWidth,
-		       radeon_output->VBlank, radeon_output->VOverPlus, radeon_output->VSyncWidth);
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		       "No LVDS Info Table found in BIOS!\n");
@@ -793,6 +572,16 @@ Bool RADEONGetLVDSInfoFromBIOS (xf86OutputPtr output)
 	    }
 	}
     }
+
+    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+	       "LVDS Info:\n"
+	       "XRes: %d, YRes: %d, DotClock: %d\n"
+	       "HBlank: %d, HOverPlus: %d, HSyncWidth: %d\n"
+	       "VBlank: %d, VOverPlus: %d, VSyncWidth: %d\n",
+	       radeon_output->PanelXRes, radeon_output->PanelYRes, radeon_output->DotClock,
+	       radeon_output->HBlank, radeon_output->HOverPlus, radeon_output->HSyncWidth,
+	       radeon_output->VBlank, radeon_output->VOverPlus, radeon_output->VSyncWidth);
+
     return TRUE;
 }
 
@@ -893,6 +682,140 @@ Bool RADEONGetTMDSInfoFromBIOS (xf86OutputPtr output)
 	    }
 	}
     }
+    return FALSE;
+}
+
+Bool RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output)
+{
+    ScrnInfoPtr pScrn = output->scrn;
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    int offset, table_start, max_freq, gpio_reg, flags;
+
+    if (!info->VBIOS) return FALSE;
+
+    if (info->IsAtomBios) {
+	return FALSE;
+    } else {
+	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x58);
+	if (offset) {
+	     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			"External TMDS Table revision: %d\n",
+			RADEON_BIOS8(offset));
+	    table_start = offset+4;
+	    max_freq = RADEON_BIOS16(table_start);
+	    radeon_output->dvo_i2c_slave_addr = RADEON_BIOS8(table_start+2);
+	    gpio_reg = RADEON_BIOS8(table_start+3);
+	    if (gpio_reg == 1)
+		radeon_output->dvo_i2c_reg = RADEON_GPIO_MONID;
+	    else if (gpio_reg == 2)
+		radeon_output->dvo_i2c_reg = RADEON_GPIO_DVI_DDC;
+	    else if (gpio_reg == 3)
+		radeon_output->dvo_i2c_reg = RADEON_GPIO_VGA_DDC;
+	    else if (gpio_reg == 4)
+		radeon_output->dvo_i2c_reg = RADEON_GPIO_CRT2_DDC;
+	    else if (gpio_reg == 5)
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "unsupported MM gpio_reg\n");
+		/*radeon_output->i2c_reg = RADEON_GPIO_MM;*/
+	    else {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "Unknown gpio reg: %d\n", gpio_reg);
+		return FALSE;
+	    }
+	    flags = RADEON_BIOS8(table_start+5);
+	    radeon_output->dvo_duallink = flags & 0x01;
+	    if (radeon_output->dvo_duallink) {
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			   "Duallink TMDS detected\n");
+	    }
+	    return TRUE;
+	}
+    }
+
+    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+	       "No External TMDS Table found\n");
+
+    return FALSE;
+}
+
+Bool RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output)
+{
+    ScrnInfoPtr pScrn = output->scrn;
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    int offset, index, id;
+    CARD32 val, reg, andmask, ormask;
+
+    if (!info->VBIOS) return FALSE;
+
+    if (info->IsAtomBios) {
+	return FALSE;
+    } else {
+	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x58);
+	if (offset) {
+	    index = offset+10;
+	    id = RADEON_BIOS16(index);
+	    while (id != 0xffff) {
+		index += 2;
+		switch(id >> 13) {
+		case 0:
+		    reg = id & 0x1fff;
+		    val = RADEON_BIOS32(index);
+		    index += 4;
+		    ErrorF("WRITE INDEXED: 0x%x 0x%x\n",
+			   (unsigned)reg, (unsigned)val);
+		    /*OUTREG(reg, val);*/
+		    break;
+		case 2:
+		    reg = id & 0x1fff;
+		    andmask = RADEON_BIOS32(index);
+		    index += 4;
+		    ormask = RADEON_BIOS32(index);
+		    index += 4;
+		    val = INREG(reg);
+		    val = (val & andmask) | ormask;
+		    ErrorF("MASK DIRECT: 0x%x 0x%x 0x%x\n",
+			   (unsigned)reg, (unsigned)andmask, (unsigned)ormask);
+		    /*OUTREG(reg, val);*/
+		    break;
+		case 4:
+		    val = RADEON_BIOS16(index);
+		    index += 2;
+		    ErrorF("delay: %u\n", (unsigned)val);
+		    usleep(val);
+		    break;
+		case 5:
+		    reg = id & 0x1fff;
+		    andmask = RADEON_BIOS32(index);
+		    index += 4;
+		    ormask = RADEON_BIOS32(index);
+		    index += 4;
+		    ErrorF("MASK PLL: 0x%x 0x%x 0x%x\n",
+			   (unsigned)reg, (unsigned)andmask, (unsigned)ormask);
+		    /*val = INPLL(pScrn, reg);
+		    val = (val & andmask) | ormask;
+		    OUTPLL(pScrn, reg, val);*/
+		    break;
+		case 6:
+		    reg = id & 0x1fff;
+		    val = RADEON_BIOS8(index);
+		    index += 1;
+		    ErrorF("i2c write: 0x%x, 0x%x\n", (unsigned)reg,
+			   (unsigned)val);
+		    RADEONDVOWriteByte(radeon_output->DVOChip, reg, val);
+		    break;
+		default:
+		    ErrorF("unknown id %d\n", id>>13);
+		    return FALSE;
+		};
+		id = RADEON_BIOS16(index);
+	    }
+	    return TRUE;
+	}
+    }
+
     return FALSE;
 }
 

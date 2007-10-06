@@ -144,7 +144,7 @@ PciChipsets RADEONPciChipsets[] = {
     { PCI_CHIP_RS480_5954, PCI_CHIP_RS480_5954, RES_SHARED_VGA },
     { PCI_CHIP_RS480_5955, PCI_CHIP_RS480_5955, RES_SHARED_VGA },
     { PCI_CHIP_RS482_5974, PCI_CHIP_RS482_5974, RES_SHARED_VGA },
-    { PCI_CHIP_RS482_5975, PCI_CHIP_RS482_5975, RES_SHARED_VGA },
+    { PCI_CHIP_RS485_5975, PCI_CHIP_RS485_5975, RES_SHARED_VGA },
     { PCI_CHIP_RV410_5E48, PCI_CHIP_RV410_5E48, RES_SHARED_VGA },
     { PCI_CHIP_RV410_564A, PCI_CHIP_RV410_564A, RES_SHARED_VGA },
     { PCI_CHIP_RV410_564B, PCI_CHIP_RV410_564B, RES_SHARED_VGA },
@@ -237,7 +237,9 @@ RADEONProbe(DriverPtr drv, int flags)
     Bool     foundScreen = FALSE;
     int      i;
 
+#ifndef XSERVER_LIBPCIACCESS
     if (!xf86GetPciVideoInfo()) return FALSE;
+#endif
 
     /* Collect unclaimed device sections for both driver names */
     nATIGDev    = xf86MatchDevice(ATI_NAME, &ATIGDevs);
