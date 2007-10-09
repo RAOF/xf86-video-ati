@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.7.195-2) experimental; urgency=low
+
+  * New upstream snapshot,
+    based on commit ddec5783103045084a66a34d71326cc6e4a3f598
+    + Fixes some LVDS issues, closes: #445746.
+
+ -- Brice Goglin <bgoglin@debian.org>  Tue, 09 Oct 2007 18:27:22 +0200
+
 xserver-xorg-video-ati (1:6.7.195-1) experimental; urgency=low
 
   * New upstream release candidate.

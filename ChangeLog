@@ -1,3 +1,28 @@
+commit ddec5783103045084a66a34d71326cc6e4a3f598
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Oct 9 13:27:27 2007 +0300
+
+    theatre compiles with pci-rework.
+
+commit 051435610a66735fd455bbb526fa294fcfe8c0b6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun Oct 7 19:39:47 2007 -0400
+
+    RADEON: still more LVDS fixes
+    
+    Seems some laptops need the native mode from the bios for
+    LVDS while others seem to prefer a CVT mode.  Add an option
+    to pick the preferred mode.  The default it to use the bios
+    table timing.
+
+commit 0b03a73b7dcb4aa192c42f2a4c842d324c358122
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Oct 6 20:11:19 2007 +1000
+
+    radeon: add support for DDC type 6
+    
+    thanks to arekm on xorg-devel for testing/feedback
+
 commit 83d7506a603889b6c18736cff9b2cd3296c95c84
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Oct 5 20:25:04 2007 -0400
