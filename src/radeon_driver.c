@@ -190,7 +190,7 @@ static const OptionInfoRec RADEONOptions[] = {
 #if defined(__powerpc__)
     { OPTION_MAC_MODEL,      "MacModel",         OPTV_STRING,  {0}, FALSE },
 #endif
-    { OPTION_LVDS_BIOS_NATIVE_MODE, "LVDSBiosNativeMode", OPTV_BOOLEAN, {0}, TRUE },
+    { OPTION_TVDAC_LOAD_DETECT, "TVDACLoadDetect", OPTV_BOOLEAN, {0}, FALSE },
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -1758,11 +1758,11 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 
 
     from               = X_PROBED;
-    info->LinearAddr   = PCI_REGION_BASE(info->PciInfo, 0, REGION_MEM) & 0xfe000000;
+    info->LinearAddr   = PCI_REGION_BASE(info->PciInfo, 0, REGION_MEM) & ~0x1ffffffUL;
     pScrn->memPhysBase = info->LinearAddr;
     if (dev->MemBase) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "Linear address override, using 0x%08lx instead of 0x%08lx\n",
+		   "Linear address override, using 0x%016lx instead of 0x%016lx\n",
 		   dev->MemBase,
 		   info->LinearAddr);
 	info->LinearAddr = dev->MemBase;
@@ -1773,7 +1773,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	return FALSE;
     }
     xf86DrvMsg(pScrn->scrnIndex, from,
-	       "Linear framebuffer at 0x%08lx\n", info->LinearAddr);
+	       "Linear framebuffer at 0x%016lx\n", info->LinearAddr);
 
 #ifndef XSERVER_LIBPCIACCESS
 				/* BIOS */
@@ -2589,7 +2589,7 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     info->PciTag  = pciTag(PCI_DEV_BUS(info->PciInfo),
 			   PCI_DEV_DEV(info->PciInfo),
 			   PCI_DEV_FUNC(info->PciInfo));
-    info->MMIOAddr = PCI_REGION_BASE(info->PciInfo, 2, REGION_MEM) & 0xffffff00;
+    info->MMIOAddr = PCI_REGION_BASE(info->PciInfo, 2, REGION_MEM) & ~0xffUL;
     info->MMIOSize = PCI_REGION_SIZE(info->PciInfo, 2);
     if (info->pEnt->device->IOBase) {
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
@@ -2602,7 +2602,7 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 	goto fail1;
     }
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "MMIO registers at 0x%08lx: size %ldKB\n", info->MMIOAddr, info->MMIOSize / 1024);
+	       "MMIO registers at 0x%016lx: size %ldKB\n", info->MMIOAddr, info->MMIOSize / 1024);
 
     if(!RADEONMapMMIO(pScrn)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -4236,11 +4236,24 @@ void RADEONRestoreLVDSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 
     if (info->IsMobility) {
 	OUTREG(RADEON_LVDS_GEN_CNTL,  restore->lvds_gen_cntl);
-	OUTREG(RADEON_LVDS_PLL_CNTL,  restore->lvds_pll_cntl);  
-	/*OUTREG(RADEON_BIOS_4_SCRATCH, restore->bios_4_scratch);
-	OUTREG(RADEON_BIOS_5_SCRATCH, restore->bios_5_scratch);
-	OUTREG(RADEON_BIOS_6_SCRATCH, restore->bios_6_scratch);*/
+	OUTREG(RADEON_LVDS_PLL_CNTL,  restore->lvds_pll_cntl);
     }
+
+}
+
+void RADEONRestoreBIOSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    CARD32 bios_6_scratch = INREG(RADEON_BIOS_6_SCRATCH);
+
+    OUTREG(RADEON_BIOS_4_SCRATCH, restore->bios_4_scratch);
+    OUTREG(RADEON_BIOS_5_SCRATCH, restore->bios_5_scratch);
+    if (restore->bios_6_scratch & 0x40000000)
+	bios_6_scratch |= 0x40000000;
+    else
+	bios_6_scratch &= ~0x40000000;
+    OUTREG(RADEON_BIOS_6_SCRATCH, bios_6_scratch);
 
 }
 
@@ -5083,6 +5096,16 @@ static void RADEONSaveDACRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
 
 }
 
+static void RADEONSaveBIOSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    save->bios_4_scratch       = INREG(RADEON_BIOS_4_SCRATCH);
+    save->bios_5_scratch       = INREG(RADEON_BIOS_5_SCRATCH);
+    save->bios_6_scratch       = INREG(RADEON_BIOS_6_SCRATCH);
+}
+
 /* Read flat panel registers */
 static void RADEONSaveFPRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
 {
@@ -5097,9 +5120,6 @@ static void RADEONSaveFPRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
     save->lvds_pll_cntl        = INREG(RADEON_LVDS_PLL_CNTL);
     save->tmds_pll_cntl        = INREG(RADEON_TMDS_PLL_CNTL);
     save->tmds_transmitter_cntl= INREG(RADEON_TMDS_TRANSMITTER_CNTL);
-    save->bios_4_scratch       = INREG(RADEON_BIOS_4_SCRATCH);
-    save->bios_5_scratch       = INREG(RADEON_BIOS_5_SCRATCH);
-    save->bios_6_scratch       = INREG(RADEON_BIOS_6_SCRATCH);
 
     if (info->ChipFamily == CHIP_FAMILY_RV280) {
 	/* bit 22 of TMDS_PLL_CNTL is read-back inverted */
@@ -5326,7 +5346,7 @@ static void RADEONSave(ScrnInfoPtr pScrn)
 	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_MODE); /* Save mode only */
 # else
 	/* Save mode * & fonts & cmap */
-	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_MODE | VGA_SR_FONTS);
+	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_ALL);
 # endif
 	vgaHWLock(hwp);
     }
@@ -5341,6 +5361,7 @@ static void RADEONSave(ScrnInfoPtr pScrn)
     RADEONSavePLLRegisters(pScrn, save);
     RADEONSaveCrtcRegisters(pScrn, save);
     RADEONSaveFPRegisters(pScrn, save);
+    RADEONSaveBIOSRegisters(pScrn, save);
     RADEONSaveDACRegisters(pScrn, save);
     if (pRADEONEnt->HasCRTC2) {
 	RADEONSaveCrtc2Registers(pScrn, save);
@@ -5387,6 +5408,7 @@ void RADEONRestore(ScrnInfoPtr pScrn)
 	RADEONRestorePLL2Registers(pScrn, restore);
     }
 
+    RADEONRestoreBIOSRegisters(pScrn, restore);
     RADEONRestoreCrtcRegisters(pScrn, restore);
     RADEONRestorePLLRegisters(pScrn, restore);
     RADEONRestoreRMXRegisters(pScrn, restore);
@@ -5418,7 +5440,7 @@ void RADEONRestore(ScrnInfoPtr pScrn)
 	*/
        vgaHWRestore(pScrn, &hwp->SavedReg, VGA_SR_MODE );
 # else
-       vgaHWRestore(pScrn, &hwp->SavedReg, VGA_SR_MODE | VGA_SR_FONTS );
+       vgaHWRestore(pScrn, &hwp->SavedReg, VGA_SR_ALL );
 # endif
        vgaHWLock(hwp);
     }
@@ -5905,7 +5927,7 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 #endif /* USE_XAA */
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "Disposing cusor info\n");
+		   "Disposing cursor info\n");
     if (info->cursor) xf86DestroyCursorInfoRec(info->cursor);
     info->cursor = NULL;
 

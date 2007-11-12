@@ -311,7 +311,7 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 	return FALSE;
     }
 
-    save->bios_4_scratch = info->SavedReg.bios_4_scratch;
+    /*save->bios_4_scratch = info->SavedReg.bios_4_scratch;*/
     save->crtc_gen_cntl = (RADEON_CRTC_EXT_DISP_EN
 			   | RADEON_CRTC_EN
 			   | (format << 8)
@@ -348,11 +348,10 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     hsync_wid = (mode->CrtcHSyncEnd - mode->CrtcHSyncStart) / 8;
     if (!hsync_wid)       hsync_wid = 1;
-    if (hsync_wid > 0x3f) hsync_wid = 0x3f;
     hsync_start = mode->CrtcHSyncStart - 8;
 
     save->crtc_h_sync_strt_wid = ((hsync_start & 0x1fff)
-				  | (hsync_wid << 16)
+				  | ((hsync_wid & 0x3f) << 16)
 				  | ((mode->Flags & V_NHSYNC)
 				     ? RADEON_CRTC_H_SYNC_POL
 				     : 0));
@@ -363,10 +362,9 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     vsync_wid = mode->CrtcVSyncEnd - mode->CrtcVSyncStart;
     if (!vsync_wid)       vsync_wid = 1;
-    if (vsync_wid > 0x1f) vsync_wid = 0x1f;
 
     save->crtc_v_sync_strt_wid = (((mode->CrtcVSyncStart - 1) & 0xfff)
-				  | (vsync_wid << 16)
+				  | ((vsync_wid & 0x1f) << 16)
 				  | ((mode->Flags & V_NVSYNC)
 				     ? RADEON_CRTC_V_SYNC_POL
 				     : 0));
@@ -545,11 +543,10 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     hsync_wid = (mode->CrtcHSyncEnd - mode->CrtcHSyncStart) / 8;
     if (!hsync_wid)       hsync_wid = 1;
-    if (hsync_wid > 0x3f) hsync_wid = 0x3f;
     hsync_start = mode->CrtcHSyncStart - 8;
 
     save->crtc2_h_sync_strt_wid = ((hsync_start & 0x1fff)
-				   | (hsync_wid << 16)
+				   | ((hsync_wid & 0x3f) << 16)
 				   | ((mode->Flags & V_NHSYNC)
 				      ? RADEON_CRTC_H_SYNC_POL
 				      : 0));
@@ -560,10 +557,9 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     vsync_wid = mode->CrtcVSyncEnd - mode->CrtcVSyncStart;
     if (!vsync_wid)       vsync_wid = 1;
-    if (vsync_wid > 0x1f) vsync_wid = 0x1f;
 
     save->crtc2_v_sync_strt_wid = (((mode->CrtcVSyncStart - 1) & 0xfff)
-				   | (vsync_wid << 16)
+				   | ((vsync_wid & 0x1f) << 16)
 				   | ((mode->Flags & V_NVSYNC)
 				      ? RADEON_CRTC2_V_SYNC_POL
 				      : 0));
@@ -768,6 +764,18 @@ RADEONInitPLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save,
 }
 
 static void
+RADEONInitBIOSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
+{
+    RADEONInfoPtr  info      = RADEONPTR(pScrn);
+
+    /* tell the bios not to muck with the hardware on events */
+    save->bios_4_scratch = 0;
+    save->bios_5_scratch = 0xff00;
+    save->bios_6_scratch = info->SavedReg.bios_6_scratch | 0x40000000;
+
+}
+
+static void
 radeon_update_tv_routing(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 {
     /* pixclks_cntl controls tv clock routing */
@@ -794,10 +802,11 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 #ifdef XF86DRI
 	if (info->directRenderingEnabled && (info->tilingEnabled != tilingOld)) {
 	    RADEONSAREAPrivPtr pSAREAPriv;
-	  if (RADEONDRISetParam(pScrn, RADEON_SETPARAM_SWITCH_TILING, (info->tilingEnabled ? 1 : 0)) < 0)
-	      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			 "[drm] failed changing tiling status\n");
-	    pSAREAPriv = DRIGetSAREAPrivate(pScrn->pScreen);
+	    if (RADEONDRISetParam(pScrn, RADEON_SETPARAM_SWITCH_TILING, (info->tilingEnabled ? 1 : 0)) < 0)
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "[drm] failed changing tiling status\n");
+	    /* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
+	    pSAREAPriv = DRIGetSAREAPrivate(screenInfo.screens[pScrn->scrnIndex]);
 	    info->tilingEnabled = pSAREAPriv->tiling_enabled ? TRUE : FALSE;
 	}
 #endif
@@ -812,6 +821,9 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 		no_odd_post_div = TRUE;
 	}
     }
+
+    if (info->IsMobility)
+	RADEONInitBIOSRegisters(pScrn, &info->ModeReg);
 
     ErrorF("init memmap\n");
     RADEONInitMemMapRegisters(pScrn, &info->ModeReg, info);
@@ -868,6 +880,9 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	}
     }
 
+    if (info->IsMobility)
+	RADEONRestoreBIOSRegisters(pScrn, &info->ModeReg);
+
     ErrorF("restore memmap\n");
     RADEONRestoreMemMapRegisters(pScrn, &info->ModeReg);
     ErrorF("restore common\n");
@@ -897,9 +912,12 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 
     if (info->tilingEnabled != tilingOld) {
 	/* need to redraw front buffer, I guess this can be considered a hack ? */
-	xf86EnableDisableFBAccess(pScrn->scrnIndex, FALSE);
+	/* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
+	if (pScrn->pScreen)
+	    xf86EnableDisableFBAccess(pScrn->scrnIndex, FALSE);
 	RADEONChangeSurfaces(pScrn);
-	xf86EnableDisableFBAccess(pScrn->scrnIndex, TRUE);
+	if (pScrn->pScreen)
+	    xf86EnableDisableFBAccess(pScrn->scrnIndex, TRUE);
 	/* xf86SetRootClip would do, but can't access that here */
     }
 

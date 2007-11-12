@@ -158,7 +158,7 @@ typedef enum {
     OPTION_MAC_MODEL,
 #endif
     OPTION_DEFAULT_TMDS_PLL,
-    OPTION_LVDS_BIOS_NATIVE_MODE
+    OPTION_TVDAC_LOAD_DETECT
 } RADEONOpts;
 
 
@@ -817,8 +817,6 @@ typedef struct {
     RADEONMacModel    MacModel;
 #endif
 
-    Bool              LVDSBiosNativeMode;
-
     Rotation rotation;
     void (*PointerMoved)(int, int, int);
     CreateScreenResourcesProcPtr CreateScreenResources;
@@ -912,6 +910,8 @@ extern void        RADEONRestoreFPRegisters(ScrnInfoPtr pScrn,
 extern void        RADEONRestoreFP2Registers(ScrnInfoPtr pScrn,
 					     RADEONSavePtr restore);
 extern void        RADEONRestoreLVDSRegisters(ScrnInfoPtr pScrn,
+					      RADEONSavePtr restore);
+extern void        RADEONRestoreBIOSRegisters(ScrnInfoPtr pScrn,
 					      RADEONSavePtr restore);
 extern void        RADEONRestoreRMXRegisters(ScrnInfoPtr pScrn,
 					     RADEONSavePtr restore);
