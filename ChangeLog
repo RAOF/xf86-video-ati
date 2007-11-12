@@ -1,3 +1,251 @@
+commit b865886d00907899297ae864358eb26d9980975d
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun Nov 11 20:38:41 2007 -0500
+
+    bump for RC release
+
+commit 37af2f6b52c8f217b205486742a6b46a864da8ed
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Nov 5 10:58:25 2007 +0100
+
+    radeon: Use indirect register access for (un)hiding the cursor.
+    
+    This avoids hangs that occur when touching these registers while the card is
+    busy with some cards.
+
+commit 5659e2f1b08e44d0c4f21a403e91b4801ef78f62
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Nov 5 10:32:04 2007 +0100
+
+    radeon: Fix build warning on powerpc.
+
+commit d41d73f5f9d8baee7137e94da2c7852ea0412180
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Nov 5 10:30:23 2007 +0100
+
+    Revert "radeon: Reinstate sync in radeon_crtc_show/hide_cursor."
+    
+    This reverts commit 0241cac643fa1c08a45ea44f5c670b290e760ad8.
+    
+    Taking the DRI lock in paths called from the SIGIO handler isn't safe. For
+    example, the SIGIO handler may be called while the lock is held by an AIGLX
+    context, resulting in deadlock. See e.g.
+    https://bugs.freedesktop.org/show_bug.cgi?id=13005 .
+
+commit aaafc6a8f33d4736c37c43d3fd5e43085a2590fb
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Sun Oct 28 21:10:32 2007 +0100
+
+    Fix typo in 'disposing cursor'
+    
+    Bug #12984.
+
+commit a5c55c418319c1315ad73c305ef48b44fe1d9580
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat Oct 27 19:46:11 2007 -0400
+
+    RADEON: disable FP DETECT for DVI.
+    
+    These bits don't seem to be reliable or routed right
+    in all cases.
+
+commit 49cf7cb3db36ce7734f7e314a040a240191d6477
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 25 21:23:09 2007 -0400
+
+    RADEON: Fix IgnoreEDID option
+
+commit 70bbc0cfe699588f8ae4123efca0e1baffc91000
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 25 20:56:11 2007 -0400
+
+    RADEON: clean up mode handling and improve reliability of DDC
+    
+    - Reduce the number of times we do DDC and don't
+    skip the magical GPIO dance when doing DDC.
+    - If no DDC modes are found, add the screen modes
+
+commit 1a4f590c2ac071f0c348f38e9f26fa6093722453
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 25 19:25:36 2007 -0400
+
+    RADEON: document DefaultTMDSPLL option
+
+commit 2d26e0d0bcf25e210dc7771e76638dcfafcc2356
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 25 19:18:18 2007 -0400
+
+    RADEON: Add driver option to force TV DAC load detection on
+
+commit a9306b7986467c0794c91625ad2ece597b718462
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Oct 18 20:06:58 2007 -0400
+
+    RADEON: fix possible crash in radeon_crtc_mode_set()
+    
+    when radeon_crtc_mode_set() is called during ScreenInit(),
+    we don't have pScrn->pScreen yet.
+
+commit 115b4b65ef679a46d90b7fc8ac22ace37038b3fc
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Oct 17 20:25:47 2007 -0400
+
+    RADEON: Remove LVDSBiosNativeMode Option
+    
+    Shouldn't be needed any longer as I've finally sorted out
+    the LVDS issues due to the crtc setup.
+
+commit f2eb5c1cc69a4f7b0754ec6b2efde4fa1650ab6d
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Oct 16 18:54:28 2007 -0400
+
+    RADEON: finish fixing LVDS/RMX
+    
+    For panels, both the mode and crtc values need to be updated based
+    on the native mode timing.  This shoudl fix any remaining problems
+    with RMX.
+
+commit 93561688087493fccb7ac387d728feec61212180
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Oct 16 10:57:06 2007 +0200
+
+    radeon: Handle 64 bit PCI resource bases better.
+
+commit 08945fc8a14ba57e32350e85daa3354619e9e72e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Oct 15 21:12:46 2007 -0400
+
+    RADEON: allow the user to set any tv standard
+    
+    allow the user to set any tv standard rather than
+    limiting it to what the bios says is supported.
+
+commit 571548b2b95ce289f26a77c11deb6266f0b18516
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Oct 15 20:33:56 2007 -0400
+
+    RADEON: use native timing for RMX
+    
+    RMX should work again with native timings after the previous
+    patch.
+
+commit 2f87bff293a343b40c1be096933a5ae126632468
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Oct 15 20:06:28 2007 -0400
+
+    RADEON: Fix subtle change in crtc reg init
+    
+    At some point we changed how hsync_wid and vsync_wid were clipped.
+    Previously we used the field size as a mask when building the
+    register.  This got changed to setting the value to the field
+    size if it was greater.  this probably explains number stange
+    mode bugs.
+
+commit fd5bb7bb5e968127b87102320eccc1222f205e5a
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Oct 13 18:56:43 2007 +0200
+
+    radeon: Improve detection of default value for Option "MacModel" on Linux.
+    
+    * Detect all PowerBooks with dual link DVI (according to developer.apple.com)
+      and both Mac Mini G4 models. Other PowerBooks and iBooks should be covered
+      by the 'detected as' line in /proc/cpuinfo.
+    * Give specific instructions for overriding and reporting incorrect detection.
+    * Only perform detection when Option "MacModel" isn't present with a valid
+      value.
+    * Close /proc/cpuinfo file handle when done with it.
+    * Coding style cleanups.
+
+commit fbf121add5584049627f07345fc502b2aefc88ce
+Author: Eugen Dedu <Eugen.Dedu@pu-pm.univ-fcomte.fr>
+Date:   Sat Oct 13 16:51:58 2007 +0200
+
+    radeon: Derive default value of Option "MacModel" from /proc/cpuinfo on Linux.
+
+commit 5db3afaa1fdb69d382ac769ef40191a4b964d28e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 11 20:25:20 2007 -0400
+
+    RADEON: return status unknown for flaky chip/connector combinations
+    
+    This should at least get something on the screen.
+    XPRESS chips, I'm looking in your general direction...
+
+commit 1148d332f52f3780897aae3fcd5d6a67687c42cd
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 11 19:09:45 2007 -0400
+
+    RADEON: fix potential crash in mode handling
+
+commit 905b19df33d6f912336b65895e97775ffec07728
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 11 18:55:08 2007 -0400
+
+    RADEON: small cleanup from last commit
+
+commit 7afd04c1e4ffa6e4e5ba08ae90ba002237dc282b
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Oct 11 00:16:45 2007 -0400
+
+    RADEON: tell the bios not to muck with the hardware while the driver is active
+    
+    by toggling the appropriate bios scratch regs you can tell
+    the bios not the touch the hw while the driver is active.
+    This should prevent the bios from scrambling the hardware
+    when users open the lid or toggle bios hotkeys.
+    
+    fixes bug 12567
+
+commit 1b231d28fdda5cdc44bb9d2075d4edfd8f17e21f
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Oct 10 21:54:46 2007 -0400
+
+    RADEON: attempt to detect lid status on legacy bios
+    
+    I'm not sure how reliable this is.  The lid closed
+    bit only seems to be set if the lid is closed at boot
+    so LVDS will default to on if you restart X with the
+    lid closed after boot.
+
+commit 47ef583b993607bc3a372dd125c6e5228c4ec7bf
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Oct 10 19:35:31 2007 -0400
+
+    RADEON: more XPRESS connector table hacks
+    
+    Seems XPRESS desktop chips with DVI-D list a proprietary
+    connector type rather than DVI-D.  try and do the right thing.
+    Also, XPRESS chips seem to include connector type 8 and ddc
+    type 8 which are unknown at this time.
+
+commit c9264aa53bf1470ad9104d1e7c4a8ce13c49c270
+Author: Joerg Sonnenberger <joerg@britannica.bec.de>
+Date:   Tue Oct 9 23:18:29 2007 -0400
+
+    Portability fix from netbsd
+
+commit 80eee856938756e1222526b6c39cee8b5252b409
+Author: Matthieu Herb <>
+Date:   Tue Oct 9 16:17:50 2007 -0400
+
+    RADEON: fix console restore on netbsd
+    
+      Include the mode restore bugfix from monolithic Xorg, that is derived
+      from the version in xsrc which in turn was provided by Matthieu Herb
+      over 3 years ago on the XFree86 lists. Suggested by various
+      developers, hold-back due to the working state in xorg-server 1.1.1.
+      Tracing down the exact change showed that the changed default color
+      depth made this issue a lot more prominent again. Discussed with Eric
+      Anholt.
+
+commit 547fef4c6382f8a4951c086ee531b804cba31075
+Author: Lars Weiler <pylon@gentoo.org>
+Date:   Tue Oct 9 16:10:34 2007 -0400
+
+    include stdint.h to fix the build on some platforms
+    
+    fixes bug 12733
+
 commit ddec5783103045084a66a34d71326cc6e4a3f598
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Tue Oct 9 13:27:27 2007 +0300
