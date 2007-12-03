@@ -470,7 +470,6 @@ EXTRA_DIST = \
 	r128_reg.h \
 	r128_sarea.h \
 	r128_version.h \
-	radeon_chipset.h \
 	radeon_common.h \
 	radeon_commonfuncs.c \
 	radeon_dri.h \
@@ -490,7 +489,13 @@ EXTRA_DIST = \
 	theatre.h \
 	theatre_reg.h \
 	atipciids.h \
-	atipcirename.h
+	atipcirename.h \
+	ati_pciids_gen.h \
+	radeon_chipinfo_gen.h \
+	radeon_chipset_gen.h \
+	radeon_pci_chipset_gen.h \
+	pcidb/ati_pciids.csv \
+	pcidb/parse_pci_ids.pl
 
 pcidatadir = $(datadir)/xserver-xorg/pci
 pcidata_DATA = ati.ids
@@ -1081,8 +1086,8 @@ uninstall-am: uninstall-ati_drv_laLTLIBRARIES \
 	uninstall-theatre_drv_laLTLIBRARIES
 
 
-ati.ids: atipciids.h
-	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/atipciids.h | sed -e 's/0x/1002/' > ati.ids
+ati.ids: ati_pciids_gen.h
+	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/ati_pciids_gen.h | sed -e 's/0x/1002/' > ati.ids
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

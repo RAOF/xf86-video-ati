@@ -21053,7 +21053,7 @@ _ACEOF
 fi
 
 
-if test "x$DRI" = xauto; then
+if test "$DRI" != no; then
 	as_ac_File=`echo "ac_cv_file_${sdkdir}/dri.h" | $as_tr_sh`
 { echo "$as_me:$LINENO: checking for ${sdkdir}/dri.h" >&5
 echo $ECHO_N "checking for ${sdkdir}/dri.h... $ECHO_C" >&6; }
