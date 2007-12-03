@@ -1,10 +1,10 @@
-xserver-xorg-video-ati (1:6.7.196-2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.7.196-2) experimental; urgency=low
 
   * New upstream snapshot, containing commits up to 5022d006.
     + Fix the washed out color, closes: #440174.
     + Update 01_gen_pci_ids.diff to use the new ati_pciids_gen.h.
 
- -- Brice Goglin <bgoglin@debian.org>  Mon, 03 Dec 2007 21:22:13 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 03 Dec 2007 21:26:02 +0100
 
 xserver-xorg-video-ati (1:6.7.196-1) experimental; urgency=low
 
