@@ -559,12 +559,12 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* Keep ordering in each band, reverse order of bands */
-	    pboxNew1 = (BoxPtr)ALLOCATE_LOCAL(sizeof(BoxRec)*nbox);
+	    pboxNew1 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
 	    if (!pboxNew1) return;
 
-	    pptNew1 = (DDXPointPtr)ALLOCATE_LOCAL(sizeof(DDXPointRec)*nbox);
+	    pptNew1 = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
 	    if (!pptNew1) {
-		DEALLOCATE_LOCAL(pboxNew1);
+		xfree(pboxNew1);
 		return;
 	    }
 
@@ -601,14 +601,14 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* reverse order of rects in each band */
-	    pboxNew2 = (BoxPtr)ALLOCATE_LOCAL(sizeof(BoxRec)*nbox);
-	    pptNew2  = (DDXPointPtr)ALLOCATE_LOCAL(sizeof(DDXPointRec)*nbox);
+	    pboxNew2 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
+	    pptNew2  = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
 
 	    if (!pboxNew2 || !pptNew2) {
-		DEALLOCATE_LOCAL(pptNew2);
-		DEALLOCATE_LOCAL(pboxNew2);
-		DEALLOCATE_LOCAL(pptNew1);
-		DEALLOCATE_LOCAL(pboxNew1);
+		xfree(pptNew2);
+		xfree(pboxNew2);
+		xfree(pptNew1);
+		xfree(pboxNew1);
 		return;
 	    }
 
@@ -679,10 +679,10 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
     info->dst_pitch_offset = info->frontPitchOffset;;
 
-    DEALLOCATE_LOCAL(pptNew2);
-    DEALLOCATE_LOCAL(pboxNew2);
-    DEALLOCATE_LOCAL(pptNew1);
-    DEALLOCATE_LOCAL(pboxNew1);
+    xfree(pptNew2);
+    xfree(pboxNew2);
+    xfree(pptNew1);
+    xfree(pboxNew1);
 
     info->accel->NeedToSync = TRUE;
 #endif /* USE_XAA */
@@ -722,7 +722,9 @@ static Bool RADEONSetAgpMode(RADEONInfoPtr info, ScreenPtr pScreen)
     unsigned long mode   = drmAgpGetMode(info->drmFD);	/* Default mode */
     unsigned int  vendor = drmAgpVendorId(info->drmFD);
     unsigned int  device = drmAgpDeviceId(info->drmFD);
-    CARD32 agp_status = INREG(RADEON_AGP_STATUS) & mode;
+    /* ignore agp 3.0 mode bit from the chip as it's buggy on some cards with
+       pcie-agp rialto bridge chip - use the one from bridge which must match */
+    CARD32 agp_status = (INREG(RADEON_AGP_STATUS) | RADEON_AGPv3_MODE) & mode;
     Bool is_v3 = (agp_status & RADEON_AGPv3_MODE);
     unsigned int defaultMode;
     MessageType from;
