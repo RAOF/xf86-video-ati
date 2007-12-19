@@ -288,6 +288,7 @@ typedef struct {
     CARD32            dot_clock_freq;
     CARD32            pll_output_freq;
     int               feedback_div;
+    int               reference_div;
     int               post_div;
 
 				/* PLL registers */
@@ -300,6 +301,7 @@ typedef struct {
     CARD32            dot_clock_freq_2;
     CARD32            pll_output_freq_2;
     int               feedback_div_2;
+    int               reference_div_2;
     int               post_div_2;
 
 				/* PLL2 registers */
@@ -364,12 +366,24 @@ typedef struct {
 
 } RADEONSaveRec, *RADEONSavePtr;
 
+#define RADEON_PLL_USE_BIOS_DIVS   (1 << 0)
+#define RADEON_PLL_NO_ODD_POST_DIV (1 << 1)
+#define RADEON_PLL_USE_REF_DIV     (1 << 2)
+
 typedef struct {
     CARD16            reference_freq;
     CARD16            reference_div;
     CARD32            min_pll_freq;
     CARD32            max_pll_freq;
     CARD16            xclk;
+
+    CARD32            min_ref_div;
+    CARD32            max_ref_div;
+    CARD32            min_feedback_div;
+    CARD32            max_feedback_div;
+    CARD32            pll_in_min;
+    CARD32            pll_in_max;
+    CARD32            best_vco;
 } RADEONPLLRec, *RADEONPLLPtr;
 
 typedef struct {
@@ -431,18 +445,21 @@ typedef enum {
 } RADEONErrata;
 
 typedef enum {
-    RADEON_SIL_164  = 0x00000001,
-    RADEON_SIL_1178 = 0x00000002
+    RADEON_DVOCHIP_NONE,
+    RADEON_SIL_164,
+    RADEON_SIL_1178
 } RADEONExtTMDSChip;
 
 #if defined(__powerpc__)
 typedef enum {
-       RADEON_MAC_IBOOK              = 0x00000001,
-       RADEON_MAC_POWERBOOK_EXTERNAL = 0x00000002,
-       RADEON_MAC_POWERBOOK_INTERNAL = 0x00000004,
-       RADEON_MAC_POWERBOOK_VGA      = 0x00000008,
-       RADEON_MAC_MINI_EXTERNAL      = 0x00000016,
-       RADEON_MAC_MINI_INTERNAL      = 0x00000032
+    RADEON_MAC_NONE,
+    RADEON_MAC_IBOOK,
+    RADEON_MAC_POWERBOOK_EXTERNAL,
+    RADEON_MAC_POWERBOOK_INTERNAL,
+    RADEON_MAC_POWERBOOK_VGA,
+    RADEON_MAC_MINI_EXTERNAL,
+    RADEON_MAC_MINI_INTERNAL,
+    RADEON_MAC_IMAC_G5_ISIGHT
 } RADEONMacModel;
 #endif
 
@@ -544,10 +561,6 @@ typedef struct {
 #endif
     Bool              accelOn;
     xf86CursorInfoPtr cursor;
-    CARD32            cursor_offset;
-#ifdef USE_XAA
-    unsigned long     cursor_end;
-#endif
     Bool              allowColorTiling;
     Bool              tilingEnabled; /* mirror of sarea->tiling_enabled */
 #ifdef ARGB_CURSOR
@@ -836,6 +849,14 @@ typedef struct {
     RADEONMacModel    MacModel;
 #endif
     RADEONExtTMDSChip ext_tmds_chip;
+
+    /* output enable masks for outputs shared across connectors */
+    int output_crt1;
+    int output_crt2;
+    int output_dfp1;
+    int output_dfp2;
+    int output_lcd1;
+    int output_tv1;
 
     Rotation rotation;
     void (*PointerMoved)(int, int, int);

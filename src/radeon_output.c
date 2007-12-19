@@ -684,6 +684,52 @@ void RADEONConnectorFindMonitor(ScrnInfoPtr pScrn, xf86OutputPtr output)
     }
 }
 
+#ifndef __powerpc__
+
+static RADEONMonitorType
+RADEONDetectLidStatus(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    RADEONMonitorType MonType = MT_NONE;
+#ifdef __linux__
+    char lidline[50];  /* 50 should be sufficient for our purposes */
+    FILE *f = fopen ("/proc/acpi/button/lid/LID/state", "r");
+
+    if (f != NULL) {
+	while (fgets(lidline, sizeof lidline, f)) {
+	    if (!strncmp(lidline, "state:", strlen ("state:"))) {
+		if (strstr(lidline, "open")) {
+		    fclose(f);
+		    ErrorF("proc lid open\n");
+		    return MT_LCD;
+		}
+		else if (strstr(lidline, "closed")) {
+		    fclose(f);
+		    ErrorF("proc lid closed\n");
+		    return MT_NONE;
+		}
+	    }
+	}
+	fclose(f);
+    }
+#endif
+
+    if (!info->IsAtomBios) {
+	unsigned char *RADEONMMIO = info->MMIO;
+
+	/* see if the lid is closed -- only works at boot */
+	if (INREG(RADEON_BIOS_6_SCRATCH) & 0x10)
+	    MonType = MT_NONE;
+	else
+	    MonType = MT_LCD;
+    } else
+	MonType = MT_LCD;
+
+    return MonType;
+}
+
+#endif /* __powerpc__ */
+
 static RADEONMonitorType RADEONPortCheckNonDDC(ScrnInfoPtr pScrn, xf86OutputPtr output)
 {
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
@@ -691,21 +737,10 @@ static RADEONMonitorType RADEONPortCheckNonDDC(ScrnInfoPtr pScrn, xf86OutputPtr 
 
     if (radeon_output->type == OUTPUT_LVDS) {
 #if defined(__powerpc__)
-	/* not sure on ppc, OF? */
+	MonType = MT_LCD;
 #else
-	RADEONInfoPtr info       = RADEONPTR(pScrn);
-
-	if (!info->IsAtomBios) {
-	    unsigned char *RADEONMMIO = info->MMIO;
-
-	    /* see if the lid is closed -- only works at boot */
-	    if (INREG(RADEON_BIOS_6_SCRATCH) & 0x10)
-		MonType = MT_NONE;
-	    else
-		MonType = MT_LCD;
-	} else
+	MonType = RADEONDetectLidStatus(pScrn);
 #endif
-	    MonType = MT_LCD;
     } /*else if (radeon_output->type == OUTPUT_DVI) {
 	if (radeon_output->TMDSType == TMDS_INT) {
 	    if (INREG(RADEON_FP_GEN_CNTL) & RADEON_FP_DETECT_SENSE)
@@ -800,7 +835,7 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
     }
 
     /* update timing for LVDS and DFP if RMX is active */
-    if ((radeon_output->MonType == MT_LCD) || (radeon_output->Flags & RADEON_USE_RMX)) {
+    if (radeon_output->Flags & RADEON_USE_RMX) {
 	/* set to the panel's native mode */
 	adjusted_mode->HTotal = radeon_output->PanelXRes + radeon_output->HBlank;
 	adjusted_mode->HSyncStart = radeon_output->PanelXRes + radeon_output->HOverPlus;
@@ -955,7 +990,10 @@ static void RADEONInitLVDSRegisters(xf86OutputPtr output, RADEONSavePtr save,
 
     save->lvds_gen_cntl = info->SavedReg.lvds_gen_cntl;
     save->lvds_gen_cntl |= RADEON_LVDS_DISPLAY_DIS;
-    save->lvds_gen_cntl &= ~(RADEON_LVDS_ON | RADEON_LVDS_BLON);
+    save->lvds_gen_cntl &= ~(RADEON_LVDS_ON |
+			     RADEON_LVDS_BLON |
+			     RADEON_LVDS_EN |
+			     RADEON_LVDS_RST_FM);
 
     if (IS_R300_VARIANT)
 	save->lvds_pll_cntl &= ~(R300_LVDS_SRC_SEL_MASK);
@@ -2789,6 +2827,25 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 	info->BiosConnector[1].DDCType = DDC_NONE_DETECTED;
 	info->BiosConnector[1].valid = TRUE;
 	return TRUE;
+    case RADEON_MAC_IMAC_G5_ISIGHT:
+	info->BiosConnector[0].DDCType = DDC_MONID;
+	info->BiosConnector[0].DACType = DAC_NONE;
+	info->BiosConnector[0].TMDSType = TMDS_INT;
+	info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_D;
+	info->BiosConnector[0].valid = TRUE;
+
+	info->BiosConnector[1].DDCType = DDC_DVI;
+	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].TMDSType = TMDS_NONE;
+	info->BiosConnector[1].ConnectorType = CONNECTOR_CRT;
+	info->BiosConnector[1].valid = TRUE;
+
+	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
+	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].TMDSType = TMDS_NONE;
+	info->BiosConnector[2].DDCType = DDC_NONE_DETECTED;
+	info->BiosConnector[2].valid = TRUE;
+	return TRUE;
     default:
 	return FALSE;
     }
@@ -2974,18 +3031,21 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
 		    break;
 		}
 	    } else if (!strncmp(cpuline, "detected as", strlen("detected as"))) {
-                if (strstr(cpuline, "iBook")) {
-                    ret = RADEON_MAC_IBOOK;
+		if (strstr(cpuline, "iBook")) {
+		    ret = RADEON_MAC_IBOOK;
 		    break;
 		} else if (strstr(cpuline, "PowerBook")) {
 		    ret = RADEON_MAC_POWERBOOK_INTERNAL; /* internal tmds */
 		    break;
-                }
+		} else if (strstr(cpuline, "iMac G5 (iSight)")) {
+		    ret = RADEON_MAC_IMAC_G5_ISIGHT;
+		    break;
+		}
 
-                /* No known PowerMac model detected */
-                break;
-            }
-        }
+		/* No known PowerMac model detected */
+		break;
+	    }
+	}
 
 	fclose (f);
     } else
@@ -3002,7 +3062,8 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
 		   ret == RADEON_MAC_POWERBOOK_VGA ? "PowerBook with VGA" :
 		   ret == RADEON_MAC_IBOOK ? "iBook" :
 		   ret == RADEON_MAC_MINI_EXTERNAL ? "Mac Mini with external DVI" :
-		   "Mac Mini with integrated DVI");
+		   ret == RADEON_MAC_MINI_INTERNAL ? "Mac Mini with integrated DVI" :
+		   "iMac G5 iSight");
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "If this is not correct, try Option \"MacModel\" and "
 		   "consider reporting to the\n");
@@ -3065,6 +3126,8 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    info->MacModel = RADEON_MAC_MINI_EXTERNAL;
 	else if (!strncmp("mini", optstr, strlen("mini"))) /* alias */
 	    info->MacModel = RADEON_MAC_MINI_EXTERNAL;
+	else if (!strncmp("imac-g5-isight", optstr, strlen("imac-g5-isight")))
+	    info->MacModel = RADEON_MAC_IMAC_G5_ISIGHT;
 	else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Invalid Mac Model: %s\n", optstr);
 	}
@@ -3146,6 +3209,14 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    }
 	}
     }
+
+    /* clear the enable masks */
+    info->output_crt1 = 0;
+    info->output_crt2 = 0;
+    info->output_dfp1 = 0;
+    info->output_dfp2 = 0;
+    info->output_lcd1 = 0;
+    info->output_tv1 = 0;
 
     for (i = 0 ; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->BiosConnector[i].valid) {
