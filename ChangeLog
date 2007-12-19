@@ -1,3 +1,359 @@
+commit ce4fa1cedec0cf56b9979dfaa12a8d3a7c643df4
+Author: Arkadiusz Miskiewicz <arekm@maven.pl>
+Date:   Tue Dec 18 15:34:14 2007 -0500
+
+    RADEON: fix fd leak in lid detect code
+
+commit 20568f66f9a9a60a33bd9a69ccc14a891c656836
+Author: Arkadiusz Miskiewicz <arekm@maven.pl>
+Date:   Tue Dec 18 15:32:10 2007 -0500
+
+    RADEON: more cleanups and warning fixes
+
+commit 1496194200adbcb044ec3977367a0908262e389c
+Author: Arkadiusz Miskiewicz <arekm@maven.pl>
+Date:   Tue Dec 18 15:29:53 2007 -0500
+
+    RADEON: driver cleanups, warning fixes
+
+commit 44d07c4ccce9acb5bd21a17acb082e91f7225764
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Dec 17 18:56:12 2007 -0500
+
+    RADEON: typo from last commit
+
+commit 4da3782239921eb377216d4de4a9cc5bb55e0e8a
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Dec 17 18:51:31 2007 -0500
+
+    RADEON: add output enable masks
+    
+    add output enable masks for outputs that drive
+    more than one connector.  Make sure we don't turn off
+    an output that's driving another connector.
+
+commit 5c5d2d19b2b032a06dd333b4ecc029aac342fb93
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Dec 17 18:15:55 2007 -0500
+
+    RADEON: whitespace clean-ups
+
+commit 9f1d8220315c8894a17f2cc328025dc682b0c6e0
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Dec 17 18:04:05 2007 -0500
+
+    RADEON: more PLL fixes
+    
+    - reduce the calculation accuracy
+    - certain LVDS panels seem to only like certain ref_divs
+    - add pll flags to handle special cases
+    - adjust the pll limits on legacy cards
+
+commit 4747c1f3cd4167b6a51d4864a297719ea48b9346
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sun Dec 16 14:07:29 2007 -0500
+
+    RADEON: Make sure LVDS_EN bit is set when enabling LVDS
+
+commit b653e5a628bfa4dfb168e96f93f41eb910f409fb
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Dec 15 00:50:10 2007 +0100
+
+    radeon: Default to 1x again with non-v3 AGP cards.
+    
+    Seems more reliable in general than what was set up by firmware - fingers
+    crossed...
+
+commit 6229825fa5d6715569098afbb21a40f7a2e7e6be
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sat Dec 15 00:48:26 2007 +0100
+
+    radeon: Warning fixes.
+    
+    The lid detection code probably wouldn't work on other non-x86 platforms
+    though...
+
+commit 818ccf0fd4b5879171c5f20526d5a58638f8fde5
+Author: Fredrik Höglund <fredrik@kde.org>
+Date:   Fri Dec 14 23:56:12 2007 +0100
+
+    RADEON: Fix the vertex coordinates for transformed pictures
+    
+    This partially fixes transformed pictures on R100/R200 based
+    cards.  The texture still doesn't appear to be clamped correctly,
+    but since that doesn't matter for rotations at perpendicular
+    angles, I'm committing this now so randr rotation and reflection
+    will work properly.
+
+commit 3cfbcf4cafbdfdb33411d16e51fb1f77cd0f93dd
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Dec 14 17:11:00 2007 -0500
+
+    RADEON: Fix PLL set up on certain notebooks
+    
+    Some LVDS panels require specific PLL dividers as
+    specified in the bios tables.  Make sure to use them
+    if the output is LVDS.
+
+commit a84d446fd301d456bcea8f7abdc52e5a30776412
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Dec 14 02:17:14 2007 -0500
+
+    RADEON: select fb_div0 for LVDS on RV410 (x700) mobility
+    
+    Fixes bug 8038
+    I wonder if desktop RV410 need a similar fix.
+    If your x700 laptop panel has problems after this let me know.
+
+commit 6ccf5b33d27218ae1c45ab93c122438ed536d8ba
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Dec 12 20:12:06 2007 -0500
+
+    RADEON: only enable vblanks if we want them
+    
+    should fix bug 13610
+
+commit 1668f2056f56370f1b5681c13f1e14904e301216
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Dec 12 19:39:08 2007 -0500
+
+    RADEON: use /proc/acpi to determine lid status
+    
+    Linux only
+
+commit 33a39947f7f79533cd90007a17d57b20126642c6
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Dec 12 18:50:18 2007 -0500
+
+    RADEON: fix cursors when using rotation
+    
+    allocate separate cursor buffers for each crtc
+
+commit 9e5efdecd12092031a4aebce58747cb4a6f48f28
+Author: Arkadiusz Miskiewicz <arekm@maven.pl>
+Date:   Tue Dec 11 23:53:03 2007 -0500
+
+    sparse fixes and cleanups from arekm
+
+commit f3d2ec3a5ae61215c792018320158750e7aa937c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Dec 11 11:57:27 2007 -0500
+
+    RADEON: rewrite PLL computation
+    
+    Algorithm adapted from BeOS radeon driver with some tweaks by me.
+    Actually calulate and use the reference divider rather than using the bios default.
+    Also, always calculate the PLL, rather than falling back to bios dividers.
+    This should fix bugs 12913, 13590, 13533, possibly others.
+
+commit 9b125312ab6edc585e4f5931a6a6de81e13b6acc
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Mon Dec 10 13:53:15 2007 -0500
+
+    RADEON: only update crtc values when RMX is active
+
+commit 3a161e1b5d80361e318ced8da5c19e797749d693
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Dec 10 00:57:26 2007 -0500
+
+    RADEON: bios PLL cleanup
+
+commit 5896ca4097d439f59f90f397939132c061c3c364
+Author: LisaWu <liswu@ati.com>
+Date:   Fri Dec 7 09:45:05 2007 +0100
+
+    radeon: Use %u instead of %d for unsigned value.
+
+commit df44f8380268c27d3978c4e91d736f093322b8b8
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Dec 7 09:41:47 2007 +0100
+
+    radeon: Use gettimeofday instead of xf86getsecs.
+
+commit 64ab1cdf343a9a69e7e9e64f0bba77c54a94e9d0
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:12 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 21ed435398e4a398dd8a0a5d7c1d4cc45e916332
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Dec 4 17:08:58 2007 -0500
+
+    RADEON: add MacModel imac-g5-isight for iMac G5 iSight
+    
+    Thanks to Étienne Bersac for helping to figure this out.
+
+commit 54bfd522405d9fdfb69d3a59e111ac3d63483dbb
+Author: Étienne Bersac <bersace03@laposte.net>
+Date:   Tue Dec 4 14:22:42 2007 -0500
+
+    RADEON: fix typo
+
+commit 5022d006cfc06ca0395981526b2c2c94c6878567
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Dec 2 17:27:33 2007 +0100
+
+    radeon: Further XVideo fixes.
+    
+    * Make sure pitch constraints are always met for DMA upload blits.
+    * RGB24 is not affected by endianness.
+
+commit 6ed55b70b23dfdc7b41103ea59c1df2bda5e41e6
+Author: Kusanagi Kouichi <slash@ma.neweb.ne.jp>
+Date:   Sun Dec 2 17:18:46 2007 +0100
+
+    radeon: Fix crash with XVideo 24bit RGB images.
+    
+    See https://bugs.freedesktop.org/show_bug.cgi?id=13274 .
+
+commit a697b590899bb7704ec4d7ae9a9c3cbbfcaef382
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Dec 2 17:11:20 2007 +0100
+
+    Fix build against xserver master.
+    
+    (DE)ALLOCATE_LOCAL are gone.
+
+commit 00b4480aa2c5d7f751e34fc964f431b90b14c8d2
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Sat Dec 1 14:18:40 2007 -0500
+
+    RADEON: add options for force TV out as detected and to set TV standard
+    
+    Also fix a typo in internal tv-out parsing
+
+commit 0175b79987ef4d7b0ce8238c3bdde989e504516a
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 15:37:42 2007 -0500
+
+    RADEON: rework MacModel option
+    
+    this brings in some previous research from Michel Dänzer,
+    Sjoerd Simons, and myself.  Hopefully, the driver will pick
+    the correct MacModel in more cases.  This also changes the
+    default connector table for desktop Macs to dual DVI rather
+    than DVI+VGA as that seems to be the case more often than not.
+    External TMDS chips are handled separately now as well.
+    Eventually we should add an option to allow the user to specify
+    what external TMDS chip they need, but we don't have enough info
+    yet, so we'll rely on OF to init the external chip in most cases
+    for now.
+
+commit 9840a0fd4fc8c980533fcd4a02c55cd0d5634b6d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 29 13:27:37 2007 -0500
+
+    RADEON: add MacModel "mini-internal" for minis with internal TMDS
+    
+    Some macs (minis and powerbooks) use internal tmds, others use external tmds
+    and not just for dual-link TMDS, it shows up with single-link as well.
+    Unforunately, there doesn't seem to be any good way to figure it out.
+
+commit 6f080d00e6f4f84d5e0d6b4eff302bf42c230e81
+Author: Arkadiusz Miskiewicz <arekm@maven.pl>
+Date:   Mon Nov 26 12:43:30 2007 -0500
+
+    RADEON: fix backlight control on some laptops
+    
+    It seems the bios scratch regs are involved in backlight control
+    on some laptops.  This patch fixes the problematic laptops and doesn't
+    seem to break the previous bios lid and output control fixes.
+
+commit dcf22aed87366f4625fb5042cb84fecccd9ceece
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 26 11:10:03 2007 -0500
+
+    RADEON: only return status unknown for XPRESS chips
+    
+    this seems to cause more issues than it attempted to fix
+    so limit it to XPRESS chips for now.
+
+commit 206e280f02324641b4fe5a1986e26adf0e021fd4
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 26 09:39:27 2007 -0500
+
+    RADEON: fix typo in man page
+
+commit 197a62704742a4a19736c2637ac92d1dc5ab34ed
+Author: Adam Jackson <ajackson@redhat.com>
+Date:   Thu Nov 22 20:26:23 2007 +1000
+
+    radeon: fix openoffice/render bug on r100 chips
+
+commit 64010fc4eae8359c01e430f64252931242c91435
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Nov 22 20:25:31 2007 +1000
+
+    Revert "Disable RENDER acceleration by default on some RV200 chips."
+    
+    This reverts commit 145da701bf4fb9c0ad9f95620b20914ae0126852.
+    
+    pull in fix from ajax next commit
+
+commit 145da701bf4fb9c0ad9f95620b20914ae0126852
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Thu Nov 22 08:38:09 2007 +0100
+
+    Disable RENDER acceleration by default on some RV200 chips.
+    
+    Novell Bug #341699: Render acceleration is known to be broken
+    on at least "Radeon 7500 QW" and "Radeon Mobility M7 LW".
+
+commit e810c3ae9908cd57e95b1b091cded87cbfc12fdc
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Thu Nov 22 02:37:55 2007 +0100
+
+    really do not set up surface regs for depth buf on r100-class igps (bug #13080)
+    
+    fix the if condition testing for these chips...
+
+commit c8872603454e6a4ffed9fc7d9adc2c364a429608
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Tue Nov 20 22:33:39 2007 +1000
+
+    radeon: restructure pci ids to avoid effort later
+    
+    This uses a single file with all the pciids and parameters for radeon
+    family and setup in it. I don't run the perl script at build time to avoid
+    a perl dependency on build but adding pci ids should be done via the csv file
+    with openoffice or gnumeric if possible.
+
+commit 49055d8aff91ff12186feaf5343c8fd2f96bcba0
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Nov 15 22:56:09 2007 -0500
+
+    RADEON: set proper defaults for tv dac BGADJ/DACADJ
+    
+    we should get these values from the bios tables, but for now use
+    some reasonable defaults.  This should fix the washed out color
+    problems on bugs 1082 and 12844.
+
+commit 821acf38b716ab87c3d07263d6e4a139fe54803f
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Nov 15 22:28:42 2007 -0500
+
+    RADEON: Make sure we set the MT properly for connected status unknown
+
+commit a94123f33ec6584fbdfc4b9ecd543d1357de8814
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Nov 15 22:19:54 2007 -0500
+
+    Revert "Portability fix from netbsd"
+    
+    This reverts commit c9264aa53bf1470ad9104d1e7c4a8ce13c49c270.
+    This breaks damage support.  See bug 13244
+
+commit e9d721c31372db045550f9562534b28f16121bb9
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Tue Nov 13 23:42:42 2007 +0100
+
+    ignore sometime bogus agp_mode bit from chip (bug #13190)
+    
+    bit is wrong on at least X700 cards with rialto pcie-agp bridge chip,
+    should be safe to use just the bit from the bridge hopefully to make
+    agp setup work on these cards and not adversely affect others.
+
 commit b865886d00907899297ae864358eb26d9980975d
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Sun Nov 11 20:38:41 2007 -0500

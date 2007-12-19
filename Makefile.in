@@ -682,6 +682,8 @@ uninstall-am:
 @BUILD_LINUXDOC_TRUE@README.r128: README.r128.sgml
 @BUILD_LINUXDOC_TRUE@	$(MAKE_TEXT) README.r128.sgml && mv README.r128.txt README.r128
 
+.PHONY: ChangeLog
+
 ChangeLog:
 	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
