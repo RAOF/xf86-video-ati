@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-ati],
-        6.7.196,
+        6.7.197,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-ati)
 
@@ -203,6 +203,16 @@ AC_CHECK_DECL(xf86XVFillKeyHelperDrawable,
 	      [AC_DEFINE(HAVE_XV_DRAWABLE_HELPER, 1, [Have xf86XVFillKeyHelperDrawable prototype])],
 	      [],
 	      [#include <xf86xv.h>])
+
+AC_CHECK_DECL(xf86ModeBandwidth,
+	      [AC_DEFINE(HAVE_XF86MODEBANDWIDTH, 1, [Have xf86ModeBandwidth prototype])],
+	      [],
+	      [#include "xf86Modes.h"])
+
+AC_CHECK_DECL(xf86_crtc_clip_video_helper,
+	      [AC_DEFINE(HAVE_XF86CRTCCLIPVIDEOHELPER, 1, [Have xf86_crtc_clip_video_helper prototype])],
+	      [],
+	      [#include "xf86Crtc.h"])
 
 AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
 	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
