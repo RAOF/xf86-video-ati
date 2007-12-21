@@ -1,10 +1,10 @@
-xserver-xorg-video-ati (1:6.7.198~git20071221.be7f8fd3-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.7.198~git20071221.be7f8fd3-1) experimental; urgency=low
 
   * New upstream snapshot, containing commits up to be7f8fd3.
     + New atombios based support for r500 and r600 boards.
     + Zaphod mode is back, reimplemented on top of RandR 1.2.
 
- -- Brice Goglin <bgoglin@debian.org>  Fri, 21 Dec 2007 08:37:42 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Fri, 21 Dec 2007 08:39:57 +0100
 
 xserver-xorg-video-ati (1:6.7.197-1) unstable; urgency=low
 
