@@ -41,6 +41,12 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Have xf86_crtc_clip_video_helper prototype */
+#undef HAVE_XF86CRTCCLIPVIDEOHELPER
+
+/* Have xf86ModeBandwidth prototype */
+#undef HAVE_XF86MODEBANDWIDTH
+
 /* Have xf86XVFillKeyHelperDrawable prototype */
 #undef HAVE_XV_DRAWABLE_HELPER
 

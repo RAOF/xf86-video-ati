@@ -1,3 +1,51 @@
+commit eb99c3c5c9a2249cb84920f0f225e525fc3a4144
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Dec 20 18:14:38 2007 -0500
+
+    Bump for RC release
+
+commit 8d49ff1da917b7f8240267953ef6ce4ff04daecb
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Dec 20 01:09:57 2007 -0500
+
+    RADEON: check for xf86_crtc_clip_video_helper() in configure.ac
+    
+    use xf86_crtc_clip_video_helper() from the server if available.
+
+commit fb7a4e24f2da3561ef81371ca4013a4f13806e91
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Dec 19 19:15:19 2007 -0500
+
+    Fix RN50 mode filtering.
+    
+    The old code would attempt to limit the maximum pixel size of the screen
+    by limiting the maximum PLL frequency.  This ends up confusing the PLL
+    computation code since sometimes your maximum freq can be lower than your
+    minimum freq.  More to the point it's just wrong, maximum PLL frequency
+    isn't the same thing as maximum pixel clock, and even that isn't the same
+    thing as maximum scanout pixels per second.
+    
+    The correct thing to do is filter by the mode's effective memory bandwidth.
+
+commit c1b0b69cc50516c3b7e881b0eb46cb3cd2e9dce6
+Merge: 0e66348... ce4fa1c...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Dec 19 11:54:50 2007 -0500
+
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit 0e6634870d1ab38ee8c83f6bda1ba60364997853
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Dec 19 11:54:27 2007 -0500
+
+    RADEON: skip empty connectors when creating outputs
+
+commit 6afbf718c151dc3c5c59bd3136b58a93a114d798
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Dec 19 11:48:38 2007 -0500
+
+    RADEON: add support for legacy radeons with DVI and no connector table
+
 commit ce4fa1cedec0cf56b9979dfaa12a8d3a7c643df4
 Author: Arkadiusz Miskiewicz <arekm@maven.pl>
 Date:   Tue Dec 18 15:34:14 2007 -0500
