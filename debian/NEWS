@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.7.197-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.7.197-1) unstable; urgency=low
 
   * The X.Org ATI driver supports RandR 1.2 which enables dynamic
     enabling, disabling, resizing, rotating, placing, ... of multiple
@@ -6,4 +6,4 @@ xserver-xorg-video-ati (1:6.7.197-1) UNRELEASED; urgency=low
     accordingly. See http://wiki.debian.org/XStrikeForce/HowToRandR12
     and http://www.intellinuxgraphics.org/dualhead.html for some help.
 
- -- Brice Goglin <bgoglin@debian.org>  Fri, 21 Dec 2007 08:08:45 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Fri, 21 Dec 2007 08:12:13 +0100

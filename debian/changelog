@@ -1,9 +1,11 @@
-xserver-xorg-video-ati (1:6.7.197-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.7.197-1) unstable; urgency=low
 
   * New upstream release candidate.
+  * Upload to unstable since this release candidate is supposed
+    to be much better than the old 1:6.6.193-3.
   * Add a NEWS entry pointing to some RandR 1.2 documentation.
 
- -- Brice Goglin <bgoglin@debian.org>  Fri, 21 Dec 2007 08:07:30 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Fri, 21 Dec 2007 08:11:07 +0100
 
 xserver-xorg-video-ati (1:6.7.197~git20071219.ce4fa1ce-1) experimental; urgency=low
 
