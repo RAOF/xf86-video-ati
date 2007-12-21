@@ -1,3 +1,33 @@
+commit be7f8fd338f5af8b632f16a83db41e15d00af469
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Dec 21 10:03:49 2007 +1000
+
+    fix mode bandwidth configure check
+
+commit 3f9b597dedc45379b0bc0b631f3f924c403bca48
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Dec 21 09:55:42 2007 +1000
+
+    fixup clip test include handling
+
+commit 9a5b501332c0a1f10af20845af48c9ddd2ce26a0
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Dec 21 09:45:55 2007 +1000
+
+    set ddc line correctly post-merge
+
+commit 3c31b96afa20913ad947e68fe0c3a662e5eafbdd
+Merge: eb99c3c... f5e8c18...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Dec 21 09:36:22 2007 +1000
+
+    Merge remote branch 'origin/atombios-support'
+    
+    Conflicts:
+    
+    	src/radeon_display.c
+    	src/radeon_driver.c
+
 commit eb99c3c5c9a2249cb84920f0f225e525fc3a4144
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Thu Dec 20 18:14:38 2007 -0500
@@ -46,6 +76,18 @@ Date:   Wed Dec 19 11:48:38 2007 -0500
 
     RADEON: add support for legacy radeons with DVI and no connector table
 
+commit f5e8c185001e62e744310667c2d1bd3fe6542a62
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Wed Dec 19 10:38:58 2007 +1000
+
+    more endian related fixage
+
+commit 98b247066d00db66abe91f518cd93b5c4da4cfb4
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Wed Dec 19 10:25:41 2007 +1000
+
+    fix big endian build since zaphod fixups
+
 commit ce4fa1cedec0cf56b9979dfaa12a8d3a7c643df4
 Author: Arkadiusz Miskiewicz <arekm@maven.pl>
 Date:   Tue Dec 18 15:34:14 2007 -0500
@@ -63,6 +105,54 @@ Author: Arkadiusz Miskiewicz <arekm@maven.pl>
 Date:   Tue Dec 18 15:29:53 2007 -0500
 
     RADEON: driver cleanups, warning fixes
+
+commit bd7206fa120495037e3fea0c920d0031d7715bf6
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Dec 18 03:03:11 2007 -0500
+
+    RADEON: fix another merge error
+    
+    this broken legacy radeons
+
+commit 65a3ac7530e11bb7d818a988fd0cf1dde7688fa4
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Dec 18 00:15:38 2007 -0500
+
+    RADEON: more PLL tweaks
+
+commit d93a0e10b8bc6e3797a3cf6c1e28ca413a7c38e4
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Dec 17 20:32:45 2007 -0500
+
+    RADEON: post div tweaks for legacy radeon
+
+commit 03b8b49f6f502c45552b018fd8c44d366b2d576f
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Dec 17 20:20:04 2007 -0500
+
+    RADEON: fix typo from merge
+
+commit 19b9d3708852b7efe2b05249c8359dadb924dd94
+Merge: cf685f3... 29706ca...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Dec 17 20:07:32 2007 -0500
+
+    Merge branch 'atombios-support' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+
+commit cf685f37ec874f0aacd09e7c4eb0402c6daec1b0
+Merge: 2a134af... 44d07c4...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Dec 17 20:07:07 2007 -0500
+
+    Merge branch 'master' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+    
+    merge master and fix conflicts
+
+commit 29706ca585ebd9b7b3521521a17016322e9ecccb
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Dec 18 10:55:38 2007 +1000
+
+    fixup shadow setup on !r600
 
 commit 44d07c4ccce9acb5bd21a17acb082e91f7225764
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -97,11 +187,41 @@ Date:   Mon Dec 17 18:04:05 2007 -0500
     - add pll flags to handle special cases
     - adjust the pll limits on legacy cards
 
+commit 2a134af01bc85de758ad83a85b23d1bba4a1a0f5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 17 15:00:36 2007 +1000
+
+    r600: add shadow support to r600 driver to at least make 2d useable
+
+commit 614414611a9f246cbc74f579a79987fff97cf571
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 17 11:10:14 2007 +1000
+
+    radeon: cleanup pitch calculation and make r600 work again
+
+commit 79a375dbc7f323e2f551490a35f44ec36bed877c
+Author: George Wu <geo@flood.OCF.Berkeley.EDU>
+Date:   Mon Dec 17 10:55:36 2007 +1000
+
+    r600: might as well fix VT for R600
+
+commit bc213ee723a45f2c396b4ed211a50f7642349973
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Dec 16 14:54:00 2007 -0500
+
+    RADEON: fix sclock printout
+
 commit 4747c1f3cd4167b6a51d4864a297719ea48b9346
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Sun Dec 16 14:07:29 2007 -0500
 
     RADEON: Make sure LVDS_EN bit is set when enabling LVDS
+
+commit a9817b2cf436a536dbc43ad77abc3bdcc53d346d
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Dec 15 20:51:53 2007 -0500
+
+    RADEON: clean up units in PLL calculation
 
 commit b653e5a628bfa4dfb168e96f93f41eb910f409fb
 Author: Michel Dänzer <michel@tungstengraphics.com>
@@ -153,6 +273,38 @@ Date:   Fri Dec 14 02:17:14 2007 -0500
     I wonder if desktop RV410 need a similar fix.
     If your x700 laptop panel has problems after this let me know.
 
+commit b3eed3d87f76779b5a62a3115f99a31484dc38e0
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Dec 14 00:20:10 2007 -0500
+
+    RADEON: fix typo in previous cursor fix
+
+commit 814c6c48aebba2e45ce257289b922cd7e92caf2a
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Dec 13 18:45:09 2007 -0500
+
+    RADEON: rework PLL calculation
+    
+    - Take into account the limits from the bios tables
+    - Unify the PLL calculation between legacy and avivo chips
+
+commit f5ac34983411e4c4f41ab1817dce582830f398fd
+Merge: f2b2e08... 6ccf5b3...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Dec 12 22:37:44 2007 -0500
+
+    Merge branch 'master' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+    
+    merge and fix conflicts
+
+commit f2b2e0804183b52d9d3f56ad85b3552ece76c544
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Dec 12 22:18:37 2007 -0500
+
+    RADEON: fix rotation on avivo chips
+    
+    There are still some issues, but this is better than before.
+
 commit 6ccf5b33d27218ae1c45ab93c122438ed536d8ba
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Dec 12 20:12:06 2007 -0500
@@ -183,6 +335,21 @@ Date:   Tue Dec 11 23:53:03 2007 -0500
 
     sparse fixes and cleanups from arekm
 
+commit 372bf41818fdafc6a9d2914aee3a8e359f668f02
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Dec 11 14:04:58 2007 -0500
+
+    RADEON: handle HMDI properly (untested) and fix some merge leftovers
+
+commit 3c22ad977c25d5ca2811821fcac6bb8ecd79994a
+Merge: c9a0cee... f3d2ec3...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Dec 11 13:11:15 2007 -0500
+
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+    
+    fix conflicts
+
 commit f3d2ec3a5ae61215c792018320158750e7aa937c
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Dec 11 11:57:27 2007 -0500
@@ -193,6 +360,12 @@ Date:   Tue Dec 11 11:57:27 2007 -0500
     Actually calulate and use the reference divider rather than using the bios default.
     Also, always calculate the PLL, rather than falling back to bios dividers.
     This should fix bugs 12913, 13590, 13533, possibly others.
+
+commit c9a0cee97ca69e8fe1e1937c7670fa903214cded
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Dec 11 06:03:46 2007 +1000
+
+    more zaphod fixes - some other work maybe needed
 
 commit 9b125312ab6edc585e4f5931a6a6de81e13b6acc
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -206,6 +379,45 @@ Date:   Mon Dec 10 00:57:26 2007 -0500
 
     RADEON: bios PLL cleanup
 
+commit 731830297f2fc4a416882aacfb0d9b5f8ed32520
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 10 15:50:38 2007 +1000
+
+    fixup some warnings
+
+commit 2818e2b02ca90c9dfa50905b5311b2ae83ac3b0c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 10 15:43:52 2007 +1000
+
+    add more to configure.ac for using out-of-tree mode src
+
+commit cc3c36100986f9d8060bc2d433373d4806f8e730
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 10 15:25:56 2007 +1000
+
+    add support for building against legacy servers similiar to Intel codepaths
+
+commit 9c278cb7fa7f18d13bde053fd75221cfba9da377
+Merge: 6451ea2... cc167b9...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 10 15:18:03 2007 +1000
+
+    Merge branch 'zaphod-lolz' of git://git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+    
+    Conflicts:
+    
+    	src/radeon.h
+    	src/radeon_crtc.c
+    	src/radeon_driver.c
+    	src/radeon_output.c
+
+commit 6451ea2dcc4fac762442f699935864f4a8d445f7
+Merge: 0d89556... 5896ca4...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 10 15:08:42 2007 +1000
+
+    Merge branch 'master' into atombios-support
+
 commit 5896ca4097d439f59f90f397939132c061c3c364
 Author: LisaWu <liswu@ati.com>
 Date:   Fri Dec 7 09:45:05 2007 +0100
@@ -218,11 +430,57 @@ Date:   Fri Dec 7 09:41:47 2007 +0100
 
     radeon: Use gettimeofday instead of xf86getsecs.
 
+commit cc167b9bb7f1c3b8579e51e7bc2fca2f8eba6bd1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Dec 7 15:41:36 2007 +1000
+
+    disable tiling for zaphod heads
+
+commit 2ce8d192533a8c795714c5a9fb308ec74db40287
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Dec 7 15:35:21 2007 +1000
+
+    don't add fboffset to info->FB it already is mapped at the offset
+
+commit 0dcd926d3092100854b3e362d6659d4950508aeb
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Dec 7 14:45:04 2007 +1000
+
+    radeon: bring back zaphod all is forgiven.
+    
+    You've whined, you've cried, you've nagged, and you're guilt trippin has
+    made me do it... It actually wasn't as hard as I thought it would be.
+    
+    Still not perfect, couple of things to fix yet
+
+commit bb5ede557bf32a42eef158ff0fbcfe1c6ede098a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Dec 7 14:30:32 2007 +1000
+
+    radeon: move savedreg/modereg into entity instead of info
+
 commit 64ab1cdf343a9a69e7e9e64f0bba77c54a94e9d0
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Thu Dec 6 15:51:12 2007 -0500
 
     Add missing PHONY line for automatic ChangeLog generation
+
+commit 0d89556bfa41a3acbd6afe85b062e3a21f2ca057
+Author: Dave Airlie <airlied@ppcg5.localdomain>
+Date:   Thu Dec 6 19:23:06 2007 +1100
+
+    powerpc: build fixes from last merge
+
+commit dbe3d2608ecc9896db9c23b3a347b50748c51e13
+Merge: 48e31cd... 21ed435...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Dec 6 14:22:03 2007 +1000
+
+    Merge branch 'master' into atombios-support
+    
+    Conflicts:
+    
+    	src/radeon_output.c
 
 commit 21ed435398e4a398dd8a0a5d7c1d4cc45e916332
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -263,6 +521,12 @@ Date:   Sun Dec 2 17:11:20 2007 +0100
     
     (DE)ALLOCATE_LOCAL are gone.
 
+commit 48e31cdaa0caa21573879af5b9267773fe89176a
+Author: George Wu <geo@ocf.berkeley.edu>
+Date:   Sun Dec 2 15:25:09 2007 +1000
+
+    RADEON/R600: small code cleanup
+
 commit 00b4480aa2c5d7f751e34fc964f431b90b14c8d2
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Sat Dec 1 14:18:40 2007 -0500
@@ -270,6 +534,58 @@ Date:   Sat Dec 1 14:18:40 2007 -0500
     RADEON: add options for force TV out as detected and to set TV standard
     
     Also fix a typo in internal tv-out parsing
+
+commit 1e029fef5fe264f2ced445b80bf6070abcb84b82
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Dec 1 00:58:51 2007 -0500
+
+    RADEON: move GPIO lookup to a separate function
+
+commit dcbef1ba9dfcf35c28e058832a55adf00afb472e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Dec 1 00:35:25 2007 -0500
+
+    RADEON: fix typo in previous commit
+    
+    check gpio table revision before connector table revision
+
+commit fdce0598a2228c48c84deae1d7bebb2d7b3e979b
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Dec 1 00:15:34 2007 -0500
+
+    RADEON: convert atombios connector table parsing to use ATOM structs
+    
+    convert and add hpd info
+
+commit e3d7de9cc956aec5f940ad6db09e826b3a69523a
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 20:14:42 2007 -0500
+
+    RADEON: remove unused cruft from last atom import
+
+commit d5d83411e8a884154d671aad440524507cce313e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 20:11:42 2007 -0500
+
+    RADEON: save/restore avivo crtc cursor control
+    
+    this should prevent the cursor from showing up on in text
+    mode or vesafb etc. after running the driver.
+
+commit af0196f7bf0d1d5d211391149c18935d64ed2b06
+Merge: d9858a2... 0175b79...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 16:40:28 2007 -0500
+
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+    
+    merge master and fix conflicts
+
+commit d9858a2b3744b99003cfb9f31b743a2d31b322e9
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Dec 1 06:49:59 2007 +1000
+
+    radeon: add in pll spread spectrum workaround
 
 commit 0175b79987ef4d7b0ce8238c3bdde989e504516a
 Author: Alex Deucher <alex@botch2.(none)>
@@ -288,6 +604,34 @@ Date:   Fri Nov 30 15:37:42 2007 -0500
     yet, so we'll rely on OF to init the external chip in most cases
     for now.
 
+commit e1945f1f25a34310bd58ce128c8ff27ecc985618
+Merge: b368b0f... df7777b...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 14:30:55 2007 -0500
+
+    Merge branch 'atombios-support' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+
+commit b368b0f22cd1d7ef9b4c65d82929c76f3b82d573
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 14:29:27 2007 -0500
+
+    RADEON: disable atom pll set for r4xx cards
+    
+    the clocks do not get set correctly in all cases.  this needs
+    further investigation.
+
+commit 5af15739571c09260750bcfd3620e16fd7fec862
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 30 14:24:30 2007 -0500
+
+    RADEON: small cleanup of pll code
+
+commit df7777bff40c1feabcc12d2148ad6ac5213efbb3
+Author: George Wu <geo@ocf.berkeley.edu>
+Date:   Fri Nov 30 17:49:33 2007 +1000
+
+    Add LVTMA PWRSEQ registers to fix VT switching for LVDS
+
 commit 9840a0fd4fc8c980533fcd4a02c55cd0d5634b6d
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Thu Nov 29 13:27:37 2007 -0500
@@ -297,6 +641,61 @@ Date:   Thu Nov 29 13:27:37 2007 -0500
     Some macs (minis and powerbooks) use internal tmds, others use external tmds
     and not just for dual-link TMDS, it shows up with single-link as well.
     Unforunately, there doesn't seem to be any good way to figure it out.
+
+commit 017c939cf0a2b12fbdc1681cc70c28b23ae3b397
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Nov 29 02:52:14 2007 -0500
+
+    RADEON: implement CLUT adjust support
+
+commit 9963b0fe01feb6dd0cb555b874a48f6fa3b255cb
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Nov 29 00:46:23 2007 -0500
+
+    RADEON: fix cursor offset on avivo chips
+
+commit 6c56e3d7655b17e93e8823aefe34b05291104695
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 27 15:27:36 2007 -0500
+
+    RADEON: switch r4xx to atombios load detection
+    
+    works great
+
+commit 7561242e5b79bc2798ca3aace2b79e1a36949488
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 27 14:50:36 2007 -0500
+
+    RADEON: re-org load detection for legacy chips
+
+commit febdcc2dccd42acbcd68ae630b7811cae5c58e8a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Nov 28 05:10:57 2007 +1000
+
+    legacy: fix fb/agp read/writes
+
+commit bb8545146959b748994be055d5b3de66ec66c8b2
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Nov 26 17:34:51 2007 -0500
+
+    RADEON: first pass at TV/Component video
+    
+    Untested and not likely to work just yet.
+
+commit e2bde646b864dca9056d9ecfe23a0d905647ea9a
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Nov 26 14:35:57 2007 -0500
+
+    RADEON: move crtc output source selection into atombios_output.c
+    
+    The function fits better as an output function and should now
+    work with clones as well.
+
+commit 16c9be4107678a2a58d3418b7f1cc94d695ca8d6
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Nov 26 14:20:54 2007 -0500
+
+    RADEON: add default connector table for avivo chips
 
 commit 6f080d00e6f4f84d5e0d6b4eff302bf42c230e81
 Author: Arkadiusz Miskiewicz <arekm@maven.pl>
@@ -322,6 +721,62 @@ Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 26 09:39:27 2007 -0500
 
     RADEON: fix typo in man page
+
+commit 4e792db655dc92d2864db36b4d8f6714908de8e8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 15:44:44 2007 +1000
+
+    r500: set default minimum pll freq
+
+commit a13b4c69c105c096dd05e6de2c5c154c9a8bcc71
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 15:25:06 2007 +1000
+
+    r5xx: cleanup pll code..
+    
+    Clean the PLL code to use the radeon pll structs.
+
+commit 5d792b5673bbf4784eb0ec059221e9b57232a122
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 15:03:13 2007 +1000
+
+    radeon: fix up memory mapping issues for vt switch
+
+commit 558a2ef266c1ca517c7fb464b0ccfef83238c913
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 14:39:32 2007 +1000
+
+    fix silly spaces
+
+commit 1bda4424a7031de437acfca9c41d4b3668e36051
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 14:39:19 2007 +1000
+
+    r600: add hi agp address for mc
+
+commit 133234c31a294f24a3968a576aad2bb8b89d0f6a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 14:15:18 2007 +1000
+
+    atombios: use values from object header
+
+commit dbf6eae7e7a4bd1bc60fefdc7ab6276ed3f097c4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 11:55:05 2007 +1000
+
+    atombios: add initial object header parsing for r600 cards
+
+commit 6b103915c11fc79d2efc43c44fc2a00c3bc64ede
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 09:24:20 2007 +1000
+
+    r500: make vt switch work again for me
+
+commit d24208276aad7669feeed527dced60c76d39eae6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 23 08:50:25 2007 +1000
+
+    avivo: fix typo in register saving
 
 commit 197a62704742a4a19736c2637ac92d1dc5ab34ed
 Author: Adam Jackson <ajackson@redhat.com>
@@ -356,6 +811,130 @@ Date:   Thu Nov 22 02:37:55 2007 +0100
     
     fix the if condition testing for these chips...
 
+commit 0cc7e94849c1525750fabd04cf58f2dee88372e0
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 17:06:17 2007 -0500
+
+    RADEON: reorder crtc/pll setup
+
+commit d56bde98efceaa8344e62f8e98db90c4bb642331
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 17:03:39 2007 -0500
+
+    RADEON: fix crtc to output routing
+    
+    Thanks to AMD for the information
+
+commit a12390c832abe423def60e39cd5a9118e5910339
+Merge: d531792... e74dca1...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 02:24:48 2007 -0500
+
+    Merge branch 'atombios-support' of git://git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+
+commit d5317922f29a57b6c4127826a2fc126c5fd7c117
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 02:23:37 2007 -0500
+
+    RADEON: attempt to fix crtc to output routing
+    
+    The output routing seems to be based on the output ids from the bios
+    connector tables and the connected status in the bios scratch regs.
+    I don't fully understand this yet, but this seems to work
+    for the most part, however changing modes can sometimes
+    lead to a blanked head.  This can be remedied by forcing
+    a dpms off cycle.
+
+commit 81ce299bffd75540925b4c8234adf11226147165
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 01:35:44 2007 -0500
+
+    RADEON: provide clearer debugging info
+
+commit e74dca19416b13f97db9d1fc06299b988057d6a4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 21 16:24:25 2007 +1000
+
+    re-enable mobility chips
+
+commit 9c5b813dd6b3492cbc9833bc59792a5cec457e51
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 01:22:42 2007 -0500
+
+    RADEON: major re-org and clean up of atom output control
+    
+    - use radeon_output->devices to determine output
+    - clean up and simplify dpms and mode set
+
+commit 7634cb6b96f938bc6615eb2c49ae75aaefd04cce
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 00:10:14 2007 -0500
+
+    RADEON: make naming consistent and remove some cruft
+
+commit 908748343fc9a6cdc38af0fc028c63a82766da3f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 21 00:05:42 2007 -0500
+
+    RADEON: store devices ids from bios for each driver output
+
+commit 3975da2ea8cb628f7f66c3f26c5dfa181cd1c532
+Merge: e283aa3... 295ce27...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 20 23:52:29 2007 -0500
+
+    Merge branch 'atombios-support' of git://git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
+
+commit e283aa332adf0134243a4fa3d14263719cd8a3fd
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 20 23:35:46 2007 -0500
+
+    RADEON: add LVDS atom support
+
+commit e4bc3e1e7bb45571367d41b5328ff2590810b0f9
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 20 18:09:29 2007 -0500
+
+    RADEON: enable/disable the right TMDS controller
+
+commit 3e47683ffaa44a89cda9bcddf530643befb27efa
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 20 18:01:15 2007 -0500
+
+    RADEON: fixup for bios tables with wrong connector types
+
+commit 7412952eb1d1e9857cdab8417f7305f676900827
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 20 18:00:12 2007 -0500
+
+    RADEON: switch to using ATOM defines for bios device table
+
+commit 295ce277bb0a44b9539b3dba575e7aff279dc2d0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 21 08:56:40 2007 +1000
+
+    add missing files for make dist
+    
+    noted by ndim on #radeonhd
+
+commit 20083b0695987b25e442ecbdec24f3cb6f1ac2ae
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 21 08:53:44 2007 +1000
+
+    LVDS on r500/r600 needs some work disable mobile chips for now
+
+commit e4b8a4479ddea9b083b3a763dc0b9302e7b9a82a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 21 08:06:12 2007 +1000
+
+    r600: add memory controller regs from AMD
+
+commit aa88da974b97ea1e9bbb47b3494543575c09d912
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Nov 21 08:01:35 2007 +1000
+
+    rs690 is !> r600
+
 commit c8872603454e6a4ffed9fc7d9adc2c364a429608
 Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
 Date:   Tue Nov 20 22:33:39 2007 +1000
@@ -366,6 +945,322 @@ Date:   Tue Nov 20 22:33:39 2007 +1000
     family and setup in it. I don't run the perl script at build time to avoid
     a perl dependency on build but adding pci ids should be done via the csv file
     with openoffice or gnumeric if possible.
+
+commit a5b34c2f1f7d5346c4489cb30e07291d1217026c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 16:37:29 2007 +1000
+
+    r600: use standard memory controller setup paths
+
+commit 4a523da5221d53f2efa49da2326500e9b0b9f14d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 15:31:11 2007 +1000
+
+    r600: get r600 to work non-accelerated.
+    
+    DDC still not working yet
+
+commit 80023441ba46882bc810ff3790c7148059f155f5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 14:10:23 2007 +1000
+
+    r600: block r600 startup due to lack of memory controller info
+
+commit f6fbbacc17bf9b1073d3e993b225987fd9173182
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 13:41:55 2007 +1000
+
+    atombios: add warnings for r500 and r600
+
+commit 45a8b083c123b820c008f04ab857a64a8facec14
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 13:37:00 2007 +1000
+
+    atombios: add all r5xx and r6xx pci ids
+
+commit 5d023e2c3c2ab44ea57ffadc9607025d602c376c
+Merge: 0d1e0c7... c887260...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 13:02:43 2007 +1000
+
+    Merge branch 'master' into atombios-support
+    
+    Conflicts:
+    
+    	src/radeon_chipset.h
+    	src/radeon_driver.c
+    	src/radeon_probe.c
+
+commit 0d1e0c7805b3d8e56ccb49465e6b144afb7bdc51
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 09:08:04 2007 +1000
+
+    r5xx: add 71c5 for macbook pro
+
+commit d5909b30595c103bb5f42cd1704330f944bba49c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 08:15:58 2007 +1000
+
+    r5xx: cleanups after last merge
+
+commit fe2f7a09050fb7a345a1f52239f8f3c4f1053891
+Merge: 744c8cb... 49055d8...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 08:04:32 2007 +1000
+
+    Merge branch 'master' into agd-atom-merge
+    
+    Conflicts:
+    
+    	src/radeon_cursor.c
+    	src/radeon_output.c
+
+commit 744c8cb6c293fcaa687566f52901644e699baace
+Merge: e258fbe... e530af7...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Nov 20 07:56:33 2007 +1000
+
+    Merge branch 'agd-atom' of ssh://people.freedesktop.org/~agd5f/xf86-video-ati-atom into agd-atom
+
+commit e258fbe411d255a1044b61d7ff738aee3fb5b7f4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 16:35:05 2007 +1000
+
+    makes 2-headed cursor work
+
+commit e530af79adf51b3e95a0eca676c915a34dcbf4a7
+Merge: 69e197f... 52aba8d...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 19 00:59:30 2007 -0500
+
+    Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
+
+commit 69e197f2c8002aacf2587754c8d3bd63c88f85b1
+Merge: 5e8940f... 862dcab...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 19 00:57:34 2007 -0500
+
+    Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
+
+commit fca47ad083449f4cf9063dd970cdcebea6a7f110
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 15:53:40 2007 +1000
+
+    add z3ro's pciids
+
+commit 5e8940fa6e33d09091aa4bcf04b0f9e79596e1b8
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 19 00:52:38 2007 -0500
+
+    fix logic in connector table check for TVs and switch counter to symbolic names
+
+commit c19123fd9483758eb6b286c3dffcb6d79d5b1ee5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 15:46:58 2007 +1000
+
+    add firegl card on ajaxs machine
+
+commit f02f340e466a415b4e01648ca1e323f4ce125885
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 19 00:39:19 2007 -0500
+
+    Don't assign a gpio for TV
+
+commit 52aba8d73189ba959f19c0437499d5e7a8829827
+Merge: 862dcab... 5e8940f...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 15:30:46 2007 +1000
+
+    Merge branch 'agd-atom' of ssh://people.freedesktop.org/~agd5f/xf86-video-ati-atom into agd-atom
+
+commit 862dcabfe0c10751d815e5cdd7436c10c2c2db10
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 15:30:08 2007 +1000
+
+    r520: nail i2c enable/disable issue
+
+commit f3dd7f413b670eeb6b8639f6677d72050ad5fe04
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 19 00:19:39 2007 -0500
+
+    Don't detect TV out for now
+
+commit 94de0e22d7229ca71e18e1e849d8545d9ca7bafe
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 14:47:33 2007 +1000
+
+    i2c: fix bus enable stuff
+
+commit 3f1fc7eef13ea02fa5119e9b51d499841b801f2d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Nov 19 00:02:14 2007 -0500
+
+    CRTs/DFPs may share a DVI port, but TV and CV don't
+
+commit 8f84c5ad4c4af14612ea68fe6f24d0d527f00acc
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 18 23:43:06 2007 -0500
+
+    fix typo in loop
+
+commit 384cd8f52c89d089c6559e2eedbae45641fcd14e
+Merge: f3f0e4e... 234b607...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 14:02:55 2007 +1000
+
+    Merge branch 'agd-atom' of ../xf86-video-ati into agd-atom
+
+commit f3f0e4ec92c935c89ddb2f4241fe4335a521b439
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 18 23:14:01 2007 -0500
+
+    RADEON: unify connectortype handling
+
+commit 234b6073054ac7630e82781683e666b94b2f12de
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 14:02:09 2007 +1000
+
+    restore avivo memory map registers at correct places
+
+commit 459a30ba511fe2fa8051380a9741fcfd9bb401ef
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 13:44:38 2007 +1000
+
+    fix type for r520 agp code
+
+commit 760af92412ef0d5cc44e52e7cec11fd80c4aaaeb
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 18 22:34:59 2007 -0500
+
+    RADEON: unify DDC line handling
+
+commit e73bf6290da20dd61798ace775999ce1cb550934
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 19 13:32:16 2007 +1000
+
+    add x1900xt support
+
+commit 2e37937bacd624d616b91c41006c113791ebe98d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 18 20:18:50 2007 -0500
+
+    RADEON: step one in output rework
+    
+    re-organize the output type
+
+commit 679e7a2e0d1b213524b8109193483bc9840fb116
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 18 17:56:51 2007 -0500
+
+    Few fixes from the last commit.
+    
+    Update parser works fine on r4xx.
+
+commit 1cd7cc3e6758ab1012f3ced6e958a1517f45557f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 18 17:44:36 2007 -0500
+
+    WIP: new atom code comples.
+    
+    I commented out the object parsing for the time being as
+    using it will require some thought as to new output
+    related data structures.
+
+commit b155fa872ee4ca5d801e942aee6e619cef104f35
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Nov 17 00:34:56 2007 -0500
+
+    WIP: more new ATOM integration work
+
+commit 67db114d97abed7a607467e5d67c7b4ffa2c347e
+Merge: 7d06a87... ea15346...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 16 14:29:53 2007 -0500
+
+    Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
+
+commit ea1534659de87d3d75eb20d808d039cff22cb537
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 18:46:02 2007 +1000
+
+    avivo: fixup some i2c stuff
+
+commit 7d06a8791839ce6b22e2449646832b79cebf1b21
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 16 02:43:00 2007 -0500
+
+    WIP: sync up with the latest ATOM bios code in rhd
+    
+    doesn't compile ATM
+
+commit 3614d80ceb9a7b3615b0baab3cf2dd34ed4ab464
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 17:22:39 2007 +1000
+
+    add missing hpd register
+
+commit 9a2715fda97ac0ebcb45650a416e0652aab575b8
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 17:22:25 2007 +1000
+
+    make i2c unlock/lock registers for gpios
+
+commit 20dc549fff9a4137c93ebed449d05e0c437b6bc1
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 17:01:33 2007 +1000
+
+    avivo i2c: consolidate the avivo i2c code
+
+commit 3e62730f79a13883a65a568bc821bc56055a4ab7
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 15:19:00 2007 +1000
+
+    atombios: fixup warnings in atombios files
+
+commit cca7af3c4910983f7f090792986fcbfa0dc97cfb
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 15:04:01 2007 +1000
+
+    remove avivo_reg.h
+
+commit d39eb2077c6b2fc094ccd952772528eb9428c587
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 15:00:50 2007 +1000
+
+    radeon: rename a large section of avivo regs to documented names
+
+commit b7774c28dde72a205a40be78003df72eabfb9b1f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 14:48:36 2007 +1000
+
+    Add copyright headers
+
+commit 3cfcd2164b400bd0d1cb4ede8eeb01abba9d75c8
+Merge: efac14e... 718bfd3...
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 15 23:25:39 2007 -0500
+
+    Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
+
+commit efac14e669a0c6184f8848191eb49ffb21934ee1
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Nov 15 23:17:25 2007 -0500
+
+    r5xx: fix typo for crtc offset
+
+commit e6db621c37ff615be286462f000d67a662c5c331
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 15 23:15:56 2007 -0500
+
+    fix INMC() and OUTMC() on !AVIVO chips
+    
+    WR_EN is bit 8 so don't use OUTREG8.
+
+commit 52ba3fdd1ce05983fabedff234cfaf4c60fba38d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 15 23:12:30 2007 -0500
+
+    atombios_dac_detect() takes care of primary vs tv dac itself
 
 commit 49055d8aff91ff12186feaf5343c8fd2f96bcba0
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -392,6 +1287,12 @@ Date:   Thu Nov 15 22:19:54 2007 -0500
     This reverts commit c9264aa53bf1470ad9104d1e7c4a8ce13c49c270.
     This breaks damage support.  See bug 13244
 
+commit 718bfd3b61879172eee819fdab7080d5d4c0a756
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Nov 16 10:37:04 2007 +1000
+
+    r5xx: fix typo for crtc offset
+
 commit e9d721c31372db045550f9562534b28f16121bb9
 Author: Roland Scheidegger <sroland@tungstengraphics.com>
 Date:   Tue Nov 13 23:42:42 2007 +0100
@@ -407,6 +1308,122 @@ Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Sun Nov 11 20:38:41 2007 -0500
 
     bump for RC release
+
+commit 7aeb35e5ad1aed6e78a3d8565fbfbfe66232ab45
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 11 19:29:30 2007 -0500
+
+    fix from last commit
+
+commit 2ea95900547165e86ad3f8a41ce3331a05bad60e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 11 18:43:03 2007 -0500
+
+    Add full parsing support for atom bios connector table
+
+commit 7ce730828c293f0810dfdc554df48dfd76e35c49
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 11 12:37:01 2007 -0500
+
+    rework crtc output source setup
+
+commit d61b6c78aa7810a2f9b9e2d9d95aab4295de80ce
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 11 11:58:17 2007 -0500
+
+    make sure i2c bus exists before using it
+
+commit 342e3e207efda42ba679731c30dfb9d5e9d5643f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 9 17:11:43 2007 -0500
+
+    combine outputs based on id
+
+commit 8078c299d5941460243944d55051547c1a4d3791
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 9 16:35:08 2007 -0500
+
+    use atom to program plls on r4xx
+
+commit 5febe2c96642f61d006abe6e8081e69d5b95adc0
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Nov 9 16:24:56 2007 -0500
+
+    turn off vga control when using ext modes
+
+commit 83f170c32c08c74a9e3466ffa0e0a0606c74427b
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 8 19:33:13 2007 -0500
+
+    add pci ids for X1550PRO
+
+commit 5cdcaba0f6e9de2d15cfcc109ab97d9fd423e3bf
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 8 19:28:03 2007 -0500
+
+    make sure to assign gpio
+
+commit 2dcb852778301b9284a2b4906dcf64f95ed638b7
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Nov 8 18:39:23 2007 -0500
+
+    pull in another of Dave's fixes
+
+commit 96273016a0bbdfa4d3a4e6275a3b09eeeadaa534
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 7 01:22:30 2007 -0500
+
+    fix and move crtc source set up atombios_output.c
+    
+    it's really more output related.
+
+commit 5c495c81cc3bcd4a38d06954243ed3bdc85bdc07
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 7 01:04:11 2007 -0500
+
+    add support for initing external tmds via ATOM
+
+commit 5c13d9355280e6de44ebbf8de7ea89a6b91c7388
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Nov 7 00:17:28 2007 -0500
+
+    add avivo output stuff
+
+commit 68e7f5c67e2e9d2162b469ce31f452f3f89756b5
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 6 23:43:29 2007 -0500
+
+    more avivo updates
+
+commit 303562dfb57e13c027b2aa9289d54e547c829ff1
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 6 23:06:46 2007 -0500
+
+    add additional connector types
+
+commit 0d3e0735f710cb7b9505e4330997aa332f73c102
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 6 22:59:25 2007 -0500
+
+    First round of avivo support
+
+commit 0abfe3150ce3eed4db93ccc2975bd4622dfa54a7
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 6 18:47:00 2007 -0500
+
+    Add atombios files
+
+commit 20f01950e42babc308b4470df6a3c6628c932003
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Nov 6 18:04:43 2007 -0500
+
+    for r4xx ATOM cards, just use ATOM for PLL
+    
+    while crtc timing and pll seem to work fine, output setup
+    and routing don't seem to work too reliably with atom.
+    AMD claims ATOM was still pretty new with r4xx so
+    it's probably better to stick with direct programming for
+    some things.
 
 commit 37af2f6b52c8f217b205486742a6b46a864da8ed
 Author: Michel Dänzer <michel@tungstengraphics.com>
@@ -435,6 +1452,34 @@ Date:   Mon Nov 5 10:30:23 2007 +0100
     example, the SIGIO handler may be called while the lock is held by an AIGLX
     context, resulting in deadlock. See e.g.
     https://bugs.freedesktop.org/show_bug.cgi?id=13005 .
+
+commit 78a3eabff382e8ebe33df2039076fb083bcc361b
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Nov 4 14:11:26 2007 -0500
+
+    WIP: get ATOM crtc stuff working on r4xx
+
+commit 5e9ebd8e496b72b051053d637c63b2956b7861d3
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Nov 3 20:46:17 2007 -0400
+
+    Initial support for r4xx
+    
+    - add r3xx/r4xx MC access macros and functions
+
+commit c106075ccb81ca2ee4894743e676fd37653c8dce
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Nov 3 18:29:20 2007 -0400
+
+    More of Dave's ATOM init code.
+
+commit e18f5d61806b445ad77d93e258fbce9422b52bb6
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Nov 3 18:20:55 2007 -0400
+
+    Initial integration of Atom code and some of Dave's code.
+    
+    ATOM builds, but it's not hooked up yet.
 
 commit aaafc6a8f33d4736c37c43d3fd5e43085a2590fb
 Author: Brice Goglin <bgoglin@debian.org>
