@@ -20265,7 +20265,7 @@ fi
 
 
 if test "x$GCC" = "xyes"; then
-	CFLAGS="$CFLAGS -Wall"
+	CPPFLAGS="$CPPFLAGS -Wall"
 fi
 
 
@@ -21323,6 +21323,7 @@ _ACEOF
 	fi
 fi
 
+save_CFLAGS="$CFLAGS"
 CFLAGS="$XORG_CFLAGS"
 { echo "$as_me:$LINENO: checking for xf86Modes.h" >&5
 echo $ECHO_N "checking for xf86Modes.h... $ECHO_C" >&6; }

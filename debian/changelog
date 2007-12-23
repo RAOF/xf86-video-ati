@@ -1,3 +1,12 @@
+xserver-xorg-video-ati (1:6.7.198~git20071223.ad3325f6-1) experimental; urgency=low
+
+  * New upstream snapshot, containing commits up to ad3325f6.
+    + Add IgnoreLidStatus option to enable lid even when closed,
+      closes: #457612, #457516.
+    + Fix PLL input setup on mac cards, closes: #457563.
+
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 23 Dec 2007 23:24:43 +0100
+
 xserver-xorg-video-ati (1:6.7.198~git20071221.be7f8fd3-1) experimental; urgency=low
 
   * New upstream snapshot, containing commits up to be7f8fd3.
