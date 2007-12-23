@@ -65,6 +65,7 @@ typedef enum
     CONNECTOR_UNSUPPORTED_LEGACY
 } RADEONLegacyConnectorType;
 
+
 /* Read the Video BIOS block and the FP registers (if applicable). */
 Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 {
@@ -304,7 +305,7 @@ static Bool RADEONGetATOMConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->BiosConnector[i].valid) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Port%d: DDCType-0x%x, DACType-%d, TMDSType-%d, ConnectorType-%d\n",
-		       i, info->BiosConnector[i].ddc_line, info->BiosConnector[i].DACType,
+		       i, (unsigned int)info->BiosConnector[i].ddc_line, info->BiosConnector[i].DACType,
 		       info->BiosConnector[i].TMDSType, info->BiosConnector[i].ConnectorType);
 	}
     }
@@ -493,7 +494,7 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->BiosConnector[i].valid) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Port%d: DDCType-0x%x, DACType-%d, TMDSType-%d, ConnectorType-%d\n",
-		       i, info->BiosConnector[i].ddc_line, info->BiosConnector[i].DACType,
+		       i, (unsigned int)info->BiosConnector[i].ddc_line, info->BiosConnector[i].DACType,
 		       info->BiosConnector[i].TMDSType, info->BiosConnector[i].ConnectorType);
 	}
     }

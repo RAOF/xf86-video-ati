@@ -166,7 +166,8 @@ typedef enum {
     OPTION_DEFAULT_TMDS_PLL,
     OPTION_TVDAC_LOAD_DETECT,
     OPTION_FORCE_TVOUT,
-    OPTION_TVSTD
+    OPTION_TVSTD,
+    OPTION_IGNORE_LID_STATUS
 } RADEONOpts;
 
 
@@ -842,32 +843,22 @@ extern void        RADEONInitMemMapRegisters(ScrnInfoPtr pScrn,
 					     RADEONInfoPtr info);
 extern void        RADEONInitDispBandwidth(ScrnInfoPtr pScrn);
 extern Bool        RADEONI2cInit(ScrnInfoPtr pScrn);
-extern void        RADEONSetSyncRangeFromEdid(ScrnInfoPtr pScrn, int flag);
 extern Bool        RADEONSetupConnectors(ScrnInfoPtr pScrn);
 extern void        RADEONPrintPortMap(ScrnInfoPtr pScrn);
-extern void        RADEONEnableDisplay(xf86OutputPtr pPort, BOOL bEnable);
 extern void        RADEONDisableDisplays(ScrnInfoPtr pScrn);
 extern void        RADEONGetPanelInfo(ScrnInfoPtr pScrn);
-extern void        RADEONGetTVDacAdjInfo(xf86OutputPtr output);
 extern void        RADEONUnblank(ScrnInfoPtr pScrn);
 extern void        RADEONUnblank(ScrnInfoPtr pScrn);
 extern void        RADEONBlank(ScrnInfoPtr pScrn);
-extern void        RADEONDisplayPowerManagementSet(ScrnInfoPtr pScrn,
-						   int PowerManagementMode,
-						   int flags);
+
 extern Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask);
 extern Bool RADEONAllocateConnectors(ScrnInfoPtr pScrn);
-extern int RADEONValidateMergeModes(ScrnInfoPtr pScrn);
-extern int RADEONValidateDDCModes(ScrnInfoPtr pScrn1, char **ppModeName,
-				  RADEONMonitorType DisplayType, int crtc2);
+
 extern void RADEONSetPitch (ScrnInfoPtr pScrn);
 extern void RADEONUpdateHVPosition(xf86OutputPtr output, DisplayModePtr mode);
 
-DisplayModePtr
+extern DisplayModePtr
 RADEONProbeOutputModes(xf86OutputPtr output);
-extern Bool RADEONInit2(ScrnInfoPtr pScrn, DisplayModePtr crtc1,
-			DisplayModePtr crtc2, int crtc_mask,
-			RADEONSavePtr save, RADEONMonitorType montype);
 
 extern Bool
 RADEONDVOReadByte(I2CDevPtr dvo, int addr, CARD8 *ch);
@@ -878,20 +869,20 @@ RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output);
 extern Bool
 RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output);
 
-void
+extern void
 radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y);
-void
+extern void
 radeon_crtc_show_cursor (xf86CrtcPtr crtc);
-void
+extern void
 radeon_crtc_hide_cursor (xf86CrtcPtr crtc);
-void
+extern void
 radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y);
-void
+extern void
 radeon_crtc_set_cursor_colors (xf86CrtcPtr crtc, int bg, int fg);
-void
+extern void
 radeon_crtc_load_cursor_argb (xf86CrtcPtr crtc, CARD32 *image);
-void
-RADEONEnableOutputs(ScrnInfoPtr pScrn, int crtc_num);
+extern void
+radeon_crtc_load_lut(xf86CrtcPtr crtc);
 
 extern void RADEONAdjustCrtcRegistersForTV(ScrnInfoPtr pScrn, RADEONSavePtr save,
 					   DisplayModePtr mode, xf86OutputPtr output);
@@ -905,8 +896,10 @@ extern void RADEONInitTVRegisters(xf86OutputPtr output, RADEONSavePtr save,
                                   DisplayModePtr mode, BOOL IsPrimary);
 
 extern void RADEONRestoreTVRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore);
-extern void RADEONRestoreTVRestarts(ScrnInfoPtr pScrn, RADEONSavePtr restore);
-extern void RADEONRestoreTVTimingTables(ScrnInfoPtr pScrn, RADEONSavePtr restore);
+
+extern void RADEONComputePLL(RADEONPLLPtr pll, unsigned long freq, CARD32 *chosen_dot_clock_freq,
+		CARD32 *chosen_feedback_div, CARD32 *chosen_reference_div,
+		CARD32 *chosen_post_div, int flags);
 
 #ifdef XF86DRI
 #ifdef USE_XAA
