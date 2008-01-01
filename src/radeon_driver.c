@@ -784,7 +784,11 @@ unsigned RADEONINMC(ScrnInfoPtr pScrn, int addr)
     unsigned char *RADEONMMIO = info->MMIO;
     CARD32         data;
 
-    if (IS_AVIVO_VARIANT) {
+    if (info->ChipFamily == CHIP_FAMILY_RS690)
+    {
+        OUTREG(RS690_MC_INDEX, (addr & RS690_MC_INDEX_MASK));
+        data = INREG(RS690_MC_DATA);
+    } else if (IS_AVIVO_VARIANT) {
 	OUTREG(AVIVO_MC_INDEX, (addr & 0xff) | 0x7f0000);
 	(void)INREG(AVIVO_MC_INDEX);
 	data = INREG(AVIVO_MC_DATA);
@@ -809,7 +813,13 @@ void RADEONOUTMC(ScrnInfoPtr pScrn, int addr, CARD32 data)
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
-    if (IS_AVIVO_VARIANT) {
+    if (info->ChipFamily == CHIP_FAMILY_RS690)
+    {
+        OUTREG(RS690_MC_INDEX, ((addr & RS690_MC_INDEX_MASK) |
+                        RS690_MC_INDEX_WR_EN));
+        OUTREG(RS690_MC_DATA, data);
+        OUTREG(RS690_MC_INDEX, RS690_MC_INDEX_WR_ACK);
+    } else if (IS_AVIVO_VARIANT) {
 	OUTREG(AVIVO_MC_INDEX, (addr & 0xff) | 0xff0000);
 	(void)INREG(AVIVO_MC_INDEX);
 	OUTREG(AVIVO_MC_DATA, data);
@@ -865,6 +875,11 @@ void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 fb_loc,
 	if (mask & LOC_AGP)
 	    OUTMC(pScrn, RV515_MC_AGP_LOCATION, agp_loc);
 	(void)INMC(pScrn, RV515_MC_AGP_LOCATION);
+    } else if (info->ChipFamily == CHIP_FAMILY_RS690) {
+	if (mask & LOC_FB)
+	    OUTMC(pScrn, RS690_MC_FB_LOCATION, fb_loc);
+	if (mask & LOC_AGP)
+	    OUTMC(pScrn, RS690_MC_AGP_LOCATION, agp_loc);
     } else if (info->ChipFamily >= CHIP_FAMILY_R520) { 
 	if (mask & LOC_FB)
 	    OUTMC(pScrn, R520_MC_FB_LOCATION, fb_loc);
@@ -896,6 +911,13 @@ void radeon_read_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 *fb_loc,
 	    *fb_loc = INMC(pScrn, RV515_MC_FB_LOCATION);
 	if (mask & LOC_AGP) {
 	    *agp_loc = INMC(pScrn, RV515_MC_AGP_LOCATION);
+	    *agp_loc_hi = 0;
+	}
+    } else if (info->ChipFamily == CHIP_FAMILY_RS690) {
+	if (mask & LOC_FB)
+	    *fb_loc = INMC(pScrn, RS690_MC_FB_LOCATION);
+	if (mask & LOC_AGP) {
+	    *agp_loc = INMC(pScrn, RS690_MC_AGP_LOCATION);
 	    *agp_loc_hi = 0;
 	}
     } else if (info->ChipFamily >= CHIP_FAMILY_R520) {
@@ -1173,7 +1195,7 @@ static Bool RADEONProbePLLParameters(ScrnInfoPtr pScrn)
     case 2: info->sclk = spll / 2.0; break;
     case 3: info->sclk = spll / 4.0; break;
     case 4: info->sclk = spll / 8.0; break;
-    case 7: info->sclk = mpll;
+    case 7: info->sclk = mpll; break;
     default:
            info->sclk = 200.00;
            xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Unsupported SCLK source"
@@ -1416,7 +1438,7 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     }
 
     if (mem_size == 0)
-	    mem_size = 0x800000;
+	mem_size = 0x800000;
 
     /* Fix for RN50, M6, M7 with 8/16/32(??) MBs of VRAM - 
        Novell bug 204882 + along with lots of ubuntu ones */
@@ -1431,7 +1453,7 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     }
 #endif
 
-    {
+    if (info->ChipFamily != CHIP_FAMILY_RS690) {
 	if (info->IsIGP)
 	    info->mc_fb_location = INREG(RADEON_NB_TOM);
 	else
@@ -1626,7 +1648,9 @@ static Bool RADEONPreInitVRAM(ScrnInfoPtr pScrn)
     MessageType    from = X_PROBED;
     CARD32         accessible, bar_size;
 
-    if ((info->IsIGP)) {
+    if (info->ChipFamily == CHIP_FAMILY_RS690) {
+	pScrn->videoRam = INREG(RADEON_CONFIG_MEMSIZE);
+    } else if (info->IsIGP) {
         CARD32 tom = INREG(RADEON_NB_TOM);
 
 	pScrn->videoRam = (((tom >> 16) -
@@ -2111,7 +2135,7 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 
 static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 {
-#if !defined(__powerpc__)
+#if !defined(__powerpc__) && !defined(__sparc__)
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     CARD32 fp2_gen_ctl_save   = 0;
@@ -2826,8 +2850,8 @@ _X_EXPORT Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     memcpy(info->Options, RADEONOptions, sizeof(RADEONOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, info->Options);
 
-    /* By default, don't do VGA IOs on ppc */
-#if defined(__powerpc__) || !defined(WITH_VGAHW)
+    /* By default, don't do VGA IOs on ppc/sparc */
+#if defined(__powerpc__) || defined(__sparc__) || !defined(WITH_VGAHW)
     info->VGAAccess = FALSE;
 #else
     info->VGAAccess = TRUE;
@@ -4590,6 +4614,18 @@ void RADEONRestore(ScrnInfoPtr pScrn)
     usleep(100000);
 #endif
 
+    /* need to make sure we don't enable a crtc by accident or we may get a hang */
+    if (pRADEONEnt->HasCRTC2 && !info->IsSecondary) {
+	if (info->crtc2_on && xf86_config->num_crtc > 1) {
+	    crtc = xf86_config->crtc[1];
+	    crtc->funcs->dpms(crtc, DPMSModeOn);
+	}
+    }
+    if (info->crtc_on) {
+	crtc = xf86_config->crtc[0];
+	crtc->funcs->dpms(crtc, DPMSModeOn);
+    }
+
 #ifdef WITH_VGAHW
     if (info->VGAAccess) {
        vgaHWPtr hwp = VGAHWPTR(pScrn);
@@ -4606,17 +4642,6 @@ void RADEONRestore(ScrnInfoPtr pScrn)
     }
 #endif
 
-    /* need to make sure we don't enable a crtc by accident or we may get a hang */
-    if (pRADEONEnt->HasCRTC2 && !info->IsSecondary) {
-	if (info->crtc2_on && xf86_config->num_crtc > 1) {
-	    crtc = xf86_config->crtc[1];
-	    crtc->funcs->dpms(crtc, DPMSModeOn);
-	}
-    }
-    if (info->crtc_on) {
-	crtc = xf86_config->crtc[0];
-	crtc->funcs->dpms(crtc, DPMSModeOn);
-    }
     /* to restore console mode, DAC registers should be set after every other registers are set,
      * otherwise,we may get blank screen 
      */

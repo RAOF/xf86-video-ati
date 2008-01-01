@@ -115,6 +115,9 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn);
 extern Bool
 RADEONGetATOMConnectorInfoFromBIOSConnectorTable (ScrnInfoPtr pScrn);
 
+extern Bool
+RADEONGetATOMTVInfo(xf86OutputPtr output);
+
 extern int
 atombios_external_tmds_setup(xf86OutputPtr output, DisplayModePtr mode);
 
@@ -242,5 +245,8 @@ typedef struct _atomBiosHandle {
 } atomBiosHandleRec;
 
 # endif
+
+extern Bool
+RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, SET_CRTC_TIMING_PARAMETERS_PS_ALLOCATION *crtc_timing, uint32_t *pixel_clock);
 
 #endif /*  RHD_ATOMBIOS_H_ */

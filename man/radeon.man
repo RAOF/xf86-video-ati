@@ -362,7 +362,7 @@ shouldn't be if the console is using radeonfb or some other graphic
 mode driver. Some platforms like PowerPC have issues with those, and they aren't
 necessary unless you have a real text mode in console. The default is
 .B off
-on PowerPC and
+on PowerPC and SPARC and
 .B on
 on other architectures.
 .TP
@@ -471,7 +471,7 @@ The default is
 Enable this option to ignore lid status on laptops and always detect
 LVDS as attached.
 The default is
-.B off 
+.B on. 
 .TP
 
 .SH SEE ALSO
