@@ -1,3 +1,78 @@
+commit f65374f5e15bfd391a1838a686cd87d3bab8043d
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Mon Dec 31 09:44:34 2007 +1000
+
+    atombios: initial rs690 patches
+
+commit a674f683e6699c30664d9cd468a64de991c3fd7e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 30 17:43:17 2007 +1000
+
+    atombios: enable TV-out detection code - tv out works for me with this
+
+commit aa7c28cbd943bb525698515d444cb5097880e364
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 30 17:40:37 2007 +1000
+
+    atombios: enable support for using tv timings
+    
+    enable support for the atombios tv timings selection by programming the crtc
+    with the tv timings if a tv is detected on the output
+
+commit 0bc3fd595a73e12a424571697d164a09a6a4c072
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 30 16:39:58 2007 +1000
+
+    atombios: add support for reading tv standard from atombios
+    
+    fix typo in atombios header file
+
+commit bfa22d676a6f333503104041f62222f4de9bb7d8
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Dec 26 12:29:47 2007 -0500
+
+    RADEON: fix typo that broke tv load detection
+
+commit 0c99554c6fab1192f5e8595469c21b5f33e1eb4f
+Author: David Miller <davem@davemloft.net>
+Date:   Wed Dec 26 02:19:12 2007 -0500
+
+    [RADEON]: Add missing break in SCLK calculation.
+
+commit 6e0d5cc1c62fbfc1962fa0d6333f0c0a8c6327bd
+Author: David Miller <davem@davemloft.net>
+Date:   Wed Dec 26 02:17:34 2007 -0500
+
+    [RADEON]: Like powerpc, don't use VGA by default on sparc.
+
+commit 2b1fae668ddabbc72e5fc31365302ea722174df1
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Dec 26 02:04:06 2007 -0500
+
+    RADEON: fix PAL tv-out
+    
+    Many thanks to Andrew Randrianasulu for providing me with
+    pll reg dumps
+
+commit d736eb5732da573162c70712dc4e8b0114986702
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Dec 24 12:34:15 2007 -0500
+
+    RADEON: default "IgnoreLidStatus" to TRUE
+    
+    Seems there are lots of busted ACPI lid status and people
+    starting X with the lid closed.
+
+commit 653da558148cc601bc1f80253e92ef98c75ef37a
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Dec 24 01:11:56 2007 -0500
+
+    RADEON: restore crtc regs before VGA regs.
+    
+    It seems some radeons don't restore text console properly if
+    the crtc regs are restored after the VGA regs.
+    Thanks to Sverre Froyen for helping me track this down
+
 commit ad3325f672a241449ca239c8ee3a24b6d7703d76
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Sun Dec 23 17:18:42 2007 -0500
