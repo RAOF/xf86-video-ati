@@ -1,3 +1,23 @@
+commit 30cab1dbebb7bdb925f2fe9f91b84183312bbbfd
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Jan 2 15:41:01 2008 -0500
+
+    RADEON: Make sure all old IGP chips have HasSingleDac set
+    
+    fix the csv file and re-gen the headers.
+
+commit e8e585651215b011e3ad07c59d0eab9107ccd8c6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jan 2 10:14:46 2008 +1000
+
+    PLL/r600: tweak pll to pick first one found instead of keeping going
+
+commit 14aa4060ad27ecb3d40b2b17ee4cf7cc55a121dd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jan 2 09:49:44 2008 +1000
+
+    r600: fix tv-out output naming
+
 commit f65374f5e15bfd391a1838a686cd87d3bab8043d
 Author: Maciej Cencora <m.cencora@gmail.com>
 Date:   Mon Dec 31 09:44:34 2007 +1000
