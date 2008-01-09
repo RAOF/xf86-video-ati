@@ -2653,6 +2653,7 @@ static Bool RADEONPreInitControllers(ScrnInfoPtr pScrn)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     int i;
     int mask;
+    int found = 0;
 
     if (!info->IsPrimary && !info->IsSecondary)
 	mask = 3;
@@ -2677,17 +2678,26 @@ static Bool RADEONPreInitControllers(ScrnInfoPtr pScrn)
       
     RADEONPrintPortMap(pScrn);
 
-    for (i = 0; i < config->num_output; i++) 
-    {
-      xf86OutputPtr	      output = config->output[i];
+    info->first_load_no_devices = FALSE;
+    for (i = 0; i < config->num_output; i++) {
+	xf86OutputPtr	      output = config->output[i];
       
-      output->status = (*output->funcs->detect) (output);
-      ErrorF("finished output detect: %d\n", i);
-      if (info->IsPrimary || info->IsSecondary) {
-             if (output->status != XF86OutputStatusConnected)
-	         return FALSE;
-      }
+	output->status = (*output->funcs->detect) (output);
+	ErrorF("finished output detect: %d\n", i);
+	if (info->IsPrimary || info->IsSecondary) {
+	    if (output->status != XF86OutputStatusConnected)
+		return FALSE;
+	}
+	if (output->status != XF86OutputStatusDisconnected)
+	    found++;
     }
+
+    if (!found) {
+	/* nothing connected, light up some defaults so the server comes up */
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No connected devices found!\n");
+	info->first_load_no_devices = TRUE;
+    }
+
     ErrorF("finished all detect\n");
     return TRUE;
 }
@@ -3483,9 +3493,13 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 
     pScrn->vtSema = TRUE;
 
+    /* xf86CrtcRotate() accesses pScrn->pScreen */
+    pScrn->pScreen = pScreen;
+
+#if 1
     for (i = 0; i < xf86_config->num_crtc; i++) {
-	xf86CrtcPtr	crtc = xf86_config->crtc[i];
-	    
+	xf86CrtcPtr crtc = xf86_config->crtc[i];
+
 	/* Mark that we'll need to re-set the mode for sure */
 	memset(&crtc->mode, 0, sizeof(crtc->mode));
 	if (!crtc->desiredMode.CrtcHDisplay) {
@@ -3499,10 +3513,13 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 	    return FALSE;
 
     }
+#else
+    /* seems to do the wrong thing on some cards??? */
+    if (!xf86SetDesiredModes (pScrn))
+	return FALSE;
+#endif
 
     RADEONSaveScreen(pScreen, SCREEN_SAVER_ON);
-
-    //    pScrn->AdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
 
     /* Backing store setup */
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,

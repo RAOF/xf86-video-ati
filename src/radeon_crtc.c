@@ -174,7 +174,7 @@ RADEONComputePLL(RADEONPLLPtr pll,
 	    }
 	}
 	if (best_freq == freq)
-		break;
+	    break;
     }
 
     ErrorF("best_freq: %u\n", (unsigned int)best_freq);
@@ -361,7 +361,8 @@ static void *
 radeon_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
-    ScreenPtr pScreen = pScrn->pScreen;
+    /* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
+    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     unsigned long rotate_pitch;

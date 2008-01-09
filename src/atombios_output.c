@@ -316,6 +316,48 @@ atombios_output_lvds_setup(xf86OutputPtr output, DisplayModePtr mode)
     return ATOM_NOT_IMPLEMENTED;
 }
 
+#if 0
+
+static int
+atombios_output_scaler_setup(xf86OutputPtr output, DisplayModePtr mode)
+{
+    RADEONInfoPtr info       = RADEONPTR(output->scrn);
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    RADEONCrtcPrivatePtr radeon_crtc = output->crtc->driver_private;
+    ENABLE_SCALER_PS_ALLOCATION disp_data;
+    AtomBiosArgRec data;
+    unsigned char *space;
+
+    disp_data.ucScaler = radeon_crtc->crtc_id;
+
+    if (mode->Flags & RADEON_USE_RMX) {
+	ErrorF("Using RMX\n");
+	if (radeon_output->rmx_type == RMX_FULL ||
+	    radeon_output->rmx_type == RMX_ASPECT)
+	    disp_data.ucEnable = ATOM_SCALER_EXPANSION;
+	else if (radeon_output->rmx_type == RMX_CENTER)
+	    disp_data.ucEnable = ATOM_SCALER_CENTER;
+    } else {
+	ErrorF("Not using RMX\n");
+	disp_data.ucEnable = ATOM_SCALER_DISABLE;
+    }
+
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, EnableScaler);
+    data.exec.dataSpace = (void *)&space;
+    data.exec.pspace = &disp_data;
+
+    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+	ErrorF("scaler %d setup success\n", radeon_crtc->crtc_id);
+	return ATOM_SUCCESS;
+    }
+
+    ErrorF("scaler %d setup failed\n", radeon_crtc->crtc_id);
+    return ATOM_NOT_IMPLEMENTED;
+
+}
+
+#endif
+
 static AtomBiosResult
 atombios_display_device_control(atomBiosHandlePtr atomBIOS, int device, Bool state)
 {
@@ -431,8 +473,15 @@ atombios_output_dpms(xf86OutputPtr output, int mode)
 	   atombios_device_dpms(output, ATOM_DEVICE_CRT1_SUPPORT, mode);
        else if (radeon_output->devices & ATOM_DEVICE_CRT2_SUPPORT)
 	   atombios_device_dpms(output, ATOM_DEVICE_CRT2_SUPPORT, mode);
+   } else if (radeon_output->MonType == MT_CV) {
+       ErrorF("AGD: cv dpms\n");
+       if (radeon_output->devices & ATOM_DEVICE_CV_SUPPORT)
+	   atombios_device_dpms(output, ATOM_DEVICE_CV_SUPPORT, mode);
+   } else if (0 /*OUTPUT_IS_TV*/) {
+       ErrorF("AGD: tv dpms\n");
+       if (radeon_output->devices & ATOM_DEVICE_TV1_SUPPORT)
+	   atombios_device_dpms(output, ATOM_DEVICE_TV1_SUPPORT, mode);
    }
-
 #if 1
     /* release card lock */
     tmp = INREG(0x0028);
@@ -480,9 +529,12 @@ atombios_set_output_crtc_source(xf86OutputPtr output)
 	    } else if (radeon_output->MonType == MT_LCD) {
 		if (radeon_output->devices & ATOM_DEVICE_LCD1_SUPPORT)
 		    crtc_src_param.ucDevice = ATOM_DEVICE_LCD1_INDEX;
-	    } else if (OUTPUT_IS_TV || (radeon_output->MonType == MT_CV)) {
+	    } else if (OUTPUT_IS_TV) {
 		if (radeon_output->devices & ATOM_DEVICE_TV1_SUPPORT)
 		    crtc_src_param.ucDevice = ATOM_DEVICE_TV1_INDEX;
+	    } else if (radeon_output->MonType == MT_CV) {
+		if (radeon_output->devices & ATOM_DEVICE_CV_SUPPORT)
+		    crtc_src_param.ucDevice = ATOM_DEVICE_CV_INDEX;
 	    }
 	    break;
 	}
@@ -514,6 +566,7 @@ atombios_output_mode_set(xf86OutputPtr output,
 {
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
+    //atombios_output_scaler_setup(output, mode);
     atombios_set_output_crtc_source(output);
 
     if (radeon_output->MonType == MT_CRT) {
@@ -588,6 +641,15 @@ atombios_dac_detect(ScrnInfoPtr pScrn, xf86OutputPtr output)
     RADEONMonitorType MonType = MT_NONE;
     AtomBiosResult ret;
     uint32_t bios_0_scratch;
+
+    if (OUTPUT_IS_TV) {
+	if (xf86ReturnOptValBool(info->Options, OPTION_FORCE_TVOUT, FALSE)) {
+	    if (radeon_output->type == OUTPUT_STV)
+		return MT_STV;
+	    else
+		return MT_CTV;
+	}
+    }
 
     ret = atom_bios_dac_load_detect(info->atomBIOS, output);
     if (ret == ATOM_SUCCESS) {

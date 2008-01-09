@@ -75,6 +75,7 @@ typedef enum _AtomBiosRequestID {
     ATOM_DAC2_CRTC2_FORCE,
     ATOM_DAC2_CRTC2_MUX_REG_IND,
     ATOM_DAC2_CRTC2_MUX_REG_INFO,
+    ATOMBIOS_GET_CV_MODES,
     FUNC_END
 } AtomBiosRequestID;
 
@@ -101,7 +102,7 @@ typedef union AtomBiosArg
     struct rhdConnectorInfo	*connectorInfo;
     unsigned char*		EDIDBlock;
     atomBiosHandlePtr		atomhandle;
-    DisplayModePtr		mode;
+    DisplayModePtr		modes;
     AtomExecRec			exec;
     AtomFbRec			fb;
 } AtomBiosArgRec, *AtomBiosArgPtr;
@@ -247,6 +248,6 @@ typedef struct _atomBiosHandle {
 # endif
 
 extern Bool
-RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, SET_CRTC_TIMING_PARAMETERS_PS_ALLOCATION *crtc_timing, uint32_t *pixel_clock);
+RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, SET_CRTC_TIMING_PARAMETERS_PS_ALLOCATION *crtc_timing, int32_t *pixel_clock);
 
 #endif /*  RHD_ATOMBIOS_H_ */
