@@ -1,3 +1,159 @@
+commit 10e7636c02478b8ffe183bb0c46229ca0d6584e1
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Wed Jan 9 12:47:39 2008 -0500
+
+    RADEON: fix crtc routing on r4xx cards when using atom to init DVO chip
+
+commit 3af671f5963810dbfd63abc9889b1d46b68f404c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Jan 9 11:30:25 2008 -0500
+
+    RADEON: restore FP2 regs before external encoders
+    
+    This may fix krh's dvi problem
+
+commit 2a54c6bb09ade2ec8f998dfc1624017029d47fa3
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Jan 8 18:43:54 2008 -0500
+
+    RADEON: Make default output actually work...
+
+commit fa3e2055225c27e25465fc46786da1b7574fd3cc
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Jan 7 01:13:09 2008 -0500
+
+    RADEON: add default outputs if no connected devices
+    
+    If no connected devices found at server startup, default
+    to something so the server comes up.  LVDS on mobility chips,
+    DAC or TMDS on others.
+
+commit d972cc9237eb90b49b11f8d2bdc5b61f628911dc
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Jan 5 17:19:06 2008 -0500
+
+    RADEON: Fix TVStandard option
+
+commit 45656b9d5a426053da2a094de39c2690c0c6f799
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Jan 5 12:00:55 2008 -0500
+
+    R128: Like powerpc, don't use VGA by default on sparc
+
+commit b8e8db4675d07e45782de0d7c67ee0fd85eaedb3
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jan 4 20:16:19 2008 -0500
+
+    RADEON: fix tvdac load detection at server start up
+
+commit 3ba7f393d0669df36848715799de8affc10a5534
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jan 4 20:00:48 2008 -0500
+
+    RADEON: further fixup for pScrn->pScreen issue
+    
+    the previous fix seems to cause the driver to hang on
+    some cards.
+
+commit a0de9c0844f9e066e0f02e8cd8045bdd278e6494
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jan 4 19:48:30 2008 -0500
+
+    RADEON: improve ntsc image centering
+
+commit 03d2f25801c8a8ec15030f06008df112d07c1a2d
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Jan 4 18:19:54 2008 -0500
+
+    RADEON: fix compile
+
+commit 308848783ed9ae27aed7c7de6ee813d375ef495e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Jan 5 09:11:55 2008 +1000
+
+    i2c: a line mux of 0 is valid
+
+commit 94d5a432f72801f821d1c4ce952baba17552659d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jan 4 17:16:54 2008 +1000
+
+    atombios: i2c lines are all done with sw so we can accept any of them.
+    
+    hch reported this working on his laptop with 0x7e60 as EDID for LVDS
+
+commit 2e4473b63d65801ae8ac5a8391de232b2201d958
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Jan 3 15:47:50 2008 -0500
+
+    RADEON: fix crash when setting rotation in the config file
+    
+    xf86CrtcRotate() accesses pScrn->pScreen which is not set
+    during ScreenInit().  This should also be fixed in the server.
+    See bug 12129
+
+commit c652208861bffca94f06b7f67688ce220e050bfb
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Jan 3 17:54:58 2008 +0100
+
+    radeon: Adapt manpage to reality wrt AGP options.
+
+commit ab451e4b7a5423d61b57cf0646599267d8504af4
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Jan 3 17:52:39 2008 +0100
+
+    radeon: Miscellaneous warning fixes.
+
+commit 394c52273328e90518568b694ee79dc1a8dab651
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 3 18:56:16 2008 +1000
+
+    r500: tvout avoid doing dpms here it makes my tv mode go all crappy
+    
+    need to investigate further
+
+commit 1c647279f021d01e110980727b7c7dd7efae1642
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 3 11:55:28 2008 +1000
+
+    r600: change devices list depending on connector
+
+commit f36db6e10d32a68b32d20ae4ad02cfc0bfd1c9c3
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 3 11:27:47 2008 +1000
+
+    r600: fixup crash on unknown output type
+    
+    not sure this is 100% the correct approach
+
+commit 1accfdd590828e95e0d68a576c8ee05a06a86e43
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 2 19:48:28 2008 -0500
+
+    RADEON: various avivo tv-out related clean-ups
+
+commit ce34090c758ac91171cb6adb9b8a36e4adbf99cf
+Merge: 2180f04... 30cab1d...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 2 16:41:36 2008 -0500
+
+    Merge branch 'master' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit 2180f04b6fb94a638f6274cb4455d5688b324dbc
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 2 16:41:06 2008 -0500
+
+    RADEON: preliminary support for ATOM RMX
+    
+    not functional yet.
+
+commit dab4dc285154d40303aadaa849b85f8e251e578e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 2 16:27:19 2008 -0500
+
+    RADEON: add support for ATOM component video table
+    
+    Component output is still not working.
+
 commit 30cab1dbebb7bdb925f2fe9f91b84183312bbbfd
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Jan 2 15:41:01 2008 -0500

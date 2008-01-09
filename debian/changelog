@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.7.198~git20080109.10e7636c-1) experimental; urgency=low
+
+  * New upstream snapshot, containing commits up to 10e7636c.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 09 Jan 2008 23:43:53 +0100
+
 xserver-xorg-video-ati (1:6.7.198~git20080102.30cab1db-1) experimental; urgency=low
 
   * New upstream snapshot, containing commits up to 30cab1db.
