@@ -18,31 +18,27 @@
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
- *
- * DRI support by:
- *    Leif Delgass <ldelgass@retinalburn.net>
  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#ifdef XFree86LOADER
-
 #include "ati.h"
-#include "atiload.h"
 #include "ativersion.h"
+
+#include "atimach64version.h"
 
 /* Module loader interface for subsidiary driver module */
 
 static XF86ModuleVersionInfo ATIVersionRec =
 {
-    "atimisc",
+    "mach64",
     MODULEVENDORSTRING,
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    ATI_VERSION_MAJOR, ATI_VERSION_MINOR, ATI_VERSION_PATCH,
+    MACH64_VERSION_MAJOR, MACH64_VERSION_MINOR, MACH64_VERSION_PATCH,
     ABI_CLASS_VIDEODRV,
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
@@ -68,73 +64,8 @@ ATISetup
     if (!Inited)
     {
         /* Ensure main driver module is loaded, but not as a submodule */
-        if (!xf86ServerIsOnlyDetecting())
-        {
-            if (!LoaderSymbol(ATI_NAME))
-                xf86LoadOneModule(ATI_DRIVER_NAME, Options);
-
-            /* ati & atimisc module versions must match */
-            do
-            {
-                XF86ModuleData *pModuleData = LoaderSymbol("atiModuleData");
-
-                if (pModuleData)
-                {
-                    XF86ModuleVersionInfo *pModuleInfo = pModuleData->vers;
-
-                    if ((pModuleInfo->majorversion == ATI_VERSION_MAJOR) &&
-                        (pModuleInfo->minorversion == ATI_VERSION_MINOR) &&
-                        (pModuleInfo->patchlevel == ATI_VERSION_PATCH))
-                        break;
-                }
-
-                xf86Msg(X_ERROR,
-                        "\"ati\" and \"atimisc\" module versions must"
-                        " match.\n");
-
-                if (ErrorMajor)
-                    *ErrorMajor = (int)LDR_MISMATCH;
-                if (ErrorMinor)
-                    *ErrorMinor = (int)LDR_MISMATCH;
-
-                return NULL;
-            } while (0);
-        }
-
-        /*
-         * Tell loader about symbols from other modules that this module might
-         * refer to.
-         */
-        xf86LoaderRefSymLists(
-            ATIint10Symbols,
-            ATIddcSymbols,
-            ATIvbeSymbols,
-
-#ifdef XF86DRI_DEVEL
-
-            ATIdrmSymbols,
-            ATIdriSymbols,
-
-#endif /* XF86DRI_DEVEL */
-
-            ATIfbSymbols,
-            ATIshadowfbSymbols,
-
-#ifdef USE_EXA
-
-            ATIexaSymbols,
-
-#endif /* USE_EXA */
-
-#ifdef USE_XAA
-
-            ATIxaaSymbols,
-
-#endif /* USE_XAA */
-
-            ATIramdacSymbols,
-            ATIi2cSymbols,
-            NULL);
+        if (!xf86ServerIsOnlyDetecting() && !LoaderSymbol(ATI_NAME))
+            xf86LoadOneModule(ATI_DRIVER_NAME, Options);
 
         Inited = TRUE;
     }
@@ -142,12 +73,10 @@ ATISetup
     return (pointer)TRUE;
 }
 
-/* The following record must be called atimiscModuleData */
-_X_EXPORT XF86ModuleData atimiscModuleData =
+/* The following record must be called mach64ModuleData */
+_X_EXPORT XF86ModuleData mach64ModuleData =
 {
     &ATIVersionRec,
     ATISetup,
     NULL
 };
-
-#endif /* XFree86LOADER */

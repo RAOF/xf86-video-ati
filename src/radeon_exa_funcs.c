@@ -55,7 +55,6 @@
 #include <string.h>
 
 #include "radeon.h"
-#include "atidri.h"
 
 #include "exa.h"
 
@@ -534,9 +533,17 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
 
 #ifdef RENDER
     if (info->RenderAccel) {
-	if (info->ChipFamily >= CHIP_FAMILY_R300) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
-			       "unsupported on R300 type cards and newer.\n");
+	if (info->ChipFamily >= CHIP_FAMILY_RV515)
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
+			       "unsupported on R500 and newer cards.\n");
+	else if (IS_R300_VARIANT && !info->IsIGP) {
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Render acceleration "
+			       "enabled for R300 type cards.\n");
+		info->exa->CheckComposite = R300CheckComposite;
+		info->exa->PrepareComposite =
+		    FUNC_NAME(R300PrepareComposite);
+		info->exa->Composite = FUNC_NAME(RadeonComposite);
+		info->exa->DoneComposite = RadeonDoneComposite;
 	} else if ((info->ChipFamily == CHIP_FAMILY_RV250) || 
 		   (info->ChipFamily == CHIP_FAMILY_RV280) || 
 		   (info->ChipFamily == CHIP_FAMILY_RS300) || 

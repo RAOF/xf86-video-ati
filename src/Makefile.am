@@ -86,10 +86,10 @@ ati_drv_ladir = @moduledir@/drivers
 ati_drv_la_SOURCES = \
 	ati.c atimodule.c
 
-atimisc_drv_la_LTLIBRARIES = atimisc_drv.la
-atimisc_drv_la_LDFLAGS = -module -avoid-version
-atimisc_drv_ladir = @moduledir@/drivers
-atimisc_drv_la_SOURCES = \
+mach64_drv_la_LTLIBRARIES = mach64_drv.la
+mach64_drv_la_LDFLAGS = -module -avoid-version
+mach64_drv_ladir = @moduledir@/drivers
+mach64_drv_la_SOURCES = \
 	atibus.c atichip.c atiprobe.c atividmem.c \
 	atiadjust.c atiaudio.c aticlock.c aticonfig.c aticonsole.c \
 	atidac.c atidecoder.c atidsp.c atii2c.c \
@@ -99,16 +99,12 @@ atimisc_drv_la_SOURCES = \
 	atiload.c atimisc.c atimach64probe.c $(ATIMISC_CPIO_SOURCES) \
 	$(ATIMISC_DGA_SOURCES) $(ATIMISC_DRI_SRCS) $(ATIMISC_EXA_SOURCES)
 
-if XSERVER_LIBPCIACCESS
-# r128 has not been ported yet
-else
 r128_drv_la_LTLIBRARIES = r128_drv.la
 r128_drv_la_LDFLAGS = -module -avoid-version
 r128_drv_ladir = @moduledir@/drivers
 r128_drv_la_SOURCES = \
 	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
 	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
-endif
 
 radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
@@ -179,7 +175,6 @@ EXTRA_DIST = \
 	atimach64io.h \
 	atimach64probe.h \
 	atimode.h \
-	atimodule.h \
 	atioption.h \
 	atipreinit.h \
 	atiprint.h \

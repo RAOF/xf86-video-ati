@@ -20,13 +20,40 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef ___ATILOAD_H___
-#define ___ATILOAD_H___ 1
+#ifndef _MACH64_VERSION_H_
+#define _MACH64_VERSION_H_ 1
 
-#include "atipriv.h"
+#undef  MACH64_NAME
+#undef  MACH64_DRIVER_NAME
+#undef  MACH64_VERSION_MAJOR
+#undef  MACH64_VERSION_MINOR
+#undef  MACH64_VERSION_PATCH
+#undef  MACH64_VERSION_CURRENT
+#undef  MACH64_VERSION_EVALUATE
+#undef  MACH64_VERSION_STRINGIFY
+#undef  MACH64_VERSION_NAME
 
-#include "xf86str.h"
+#define MACH64_NAME          "MACH64"
+#define MACH64_DRIVER_NAME   "mach64"
 
-extern pointer ATILoadModules(ScrnInfoPtr, ATIPtr);
+#define MACH64_VERSION_MAJOR 6
+#define MACH64_VERSION_MINOR 7
+#define MACH64_VERSION_PATCH 0
 
-#endif /* ___ATILOAD_H___ */
+#ifndef MACH64_VERSION_EXTRA
+#define MACH64_VERSION_EXTRA ""
+#endif
+
+#define MACH64_VERSION_CURRENT \
+    ((MACH64_VERSION_MAJOR << 20) | \
+     (MACH64_VERSION_MINOR << 10) | \
+     (MACH64_VERSION_PATCH))
+
+#define MACH64_VERSION_EVALUATE(__x) #__x
+#define MACH64_VERSION_STRINGIFY(_x) MACH64_VERSION_EVALUATE(_x)
+#define MACH64_VERSION_NAME                                             \
+    MACH64_VERSION_STRINGIFY(MACH64_VERSION_MAJOR) "."                  \
+    MACH64_VERSION_STRINGIFY(MACH64_VERSION_MINOR) "."                  \
+    MACH64_VERSION_STRINGIFY(MACH64_VERSION_MINOR) MACH64_VERSION_EXTRA
+
+#endif /* _MACH64_VERSION_H_ */

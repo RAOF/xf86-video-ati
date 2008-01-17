@@ -90,18 +90,18 @@ typedef enum
 
 typedef enum
 {
-    DAC_UNKNOWN = -1,
-    DAC_PRIMARY = 0,
-    DAC_TVDAC   = 1,
-    DAC_NONE    = 2
+    DAC_NONE    = 0,
+    DAC_PRIMARY = 1,
+    DAC_TVDAC   = 2,
+    DAC_EXT     = 3
 } RADEONDacType;
 
 typedef enum
 {
-    TMDS_UNKNOWN = -1,
-    TMDS_INT     = 0,
-    TMDS_EXT     = 1,
-    TMDS_NONE    = 2
+    TMDS_NONE    = 0,
+    TMDS_INT     = 1,
+    TMDS_EXT     = 2,
+    TMDS_LVTMA   = 3
 } RADEONTmdsType;
 
 typedef enum
@@ -543,14 +543,9 @@ typedef struct
 } RADEONEntRec, *RADEONEntPtr;
 
 /* radeon_probe.c */
-extern const OptionInfoRec *RADEONAvailableOptions(int, int);
-extern void                 RADEONIdentify(int);
-extern Bool                 RADEONProbe(DriverPtr, int);
-
 extern PciChipsets          RADEONPciChipsets[];
 
 /* radeon_driver.c */
-extern void                 RADEONLoaderRefSymLists(void);
 extern Bool                 RADEONPreInit(ScrnInfoPtr, int);
 extern Bool                 RADEONScreenInit(int, ScreenPtr, int, char **);
 extern Bool                 RADEONSwitchMode(int, DisplayModePtr, int);

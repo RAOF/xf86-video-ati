@@ -28,6 +28,7 @@
 #include "atichip.h"
 #include "atimach64io.h"
 #include "atimach64probe.h"
+#include "atimach64version.h"
 #include "atioption.h"
 #include "ativersion.h"
 
@@ -106,11 +107,11 @@ Mach64PciChipsets[] = {
     {-1, -1, RES_UNDEFINED}
 };
 
-_X_EXPORT const OptionInfoRec *
+static const OptionInfoRec *
 Mach64AvailableOptions(int chipid, int busid)
 {
     /*
-     * Return options defined in the atimisc submodule which will have been
+     * Return options defined in the mach64 submodule which will have been
      * loaded by this point.
      */
     return ATIOptionsWeak();
@@ -121,13 +122,13 @@ Mach64AvailableOptions(int chipid, int busid)
  *
  * Print the driver's list of chipset names.
  */
-_X_EXPORT void
+static void
 Mach64Identify
 (
     int flags
 )
 {
-    xf86Msg(X_INFO, "%s: %s\n", ATI_NAME,
+    xf86Msg(X_INFO, "%s: %s\n", MACH64_NAME,
             "Driver for ATI Mach64 chipsets");
 }
 
@@ -137,12 +138,12 @@ Mach64Identify
  * This function is called once, at the start of the first server generation to
  * do a minimal probe for supported hardware.
  */
-_X_EXPORT Bool
+static Bool
 Mach64Probe(DriverPtr pDriver, int flags)
 {
-    GDevPtr *devSections;
+    GDevPtr *devSections, *ATIGDevs, *Mach64GDevs;
     int     *usedChips;
-    int     numDevSections;
+    int     numDevSections, nATIGDev, nMach64GDev;
     int     numUsed;
     Bool    ProbeSuccess = FALSE;
 
@@ -151,10 +152,32 @@ Mach64Probe(DriverPtr pDriver, int flags)
         return FALSE;
 #endif
 
-    if ((numDevSections = xf86MatchDevice(ATI_DRIVER_NAME, &devSections)) <= 0)
+    /* Collect unclaimed device sections for both driver names */
+    nATIGDev = xf86MatchDevice(ATI_DRIVER_NAME, &ATIGDevs);
+    nMach64GDev = xf86MatchDevice(MACH64_DRIVER_NAME, &Mach64GDevs);
+
+    if ((numDevSections = nATIGDev + nMach64GDev) <= 0)
         return FALSE;
 
-    numUsed = xf86MatchPciInstances(ATI_DRIVER_NAME, PCI_VENDOR_ATI,
+    if (ATIGDevs == NULL) {
+        devSections = Mach64GDevs;
+        numDevSections = nMach64GDev;
+    } else if (Mach64GDevs == NULL) {
+        devSections = ATIGDevs;
+        numDevSections = nATIGDev;
+    } else {
+        /* Combine into one list */
+        devSections = xnfalloc((numDevSections + 1) * sizeof(GDevPtr));
+        (void)memcpy(devSections,
+                     ATIGDevs, nATIGDev * sizeof(GDevPtr));
+        (void)memcpy(devSections + nATIGDev,
+                     Mach64GDevs, nMach64GDev * sizeof(GDevPtr));
+        devSections[numDevSections] = NULL;
+        xfree(ATIGDevs);
+        xfree(Mach64GDevs);
+    }
+
+    numUsed = xf86MatchPciInstances(MACH64_NAME, PCI_VENDOR_ATI,
                                     Mach64Chipsets, Mach64PciChipsets,
                                     devSections, numDevSections,
                                     pDriver, &usedChips);
@@ -177,9 +200,9 @@ Mach64Probe(DriverPtr pDriver, int flags)
             if (!pScrn)
                 continue;
 
-            pScrn->driverVersion = ATI_VERSION_CURRENT;
-            pScrn->driverName    = ATI_DRIVER_NAME;
-            pScrn->name          = ATI_NAME;
+            pScrn->driverVersion = MACH64_VERSION_CURRENT;
+            pScrn->driverName    = MACH64_DRIVER_NAME;
+            pScrn->name          = MACH64_NAME;
             pScrn->Probe         = Mach64Probe;
             pScrn->PreInit       = ATIPreInit;
             pScrn->ScreenInit    = ATIScreenInit;
@@ -198,3 +221,14 @@ Mach64Probe(DriverPtr pDriver, int flags)
 
     return ProbeSuccess;
 }
+
+_X_EXPORT DriverRec MACH64 =
+{
+    MACH64_VERSION_CURRENT,
+    MACH64_DRIVER_NAME,
+    Mach64Identify,
+    Mach64Probe,
+    Mach64AvailableOptions,
+    NULL,
+    0
+};
