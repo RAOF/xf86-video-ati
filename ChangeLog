@@ -1,3 +1,135 @@
+commit 6bd510a211f25d52e74791e4a429cd2218ced541
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 16 18:09:49 2008 -0500
+
+    RADEON: add a message about render accel on newer cards
+
+commit 85bf3439fe2579aec48f5cd8d65a9d51b1ae8535
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 16 17:52:06 2008 -0500
+
+    R300: only init3d on r3xx
+
+commit dbb2ca471dfbff245b30c5055871dee0dc0e3d15
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 16 17:10:02 2008 -0500
+
+    R300: only enable render accel on non-IGP r3xx/r4xx chips for now
+
+commit 3c72b100bcfacee600644669b586e86cfd32754e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Jan 16 16:55:42 2008 -0500
+
+    R300: First pass at render accel
+    
+    This first pass is pretty limited.  All it currently supports
+    is transforms for rotation.  No blending yet.
+    
+    Based on inital implementation from Wolke Liu with
+    additional lock-up fixes by Dave Airlie.
+
+commit 2ba3562d2af911fdd90881049599e239d27260bc
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Jan 12 17:11:59 2008 +0200
+
+    ati wrapper: xf86PciInfo.h is enough
+
+commit c2caeb11a97dad5379d70881c5c0fd834a8c3d54
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Jan 12 16:18:34 2008 +0200
+
+    ati wrapper: add DriverRec's and use them
+
+commit 19e1b180fec6f83a474e125465bc60111c0f43e0
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Jan 12 16:18:07 2008 +0200
+
+    mach64: load for both "ati" and "mach64" as driver names
+    
+    similar to r128/radeon
+
+commit 92f54400d5450b29b3a76d5ecc927cf0d73e156e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Jan 12 16:17:47 2008 +0200
+
+    mach64: add version (need not match with ati)
+    
+    similar to r128/radeon
+
+commit 311ec7b6c54a50a4b8a5a445f7283da2b0b2e0f5
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Jan 12 16:17:21 2008 +0200
+
+    atimisc: rename to mach64
+
+commit 5244e235262290eab8a3546f449295c12ed8f6c7
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Jan 14 16:11:09 2008 -0500
+
+    ATOMBIOS: disable the scaler by default on avivo cards
+    
+    Fixes bug 14001
+
+commit 729da30c80d6545b75c8faea44754634f477cc09
+Merge: 000741e... 625a885...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Jan 14 10:05:01 2008 -0500
+
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit 625a885a964488da2a35065eb597a17ee57b22a9
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Jan 9 17:39:56 2008 +0200
+
+    ati wrapper: use pci ids
+
+commit 48865200ca9f1daf87e52620b9f8175f88dd886f
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Jan 9 19:01:04 2008 +0200
+
+    radeon: remove stray include
+
+commit a5a6b873353611cb7e46e5e375f039957c7051a7
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Jan 9 13:03:32 2008 +0200
+
+    radeon: remove stray _X_EXPORT
+
+commit 80c9974b6cdc0147d777df6990b3f3aacd87969d
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Tue Jan 8 18:15:47 2008 +0200
+
+    r128: pci-rework conversion
+    
+    compile-tested only
+
+commit cd4b39403d74f314e1c2cfa4cf0e4fe542891dc3
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Mar 10 23:12:15 2007 +0200
+
+    Drop symbol lists from r128, radeon, theatre.
+    
+    compile-tested only
+
+commit 63b4b8213fabc5a57f897b60b6eaa9f78d86e6ff
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Mar 21 20:24:22 2007 +0200
+
+    [mach64] Drop symbol lists.
+    
+    egrep LOADER\|SymLists\|Symbols src/*.[hc]
+    
+    not needed after server commit bca9364f3f4a2376edbcf57a34f704ce28be21ba, i.e.
+    xserver 1.2
+    
+    compile-tested only
+
+commit 000741e250e54122b0adc91694eb4bfa320a70fb
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Jan 10 14:49:48 2008 -0500
+
+    RADEON: clean up output handling
+
 commit 10e7636c02478b8ffe183bb0c46229ca0d6584e1
 Author: Kristian Høgsberg <krh@bitplanet.net>
 Date:   Wed Jan 9 12:47:39 2008 -0500

@@ -20786,12 +20786,12 @@ if test -n "$PKG_CONFIG"; then
         pkg_cv_XORG_CFLAGS="$XORG_CFLAGS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xorg-server xproto fontsproto \$REQUIRED_MODULES\"") >&5
-  ($PKG_CONFIG --exists --print-errors "xorg-server xproto fontsproto $REQUIRED_MODULES") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xorg-server >= 1.2 xproto fontsproto \$REQUIRED_MODULES\"") >&5
+  ($PKG_CONFIG --exists --print-errors "xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_XORG_CFLAGS=`$PKG_CONFIG --cflags "xorg-server xproto fontsproto $REQUIRED_MODULES" 2>/dev/null`
+  pkg_cv_XORG_CFLAGS=`$PKG_CONFIG --cflags "xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -20804,12 +20804,12 @@ if test -n "$PKG_CONFIG"; then
         pkg_cv_XORG_LIBS="$XORG_LIBS"
     else
         if test -n "$PKG_CONFIG" && \
-    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xorg-server xproto fontsproto \$REQUIRED_MODULES\"") >&5
-  ($PKG_CONFIG --exists --print-errors "xorg-server xproto fontsproto $REQUIRED_MODULES") 2>&5
+    { (echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"xorg-server >= 1.2 xproto fontsproto \$REQUIRED_MODULES\"") >&5
+  ($PKG_CONFIG --exists --print-errors "xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES") 2>&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  pkg_cv_XORG_LIBS=`$PKG_CONFIG --libs "xorg-server xproto fontsproto $REQUIRED_MODULES" 2>/dev/null`
+  pkg_cv_XORG_LIBS=`$PKG_CONFIG --libs "xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES" 2>/dev/null`
 else
   pkg_failed=yes
 fi
@@ -20828,14 +20828,14 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        XORG_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xorg-server xproto fontsproto $REQUIRED_MODULES"`
+	        XORG_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES"`
         else
-	        XORG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xorg-server xproto fontsproto $REQUIRED_MODULES"`
+	        XORG_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$XORG_PKG_ERRORS" >&5
 
-	{ { echo "$as_me:$LINENO: error: Package requirements (xorg-server xproto fontsproto $REQUIRED_MODULES) were not met:
+	{ { echo "$as_me:$LINENO: error: Package requirements (xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES) were not met:
 
 $XORG_PKG_ERRORS
 
@@ -20846,7 +20846,7 @@ Alternatively, you may set the environment variables XORG_CFLAGS
 and XORG_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 " >&5
-echo "$as_me: error: Package requirements (xorg-server xproto fontsproto $REQUIRED_MODULES) were not met:
+echo "$as_me: error: Package requirements (xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES) were not met:
 
 $XORG_PKG_ERRORS
 
