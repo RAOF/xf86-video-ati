@@ -1,3 +1,181 @@
+commit f65e8dfac23adfa199026765fe3a1ea08cf4da67
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sun Feb 3 00:09:59 2008 -0500
+
+    RADEON: rework i2c handling
+    
+    Split out clk, data, and lock regs and masks.  some cards use different
+    regs and masks for each.  For cards with ATOMBIOS, use the i2c bios
+    table to grab the i2c data.
+
+commit a38a903debc0a50dbc73f59dc2741bbea76d2bd9
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Feb 1 02:59:07 2008 -0500
+
+    RADEON: don't restore LVDS_PLL_CNTL for now
+    
+    seems to cause problems with resume for some users.
+    this needs further investigation.
+    see bug 12596
+
+commit 5d7bea2b62c86868baf1960665a40249a43bafc5
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Feb 1 02:53:22 2008 -0500
+
+    RADEON: remove redundant RADEONDisableDisplays()
+    
+    use RADEONBlank() instead
+
+commit 73b437ce232c94c0067a0d2f70538b6e1e8c07a7
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Feb 1 02:47:06 2008 -0500
+
+    RADEON: remove unused "aspect" scaler option
+
+commit f1fb9e4daa29bc379f653f847254db1496b625fd
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Feb 1 02:39:18 2008 -0500
+
+    RADEON: Implement "center" mode for RMX on legacy radeons
+
+commit bcd590103e04bfdb4f12413beacebf344f07e88e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Jan 29 12:12:54 2008 -0500
+
+    RADEON: update man page to reflect AGP 1x default revert
+
+commit 09348a83d06ba9d3129499c4daedd44a68771530
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Jan 29 12:09:24 2008 -0500
+
+    Seems the default is more reliable... we can't win.
+    
+    Revert "radeon: Default to 1x again with non-v3 AGP cards."
+    
+    This reverts commit b653e5a628bfa4dfb168e96f93f41eb910f409fb.
+
+commit 0c26806245381b925b73ff9f3b747e3dcf0ebd6f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Jan 29 10:26:48 2008 -0500
+
+    RADEON: Add new RV380 pci id
+    
+    bug 14289
+
+commit ce77ed78a877023da72dbe51609aef9a07e250b1
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Mon Jan 28 19:02:56 2008 -0500
+
+    RS690: Implement MC idle check
+
+commit b7de4ff52cfbdd85ee65000613632e21b92af24e
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Sat Jan 26 19:28:05 2008 +0200
+
+    mach64: add hint for sparc and minor cosmetic.
+
+commit 09d713aa0ed6367b4457420b3c2832fe8eca9b00
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Jan 23 18:05:41 2008 -0500
+
+    Revert "RADEON: adjust PAL mode hstart"
+    
+    This reverts commit 719a9a376e34d99032af75e3f7b002670ccb816b.
+    
+    This breaks TV out on some cards.
+
+commit 719a9a376e34d99032af75e3f7b002670ccb816b
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Jan 20 18:40:53 2008 -0500
+
+    RADEON: adjust PAL mode hstart
+    
+    Most people seem to get a more aligned picture with this setting
+
+commit b2db8657fb888cff6d64c6dcb182caac389776ce
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Jan 20 18:33:22 2008 -0500
+
+    RADEON: re-work i2c for DDC
+    
+    Unify the radeon/avivo paths and grab the data/clk masks from bios
+    if available
+
+commit a43003b24022a833e604f41b2873c0350b34181c
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Jan 19 18:49:53 2008 -0500
+
+    RADEON: get dac2 adj values from the bios tables
+
+commit d4596c52ac9994be26e9ec2d7d57b3892c34abdb
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Jan 19 17:17:26 2008 -0500
+
+    RADEON: grab pll_in_min/pll_in_max from bios tables if available
+
+commit 9a0947c812d0d38d1bca6a91140ac210831a6cb4
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Jan 19 13:57:50 2008 -0500
+
+    ATOM: Use LVDS edid from bios if available
+
+commit 7238258c12def8ef273e5362f716d165f720c5a5
+Author: Kusanagi Kouichi <slash@ma.neweb.ne.jp>
+Date:   Sat Jan 19 15:04:21 2008 +0100
+
+    radeon: Partial fix for XVideo RGB image distortions.
+
+commit 32be3cf9d6c34e60ff8c3d6cfe9f73f1869c50e4
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Fri Jan 18 14:42:14 2008 -0500
+
+    RADEON: print the name of the output when printing the EDID
+
+commit 4ba9430ee97dbce8f77db8de6ce9b753a75e453d
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Jan 18 18:18:18 2008 +0200
+
+    mach64: workaround for corruption at upper-left
+    
+    commit possible workaround, it's reported multiple times ...
+
+commit 12c00111b68c9cf4872a424258c6f8b7247aac47
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Jan 18 18:17:40 2008 +0200
+
+    use stand-alone drivers for each chip family.
+    
+    Do not load the ati wrapper when the user specifies the sub-driver name in
+    the Driver line of xorg.conf.  Also, for -configure cause the wrapper to fail
+    and let each sub-driver speak for themselves.
+
+commit 24c7d134cd450f9e2cca85e4a2fc3253d250be04
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Jan 18 09:50:38 2008 -0500
+
+    RADEON: make sure EXA Composite is actually disabled on XPRESS chips.
+
+commit eaf425436008092abe81208321a2b3b6698a5d79
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jan 18 20:11:57 2008 +1000
+
+    fixup register 6594 save/restore
+
+commit 2a89a31481d71a56a9930073cf99d3ae7b4290e1
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Jan 17 15:08:17 2008 -0500
+
+    RADEON: use radeon_output->Flags for tracking RMX rather than mode->Flags
+
+commit 495e3119250ffb48489debbaabe560d23753cc43
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Jan 17 14:56:19 2008 -0500
+
+    AVIVO: Add support for RMX
+    
+    Both centered and expansion modes are supported.  Select
+    using output attributes.
+
 commit 6bd510a211f25d52e74791e4a429cd2218ced541
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Jan 16 18:09:49 2008 -0500
