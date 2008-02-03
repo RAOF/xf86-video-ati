@@ -53,6 +53,8 @@
 #include "xaa.h"
 #endif
 
+extern DriverRec RADEON;
+
 typedef enum
 {
     MT_UNKNOWN = -1,
@@ -115,8 +117,7 @@ typedef enum
 {
     RMX_OFF,
     RMX_FULL,
-    RMX_CENTER,
-    RMX_ASPECT
+    RMX_CENTER
 } RADEONRMXType;
 
 typedef struct {
@@ -158,6 +159,23 @@ typedef enum
     TV_STD_PAL_CN    = 128,
 } TVStd;
 
+typedef struct
+{
+    Bool   valid;
+    CARD32 mask_clk_reg;
+    CARD32 mask_data_reg;
+    CARD32 put_clk_reg;
+    CARD32 put_data_reg;
+    CARD32 get_clk_reg;
+    CARD32 get_data_reg;
+    CARD32 mask_clk_mask;
+    CARD32 mask_data_mask;
+    CARD32 put_clk_mask;
+    CARD32 put_data_mask;
+    CARD32 get_clk_mask;
+    CARD32 get_data_mask;
+} RADEONI2CBusRec, *RADEONI2CBusPtr;
+
 typedef struct _RADEONCrtcPrivateRec {
 #ifdef USE_XAA
     FBLinearPtr rotate_mem_xaa;
@@ -181,7 +199,6 @@ typedef struct _RADEONCrtcPrivateRec {
 } RADEONCrtcPrivateRec, *RADEONCrtcPrivatePtr;
 
 typedef struct {
-    CARD32 ddc_line;
     RADEONDacType DACType;
     RADEONTmdsType TMDSType;
     RADEONConnectorType ConnectorType;
@@ -189,6 +206,7 @@ typedef struct {
     int output_id;
     int devices;
     int hpd_mask;
+    RADEONI2CBusRec ddc_i2c;
 } RADEONBIOSConnector;
 
 typedef struct _RADEONOutputPrivateRec {
@@ -204,7 +222,10 @@ typedef struct _RADEONOutputPrivateRec {
     int crtc_num;
     int DDCReg;
     I2CBusPtr         pI2CBus;
-    CARD32            tv_dac_adj;
+    RADEONI2CBusRec   ddc_i2c;
+    CARD32            ps2_tvdac_adj;
+    CARD32            pal_tvdac_adj;
+    CARD32            ntsc_tvdac_adj;
     /* panel stuff */
     int               PanelXRes;
     int               PanelYRes;
@@ -221,7 +242,7 @@ typedef struct _RADEONOutputPrivateRec {
     RADEONRMXType     rmx_type;
     /* dvo */
     I2CDevPtr         DVOChip;
-    int               dvo_i2c_reg;
+    RADEONI2CBusRec   dvo_i2c;
     int               dvo_i2c_slave_addr;
     Bool              dvo_duallink;
     /* TV out */
@@ -289,6 +310,7 @@ struct avivo_grph_state {
     CARD32 viewport_start;
     CARD32 viewport_size;
     CARD32 scl_enable;
+    CARD32 scl_tap_control;
 };
 
 struct avivo_dac_state {
@@ -424,6 +446,7 @@ typedef struct {
     CARD32            fp_h_sync_strt_wid;
     CARD32            fp_h2_sync_strt_wid;
     CARD32            fp_horz_stretch;
+    CARD32            fp_horz_vert_active;
     CARD32            fp_panel_cntl;
     CARD32            fp_v_sync_strt_wid;
     CARD32            fp_v2_sync_strt_wid;

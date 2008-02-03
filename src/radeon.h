@@ -811,6 +811,7 @@ extern Bool        RADEONGetClockInfoFromBIOS (ScrnInfoPtr pScrn);
 extern Bool        RADEONGetLVDSInfoFromBIOS (xf86OutputPtr output);
 extern Bool        RADEONGetTMDSInfoFromBIOS (xf86OutputPtr output);
 extern Bool        RADEONGetTVInfoFromBIOS (xf86OutputPtr output);
+extern Bool        RADEONGetDAC2InfoFromBIOS (xf86OutputPtr output);
 extern Bool        RADEONGetHardCodedEDIDFromBIOS (xf86OutputPtr output);
 
 extern void        RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
@@ -868,6 +869,9 @@ extern Bool
 RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output);
 extern Bool
 RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output);
+
+extern RADEONI2CBusRec
+legacy_setup_i2c_bus(int ddc_line);
 
 extern void
 radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y);

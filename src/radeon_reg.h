@@ -337,6 +337,8 @@
 #       define RADEON_CRTC2_HSYNC_DIS       (1 << 28)
 #       define RADEON_CRTC2_VSYNC_DIS       (1 << 29)
 #define RADEON_CRTC_MORE_CNTL               0x27c
+#       define RADEON_CRTC_AUTO_HORZ_CENTER_EN (1<<2)
+#       define RADEON_CRTC_AUTO_VERT_CENTER_EN (1<<3)
 #       define RADEON_CRTC_H_CUTOFF_ACTIVE_EN (1<<4)
 #       define RADEON_CRTC_V_CUTOFF_ACTIVE_EN (1<<5)
 #define RADEON_CRTC_GUI_TRIG_VLINE          0x0218
@@ -812,6 +814,7 @@
 #       define RADEON_HORZ_AUTO_RATIO         (1      << 27)
 #       define RADEON_HORZ_FP_LOOP_STRETCH    (0x7    << 28)
 #       define RADEON_HORZ_AUTO_RATIO_INC     (1      << 31)
+#define RADEON_FP_HORZ_VERT_ACTIVE          0x0278
 #define RADEON_FP_V_SYNC_STRT_WID           0x02c8
 #define RADEON_FP_VERT_STRETCH              0x0290
 #define RADEON_FP_V2_SYNC_STRT_WID          0x03c8
@@ -3281,6 +3284,8 @@
 #define RS690_MC_FB_LOCATION			0x100
 #define RS690_MC_AGP_LOCATION			0x101
 #define RS690_MC_AGP_BASE			0x102
+#define RS690_MC_STATUS                         0x90
+#define RS690_MC_STATUS_IDLE                     (1 << 0)
 
 #define AVIVO_MC_INDEX						0x0070
 #define R520_MC_STATUS 0x00
@@ -3439,6 +3444,7 @@
 #define AVIVO_D1MODE_EXT_OVERSCAN_TOP_BOTTOM    0x658c
 
 #define AVIVO_D1SCL_SCALER_ENABLE               0x6590
+#define AVIVO_D1SCL_SCALER_TAP_CONTROL	 	0x6594
 #define AVIVO_D1SCL_UPDATE                      0x65cc
 #       define AVIVO_D1SCL_UPDATE_LOCK         (1<<16)
 
@@ -3489,6 +3495,7 @@
 #define AVIVO_D2MODE_EXT_OVERSCAN_TOP_BOTTOM    0x6d8c
 
 #define AVIVO_D2SCL_SCALER_ENABLE               0x6d90
+#define AVIVO_D2SCL_SCALER_TAP_CONTROL	 	0x6d94
 
 #define AVIVO_DACA_ENABLE					0x7800
 #	define AVIVO_DAC_ENABLE				(1 << 0)
