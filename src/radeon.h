@@ -270,6 +270,7 @@ typedef enum {
     CHIP_FAMILY_R630,
     CHIP_FAMILY_RV610,
     CHIP_FAMILY_RV630,
+    CHIP_FAMILY_RV670,
     CHIP_FAMILY_RS740,
     CHIP_FAMILY_LAST
 } RADEONChipFamily;
@@ -828,8 +829,6 @@ extern void        RADEONRestoreFP2Registers(ScrnInfoPtr pScrn,
 					     RADEONSavePtr restore);
 extern void        RADEONRestoreLVDSRegisters(ScrnInfoPtr pScrn,
 					      RADEONSavePtr restore);
-extern void        RADEONRestoreBIOSRegisters(ScrnInfoPtr pScrn,
-					      RADEONSavePtr restore);
 extern void        RADEONRestoreRMXRegisters(ScrnInfoPtr pScrn,
 					     RADEONSavePtr restore);
 extern void        RADEONRestorePLLRegisters(ScrnInfoPtr pScrn,
@@ -872,6 +871,8 @@ RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output);
 
 extern RADEONI2CBusRec
 legacy_setup_i2c_bus(int ddc_line);
+extern RADEONI2CBusRec
+atom_setup_i2c_bus(int ddc_line);
 
 extern void
 radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y);

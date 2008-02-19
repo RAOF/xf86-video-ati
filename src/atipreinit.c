@@ -123,6 +123,367 @@ ATIPrintNoiseIfRequested
     ATIPrintRegisters(pATI);
 }
 
+#define BIOS_SIZE    0x00010000U     /* 64kB */
+#define BIOSByte(_n) ((CARD8)(BIOS[_n]))
+#define BIOSWord(_n) ((CARD16)(BIOS[_n] |                \
+                               (BIOS[(_n) + 1] << 8)))
+
+/*
+ * For Mach64 adapters, pick up, from the BIOS, the type of programmable
+ * clock generator (if any), and various information about it.
+ */
+static void
+ati_bios_clock
+(
+    ScrnInfoPtr  pScreenInfo,
+    ATIPtr       pATI,
+    CARD8       *BIOS,
+    unsigned int ClockTable,
+    GDevPtr      pGDev
+)
+{
+    CARD16 ClockDac;
+
+    if (ClockTable > 0)
+    {
+        pATI->ProgrammableClock = BIOSByte(ClockTable);
+        pATI->ClockNumberToProgramme = BIOSByte(ClockTable + 0x06U);
+        pATI->refclk = BIOSWord(ClockTable + 0x08U);
+        pATI->refclk *= 10000;
+    }
+    else
+    {
+        /*
+         * Compensate for BIOS absence.  Note that the reference
+         * frequency has already been set by option processing.
+         */
+        if ((pATI->DAC & ~0x0FU) == ATI_DAC_INTERNAL)
+        {
+            pATI->ProgrammableClock = ATI_CLOCK_INTERNAL;
+        }
+        else switch (pATI->DAC)
+        {
+            case ATI_DAC_STG1703:
+                pATI->ProgrammableClock = ATI_CLOCK_STG1703;
+                break;
+
+            case ATI_DAC_CH8398:
+                pATI->ProgrammableClock = ATI_CLOCK_CH8398;
+                break;
+
+            case ATI_DAC_ATT20C408:
+                pATI->ProgrammableClock = ATI_CLOCK_ATT20C408;
+                break;
+
+            case ATI_DAC_IBMRGB514:
+                pATI->ProgrammableClock = ATI_CLOCK_IBMRGB514;
+                break;
+
+            default:        /* Provisional */
+                pATI->ProgrammableClock = ATI_CLOCK_ICS2595;
+                break;
+        }
+
+        /* This should be safe for all generators except IBM's RGB514 */
+        pATI->ClockNumberToProgramme = 3;
+    }
+
+    pATI->ClockDescriptor = ATIClockDescriptors[ATI_CLOCK_FIXED];
+
+    if ((pATI->ProgrammableClock > ATI_CLOCK_FIXED) &&
+        (pATI->ProgrammableClock < ATI_CLOCK_MAX))
+    {
+        /*
+         * Graphics PRO TURBO 1600's are unusual in that an ICS2595 is used
+         * to generate clocks for VGA modes, and an IBM RGB514 is used for
+         * accelerator modes.
+         */
+        if ((pATI->ProgrammableClock == ATI_CLOCK_ICS2595) &&
+            (pATI->DAC == ATI_DAC_IBMRGB514))
+            pATI->ProgrammableClock = ATI_CLOCK_IBMRGB514;
+
+        pATI->ClockDescriptor = ATIClockDescriptors[pATI->ProgrammableClock];
+    }
+
+    ClockDac = pATI->DAC;
+    switch (pATI->ProgrammableClock)
+    {
+        case ATI_CLOCK_ICS2595:
+            /*
+             * Pick up reference divider (43 or 46) appropriate to the chip
+             * revision level.
+             */
+            if (ClockTable > 0)
+                pATI->ClockDescriptor.MinM =
+                pATI->ClockDescriptor.MaxM = BIOSWord(ClockTable + 0x0AU);
+            else if (!xf86NameCmp(pGDev->clockchip, "ATI 18818-0"))
+                pATI->ClockDescriptor.MinM =
+                pATI->ClockDescriptor.MaxM = 43;
+            else if (!xf86NameCmp(pGDev->clockchip, "ATI 18818-1"))
+                pATI->ClockDescriptor.MinM =
+                pATI->ClockDescriptor.MaxM = 46;
+            else
+                pATI->ProgrammableClock = ATI_CLOCK_UNKNOWN;
+            break;
+
+        case ATI_CLOCK_STG1703:
+            /* This one's also a RAMDAC */
+            ClockDac = ATI_DAC_STG1703;
+            break;
+
+        case ATI_CLOCK_CH8398:
+            /* This one's also a RAMDAC */
+            ClockDac = ATI_DAC_CH8398;
+            break;
+
+        case ATI_CLOCK_INTERNAL:
+            /*
+             * The reference divider has already been programmed by BIOS
+             * initialisation.  Because, there is only one reference
+             * divider for all generated frequencies (including MCLK), it
+             * cannot be changed without reprogramming all clocks every
+             * time one of them needs a different reference divider.
+             *
+             * Besides, it's not a good idea to change the reference
+             * divider.  BIOS initialisation sets it to a value that
+             * effectively prevents generating frequencies beyond the
+             * graphics controller's tolerance.
+             */
+            pATI->ClockDescriptor.MinM =
+            pATI->ClockDescriptor.MaxM = ATIMach64GetPLLReg(PLL_REF_DIV);
+
+            /* The DAC is also integrated */
+            if ((pATI->DAC & ~0x0FU) != ATI_DAC_INTERNAL)
+                ClockDac = ATI_DAC_INTERNAL;
+
+            break;
+
+        case ATI_CLOCK_ATT20C408:
+            /* This one's also a RAMDAC */
+            ClockDac = ATI_DAC_ATT20C408;
+            break;
+
+        case ATI_CLOCK_IBMRGB514:
+            /* This one's also a RAMDAC */
+            ClockDac = ATI_DAC_IBMRGB514;
+            pATI->ClockNumberToProgramme = 7;
+            break;
+
+        default:
+            break;
+    }
+
+    /*
+     * We now have up to two indications of what RAMDAC the adapter uses.
+     * They should be the same.  The following test and corresponding
+     * action are under construction.
+     */
+    if (pATI->DAC != ClockDac)
+    {
+        xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
+                   "Mach64 RAMDAC probe discrepancy detected:\n"
+                   "  DAC=0x%02X;  ClockDac=0x%02X.\n",
+                   pATI->DAC, ClockDac);
+
+        if (pATI->DAC == ATI_DAC_IBMRGB514)
+        {
+            pATI->ProgrammableClock = ATI_CLOCK_IBMRGB514;
+            pATI->ClockDescriptor = ATIClockDescriptors[ATI_CLOCK_IBMRGB514];
+            pATI->ClockNumberToProgramme = 7;
+        }
+        else
+        {
+            pATI->DAC = ClockDac;   /* For now */
+        }
+    }
+
+    switch (pATI->refclk / 100000)
+    {
+        case 143:
+            pATI->ReferenceNumerator = 157500;
+            pATI->ReferenceDenominator = 11;
+            break;
+
+        case 286:
+            pATI->ReferenceNumerator = 315000;
+            pATI->ReferenceDenominator = 11;
+            break;
+
+        default:
+            pATI->ReferenceNumerator = pATI->refclk / 1000;
+            pATI->ReferenceDenominator = 1;
+            break;
+    }
+}
+
+/*
+ * Pick up multimedia information, which will be at different
+ * displacements depending on table revision.
+ */
+static void
+ati_bios_mmedia
+(
+    ScrnInfoPtr  pScreenInfo,
+    ATIPtr       pATI,
+    CARD8       *BIOS,
+    unsigned int VideoTable,
+    unsigned int HardwareTable
+)
+{
+    pATI->Audio = ATI_AUDIO_NONE;
+
+    if (VideoTable > 0)
+    {
+        switch (BIOSByte(VideoTable - 0x02U))
+        {
+            case 0x00U:
+                pATI->Tuner = BIOSByte(VideoTable) & 0x1FU;
+
+                /*
+                 * XXX  The VideoTable[1] byte is known to have been
+                 *      omitted in LTPro and Mobility BIOS'es.  Any others?
+                 */
+                switch (pATI->Chip)
+                {
+                    case ATI_CHIP_264LTPRO:
+                    case ATI_CHIP_MOBILITY:
+                        pATI->Decoder = BIOSByte(VideoTable + 0x01U) & 0x07U;
+                        pATI->Audio = BIOSByte(VideoTable + 0x02U) & 0x0FU;
+                        break;
+
+                    default:
+                        pATI->Decoder = BIOSByte(VideoTable + 0x02U) & 0x07U;
+                        pATI->Audio = BIOSByte(VideoTable + 0x03U) & 0x0FU;
+                        break;
+                }
+
+                break;
+
+            case 0x01U:
+                pATI->Tuner = BIOSByte(VideoTable) & 0x1FU;
+                pATI->Audio = BIOSByte(VideoTable + 0x01U) & 0x0FU;
+                pATI->Decoder = BIOSByte(VideoTable + 0x05U) & 0x0FU;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    if (HardwareTable > 0)
+    {
+        pATI->I2CType = BIOSByte(HardwareTable + 0x06U) & 0x0FU;
+    }
+}
+
+/*
+ * Determine panel dimensions and model.
+ */
+static void
+ati_bios_panel_info
+(
+    ScrnInfoPtr  pScreenInfo,
+    ATIPtr       pATI,
+    CARD8       *BIOS,
+    unsigned int BIOSSize,
+    unsigned int LCDTable
+)
+{
+    unsigned int LCDPanelInfo = 0;
+    char         Buffer[128];
+    int          i, j;
+
+    if (LCDTable > 0)
+    {
+        LCDPanelInfo = BIOSWord(LCDTable + 0x0AU);
+        if (((LCDPanelInfo + 0x1DU) > BIOSSize) ||
+            ((BIOSByte(LCDPanelInfo) != pATI->LCDPanelID) &&
+             (pATI->LCDPanelID || (BIOSByte(LCDPanelInfo) > 0x1FU) ||
+              (pATI->Chip <= ATI_CHIP_264LTPRO))))
+            LCDPanelInfo = 0;
+    }
+
+    if (!LCDPanelInfo)
+    {
+        /*
+         * Scan BIOS for panel info table.
+         */
+        for (i = 0;  i <= (int)(BIOSSize - 0x1DU);  i++)
+        {
+            /* Look for panel ID ... */
+            if ((BIOSByte(i) != pATI->LCDPanelID) &&
+                (pATI->LCDPanelID || (BIOSByte(i) > 0x1FU) ||
+                 (pATI->Chip <= ATI_CHIP_264LTPRO)))
+                continue;
+
+            /* ... followed by 24-byte panel model name ... */
+            for (j = 0;  j < 24;  j++)
+            {
+                if ((CARD8)(BIOSByte(i + j + 1) - 0x20U) > 0x5FU)
+                {
+                    i += j;
+                    goto NextBIOSByte;
+                }
+            }
+
+            /* ... verify panel width ... */
+            if (pATI->LCDHorizontal &&
+                (pATI->LCDHorizontal != BIOSWord(i + 0x19U)))
+                continue;
+
+            /* ... and verify panel height */
+            if (pATI->LCDVertical &&
+                (pATI->LCDVertical != BIOSWord(i + 0x1BU)))
+                continue;
+
+            if (LCDPanelInfo)
+            {
+                /*
+                 * More than one possibility, but don't care if all
+                 * tables describe panels of the same size.
+                 */
+                if ((BIOSByte(LCDPanelInfo + 0x19U) ==
+                     BIOSByte(i + 0x19U)) &&
+                    (BIOSByte(LCDPanelInfo + 0x1AU) ==
+                     BIOSByte(i + 0x1AU)) &&
+                    (BIOSByte(LCDPanelInfo + 0x1BU) ==
+                     BIOSByte(i + 0x1BU)) &&
+                    (BIOSByte(LCDPanelInfo + 0x1CU) ==
+                     BIOSByte(i + 0x1CU)))
+                    continue;
+
+                LCDPanelInfo = 0;
+                break;
+            }
+
+            LCDPanelInfo = i;
+
+    NextBIOSByte:  ;
+        }
+    }
+
+    if (LCDPanelInfo > 0)
+    {
+        pATI->LCDPanelID = BIOSByte(LCDPanelInfo);
+        pATI->LCDHorizontal = BIOSWord(LCDPanelInfo + 0x19U);
+        pATI->LCDVertical = BIOSWord(LCDPanelInfo + 0x1BU);
+    }
+
+    if (LCDPanelInfo)
+    {
+        for (i = 0;  i < 24;  i++)
+            Buffer[i] = BIOSByte(LCDPanelInfo + 1 + i);
+        for (;  --i >= 0;  )
+            if (Buffer[i] && Buffer[i] != ' ')
+            {
+                Buffer[i + 1] = '\0';
+                xf86DrvMsg(pScreenInfo->scrnIndex, X_PROBED,
+                    "Panel model %s.\n", Buffer);
+                break;
+            }
+    }
+}
+
 /*
  * ATIPreInit --
  *
@@ -136,18 +497,10 @@ ATIPreInit
     int flags
 )
 {
-#   define           BIOS_SIZE       0x00010000U     /* 64kB */
     CARD8            BIOS[BIOS_SIZE];
-#   define           BIOSByte(_n)    ((CARD8)(BIOS[_n]))
-#   define           BIOSWord(_n)    ((CARD16)(BIOS[_n] |                \
-                                               (BIOS[(_n) + 1] << 8)))
-#   define           BIOSLong(_n)    ((CARD32)(BIOS[_n] |                \
-                                               (BIOS[(_n) + 1] << 8) |   \
-                                               (BIOS[(_n) + 2] << 16) |  \
-                                               (BIOS[(_n) + 3] << 24)))
     unsigned int     BIOSSize = 0;
     unsigned int     ROMTable = 0, ClockTable = 0, FrequencyTable = 0;
-    unsigned int     LCDTable = 0, LCDPanelInfo = 0, VideoTable = 0;
+    unsigned int     LCDTable = 0, VideoTable = 0;
     unsigned int     HardwareTable = 0;
 
     char             Buffer[128], *Message;
@@ -415,11 +768,7 @@ ATIPreInit
 #endif /* AVOID_CPIO */
 
     /* Finish private area initialisation */
-    pATI->DAC = ATI_DAC_GENERIC;
-
-    pATI->LCDPanelID = -1;
     pATI->nFIFOEntries = 16;                    /* For now */
-    pATI->Audio = ATI_AUDIO_NONE;
 
     /* Finish probing the adapter */
     {
@@ -499,13 +848,20 @@ ATIPreInit
                     pATI->VideoRAM = (IOValue - 7) * 2048;
             }
 
-            pATI->DAC = GetBits(inr(DAC_CNTL), DAC_TYPE);
-
             IOValue = inr(CONFIG_STATUS64_0);
             if (pATI->Chip >= ATI_CHIP_264CT)
             {
                 pATI->MemoryType = GetBits(IOValue, CFG_MEM_TYPE_T);
+            }
+            else
+            {
+                pATI->MemoryType = GetBits(IOValue, CFG_MEM_TYPE);
+            }
 
+            pATI->LCDPanelID = -1;
+
+            if (pATI->Chip >= ATI_CHIP_264CT)
+            {
                 /* Get LCD panel id */
                 if (pATI->Chip == ATI_CHIP_264LT)
                 {
@@ -573,10 +929,12 @@ ATIPreInit
                         pATI->OptionPanelDisplay = FALSE;
                 }
             }
-            else
-            {
-                pATI->MemoryType = GetBits(IOValue, CFG_MEM_TYPE);
 
+            /* Get DAC type */
+            pATI->DAC = GetBits(inr(DAC_CNTL), DAC_TYPE);
+
+            if (pATI->Chip < ATI_CHIP_264CT)
+            {
                 /* Factor in what the BIOS says the DAC is */
                 pATI->DAC = ATI_DAC(pATI->DAC,
                     GetBits(inr(SCRATCH_REG1), BIOS_INIT_DAC_SUBTYPE));
@@ -590,17 +948,7 @@ ATIPreInit
                 pATI->DAC += ATI_DAC_INTERNAL;
     }
 
-    /*
-     * For Mach64 adapters, pick up, from the BIOS, the type of programmable
-     * clock generator (if any), and various information about it.
-     */
     {
-        CARD16 ClockDac;
-
-        /* Set up non-zero defaults */
-        pATI->ClockDescriptor = ATIClockDescriptors[ATI_CLOCK_FIXED];
-        pATI->ClockNumberToProgramme = -1;
-
         ROMTable = BIOSWord(0x48U);
         if ((ROMTable < 0x0002U) ||
             (BIOSWord(ROMTable - 0x02U) < 0x0012U) ||
@@ -626,312 +974,23 @@ ATIPreInit
             if (BIOSWord(ROMTable - 0x02U) >= 0x004AU)
             {
                 HardwareTable = BIOSWord(ROMTable + 0x48U);
-                if (((HardwareTable + 0x08U) <= BIOSSize) &&
-                    !memcmp(BIOS + HardwareTable, "$ATI", 4))
-                    pATI->I2CType = BIOSByte(HardwareTable + 0x06U) & 0x0FU;
-                else
+                if (((HardwareTable + 0x08U) > BIOSSize) ||
+                    (memcmp(BIOS + HardwareTable, "$ATI", 4) != 0))
                     HardwareTable = 0;
             }
         }
 
-        if (ClockTable > 0)
-        {
-            pATI->ProgrammableClock = BIOSByte(ClockTable);
-            pATI->ClockNumberToProgramme = BIOSByte(ClockTable + 0x06U);
-            switch (BIOSWord(ClockTable + 0x08U) / 10)
-            {
-                case 143:
-                    pATI->ReferenceNumerator = 157500;
-                    pATI->ReferenceDenominator = 11;
-                    break;
+        ati_bios_clock(pScreenInfo, pATI, BIOS, ClockTable, pGDev);
 
-                case 286:
-                    pATI->ReferenceNumerator = 315000;
-                    pATI->ReferenceDenominator = 11;
-                    break;
+        ati_bios_mmedia(pScreenInfo, pATI, BIOS, VideoTable, HardwareTable);
 
-                default:
-                    pATI->ReferenceNumerator =
-                        BIOSWord(ClockTable + 0x08U) * 10;
-                    pATI->ReferenceDenominator = 1;
-                    break;
-            }
-        }
-        else
-        {
-            /*
-             * Compensate for BIOS absence.  Note that the reference
-             * frequency has already been set by option processing.
-             */
-            if ((pATI->DAC & ~0x0FU) == ATI_DAC_INTERNAL)
-            {
-                pATI->ProgrammableClock = ATI_CLOCK_INTERNAL;
-            }
-            else switch (pATI->DAC)
-            {
-                case ATI_DAC_STG1703:
-                    pATI->ProgrammableClock = ATI_CLOCK_STG1703;
-                    break;
-
-                case ATI_DAC_CH8398:
-                    pATI->ProgrammableClock = ATI_CLOCK_CH8398;
-                    break;
-
-                case ATI_DAC_ATT20C408:
-                    pATI->ProgrammableClock = ATI_CLOCK_ATT20C408;
-                    break;
-
-                case ATI_DAC_IBMRGB514:
-                    pATI->ProgrammableClock = ATI_CLOCK_IBMRGB514;
-                    break;
-
-                default:        /* Provisional */
-                    pATI->ProgrammableClock = ATI_CLOCK_ICS2595;
-                    break;
-            }
-
-            /* This should be safe for all generators except IBM's RGB514 */
-            pATI->ClockNumberToProgramme = 3;
-        }
-
-        if ((pATI->ProgrammableClock > ATI_CLOCK_FIXED) &&
-            (pATI->ProgrammableClock < ATI_CLOCK_MAX))
-        {
-            /*
-             * Graphics PRO TURBO 1600's are unusual in that an ICS2595 is used
-             * to generate clocks for VGA modes, and an IBM RGB514 is used for
-             * accelerator modes.
-             */
-            if ((pATI->ProgrammableClock == ATI_CLOCK_ICS2595) &&
-                (pATI->DAC == ATI_DAC_IBMRGB514))
-                pATI->ProgrammableClock = ATI_CLOCK_IBMRGB514;
-
-            pATI->ClockDescriptor =
-                ATIClockDescriptors[pATI->ProgrammableClock];
-        }
-
-        ClockDac = pATI->DAC;
-        switch (pATI->ProgrammableClock)
-        {
-            case ATI_CLOCK_ICS2595:
-                /*
-                 * Pick up reference divider (43 or 46) appropriate to the chip
-                 * revision level.
-                 */
-                if (ClockTable > 0)
-                    pATI->ClockDescriptor.MinM =
-                        pATI->ClockDescriptor.MaxM =
-                            BIOSWord(ClockTable + 0x0AU);
-                else if (!xf86NameCmp(pGDev->clockchip, "ATI 18818-0"))
-                    pATI->ClockDescriptor.MinM =
-                        pATI->ClockDescriptor.MaxM = 43;
-                else if (!xf86NameCmp(pGDev->clockchip, "ATI 18818-1"))
-                    pATI->ClockDescriptor.MinM =
-                        pATI->ClockDescriptor.MaxM = 46;
-                else
-                    pATI->ProgrammableClock = ATI_CLOCK_UNKNOWN;
-                break;
-
-            case ATI_CLOCK_STG1703:
-                /* This one's also a RAMDAC */
-                ClockDac = ATI_DAC_STG1703;
-                break;
-
-            case ATI_CLOCK_CH8398:
-                /* This one's also a RAMDAC */
-                ClockDac = ATI_DAC_CH8398;
-                break;
-
-            case ATI_CLOCK_INTERNAL:
-                /*
-                 * The reference divider has already been programmed by BIOS
-                 * initialisation.  Because, there is only one reference
-                 * divider for all generated frequencies (including MCLK), it
-                 * cannot be changed without reprogramming all clocks every
-                 * time one of them needs a different reference divider.
-                 *
-                 * Besides, it's not a good idea to change the reference
-                 * divider.  BIOS initialisation sets it to a value that
-                 * effectively prevents generating frequencies beyond the
-                 * graphics controller's tolerance.
-                 */
-                pATI->ClockDescriptor.MinM = pATI->ClockDescriptor.MaxM =
-                    ATIMach64GetPLLReg(PLL_REF_DIV);
-
-                /* The DAC is also integrated */
-                if ((pATI->DAC & ~0x0FU) != ATI_DAC_INTERNAL)
-                    ClockDac = ATI_DAC_INTERNAL;
-
-                break;
-
-            case ATI_CLOCK_ATT20C408:
-                /* This one's also a RAMDAC */
-                ClockDac = ATI_DAC_ATT20C408;
-                break;
-
-            case ATI_CLOCK_IBMRGB514:
-                /* This one's also a RAMDAC */
-                ClockDac = ATI_DAC_IBMRGB514;
-                pATI->ClockNumberToProgramme = 7;
-                break;
-
-            default:
-                break;
-        }
-
-        /*
-         * We now have up to two indications of what RAMDAC the adapter uses.
-         * They should be the same.  The following test and corresponding
-         * action are under construction.
-         */
-        if (pATI->DAC != ClockDac)
-        {
-            xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-                       "Mach64 RAMDAC probe discrepancy detected:\n"
-                       "  DAC=0x%02X;  ClockDac=0x%02X.\n",
-                       pATI->DAC, ClockDac);
-
-            if (pATI->DAC == ATI_DAC_IBMRGB514)
-            {
-                pATI->ProgrammableClock = ATI_CLOCK_IBMRGB514;
-                pATI->ClockDescriptor =
-                    ATIClockDescriptors[ATI_CLOCK_IBMRGB514];
-                pATI->ClockNumberToProgramme = 7;
-            }
-            else
-            {
-                pATI->DAC = ClockDac;   /* For now */
-            }
-        }
-
-        /*
-         * Pick up multimedia information, which will be at different
-         * displacements depending on table revision.
-         */
-        if (VideoTable > 0)
-        {
-            switch (BIOSByte(VideoTable - 0x02U))
-            {
-                case 0x00U:
-                    pATI->Tuner = BIOSByte(VideoTable) & 0x1FU;
-
-                    /*
-                     * XXX  The VideoTable[1] byte is known to have been
-                     *      omitted in LTPro and Mobility BIOS'es.  Any others?
-                     */
-                    switch (pATI->Chip)
-                    {
-                        case ATI_CHIP_264LTPRO:
-                        case ATI_CHIP_MOBILITY:
-                            pATI->Decoder =
-                                BIOSByte(VideoTable + 0x01U) & 0x07U;
-                            pATI->Audio =
-                                BIOSByte(VideoTable + 0x02U) & 0x0FU;
-                            break;
-
-                        default:
-                            pATI->Decoder =
-                                BIOSByte(VideoTable + 0x02U) & 0x07U;
-                            pATI->Audio =
-                                BIOSByte(VideoTable + 0x03U) & 0x0FU;
-                            break;
-                    }
-
-                    break;
-
-                case 0x01U:
-                    pATI->Tuner = BIOSByte(VideoTable) & 0x1FU;
-                    pATI->Audio = BIOSByte(VideoTable + 0x01U) & 0x0FU;
-                    pATI->Decoder = BIOSByte(VideoTable + 0x05U) & 0x0FU;
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        /* Determine panel dimensions */
         if (pATI->LCDPanelID >= 0)
         {
             LCDTable = BIOSWord(0x78U);
             if ((LCDTable + BIOSByte(LCDTable + 5)) > BIOSSize)
                 LCDTable = 0;
 
-            if (LCDTable > 0)
-            {
-                LCDPanelInfo = BIOSWord(LCDTable + 0x0AU);
-                if (((LCDPanelInfo + 0x1DU) > BIOSSize) ||
-                    ((BIOSByte(LCDPanelInfo) != pATI->LCDPanelID) &&
-                     (pATI->LCDPanelID || (BIOSByte(LCDPanelInfo) > 0x1FU) ||
-                      (pATI->Chip <= ATI_CHIP_264LTPRO))))
-                    LCDPanelInfo = 0;
-            }
-
-            if (!LCDPanelInfo)
-            {
-                /*
-                 * Scan BIOS for panel info table.
-                 */
-                for (i = 0;  i <= (int)(BIOSSize - 0x1DU);  i++)
-                {
-                    /* Look for panel ID ... */
-                    if ((BIOSByte(i) != pATI->LCDPanelID) &&
-                        (pATI->LCDPanelID || (BIOSByte(i) > 0x1FU) ||
-                         (pATI->Chip <= ATI_CHIP_264LTPRO)))
-                        continue;
-
-                    /* ... followed by 24-byte panel model name ... */
-                    for (j = 0;  j < 24;  j++)
-                    {
-                        if ((CARD8)(BIOSByte(i + j + 1) - 0x20U) > 0x5FU)
-                        {
-                            i += j;
-                            goto NextBIOSByte;
-                        }
-                    }
-
-                    /* ... verify panel width ... */
-                    if (pATI->LCDHorizontal &&
-                        (pATI->LCDHorizontal != BIOSWord(i + 0x19U)))
-                        continue;
-
-                    /* ... and verify panel height */
-                    if (pATI->LCDVertical &&
-                        (pATI->LCDVertical != BIOSWord(i + 0x1BU)))
-                        continue;
-
-                    if (LCDPanelInfo)
-                    {
-                        /*
-                         * More than one possibility, but don't care if all
-                         * tables describe panels of the same size.
-                         */
-                        if ((BIOSByte(LCDPanelInfo + 0x19U) ==
-                             BIOSByte(i + 0x19U)) &&
-                            (BIOSByte(LCDPanelInfo + 0x1AU) ==
-                             BIOSByte(i + 0x1AU)) &&
-                            (BIOSByte(LCDPanelInfo + 0x1BU) ==
-                             BIOSByte(i + 0x1BU)) &&
-                            (BIOSByte(LCDPanelInfo + 0x1CU) ==
-                             BIOSByte(i + 0x1CU)))
-                            continue;
-
-                        LCDPanelInfo = 0;
-                        break;
-                    }
-
-                    LCDPanelInfo = i;
-
-            NextBIOSByte:  ;
-                }
-            }
-
-            if (LCDPanelInfo > 0)
-            {
-                pATI->LCDPanelID = BIOSByte(LCDPanelInfo);
-                pATI->LCDHorizontal = BIOSWord(LCDPanelInfo + 0x19U);
-                pATI->LCDVertical = BIOSWord(LCDPanelInfo + 0x1BU);
-            }
+            ati_bios_panel_info(pScreenInfo, pATI, BIOS, BIOSSize, LCDTable);
         }
 
         xf86DrvMsgVerb(pScreenInfo->scrnIndex, X_INFO, 3,
@@ -941,8 +1000,8 @@ ATIPreInit
             "BIOS Data:  ClockTable=0x%04X, FrequencyTable=0x%04X.\n",
             ClockTable, FrequencyTable);
         xf86DrvMsgVerb(pScreenInfo->scrnIndex, X_INFO, 3,
-            "BIOS Data:  LCDTable=0x%04X, LCDPanelInfo=0x%04X.\n",
-            LCDTable, LCDPanelInfo);
+            "BIOS Data:  LCDTable=0x%04X.\n",
+            LCDTable);
         xf86DrvMsgVerb(pScreenInfo->scrnIndex, X_INFO, 3,
             "BIOS Data:  VideoTable=0x%04X, HardwareTable=0x%04X.\n",
             VideoTable, HardwareTable);
@@ -1702,20 +1761,6 @@ ATIPreInit
                 xf86DrvMsg(pScreenInfo->scrnIndex, X_PROBED,
                     "%dx%d panel detected.\n",
                     pATI->LCDHorizontal, pATI->LCDVertical);
-
-            if (LCDPanelInfo)
-            {
-                for (i = 0;  i < 24;  i++)
-                    Buffer[i] = BIOSByte(LCDPanelInfo + 1 + i);
-                for (;  --i >= 0;  )
-                    if (Buffer[i] && Buffer[i] != ' ')
-                    {
-                        Buffer[i + 1] = '\0';
-                        xf86DrvMsg(pScreenInfo->scrnIndex, X_PROBED,
-                            "Panel model %s.\n", Buffer);
-                        break;
-                    }
-            }
 
             /*
              * Determine panel clock.  This must be done after option

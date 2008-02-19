@@ -30,7 +30,6 @@
 #include "atimach64probe.h"
 #include "atimach64version.h"
 #include "atioption.h"
-#include "ativersion.h"
 
 /* include headers corresponding to ScrnInfoPtr fields */
 #include "atipreinit.h"
@@ -38,6 +37,10 @@
 #include "aticonsole.h"
 #include "atiadjust.h"
 #include "ativalid.h"
+
+#ifndef XSERVER_LIBPCIACCESS
+static Bool Mach64Probe(DriverPtr pDriver, int flags);
+#endif
 
 SymTabRec
 Mach64Chipsets[] = {
@@ -107,13 +110,51 @@ Mach64PciChipsets[] = {
     {-1, -1, RES_UNDEFINED}
 };
 
+#ifdef XSERVER_LIBPCIACCESS
+
+static const struct pci_id_match mach64_device_match[] = {
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GX, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64CX, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64CT, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64ET, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64VT, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GT, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64VU, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GU, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LG, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64VV, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GV, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GW, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GY, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GZ, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GB, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GD, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GI, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GP, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GQ, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LB, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LD, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LI, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LP, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LQ, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GL, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GM, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GN, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GO, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GR, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64GS, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LM, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LN, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LR, 0 ),
+    ATI_DEVICE_MATCH( PCI_CHIP_MACH64LS, 0 ),
+    { 0, 0, 0 }
+};
+
+#endif /* XSERVER_LIBPCIACCESS */
+
 static const OptionInfoRec *
 Mach64AvailableOptions(int chipid, int busid)
 {
-    /*
-     * Return options defined in the mach64 submodule which will have been
-     * loaded by this point.
-     */
     return ATIOptionsWeak();
 }
 
@@ -132,6 +173,39 @@ Mach64Identify
             "Driver for ATI Mach64 chipsets");
 }
 
+static Bool
+mach64_get_scrninfo(int entity_num)
+{
+    ScrnInfoPtr pScrn;
+
+    pScrn = xf86ConfigPciEntity(NULL, 0, entity_num, Mach64PciChipsets,
+                                0, 0, 0, 0, NULL);
+
+    if (!pScrn)
+        return FALSE;
+
+    pScrn->driverVersion = MACH64_VERSION_CURRENT;
+    pScrn->driverName    = MACH64_DRIVER_NAME;
+    pScrn->name          = MACH64_NAME;
+#ifdef XSERVER_LIBPCIACCESS
+    pScrn->Probe         = NULL;
+#else
+    pScrn->Probe         = Mach64Probe;
+#endif
+    pScrn->PreInit       = ATIPreInit;
+    pScrn->ScreenInit    = ATIScreenInit;
+    pScrn->SwitchMode    = ATISwitchMode;
+    pScrn->AdjustFrame   = ATIAdjustFrame;
+    pScrn->EnterVT       = ATIEnterVT;
+    pScrn->LeaveVT       = ATILeaveVT;
+    pScrn->FreeScreen    = ATIFreeScreen;
+    pScrn->ValidMode     = ATIValidMode;
+
+    return TRUE;
+}
+
+#ifndef XSERVER_LIBPCIACCESS
+
 /*
  * Mach64Probe --
  *
@@ -141,41 +215,20 @@ Mach64Identify
 static Bool
 Mach64Probe(DriverPtr pDriver, int flags)
 {
-    GDevPtr *devSections, *ATIGDevs, *Mach64GDevs;
+    GDevPtr *devSections;
     int     *usedChips;
-    int     numDevSections, nATIGDev, nMach64GDev;
+    int     numDevSections;
     int     numUsed;
     Bool    ProbeSuccess = FALSE;
+    int     i;
 
-#ifndef XSERVER_LIBPCIACCESS
     if (xf86GetPciVideoInfo() == NULL)
         return FALSE;
-#endif
 
-    /* Collect unclaimed device sections for both driver names */
-    nATIGDev = xf86MatchDevice(ATI_DRIVER_NAME, &ATIGDevs);
-    nMach64GDev = xf86MatchDevice(MACH64_DRIVER_NAME, &Mach64GDevs);
+    numDevSections = xf86MatchDevice(MACH64_DRIVER_NAME, &devSections);
 
-    if ((numDevSections = nATIGDev + nMach64GDev) <= 0)
+    if (numDevSections <= 0)
         return FALSE;
-
-    if (ATIGDevs == NULL) {
-        devSections = Mach64GDevs;
-        numDevSections = nMach64GDev;
-    } else if (Mach64GDevs == NULL) {
-        devSections = ATIGDevs;
-        numDevSections = nATIGDev;
-    } else {
-        /* Combine into one list */
-        devSections = xnfalloc((numDevSections + 1) * sizeof(GDevPtr));
-        (void)memcpy(devSections,
-                     ATIGDevs, nATIGDev * sizeof(GDevPtr));
-        (void)memcpy(devSections + nATIGDev,
-                     Mach64GDevs, nMach64GDev * sizeof(GDevPtr));
-        devSections[numDevSections] = NULL;
-        xfree(ATIGDevs);
-        xfree(Mach64GDevs);
-    }
 
     numUsed = xf86MatchPciInstances(MACH64_NAME, PCI_VENDOR_ATI,
                                     Mach64Chipsets, Mach64PciChipsets,
@@ -189,31 +242,9 @@ Mach64Probe(DriverPtr pDriver, int flags)
     if (flags & PROBE_DETECT) {
         ProbeSuccess = TRUE;
     } else {
-        int  i;
-
         for (i = 0; i < numUsed; i++) {
-            ScrnInfoPtr pScrn;
-
-            pScrn = xf86ConfigPciEntity(NULL, 0, usedChips[i], Mach64PciChipsets,
-                                        0, 0, 0, 0, NULL);
-
-            if (!pScrn)
-                continue;
-
-            pScrn->driverVersion = MACH64_VERSION_CURRENT;
-            pScrn->driverName    = MACH64_DRIVER_NAME;
-            pScrn->name          = MACH64_NAME;
-            pScrn->Probe         = Mach64Probe;
-            pScrn->PreInit       = ATIPreInit;
-            pScrn->ScreenInit    = ATIScreenInit;
-            pScrn->SwitchMode    = ATISwitchMode;
-            pScrn->AdjustFrame   = ATIAdjustFrame;
-            pScrn->EnterVT       = ATIEnterVT;
-            pScrn->LeaveVT       = ATILeaveVT;
-            pScrn->FreeScreen    = ATIFreeScreen;
-            pScrn->ValidMode     = ATIValidMode;
-
-            ProbeSuccess = TRUE;
+            if (mach64_get_scrninfo(usedChips[i]))
+                ProbeSuccess = TRUE;
         }
     }
 
@@ -222,13 +253,37 @@ Mach64Probe(DriverPtr pDriver, int flags)
     return ProbeSuccess;
 }
 
+#else /* XSERVER_LIBPCIACCESS */
+
+static Bool
+mach64_pci_probe(
+    DriverPtr          pDriver,
+    int                entity_num,
+    struct pci_device *device,
+    intptr_t           match_data
+)
+{
+    return mach64_get_scrninfo(entity_num);
+}
+
+#endif /* XSERVER_LIBPCIACCESS */
+
 _X_EXPORT DriverRec MACH64 =
 {
     MACH64_VERSION_CURRENT,
     MACH64_DRIVER_NAME,
     Mach64Identify,
+#ifdef XSERVER_LIBPCIACCESS
+    NULL,
+#else
     Mach64Probe,
+#endif
     Mach64AvailableOptions,
     NULL,
-    0
+    0,
+    NULL,
+#ifdef XSERVER_LIBPCIACCESS
+    mach64_device_match,
+    mach64_pci_probe
+#endif
 };

@@ -935,7 +935,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
     CARD32 dst_format, dst_offset, dst_pitch;
     CARD32 txenable, colorpitch;
-    /*CARD32 blendcntl, cblend, ablend;*/
+    CARD32 blendcntl;
     int pixel_shift;
     ACCEL_PREAMBLE();
 
@@ -975,6 +975,22 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 
     RADEON_SWITCH_TO_3D();
 
+    /* setup pixel shader */
+    BEGIN_ACCEL(12);
+    OUT_ACCEL_REG(R300_US_CONFIG, 0x8);
+    OUT_ACCEL_REG(R300_US_PIXSIZE, 0x0);
+    OUT_ACCEL_REG(R300_US_CODE_OFFSET, 0x40040);
+    OUT_ACCEL_REG(R300_US_CODE_ADDR_0, 0x0);
+    OUT_ACCEL_REG(R300_US_CODE_ADDR_1, 0x0);
+    OUT_ACCEL_REG(R300_US_CODE_ADDR_2, 0x0);
+    OUT_ACCEL_REG(R300_US_CODE_ADDR_3, 0x400000);
+    OUT_ACCEL_REG(R300_US_TEX_INST_0, 0x8000);
+    OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR_0, 0x1f800000);
+    OUT_ACCEL_REG(R300_US_ALU_RGB_INST_0, 0x50a80);
+    OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR_0, 0x1800000);
+    OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST_0, 0x00040889);
+    FINISH_ACCEL();
+
     BEGIN_ACCEL(6);
     OUT_ACCEL_REG(R300_TX_INVALTAGS, 0x0);
     OUT_ACCEL_REG(R300_TX_ENABLE, txenable);
@@ -982,7 +998,8 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     OUT_ACCEL_REG(R300_RB3D_COLOROFFSET0, dst_offset);
     OUT_ACCEL_REG(R300_RB3D_COLORPITCH0, colorpitch);
 
-    OUT_ACCEL_REG(R300_RB3D_BLENDCNTL, 0x0);
+    blendcntl = RADEONGetBlendCntl(op, pMaskPicture, pDstPicture->format);
+    OUT_ACCEL_REG(R300_RB3D_BLENDCNTL, blendcntl);
     OUT_ACCEL_REG(R300_RB3D_ABLENDCNTL, 0x0);
 
 #if 0
@@ -1037,7 +1054,6 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 }
 
 #define VTX_COUNT 6
-#define R300_VTX_COUNT 4
 
 #ifdef ACCEL_CP
 
@@ -1051,14 +1067,6 @@ do {								\
     OUT_RING_F(_maskY);						\
 } while (0)
 
-#define VTX_OUT4(_dstX, _dstY, _srcX, _srcY)	                \
-do {								\
-    OUT_RING_F(_dstX);						\
-    OUT_RING_F(_dstY);						\
-    OUT_RING_F(_srcX);						\
-    OUT_RING_F(_srcY);						\
-} while (0)
-
 #else /* ACCEL_CP */
 
 #define VTX_OUT(_dstX, _dstY, _srcX, _srcY, _maskX, _maskY)	\
@@ -1069,14 +1077,6 @@ do {								\
     OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _srcY);		\
     OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _maskX);		\
     OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _maskY);		\
-} while (0)
-
-#define VTX_OUT4(_dstX, _dstY, _srcX, _srcY)	                \
-do {								\
-    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _dstX);		\
-    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _dstY);		\
-    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _srcX);		\
-    OUT_ACCEL_REG_F(RADEON_SE_PORT_DATA0, _srcY);		\
 } while (0)
 
 #endif /* !ACCEL_CP */
@@ -1111,8 +1111,8 @@ static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
 
     ENTER_DRAW(0);
 
-    /*ErrorF("RadeonComposite (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",
-          srcX, srcY, maskX, maskY,dstX, dstY, w, h);*/
+    /* ErrorF("RadeonComposite (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",
+       srcX, srcY, maskX, maskY,dstX, dstY, w, h); */
 
     srcXend = srcX + w;
     srcYend = srcY + h;
@@ -1150,7 +1150,7 @@ static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
 	transformPoint(transform[1], &maskBottomRight);
     }
 
-    vtx_count = (info->ChipFamily >= CHIP_FAMILY_R300) ? R300_VTX_COUNT : VTX_COUNT;
+    vtx_count = VTX_COUNT;
 
     if (IS_R300_VARIANT) {
 	BEGIN_ACCEL(1);
@@ -1208,22 +1208,6 @@ static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
 	VTX_OUT(dstX,     dstY + h,   srcX,     srcYend,  maskX,    maskYend);
 	VTX_OUT(dstX + w, dstY + h,   srcXend,  srcYend,  maskXend, maskYend);
 	VTX_OUT(dstX + w, dstY,	      srcXend,  srcY,     maskXend, maskY);
-    } else if (IS_R300_VARIANT) {
-	VTX_OUT4((float)dstX, (float)dstY,
-		 xFixedToFloat(srcTopLeft.x) / info->texW[0],
-		 xFixedToFloat(srcTopLeft.y) / info->texH[0]);
-
-	VTX_OUT4((float)dstX, (float)(dstY + h),
-		 xFixedToFloat(srcBottomLeft.x) / info->texW[0],
-		 xFixedToFloat(srcBottomLeft.y) / info->texH[0]);
-
-	VTX_OUT4((float)(dstX + w), (float)(dstY + h),
-		 xFixedToFloat(srcBottomRight.x) / info->texW[0],
-		 xFixedToFloat(srcBottomRight.y) / info->texH[0]);
-
-	VTX_OUT4((float)(dstX + w), (float)dstY,
-		 xFixedToFloat(srcTopRight.x) / info->texW[0],
-		 xFixedToFloat(srcTopRight.y) / info->texH[0]);
     } else {
 	VTX_OUT((float)dstX,                                      (float)dstY,
 	        xFixedToFloat(srcTopLeft.x) / info->texW[0],      xFixedToFloat(srcTopLeft.y) / info->texH[0],

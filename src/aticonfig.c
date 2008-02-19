@@ -471,28 +471,7 @@ ATIProcessOptions
         pATI->Cursor = ATI_CURSOR_HARDWARE;
     }
 
-    /* Only set the reference clock if it hasn't already been determined */
-    if (!pATI->ReferenceNumerator || !pATI->ReferenceDenominator)
-    {
-        switch ((int)(ReferenceClock / ((double)100000.0)))
-        {
-            case 143:
-                pATI->ReferenceNumerator = 157500;
-                pATI->ReferenceDenominator = 11;
-                break;
-
-            case 286:
-                pATI->ReferenceNumerator = 315000;
-                pATI->ReferenceDenominator = 11;
-                break;
-
-            default:
-                pATI->ReferenceNumerator =
-                    (int)(ReferenceClock / ((double)1000.0));
-                pATI->ReferenceDenominator = 1;
-                break;
-        }
-    }
+    pATI->refclk = (int)ReferenceClock;
 
     pATI->useEXA = FALSE;
     if (pATI->OptionAccel)

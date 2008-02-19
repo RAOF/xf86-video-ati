@@ -174,6 +174,7 @@ EXTRA_DIST = \
 	atimach64i2c.h \
 	atimach64io.h \
 	atimach64probe.h \
+	atimach64version.h \
 	atimode.h \
 	atioption.h \
 	atipreinit.h \
@@ -198,7 +199,6 @@ EXTRA_DIST = \
 	mach64_common.h \
 	mach64_dri.h \
 	mach64_sarea.h \
-	r128_chipset.h \
 	r128_common.h \
 	r128_dri.h \
 	r128_dripriv.h \
@@ -232,6 +232,7 @@ EXTRA_DIST = \
 	radeon_chipinfo_gen.h \
 	radeon_chipset_gen.h \
 	radeon_pci_chipset_gen.h \
+	radeon_pci_device_match_gen.h \
 	pcidb/ati_pciids.csv \
 	pcidb/parse_pci_ids.pl \
 	radeon_atombios.h

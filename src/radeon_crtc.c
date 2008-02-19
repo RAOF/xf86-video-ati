@@ -68,11 +68,28 @@ static void
 radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
     RADEONInfoPtr info = RADEONPTR(crtc->scrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(crtc->scrn);
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+    xf86CrtcPtr crtc0 = pRADEONEnt->pCrtc[0];
 
     if (IS_AVIVO_VARIANT) {
 	atombios_crtc_dpms(crtc, mode);
     } else {
+
+	/* need to restore crtc1 before crtc0 or we may get a blank screen
+	 * in some cases
+	 */
+	if ((radeon_crtc->crtc_id == 1) && (mode == DPMSModeOn)) {
+	    if (crtc0->enabled)
+		legacy_crtc_dpms(crtc0,  DPMSModeOff);
+	}
+
 	legacy_crtc_dpms(crtc, mode);
+
+	if ((radeon_crtc->crtc_id == 1) && (mode == DPMSModeOn)) {
+	    if (crtc0->enabled)
+		legacy_crtc_dpms(crtc0, mode);
+	}
     }
 }
 
@@ -206,6 +223,20 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 static void
 radeon_crtc_mode_commit(xf86CrtcPtr crtc)
 {
+    RADEONInfoPtr info = RADEONPTR(crtc->scrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(crtc->scrn);
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+
+    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+	xf86CrtcPtr other;
+	if (radeon_crtc->crtc_id == 1)
+	    other = pRADEONEnt->pCrtc[0];
+	else
+	    other = pRADEONEnt->pCrtc[1];
+	if (other->enabled)
+	    radeon_crtc_dpms(other, DPMSModeOn);
+    }
+
     radeon_crtc_dpms(crtc, DPMSModeOn);
 }
 

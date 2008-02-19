@@ -283,7 +283,6 @@ typedef struct _ATIRec
     /*
      * BIOS-related definitions.
      */
-    unsigned long BIOSBase;
     CARD8 I2CType, Tuner, Decoder, Audio;
 
     /*
@@ -353,6 +352,7 @@ typedef struct _ATIRec
     /*
      * Clock-related definitions.
      */
+    int refclk;
     int ClockNumberToProgramme, ReferenceNumerator, ReferenceDenominator;
     int ProgrammableClock, maxClock;
     ClockRec ClockDescriptor;
