@@ -74,11 +74,12 @@ const RADEONMonitorType MonTypeID[10] = {
   MT_DP
 };
 
-const char *TMDSTypeName[4] = {
+const char *TMDSTypeName[5] = {
   "None",
   "Internal",
   "External",
   "LVTMA",
+  "DDIA"
 };
 
 const char *DACTypeName[4] = {
@@ -393,7 +394,7 @@ void RADEONConnectorFindMonitor(ScrnInfoPtr pScrn, xf86OutputPtr output)
     /* panel is probably busted or not connected */
     if ((radeon_output->MonType == MT_LCD) &&
 	((radeon_output->PanelXRes == 0) || (radeon_output->PanelYRes == 0)))
-	radeon_output->MonType == MT_NONE;
+	radeon_output->MonType = MT_NONE;
 
     if (output->MonInfo) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "EDID data from the display on output: %s ----------------------\n",
@@ -1754,12 +1755,23 @@ legacy_setup_i2c_bus(int ddc_line)
     i2c.put_data_mask = RADEON_GPIO_EN_0;
     i2c.get_clk_mask = RADEON_GPIO_Y_1;
     i2c.get_data_mask = RADEON_GPIO_Y_0;
-    i2c.mask_clk_reg = ddc_line;
-    i2c.mask_data_reg = ddc_line;
-    i2c.put_clk_reg = ddc_line;
-    i2c.put_data_reg = ddc_line;
-    i2c.get_clk_reg = ddc_line;
-    i2c.get_data_reg = ddc_line;
+    if ((ddc_line == RADEON_LCD_GPIO_MASK) ||
+	(ddc_line == RADEON_MDGPIO_EN_REG)) {
+	i2c.mask_clk_reg = ddc_line;
+	i2c.mask_data_reg = ddc_line;
+	i2c.put_clk_reg = ddc_line;
+	i2c.put_data_reg = ddc_line;
+	i2c.get_clk_reg = ddc_line + 4;
+	i2c.get_data_reg = ddc_line + 4;
+    } else {
+	i2c.mask_clk_reg = ddc_line;
+	i2c.mask_data_reg = ddc_line;
+	i2c.put_clk_reg = ddc_line;
+	i2c.put_data_reg = ddc_line;
+	i2c.get_clk_reg = ddc_line;
+	i2c.get_data_reg = ddc_line;
+    }
+
     if (ddc_line)
 	i2c.valid = TRUE;
     else

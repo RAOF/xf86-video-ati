@@ -103,7 +103,8 @@ typedef enum
     TMDS_NONE    = 0,
     TMDS_INT     = 1,
     TMDS_EXT     = 2,
-    TMDS_LVTMA   = 3
+    TMDS_LVTMA   = 3,
+    TMDS_DDIA    = 4
 } RADEONTmdsType;
 
 typedef enum
@@ -309,24 +310,6 @@ struct avivo_grph_state {
 
     CARD32 viewport_start;
     CARD32 viewport_size;
-    CARD32 scl_enable;
-    CARD32 scl_tap_control;
-};
-
-struct avivo_dac_state {
-    CARD32 enable;
-    CARD32 source_select;
-    CARD32 force_output_cntl;
-    CARD32 powerdown;
-};
-
-struct avivo_dig_state {
-    CARD32 cntl;
-    CARD32 bit_depth_cntl;
-    CARD32 data_sync;
-    CARD32 transmitter_enable;
-    CARD32 transmitter_cntl;
-    CARD32 source_select;
 };
 
 struct avivo_state
@@ -342,9 +325,6 @@ struct avivo_state
     CARD32 crtc_master_en;
     CARD32 crtc_tv_control;
 
-    CARD32 lvtma_pwrseq_cntl;
-    CARD32 lvtma_pwrseq_state;
-
     struct avivo_pll_state pll1;
     struct avivo_pll_state pll2;
 
@@ -354,11 +334,26 @@ struct avivo_state
     struct avivo_grph_state grph1;
     struct avivo_grph_state grph2;
 
-    struct avivo_dac_state daca;
-    struct avivo_dac_state dacb;
+    /* DDIA block on RS6xx chips */
+    CARD32 ddia[37];
 
-    struct avivo_dig_state tmds1;
-    struct avivo_dig_state tmds2;
+    /* scalers */
+    CARD32 d1scl[40];
+    CARD32 d2scl[40];
+    CARD32 dxscl[6+2];
+
+    /* dac regs */
+    CARD32 daca[23];
+    CARD32 dacb[23];
+
+    /* tmdsa */
+    CARD32 tmdsa[31];
+
+    /* lvtma */
+    CARD32 lvtma[39];
+
+    /* dvoa */
+    CARD32 dvoa[16];
 
 };
 
