@@ -2,12 +2,6 @@
 
 #include "xorg-server.h"
 
-/* Avoid PIO and use MMIO for atimisc. */
-#undef AVOID_CPIO
-
-/* Do not build DGA support. */
-#undef AVOID_DGA
-
 /* Use Damage extension */
 #undef DAMAGE
 
@@ -79,9 +73,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Build TV-Out support for atimisc. */
-#undef TV_OUT
 
 /* Build support for Exa */
 #undef USE_EXA

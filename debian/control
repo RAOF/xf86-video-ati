@@ -4,27 +4,24 @@ Priority: optional
 Maintainer: Debian X Strike Force <debian-x@lists.debian.org>
 Uploaders: David Nusinow <dnusinow@debian.org>, Drew Parsons <dparsons@debian.org>, Brice Goglin <bgoglin@debian.org>
 Build-Depends: debhelper (>= 5), pkg-config, xserver-xorg-dev (>= 2:1.4), x11proto-gl-dev, x11proto-xext-dev, x11proto-core-dev, x11proto-video-dev, x11proto-xinerama-dev, x11proto-xf86misc-dev, libgl1-mesa-dev | libgl-dev, x11proto-fonts-dev, x11proto-randr-dev (>= 1.2), x11proto-render-dev, libdrm-dev (>> 2.2) [!hurd-i386], x11proto-xf86dri-dev, quilt
-Standards-Version: 3.7.2
-XS-Vcs-Git: git://git.debian.org/git/pkg-xorg/driver/xserver-xorg-video-ati
-XS-Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-ati.git
+Standards-Version: 3.7.3
+Vcs-Git: git://git.debian.org/git/pkg-xorg/driver/xserver-xorg-video-ati
+Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-ati.git
 
 Package: xserver-xorg-video-ati
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${xserver:Depends}
-Replaces: xserver-xorg (<< 6.8.2-35), xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon, xserver-xorg-driver-ati
-Conflicts: xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon, xserver-xorg-driver-ati
-Provides: ${xviddriver:Provides}, xserver-xorg-video-atimisc, xserver-xorg-driver-r128, xserver-xorg-driver-radeon
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${xserver:Depends}, xserver-xorg-video-r128, xserver-xorg-video-mach64
+Provides: ${xviddriver:Provides}
 Description: X.Org X server -- ATI display driver
  This driver for the X.Org X server (see xserver-xorg for a further description)
- provides support for the ATI Mach, Rage, Radeon, and FireGL series.  It
- provides the 'atimisc', 'r128' and 'radeon' sub-drivers.
+ provides support for the ATI Radeon and FireGL series. It provides the 'radeon'
+ sub-driver.
  .
  Note that this is not the same as the ATI-provided, binary-only, 'fglrx'
  driver, which provides additional 3D functionality for some newer Radeon
  cards, but is not supported.
  .
- This driver provides support for Mach, Rage, Rage128, Radeon, and most
- FireGL series ATI cards.
+ This driver provides support for Radeon and FireGL series ATI cards.
  .
  More information about X.Org can be found at:
  <URL:http://www.X.org>
@@ -39,11 +36,10 @@ Depends: xserver-xorg-video-ati (= ${binary:Version})
 Priority: extra
 Description: X.Org X server -- ATI display driver (debugging symbols)
  This driver for the X.Org X server (see xserver-xorg for a further description)
- provides support for the ATI Mach, Rage, Radeon, and FireGL series.  It
- provides the 'atimisc', 'r128' and 'radeon' sub-drivers.
+ provides support for the ATI Radeon and FireGL series. It provides the 'radeon'
+ sub-driver.
  .
- This driver provides support for Mach, Rage, Rage128, Radeon, and most
- FireGL series ATI cards.
+ This driver provides support for Radeon and FireGL series ATI cards.
  .
  This package provides debugging symbols for the Xorg X server ATI display
  driver.

@@ -229,7 +229,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
-EXTRA_DIST = README.ati README.r128 README.ati.sgml README.r128.sgml ChangeLog
+EXTRA_DIST = ChangeLog
 CLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -683,12 +683,6 @@ uninstall-am:
 	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
 	ps ps-am tags tags-recursive uninstall uninstall-am
 
-
-@BUILD_LINUXDOC_TRUE@README.ati: README.ati.sgml
-@BUILD_LINUXDOC_TRUE@	$(MAKE_TEXT) README.ati.sgml && mv README.ati.txt README.ati
-
-@BUILD_LINUXDOC_TRUE@README.r128: README.r128.sgml
-@BUILD_LINUXDOC_TRUE@	$(MAKE_TEXT) README.r128.sgml && mv README.r128.txt README.r128
 
 .PHONY: ChangeLog
 

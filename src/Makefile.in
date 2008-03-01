@@ -79,20 +79,16 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(ati_drv_ladir)" \
-	"$(DESTDIR)$(mach64_drv_ladir)" "$(DESTDIR)$(r128_drv_ladir)" \
 	"$(DESTDIR)$(radeon_drv_ladir)" \
 	"$(DESTDIR)$(theatre200_drv_ladir)" \
 	"$(DESTDIR)$(theatre_detect_drv_ladir)" \
 	"$(DESTDIR)$(theatre_drv_ladir)" "$(DESTDIR)$(pcidatadir)"
 ati_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-mach64_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-r128_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 radeon_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 theatre200_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 theatre_detect_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 theatre_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(ati_drv_la_LTLIBRARIES) $(mach64_drv_la_LTLIBRARIES) \
-	$(r128_drv_la_LTLIBRARIES) $(radeon_drv_la_LTLIBRARIES) \
+LTLIBRARIES = $(ati_drv_la_LTLIBRARIES) $(radeon_drv_la_LTLIBRARIES) \
 	$(theatre200_drv_la_LTLIBRARIES) \
 	$(theatre_detect_drv_la_LTLIBRARIES) \
 	$(theatre_drv_la_LTLIBRARIES)
@@ -102,53 +98,15 @@ ati_drv_la_OBJECTS = $(am_ati_drv_la_OBJECTS)
 ati_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(ati_drv_la_LDFLAGS) $(LDFLAGS) -o $@
-mach64_drv_la_LIBADD =
-am__mach64_drv_la_SOURCES_DIST = atibus.c atichip.c atiprobe.c \
-	atividmem.c atiadjust.c atiaudio.c aticlock.c aticonfig.c \
-	aticonsole.c atidac.c atidecoder.c atidsp.c atii2c.c atilock.c \
-	atimach64.c atimach64accel.c atimach64cursor.c atimach64i2c.c \
-	atimach64io.c atimach64xv.c atimode.c atipreinit.c atiprint.c \
-	atirgb514.c atiscreen.c atituner.c atiutil.c ativalid.c \
-	atiload.c atimisc.c atimach64probe.c ativga.c ativgaio.c \
-	atibank.c atiwonder.c atiwonderio.c atidga.c atidri.c \
-	atimach64exa.c
-@ATIMISC_CPIO_TRUE@am__objects_1 = ativga.lo ativgaio.lo atibank.lo \
-@ATIMISC_CPIO_TRUE@	atiwonder.lo atiwonderio.lo
-@ATIMISC_DGA_TRUE@am__objects_2 = atidga.lo
-@DRI_TRUE@am__objects_3 = atidri.lo
-@USE_EXA_TRUE@am__objects_4 = atimach64exa.lo
-am_mach64_drv_la_OBJECTS = atibus.lo atichip.lo atiprobe.lo \
-	atividmem.lo atiadjust.lo atiaudio.lo aticlock.lo aticonfig.lo \
-	aticonsole.lo atidac.lo atidecoder.lo atidsp.lo atii2c.lo \
-	atilock.lo atimach64.lo atimach64accel.lo atimach64cursor.lo \
-	atimach64i2c.lo atimach64io.lo atimach64xv.lo atimode.lo \
-	atipreinit.lo atiprint.lo atirgb514.lo atiscreen.lo \
-	atituner.lo atiutil.lo ativalid.lo atiload.lo atimisc.lo \
-	atimach64probe.lo $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4)
-mach64_drv_la_OBJECTS = $(am_mach64_drv_la_OBJECTS)
-mach64_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(mach64_drv_la_LDFLAGS) $(LDFLAGS) -o $@
-r128_drv_la_LIBADD =
-am__r128_drv_la_SOURCES_DIST = r128_accel.c r128_cursor.c r128_dga.c \
-	r128_driver.c r128_video.c r128_misc.c r128_probe.c r128_dri.c
-@DRI_TRUE@am__objects_5 = r128_dri.lo
-am_r128_drv_la_OBJECTS = r128_accel.lo r128_cursor.lo r128_dga.lo \
-	r128_driver.lo r128_video.lo r128_misc.lo r128_probe.lo \
-	$(am__objects_5)
-r128_drv_la_OBJECTS = $(am_r128_drv_la_OBJECTS)
-r128_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(r128_drv_la_LDFLAGS) $(LDFLAGS) -o $@
 radeon_drv_la_LIBADD =
 am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_cursor.c \
 	radeon_dga.c radeon_driver.c radeon_video.c radeon_bios.c \
 	radeon_mm_i2c.c radeon_vip.c radeon_misc.c radeon_probe.c \
-	legacy_crtc.c legacy_output.c radeon_crtc.c radeon_output.c \
-	radeon_modes.c radeon_tv.c AtomBios/CD_Operations.c \
-	AtomBios/Decoder.c AtomBios/hwserv_drv.c \
-	AtomBios/includes/atombios.h AtomBios/includes/CD_binding.h \
+	legacy_crtc.c legacy_output.c radeon_textured_video.c \
+	radeon_crtc.c radeon_output.c radeon_modes.c radeon_tv.c \
+	AtomBios/CD_Operations.c AtomBios/Decoder.c \
+	AtomBios/hwserv_drv.c AtomBios/includes/atombios.h \
+	AtomBios/includes/CD_binding.h \
 	AtomBios/includes/CD_Common_Types.h \
 	AtomBios/includes/CD_Definitions.h \
 	AtomBios/includes/CD_hw_services.h \
@@ -162,20 +120,20 @@ am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_cursor.c \
 	modes/xf86Crtc.c modes/xf86Cursors.c modes/xf86EdidModes.c \
 	modes/xf86RandR12.c modes/xf86RandR12.h modes/xf86Rename.h \
 	modes/xf86Rotate.c modes/xf86DiDGA.c
-am__objects_6 = CD_Operations.lo Decoder.lo hwserv_drv.lo
-@DRI_TRUE@am__objects_7 = radeon_dri.lo
-@USE_EXA_TRUE@am__objects_8 = radeon_exa.lo
-am__objects_9 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
+am__objects_1 = CD_Operations.lo Decoder.lo hwserv_drv.lo
+@DRI_TRUE@am__objects_2 = radeon_dri.lo
+@USE_EXA_TRUE@am__objects_3 = radeon_exa.lo
+am__objects_4 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
 	xf86EdidModes.lo xf86RandR12.lo xf86Rotate.lo xf86DiDGA.lo
-@XMODES_TRUE@am__objects_10 = $(am__objects_9)
+@XMODES_TRUE@am__objects_5 = $(am__objects_4)
 am_radeon_drv_la_OBJECTS = radeon_accel.lo radeon_cursor.lo \
 	radeon_dga.lo radeon_driver.lo radeon_video.lo radeon_bios.lo \
 	radeon_mm_i2c.lo radeon_vip.lo radeon_misc.lo radeon_probe.lo \
-	legacy_crtc.lo legacy_output.lo radeon_crtc.lo \
-	radeon_output.lo radeon_modes.lo radeon_tv.lo $(am__objects_6) \
-	radeon_atombios.lo radeon_atomwrapper.lo $(am__objects_7) \
-	$(am__objects_8) atombios_output.lo atombios_crtc.lo \
-	$(am__objects_10)
+	legacy_crtc.lo legacy_output.lo radeon_textured_video.lo \
+	radeon_crtc.lo radeon_output.lo radeon_modes.lo radeon_tv.lo \
+	$(am__objects_1) radeon_atombios.lo radeon_atomwrapper.lo \
+	$(am__objects_2) $(am__objects_3) atombios_output.lo \
+	atombios_crtc.lo $(am__objects_5)
 radeon_drv_la_OBJECTS = $(am_radeon_drv_la_OBJECTS)
 radeon_drv_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -213,14 +171,12 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(ati_drv_la_SOURCES) $(mach64_drv_la_SOURCES) \
-	$(r128_drv_la_SOURCES) $(radeon_drv_la_SOURCES) \
+SOURCES = $(ati_drv_la_SOURCES) $(radeon_drv_la_SOURCES) \
 	$(theatre200_drv_la_SOURCES) $(theatre_detect_drv_la_SOURCES) \
 	$(theatre_drv_la_SOURCES)
-DIST_SOURCES = $(ati_drv_la_SOURCES) $(am__mach64_drv_la_SOURCES_DIST) \
-	$(am__r128_drv_la_SOURCES_DIST) \
-	$(am__radeon_drv_la_SOURCES_DIST) $(theatre200_drv_la_SOURCES) \
-	$(theatre_detect_drv_la_SOURCES) $(theatre_drv_la_SOURCES)
+DIST_SOURCES = $(ati_drv_la_SOURCES) $(am__radeon_drv_la_SOURCES_DIST) \
+	$(theatre200_drv_la_SOURCES) $(theatre_detect_drv_la_SOURCES) \
+	$(theatre_drv_la_SOURCES)
 pcidataDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(pcidata_DATA)
 ETAGS = etags
@@ -363,8 +319,6 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@DRI_TRUE@ATIMISC_DRI_SRCS = atidri.c
-@DRI_TRUE@R128_DRI_SRCS = r128_dri.c
 @DRI_TRUE@RADEON_DRI_SRCS = radeon_dri.c
 RADEON_ATOMBIOS_SOURCES = \
 	AtomBios/CD_Operations.c \
@@ -398,9 +352,6 @@ XMODE_SRCS = \
         modes/xf86Rotate.c \
         modes/xf86DiDGA.c
 
-@ATIMISC_CPIO_TRUE@ATIMISC_CPIO_SOURCES = ativga.c ativgaio.c atibank.c atiwonder.c atiwonderio.c
-@ATIMISC_DGA_TRUE@ATIMISC_DGA_SOURCES = atidga.c
-@USE_EXA_TRUE@ATIMISC_EXA_SOURCES = atimach64exa.c
 @USE_EXA_TRUE@RADEON_EXA_SOURCES = radeon_exa.c
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @XMODES_CFLAGS@ -DDISABLE_EASF -DENABLE_ALL_SERVICE_FUNCTIONS -DATOM_BIOS -DATOM_BIOS_PARSER -DFGL_LINUX -DDRIVER_PARSER
 INCLUDES = -I$(srcdir)/AtomBios/includes
@@ -410,34 +361,15 @@ ati_drv_ladir = @moduledir@/drivers
 ati_drv_la_SOURCES = \
 	ati.c atimodule.c
 
-mach64_drv_la_LTLIBRARIES = mach64_drv.la
-mach64_drv_la_LDFLAGS = -module -avoid-version
-mach64_drv_ladir = @moduledir@/drivers
-mach64_drv_la_SOURCES = \
-	atibus.c atichip.c atiprobe.c atividmem.c \
-	atiadjust.c atiaudio.c aticlock.c aticonfig.c aticonsole.c \
-	atidac.c atidecoder.c atidsp.c atii2c.c \
-	atilock.c atimach64.c atimach64accel.c atimach64cursor.c \
-	atimach64i2c.c atimach64io.c atimach64xv.c atimode.c atipreinit.c \
-	atiprint.c atirgb514.c atiscreen.c atituner.c atiutil.c ativalid.c \
-	atiload.c atimisc.c atimach64probe.c $(ATIMISC_CPIO_SOURCES) \
-	$(ATIMISC_DGA_SOURCES) $(ATIMISC_DRI_SRCS) $(ATIMISC_EXA_SOURCES)
-
-r128_drv_la_LTLIBRARIES = r128_drv.la
-r128_drv_la_LDFLAGS = -module -avoid-version
-r128_drv_ladir = @moduledir@/drivers
-r128_drv_la_SOURCES = \
-	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
-	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
-
 radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
 radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = radeon_accel.c radeon_cursor.c radeon_dga.c \
 	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
 	radeon_vip.c radeon_misc.c radeon_probe.c legacy_crtc.c \
-	legacy_output.c radeon_crtc.c radeon_output.c radeon_modes.c \
-	radeon_tv.c $(RADEON_ATOMBIOS_SOURCES) radeon_atombios.c \
+	legacy_output.c radeon_textured_video.c radeon_crtc.c \
+	radeon_output.c radeon_modes.c radeon_tv.c \
+	$(RADEON_ATOMBIOS_SOURCES) radeon_atombios.c \
 	radeon_atomwrapper.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES) \
 	atombios_output.c atombios_crtc.c $(am__append_1)
 theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
@@ -463,67 +395,13 @@ theatre200_drv_la_SOURCES = \
 
 EXTRA_DIST = \
 	$(XMODE_SRCS) \
-	atimach64render.c \
 	radeon_render.c \
 	radeon_accelfuncs.c \
+	radeon_textured_videofuncs.c \
 	\
-	atiadjust.h \
-	atiaudio.h \
-	atibank.h \
-	atibus.h \
-	atichip.h \
-	aticlock.h \
-	aticonsole.h \
-	aticrtc.h \
-	aticursor.h \
-	atidac.h \
-	atidecoder.h \
-	atidga.h \
-	atidri.h \
-	atidripriv.h \
-	atidsp.h \
 	ati.h \
-	atii2c.h \
-	atiload.h \
-	atilock.h \
-	atimach64accel.h \
-	atimach64.h \
-	atimach64i2c.h \
-	atimach64io.h \
-	atimach64probe.h \
-	atimach64version.h \
-	atimode.h \
-	atioption.h \
-	atipreinit.h \
-	atiprint.h \
-	atipriv.h \
-	atiprobe.h \
-	atiregs.h \
-	atirgb514.h \
-	atiscreen.h \
-	atistruct.h \
-	atituner.h \
-	atiutil.h \
-	ativalid.h \
 	ativersion.h \
-	ativga.h \
-	ativgaio.h \
-	atividmem.h \
-	atiwonder.h \
-	atiwonderio.h \
-	atixv.h \
 	generic_bus.h \
-	mach64_common.h \
-	mach64_dri.h \
-	mach64_sarea.h \
-	r128_common.h \
-	r128_dri.h \
-	r128_dripriv.h \
-	r128.h \
-	r128_probe.h \
-	r128_reg.h \
-	r128_sarea.h \
-	r128_version.h \
 	radeon_common.h \
 	radeon_commonfuncs.c \
 	radeon_dri.h \
@@ -611,60 +489,6 @@ uninstall-ati_drv_laLTLIBRARIES:
 clean-ati_drv_laLTLIBRARIES:
 	-test -z "$(ati_drv_la_LTLIBRARIES)" || rm -f $(ati_drv_la_LTLIBRARIES)
 	@list='$(ati_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
-install-mach64_drv_laLTLIBRARIES: $(mach64_drv_la_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(mach64_drv_ladir)" || $(MKDIR_P) "$(DESTDIR)$(mach64_drv_ladir)"
-	@list='$(mach64_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(mach64_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(mach64_drv_ladir)/$$f'"; \
-	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(mach64_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(mach64_drv_ladir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-mach64_drv_laLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(mach64_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(mach64_drv_ladir)/$$p'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(mach64_drv_ladir)/$$p"; \
-	done
-
-clean-mach64_drv_laLTLIBRARIES:
-	-test -z "$(mach64_drv_la_LTLIBRARIES)" || rm -f $(mach64_drv_la_LTLIBRARIES)
-	@list='$(mach64_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
-install-r128_drv_laLTLIBRARIES: $(r128_drv_la_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(r128_drv_ladir)" || $(MKDIR_P) "$(DESTDIR)$(r128_drv_ladir)"
-	@list='$(r128_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(r128_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(r128_drv_ladir)/$$f'"; \
-	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(r128_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(r128_drv_ladir)/$$f"; \
-	  else :; fi; \
-	done
-
-uninstall-r128_drv_laLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(r128_drv_la_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(r128_drv_ladir)/$$p'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(r128_drv_ladir)/$$p"; \
-	done
-
-clean-r128_drv_laLTLIBRARIES:
-	-test -z "$(r128_drv_la_LTLIBRARIES)" || rm -f $(r128_drv_la_LTLIBRARIES)
-	@list='$(r128_drv_la_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
@@ -780,10 +604,6 @@ clean-theatre_drv_laLTLIBRARIES:
 	done
 ati_drv.la: $(ati_drv_la_OBJECTS) $(ati_drv_la_DEPENDENCIES) 
 	$(ati_drv_la_LINK) -rpath $(ati_drv_ladir) $(ati_drv_la_OBJECTS) $(ati_drv_la_LIBADD) $(LIBS)
-mach64_drv.la: $(mach64_drv_la_OBJECTS) $(mach64_drv_la_DEPENDENCIES) 
-	$(mach64_drv_la_LINK) -rpath $(mach64_drv_ladir) $(mach64_drv_la_OBJECTS) $(mach64_drv_la_LIBADD) $(LIBS)
-r128_drv.la: $(r128_drv_la_OBJECTS) $(r128_drv_la_DEPENDENCIES) 
-	$(r128_drv_la_LINK) -rpath $(r128_drv_ladir) $(r128_drv_la_OBJECTS) $(r128_drv_la_LIBADD) $(LIBS)
 radeon_drv.la: $(radeon_drv_la_OBJECTS) $(radeon_drv_la_DEPENDENCIES) 
 	$(radeon_drv_la_LINK) -rpath $(radeon_drv_ladir) $(radeon_drv_la_OBJECTS) $(radeon_drv_la_LIBADD) $(LIBS)
 theatre200_drv.la: $(theatre200_drv_la_OBJECTS) $(theatre200_drv_la_DEPENDENCIES) 
@@ -802,59 +622,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CD_Operations.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Decoder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ati.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiadjust.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiaudio.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atibank.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atibus.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atichip.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aticlock.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aticonfig.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aticonsole.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidac.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidecoder.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidga.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atidsp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atii2c.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiload.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atilock.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64accel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64exa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64i2c.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64probe.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimach64xv.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimisc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atimodule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atipreinit.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiprint.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiprobe.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atirgb514.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiscreen.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atituner.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiutil.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ativalid.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ativga.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ativgaio.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atividmem.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiwonder.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atiwonderio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atombios_crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atombios_output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hwserv_drv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/legacy_crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/legacy_output.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_accel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_dga.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_dri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_driver.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_misc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_probe.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_atombios.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_atomwrapper.Plo@am__quote@
@@ -870,6 +643,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_modes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_output.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_probe.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_textured_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_tv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_vip.Plo@am__quote@
@@ -1100,7 +874,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(ati_drv_ladir)" "$(DESTDIR)$(mach64_drv_ladir)" "$(DESTDIR)$(r128_drv_ladir)" "$(DESTDIR)$(radeon_drv_ladir)" "$(DESTDIR)$(theatre200_drv_ladir)" "$(DESTDIR)$(theatre_detect_drv_ladir)" "$(DESTDIR)$(theatre_drv_ladir)" "$(DESTDIR)$(pcidatadir)"; do \
+	for dir in "$(DESTDIR)$(ati_drv_ladir)" "$(DESTDIR)$(radeon_drv_ladir)" "$(DESTDIR)$(theatre200_drv_ladir)" "$(DESTDIR)$(theatre_detect_drv_ladir)" "$(DESTDIR)$(theatre_drv_ladir)" "$(DESTDIR)$(pcidatadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1130,7 +904,6 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-ati_drv_laLTLIBRARIES clean-generic clean-libtool \
-	clean-mach64_drv_laLTLIBRARIES clean-r128_drv_laLTLIBRARIES \
 	clean-radeon_drv_laLTLIBRARIES \
 	clean-theatre200_drv_laLTLIBRARIES \
 	clean-theatre_detect_drv_laLTLIBRARIES \
@@ -1152,9 +925,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-ati_drv_laLTLIBRARIES \
-	install-mach64_drv_laLTLIBRARIES install-pcidataDATA \
-	install-r128_drv_laLTLIBRARIES \
+install-data-am: install-ati_drv_laLTLIBRARIES install-pcidataDATA \
 	install-radeon_drv_laLTLIBRARIES \
 	install-theatre200_drv_laLTLIBRARIES \
 	install-theatre_detect_drv_laLTLIBRARIES \
@@ -1194,9 +965,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-ati_drv_laLTLIBRARIES \
-	uninstall-mach64_drv_laLTLIBRARIES uninstall-pcidataDATA \
-	uninstall-r128_drv_laLTLIBRARIES \
+uninstall-am: uninstall-ati_drv_laLTLIBRARIES uninstall-pcidataDATA \
 	uninstall-radeon_drv_laLTLIBRARIES \
 	uninstall-theatre200_drv_laLTLIBRARIES \
 	uninstall-theatre_detect_drv_laLTLIBRARIES \
@@ -1206,7 +975,6 @@ uninstall-am: uninstall-ati_drv_laLTLIBRARIES \
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean \
 	clean-ati_drv_laLTLIBRARIES clean-generic clean-libtool \
-	clean-mach64_drv_laLTLIBRARIES clean-r128_drv_laLTLIBRARIES \
 	clean-radeon_drv_laLTLIBRARIES \
 	clean-theatre200_drv_laLTLIBRARIES \
 	clean-theatre_detect_drv_laLTLIBRARIES \
@@ -1216,9 +984,8 @@ uninstall-am: uninstall-ati_drv_laLTLIBRARIES \
 	install install-am install-ati_drv_laLTLIBRARIES install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
-	install-info-am install-mach64_drv_laLTLIBRARIES install-man \
-	install-pcidataDATA install-pdf install-pdf-am install-ps \
-	install-ps-am install-r128_drv_laLTLIBRARIES \
+	install-info-am install-man install-pcidataDATA install-pdf \
+	install-pdf-am install-ps install-ps-am \
 	install-radeon_drv_laLTLIBRARIES install-strip \
 	install-theatre200_drv_laLTLIBRARIES \
 	install-theatre_detect_drv_laLTLIBRARIES \
@@ -1227,9 +994,7 @@ uninstall-am: uninstall-ati_drv_laLTLIBRARIES \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am uninstall-ati_drv_laLTLIBRARIES \
-	uninstall-mach64_drv_laLTLIBRARIES uninstall-pcidataDATA \
-	uninstall-r128_drv_laLTLIBRARIES \
-	uninstall-radeon_drv_laLTLIBRARIES \
+	uninstall-pcidataDATA uninstall-radeon_drv_laLTLIBRARIES \
 	uninstall-theatre200_drv_laLTLIBRARIES \
 	uninstall-theatre_detect_drv_laLTLIBRARIES \
 	uninstall-theatre_drv_laLTLIBRARIES

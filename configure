@@ -883,12 +883,6 @@ DRI_TRUE
 DRI_FALSE
 DRI_CFLAGS
 DRI_LIBS
-ATIMISC_CPIO_TRUE
-ATIMISC_CPIO_FALSE
-ATIMISC_DGA_TRUE
-ATIMISC_DGA_FALSE
-ATIMISC_TV_OUT_TRUE
-ATIMISC_TV_OUT_FALSE
 XMODES_TRUE
 XMODES_FALSE
 XMODES_CFLAGS
@@ -4419,7 +4413,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4422 "configure"' > conftest.$ac_ext
+  echo '#line 4416 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7476,11 +7470,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7479: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7473: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7483: \$? = $ac_status" >&5
+   echo "$as_me:7477: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7766,11 +7760,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7769: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7763: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7773: \$? = $ac_status" >&5
+   echo "$as_me:7767: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7870,11 +7864,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7873: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7867: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7877: \$? = $ac_status" >&5
+   echo "$as_me:7871: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10247,7 +10241,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10250 "configure"
+#line 10244 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10347,7 +10341,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10350 "configure"
+#line 10344 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12748,11 +12742,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12751: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12745: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12755: \$? = $ac_status" >&5
+   echo "$as_me:12749: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12852,11 +12846,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12855: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12849: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12859: \$? = $ac_status" >&5
+   echo "$as_me:12853: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14450,11 +14444,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14453: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14447: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14457: \$? = $ac_status" >&5
+   echo "$as_me:14451: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14554,11 +14548,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14557: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14551: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14561: \$? = $ac_status" >&5
+   echo "$as_me:14555: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16774,11 +16768,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16777: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16771: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16781: \$? = $ac_status" >&5
+   echo "$as_me:16775: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17064,11 +17058,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17067: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17061: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17071: \$? = $ac_status" >&5
+   echo "$as_me:17065: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17168,11 +17162,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17171: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17165: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17175: \$? = $ac_status" >&5
+   echo "$as_me:17169: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -21757,98 +21751,6 @@ fi
 
 CFLAGS="$save_CFLAGS"
 
-# Note that this is sort of inverted from drivers/ati/Imakefile in
-# the monolith.  We test for foo, not for !foo (i.e. ATMISC_CPIO, not
-# ATIMISC_AVOID_CPIO), but the defines are negative.  So beware.  Oh yeah,
-# TV_OUT is the special case where it's a positive define, not AVOID_TV_OUT.
-
-# AVOID_CPIO: Only x86, amd64, and alpha are cool with CPIO.  It needs a
-# little-endian, undirected PIO space of at least 64kB.
-# AVOID_DGA: ???
-# ATI_TV_OUT: This only works on x86.
-
-ATIMISC_CPIO=no
-ATIMISC_DGA=yes
-ATIMISC_TV_OUT=no
-
-case $host_cpu in
-  i*86)
-    ATIMISC_TV_OUT=yes
-    ATIMISC_CPIO=yes
-    ;;
-  x86_64|amd64|alpha|ia64)
-    ATIMISC_CPIO=yes
-    ;;
-  sparc)
-    ATIMISC_DGA=no
-    ;;
-  *)
-    ;;
-esac
-
-{ echo "$as_me:$LINENO: checking whether to include PIO support" >&5
-echo $ECHO_N "checking whether to include PIO support... $ECHO_C" >&6; }
- if test "x$ATIMISC_CPIO" = xyes; then
-  ATIMISC_CPIO_TRUE=
-  ATIMISC_CPIO_FALSE='#'
-else
-  ATIMISC_CPIO_TRUE='#'
-  ATIMISC_CPIO_FALSE=
-fi
-
-if test "x$ATIMISC_CPIO" = xyes; then
-	{ echo "$as_me:$LINENO: result: yes, PIO" >&5
-echo "${ECHO_T}yes, PIO" >&6; }
-else
-
-cat >>confdefs.h <<\_ACEOF
-#define AVOID_CPIO 1
-_ACEOF
-
-	{ echo "$as_me:$LINENO: result: no, MMIO" >&5
-echo "${ECHO_T}no, MMIO" >&6; }
-fi
-
-{ echo "$as_me:$LINENO: checking whether to include DGA support" >&5
-echo $ECHO_N "checking whether to include DGA support... $ECHO_C" >&6; }
-{ echo "$as_me:$LINENO: result: $ATIMISC_DGA" >&5
-echo "${ECHO_T}$ATIMISC_DGA" >&6; }
- if test "x$ATIMISC_DGA" = xyes; then
-  ATIMISC_DGA_TRUE=
-  ATIMISC_DGA_FALSE='#'
-else
-  ATIMISC_DGA_TRUE='#'
-  ATIMISC_DGA_FALSE=
-fi
-
-if ! test "x$ATIMISC_DGA" = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define AVOID_DGA 1
-_ACEOF
-
-fi
-
-{ echo "$as_me:$LINENO: checking whether to include TV Out support" >&5
-echo $ECHO_N "checking whether to include TV Out support... $ECHO_C" >&6; }
-{ echo "$as_me:$LINENO: result: $ATIMISC_TV_OUT" >&5
-echo "${ECHO_T}$ATIMISC_TV_OUT" >&6; }
- if test "x$ATIMISC_TV_OUT" = xyes; then
-  ATIMISC_TV_OUT_TRUE=
-  ATIMISC_TV_OUT_FALSE='#'
-else
-  ATIMISC_TV_OUT_TRUE='#'
-  ATIMISC_TV_OUT_FALSE=
-fi
-
-if test "x$ATIMISC_TV_OUT" = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define TV_OUT 1
-_ACEOF
-
-fi
-
 
 cat >>confdefs.h <<\_ACEOF
 #define USE_XAA 1
@@ -22789,6 +22691,24 @@ MAKE_HTML="SGML_SEARCH_PATH=$XORG_SGML_PATH $LINUXDOC  -B html --split=0"
 
 
 
+{ echo "$as_me:$LINENO: The atimisc sub-driver has been split out to xf86-video-mach64:
+    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-mach64
+Please install that driver as well for mach64-based cards.
+" >&5
+echo "$as_me: The atimisc sub-driver has been split out to xf86-video-mach64:
+    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-mach64
+Please install that driver as well for mach64-based cards.
+" >&6;}
+
+{ echo "$as_me:$LINENO: The r128 sub-driver has been split out to xf86-video-r128:
+    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-r128
+Please install that driver as well for rage128-based cards.
+" >&5
+echo "$as_me: The r128 sub-driver has been split out to xf86-video-r128:
+    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-r128
+Please install that driver as well for rage128-based cards.
+" >&6;}
+
 ac_config_files="$ac_config_files Makefile src/Makefile man/Makefile"
 
 cat >confcache <<\_ACEOF
@@ -22926,27 +22846,6 @@ if test -z "${DRI_TRUE}" && test -z "${DRI_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"DRI\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"DRI\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${ATIMISC_CPIO_TRUE}" && test -z "${ATIMISC_CPIO_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"ATIMISC_CPIO\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"ATIMISC_CPIO\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${ATIMISC_DGA_TRUE}" && test -z "${ATIMISC_DGA_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"ATIMISC_DGA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"ATIMISC_DGA\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${ATIMISC_TV_OUT_TRUE}" && test -z "${ATIMISC_TV_OUT_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"ATIMISC_TV_OUT\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"ATIMISC_TV_OUT\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23674,12 +23573,6 @@ DRI_TRUE!$DRI_TRUE$ac_delim
 DRI_FALSE!$DRI_FALSE$ac_delim
 DRI_CFLAGS!$DRI_CFLAGS$ac_delim
 DRI_LIBS!$DRI_LIBS$ac_delim
-ATIMISC_CPIO_TRUE!$ATIMISC_CPIO_TRUE$ac_delim
-ATIMISC_CPIO_FALSE!$ATIMISC_CPIO_FALSE$ac_delim
-ATIMISC_DGA_TRUE!$ATIMISC_DGA_TRUE$ac_delim
-ATIMISC_DGA_FALSE!$ATIMISC_DGA_FALSE$ac_delim
-ATIMISC_TV_OUT_TRUE!$ATIMISC_TV_OUT_TRUE$ac_delim
-ATIMISC_TV_OUT_FALSE!$ATIMISC_TV_OUT_FALSE$ac_delim
 XMODES_TRUE!$XMODES_TRUE$ac_delim
 XMODES_FALSE!$XMODES_FALSE$ac_delim
 XMODES_CFLAGS!$XMODES_CFLAGS$ac_delim
@@ -23717,7 +23610,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 58; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 52; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

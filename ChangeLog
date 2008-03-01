@@ -1,3 +1,704 @@
+commit 1f6a23000001f3d1c21b5c04f94714a8caa7aa8b
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sat Mar 1 15:53:42 2008 -0500
+
+    RADEON: only restore legacy dac regs on legacy radeons
+
+commit dee6cef8e62d0651c00319e03eea92940fd24aa4
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Mar 1 14:39:32 2008 -0500
+
+    RS4xx: enable exa render accel and textured video
+    
+    RS6xx paths seem to work fine on RS4xx
+
+commit 129f737efe4e8d1a368e7db4b063bdcd9339cb09
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sat Mar 1 14:32:30 2008 -0500
+
+    AVIVO: save/restore regs by block
+    
+    Save/Restore the entire block for each output.
+    This should fix VT switch problems.
+
+commit b069aadaa63a95d7a71b5cfbab83577b49501094
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Feb 29 22:36:02 2008 -0500
+
+    AVIVO: LVDS panels need dithering enabled
+    
+    Fixes bug 14760
+
+commit fe87bdee815372b4b4d7d4c705e34681625b90f2
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Feb 29 13:10:13 2008 -0500
+
+    AVIVO: disable pageflipping on avivo chips until we have proper drm support
+
+commit fb3678c7f511d539a51cd090cb8b5041d7d2ba26
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Feb 29 13:01:21 2008 -0500
+
+    R5xx: fix register count when sending fragment program for textured video
+
+commit a66d37d1a896ec934989592457c2beff8e6f1639
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Feb 29 04:07:05 2008 -0500
+
+    fix off-by-one in last commit
+
+commit e56062960be0c8d3947861dd5e0691fce6516b99
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Feb 28 19:16:39 2008 -0500
+
+    AVIVO: save/restore scaler regs
+
+commit ae1c39a9b3e666404d0931679c9078c2e125a8bc
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Feb 28 18:53:55 2008 -0500
+
+    RS6xx: rework output parsing
+    
+    Turns out it's not as complex as I originially thought.
+    IGP chips just have non-standard GPIO entires for DDC.
+
+commit d8d6c9fe4ae7e1ab67dd041a251e901d97c29ed6
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Feb 28 17:01:14 2008 -0500
+
+    RS6xx: fix typos in previous commit
+    
+    Noted by Maciej Cencora on IRC
+
+commit 46547ae8bdbc5c10f1fd028b95ec4c5c31a5b318
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Feb 28 14:29:30 2008 -0500
+
+    AVIVO: disable dithering on DFPs
+    
+    This should fix the color banding some people have noticed.
+    Also save/restore DDIA regs on RS6xx
+
+commit 72a53d6f20ac29b3baddb7d8af04f19b76d2e04f
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Feb 28 17:38:04 2008 +0100
+
+    Handle EXA coordinate limits more cleverly.
+    
+    Generally set the 2D engine limits, and only enforce the 3D engine limits in the
+    CheckComposite hook. This should still prevent useless migration of pixmaps the
+    3D engine can't handle but allows for basic acceleration of bigger ones.
+    
+    Fixes http://bugs.freedesktop.org/show_bug.cgi?id=14708 .
+
+commit 5249f450a2487475a95531603cc8668db2c21c33
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Feb 28 12:23:58 2008 +0100
+
+    Fix 16 bit packed YUV XVideo playback on big endian systems with DRI disabled.
+    
+    http://bugs.freedesktop.org/show_bug.cgi?id=14668
+
+commit e40d75fd8b2aece9dae8076fac822a4a83025fb2
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 22:53:10 2008 -0500
+
+    R500: fragment program clean up and magic number conversion
+
+commit 140dadba36b2191f0e18e41dd987785abd5f55d2
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 22:21:12 2008 -0500
+
+    R300: fix up magic numbers in fragment program
+
+commit e521476bb5e2dfabc93747e43eb911a8a101357e
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Feb 27 21:26:55 2008 -0500
+
+    R300/R400: bump up the clip limits for textured video
+    
+    This allows up to 2560x2560 (hw limit)
+
+commit 10db46f11d7e1c055c9ad6034c65ad163dad17dc
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 15:28:50 2008 -0500
+
+    AVIVO: make sure we select the right LUT for each crtc
+
+commit ea944f38dcfd871b27345698afea1cb986ecb049
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 14:37:52 2008 -0500
+
+    R300+: update RADEONCP_REFRESH() to reflect new location of scissor regs
+
+commit b865faf95666e2172c3eec143f77fe9c524e4983
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 14:05:44 2008 -0500
+
+    R100/R200: move r100/r200 specific 3D setup into appropriate blocks
+    
+    R3xx+ doesn't have these regs.
+
+commit ee485ee0fc550414cd39cdb8fd2769fe0bc996a8
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:41:31 2008 +0200
+
+    radeon: pass distcheck
+
+commit ff110c781299fb729e93572ba3d630ca59e8127d
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:41:17 2008 +0200
+
+    add warning for r128
+
+commit b4a344f36332a12a51c9e896d93e9cb0672d31ef
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:40:50 2008 +0200
+
+    add warning for mach64
+
+commit 81ce4097c12ab64a52d0992f981f588f5a297b7b
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:40:23 2008 +0200
+
+    drop r128
+
+commit 873ff2033f1d0b84c91c48e829aa945f41b490b7
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:40:09 2008 +0200
+
+    drop r128 (build system)
+
+commit 2b8b2676e7b2fd2952f5307a934ef0a11006f838
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:39:49 2008 +0200
+
+    drop mach64
+
+commit 05bbbec11a04e7f6321b92c9dbec4ad4c0d130ff
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Wed Feb 27 18:39:32 2008 +0200
+
+    drop mach64 (build system)
+
+commit 68888189cf8d460ef6f8f2f1431a6ffe9fcd8134
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 03:09:28 2008 -0500
+
+    RADEON: fix textured video uploads
+
+commit 7cfad216a3f1486be194c972b9b6bcf070358586
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Feb 27 02:13:10 2008 -0500
+
+    RADEON: fix clipping for textured video
+
+commit a2dca1d68d751def34ef3c6f836574173737bf76
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Feb 26 16:38:29 2008 -0500
+
+    RADEON: Convert textured video to use pipelined uploads
+
+commit b4fa1ce9d2da04d94521a82d3c2e95f0fe985ccc
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Feb 26 14:45:25 2008 -0500
+
+    R300/R500: fix up clipping
+    
+    Based on patch from Peter Zubaj.
+
+commit 44e527a117ab0a363135ff066c7f7e0c12e3dc89
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Feb 26 14:33:24 2008 -0500
+
+    R300: fix cordinate clamping in render code
+    
+    Based on Peter's fix for textured video
+
+commit 00ec17ad53d7ad43f19c9b723794ac1b8ef86826
+Author: Peter Zubaj <pzubaj at marticonet.sk>
+Date:   Tue Feb 26 14:26:14 2008 -0500
+
+    R300: Fix clamping and pitch for textured video
+
+commit 4207793f9b6c891cb17ba715223d2002668885e3
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Feb 26 13:16:22 2008 -0500
+
+    R300/R500: set the number graphics pipes properly
+    
+    This should fix the checkerboard issues on r300/r350 cards.
+
+commit 823d8bf49e4c0a8c839354179942c5a1944c178d
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Feb 26 12:25:14 2008 -0500
+
+    R300/R500: clean up magic numbers in textured video
+
+commit 8ea75b268f11794f4a7e7bac52cb256490ed3fd2
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Feb 26 16:29:19 2008 +1000
+
+    regs: fix spelling properly
+
+commit f2816064a6c2c4c35ccba74b9aa80547e25c012e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Feb 26 16:28:24 2008 +1000
+
+    regs: fix spelling mistake
+    
+    pointed out by plaes on irc
+
+commit 9d2ca30b90607085578dde1f314db663bd5f82ec
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Feb 25 17:34:00 2008 -0500
+
+    R300/R500: clean up magic numbers in render code
+
+commit 153ad6fcf704cbf9f811d9986cd4baf04e82c9d2
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Feb 25 07:10:48 2008 +1000
+
+    fixup check for EXA composite pointed out by Alan Swanson
+
+commit 85e470e64f629de72e361c77770e2e29998d1bf4
+Merge: 27ddb39... 1b84c76...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Feb 24 05:37:22 2008 -0500
+
+    Merge master and fix conflicts
+    
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+    
+    Conflicts:
+    
+    	src/radeon_commonfuncs.c
+
+commit 27ddb39b12a0b54e099fd5274c4c91f08e2d2822
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Feb 24 05:30:11 2008 -0500
+
+    R300: clean up magic numbers in RADEONInit3DEngine
+
+commit d4c20f33ad6a1f88615cd7e09ad3638896873f9e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Feb 24 04:46:10 2008 -0500
+
+    R300: replace magic numbers in cache flush
+
+commit e52f1c8d2647b81d891ec0728dd582941a76c83f
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Feb 24 04:43:18 2008 -0500
+
+    R300: fill in some more 3D bitfields
+
+commit 1b84c76f27c8d24cb42beae26abf000721901c1c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sun Feb 24 19:20:36 2008 +1100
+
+    rs690: initial textured video support
+
+commit 68158124366db883a901e960fe5f05f8df5efa42
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Feb 19 19:51:18 2008 +1100
+
+    rs690: initial rs690 rotate
+    
+    suffers same problem as r500 with clipping
+
+commit e614bb6965588bf09dcb87f5e08e67120ec9847f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sun Feb 24 01:46:05 2008 -0500
+
+    r500: convert fragprog to use register values
+
+commit 6ce9ee47c75620b2e5d211c5d59d17271a6a7b19
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Feb 23 22:49:34 2008 -0500
+
+    r500: add textured video Xv adapter support
+
+commit 9aaf8b33b22b6ba112869558ae54e021b9487ad2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Feb 23 22:16:25 2008 -0500
+
+    r500: initial rotate support - not fully working yet.
+    
+    Just an example of how to setup and run the r500 3D engine for rotation.
+    this rotates for me but I get some strange clipping on the bottom of my screen
+
+commit 05dc3e4fc19d056ce99a7b110665adab2ca1ea21
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Feb 23 20:29:51 2008 -0500
+
+    Clarify R500 US setup.
+
+commit 080606ad528972623e1ed1124d8efe7705a73446
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Feb 23 20:21:17 2008 -0500
+
+    Add the R500 US index/data pair.
+
+commit edfb3b6bbf0ee17ace8e6ba704a6f54e249fec63
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Feb 23 19:59:33 2008 -0500
+
+    RADEON: no textured video yet on XPRESS chips
+    
+    Still need to sort out the VAP and PVS stuff
+
+commit 4146bfe5d00e40a86d17826fac50d04b2469621d
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Feb 23 19:21:52 2008 -0500
+
+    R500: fix typo in new r5xx regs
+
+commit d9be9f34b0d3313e7b22b2a8bb0a8924ad3116bf
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sat Feb 23 19:06:30 2008 -0500
+
+    RADEON: add textured video support for r1xx-r4xx radeons
+    
+    Based on the kdrive ati video code by Eric Anholt.
+    R3xx/R4xx still have some clipping issues in certain situations
+
+commit 9dc4acad79196e9d5d94dd710773bfa83456d47f
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sat Feb 23 18:29:00 2008 -0500
+
+    RS6xx: gpio entry for DDIA varies depending on the number of DFP ports
+
+commit ed0a93edf28155308e7ab9d8705581bb38455ea0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Feb 23 15:02:17 2008 -0500
+
+    Fix R500_US_CONFIG.
+
+commit bc2bd6f841b51aeed3b6b4a47dbe758c200bc5a6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Feb 23 14:34:18 2008 -0500
+
+    Add R500 unified shader register block.
+
+commit a7b5c3bb74fc4de5e38a75ac31656445ce823464
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Fri Feb 22 19:35:11 2008 -0500
+
+    RS6xx: fix DDC on DDIA output (usually HDMI port)
+
+commit 3327a681e21101cc6f6e162f4e29f9937b69ccc3
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Fri Feb 22 17:05:56 2008 -0500
+
+    ATOM: properly set up DDIA output on RS6xx boards
+
+commit 1d0e9ab8b9451101b1b91943546f6c5833c21b3f
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Wed Feb 20 10:21:49 2008 +0100
+
+    radeon: Fix typo flagged by gcc -Wall.
+
+commit b5bd442b60dbc72fe4c1e928ab864aeb0fd7a3cb
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Feb 19 20:47:40 2008 -0500
+
+    R100: fix render accel for transforms
+    
+    Not sure why we had a separate broken path for r100 vertex
+    submission.
+
+commit a0a73208a21546ac120fb9a463261836c9ea7b55
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Feb 19 20:11:19 2008 -0500
+
+    RADEON: restore clock gating and CP clock errata on VT switch
+    
+    This may help people with hangs on resume
+
+commit b77e2aff7453a9f370beba37ca3c25b92b3f97ff
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Feb 19 19:55:41 2008 -0500
+
+    RADEON: fix DDC types 5 and 6
+
+commit af82172a82f2bdf96e571def659a1c70f92dfdbf
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Feb 19 19:39:35 2008 -0500
+
+    RADEON: update man page with supported chips
+
+commit 1302d1b019c8091986aaf9c86b25c1f36a037788
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Tue Feb 19 00:34:31 2008 -0500
+
+    Bump for 6.8 release
+
+commit 830d29e8b280c11e798fb5bf5278bf24ecbac7bf
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Mon Feb 18 21:17:12 2008 -0500
+
+    ATOM: fix RS6xx connector table parsing and fix some warnings
+
+commit 03aa4cc6d6e8c715a1c1d677cc1845223505b358
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Mon Feb 18 20:19:58 2008 -0500
+
+    bring back to life planar-to-packed conversion for rs4xx
+    
+    Here's a patch to bring back the code for converting planar yuv to packed yuv,
+    if a RS400 family chip is used (though I've no idea if they really all fail
+    with planar yuv).
+    
+    fixes bug 12744
+
+commit 66b0b3f43bb714bc007169d5ba6dabe34cfc008b
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Mon Feb 18 10:33:59 2008 +0200
+
+    r128/radeon: probably correct fix for non pci access code
+
+commit d055b9e800ae50d08cca9db75fc666ce1da9ab52
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Feb 16 09:13:43 2008 +1000
+
+    r128/radeon: hopeful fix for non pci access code
+
+commit c773bc6a314327da29e21e4ebac6fa7f3e98a0a7
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Feb 16 09:05:07 2008 +1000
+
+    r128/radeon: fix build without pciaccess
+
+commit 690a52da5248f47a587a878d05fce9784957970b
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Feb 16 08:33:36 2008 +1000
+
+    mach64: fix non pciaccess build
+
+commit fc85188fd95bf78b7f965cdde3e22b644c74ff81
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 15 18:36:10 2008 +0200
+
+    ati: convert to pci probe
+    
+    add pciids for each subdriver, make no use of the match_data functionality.
+    
+    thanks to Alex Deucher for reviewing and testing.
+
+commit 665bd7e2f61cac3e029bbad5024034e5136deec1
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 15 18:34:56 2008 +0200
+
+    ati wrapper: translate Device lines
+
+commit a596c1618f72179a45289a50a1f9e89462ce9667
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 15 18:34:31 2008 +0200
+
+    r128: do not compile in PciChipsets twice
+
+commit 99cd8ff9a7e15fc2b4e55f8bc020f584173a8c2d
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 15 18:33:51 2008 +0200
+
+    ati: drop duplicate pci-id defines
+
+commit 146b01b51069dc227d0b125babb3f6957c9b9de2
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 15 18:33:29 2008 +0200
+
+    mach64: clean probe a little
+    
+    do not report I/O ports now, they are reported later.
+
+commit f47d461331a032f9bdcf6f63336e848778cec6cc
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 15 18:32:56 2008 +0200
+
+    mach64: minor cosmetic, I2C type
+
+commit 2c66f2e812195167df9ca113044d46deece776ac
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Fri Feb 15 10:59:30 2008 +1000
+
+    make distcheck pass
+
+commit ed87f367ddab7366f84917b43b31d76df4ce1110
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Feb 13 12:53:46 2008 -0500
+
+    RADEON: disable LVDS if panel size is 0x0
+    
+    if we can't get the panel size from the bios or edid
+    or a user specified option, assume it's not connected.
+
+commit 422d7f441fdbb318d22d44db661ac9bd61387bd2
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Feb 12 15:35:46 2008 -0500
+
+    R6xx: when both crtcs are in use make sure they are both enabled
+    
+    sometimes setting a mode on one crtc can cuase a blank screen on the other.
+    make sure they are both enabled if they should be.
+
+commit 860f5af75274cb236f536e1da09da6bd9a579530
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Feb 12 14:46:49 2008 -0500
+
+    R6xx: fix up use of bios scratch regs to reflect the new offsets
+
+commit 32f2119b43a0faf6069d8cc0816f0d9f7914c07f
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Feb 12 14:20:02 2008 -0500
+
+    R6xx: bios scratch regs moved.
+
+commit 8d64be6ebd7f50d4bcb587afeee8252c1367dc77
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Feb 12 12:53:09 2008 -0500
+
+    RADEON: make sure we always set up the FP crtc shadow registers for crtc0
+    
+    The behavior changed when I added rmx center mode support.  In cases where
+    crtc0 drives a DAC this can lead to a blank screen.
+
+commit 810d192ee046077a894e0fb5f2dfd6a7c0130766
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Mon Feb 11 19:23:01 2008 -0500
+
+    R6xx: add missing objects
+
+commit 85043439426e534e561259ce98bebdd8508b36a9
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Feb 11 16:36:58 2008 -0500
+
+    R6xx: make sure we set up the HDP base properly
+
+commit 9ab5d2ec7c583c74f364d7cfbb54bcd2cd8ae2f5
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Feb 11 15:26:51 2008 -0500
+
+    RADEON: always restore crtc1 before crtc0 when using both crtcs
+    
+    In some rare cases restoring crtc0 first will result in a blank screen
+    on crtc1.  If you are having issues with a blank screen on crtc1
+    that used to work on 6.6.3 or before, this should help.
+
+commit e33edca75bd9df0aa19a33e74c38a6d02610befd
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Feb 11 00:33:12 2008 -0500
+
+    RADEON: Implement proper (hopefully) BIOS/DRIVER interaction for ATOM bios
+    
+    Tested on atom-based Desktop cards.  It'd nice to get some testing
+    on atom-based laptops.
+
+commit 6524e33435a786f7de0064cdd1b04c1120d21593
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sun Feb 10 18:52:52 2008 -0500
+
+    RADEON: Implement proper (hopefully) BIOS/DRIVER interaction for COM bios
+    
+    Tested on my M10-based laptop.
+
+commit 8606c1bd175893c77e8c758246a1aed166c8be51
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 8 19:07:03 2008 +0200
+
+    mach64: factor out BIOS panel info parsing
+
+commit 9f33218c80f5a6d6d9464aa3db8ae25a4759f351
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 8 19:06:41 2008 +0200
+
+    mach64: minor cosmetic, LCD panel id
+
+commit 8cd5a465a03834b4b2f3a19f8d36fc9d2e18c6d4
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Fri Feb 8 19:06:27 2008 +0200
+
+    mach64: minor cosmetic, DAC type
+
+commit 7f4db96123fdcba9874226352802d702c2a498bd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Feb 8 10:47:10 2008 +1000
+
+    add rv670 pciids
+
+commit e8899b9978291c62a65f468c92f340f65ad5479d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Feb 7 19:27:38 2008 -0500
+
+    R6xx: fix ddc after my i2c rework
+    
+    Seems r6xx does something different for its i2c table,
+    revert to the old behavior for now.
+
+commit 435de6c4e46ff2bebd4cee58888a66b936cd3fdf
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Feb 7 19:14:13 2008 -0500
+
+    RADEON: sync up with latest upstream versions
+    
+    atombios.h
+    ObjectID.h
+
+commit 692789a293970f70b88ccb6adcf0676d8b495ae2
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:03:37 2008 +0200
+
+    mach64: factor out BIOS multimedia parsing
+
+commit 933328ffd6d1d872a18d3de8624c4df845a64588
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:03:03 2008 +0200
+
+    mach64: complement hint for sparc
+
+commit 956c8c81f3ff434930a0cb17b027b2f8e4eeabb2
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:02:31 2008 +0200
+
+    mach64: consolidate refclk #2
+
+commit dce4cc26a8e2bf53805ec63763243f3ff6b4a6d3
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:02:17 2008 +0200
+
+    mach64: consolidate refclk #1
+
+commit f7ed807f0d82a7446ebc4acdd4e94df44a675f19
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:01:59 2008 +0200
+
+    mach64: cosmetic
+
+commit cda1cd198f33c26ef1b51532a2126468369743b8
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:01:33 2008 +0200
+
+    mach64: factor out BIOS clock parsing
+
+commit 73ff279469be9c7cbf9f533b85fcb553694ff413
+Author: George Sapountzis <gsap7@yahoo.gr>
+Date:   Thu Feb 7 18:00:55 2008 +0200
+
+    mach64: BIOSBase is no longer used
+
+commit caea326cc6f1932bb299f451be013651a5749ea7
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Feb 6 06:36:13 2008 +1000
+
+    r300: move fragprog setup code to prepare composite for now
+
+commit 470cd6a401c6a3e8fea981a8fe97c28be3cfb81d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Feb 6 06:04:13 2008 +1000
+
+    r300: remove r300 specific vertex emission
+    
+    Set the vertex and fragment engine to expect the mask coords.
+
 commit f65e8dfac23adfa199026765fe3a1ea08cf4da67
 Author: Alex Deucher <alex@cube.(none)>
 Date:   Sun Feb 3 00:09:59 2008 -0500
