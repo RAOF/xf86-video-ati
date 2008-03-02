@@ -1,8 +1,9 @@
 xserver-xorg-video-ati (1:6.8.1~git20080302.a4398ac3-1) experimental; urgency=low
 
   * The 'ati' Xorg driver module does not contain the 'r128' and 'mach64'
-    submodule anymore. Users of Rage or Mach boards should replace
-    Driver 'ati' with 'r128' or 'mach64' in their /etc/X11/xorg.conf.
+    submodules anymore. Users of Rage or Mach boards may safely remove
+    the xserver-xorg-video-ati packages only if they use Driver "r128" or
+    "mach64" instead of "ati" in their /etc/X11/xorg.conf.
 
  -- Brice Goglin <bgoglin@debian.org>  Sun, 02 Mar 2008 13:22:03 +0100
 
