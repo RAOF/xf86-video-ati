@@ -1,3 +1,37 @@
+commit a4398ac3ad77216f2c8aa628425bef5f2912a0a9
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sat Mar 1 18:52:26 2008 -0500
+
+    RS6xx: change isIGP checks to CHIP_FAMILY_RS690
+    
+    these paths are only relevant on RS6xx chips
+
+commit 67d4d04836c05293b844bc505f303cfb04c0f8a4
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sat Mar 1 18:33:18 2008 -0500
+
+    RADEON: use xf86SetDesiredModes() in screeninit and enterVT
+    
+    this should restore the proper output state on VT switches
+
+commit be0858a84fbdf74c0b844f462933a221d48c707d
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Sat Mar 1 18:11:58 2008 -0500
+
+    RADEON: remove driver rec copies of mc info, use save rec directly
+    
+    info->mc_* were used and the immediately copied into info->ModeReg
+    ones.  Just use the ModeReg copies directly.
+
+commit dd8ee1b444f4b973a1e0fadca5f943f2162b5e94
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sat Mar 1 16:23:51 2008 -0500
+
+    RADEON: memmap rework 1
+    
+    Don't restore memmap regs on every mode switch.
+    Just do memmap save/restore/setup on server start and VT switch.
+
 commit 1f6a23000001f3d1c21b5c04f94714a8caa7aa8b
 Author: Alex Deucher <alex@cube.(none)>
 Date:   Sat Mar 1 15:53:42 2008 -0500
