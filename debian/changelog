@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.8.1~git20080301.1f6a2300-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.8.1~git20080302.a4398ac3-1) experimental; urgency=low
 
   * New upstream snapshot, after r128 and mach64 got split out.
     + Depends on xserver-xorg-video-r128 and xserver-xorg-video-mach64.
@@ -7,7 +7,7 @@ xserver-xorg-video-ati (1:6.8.1~git20080301.1f6a2300-1) UNRELEASED; urgency=low
   * Bump Standards-Version: to 3.7.3, no change needed.
   * Remove XS- prefix to Vcs-Browser and Vcs-Git fields.
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 01 Mar 2008 23:03:35 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 02 Mar 2008 13:20:59 +0100
 
 xserver-xorg-video-ati (1:6.8.0-1) unstable; urgency=low
 

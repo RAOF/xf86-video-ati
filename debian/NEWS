@@ -1,10 +1,10 @@
-xserver-xorg-video-ati (1:6.8.1~git20080301.1f6a2300-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.8.1~git20080302.a4398ac3-1) experimental; urgency=low
 
   * The 'ati' Xorg driver module does not contain the 'r128' and 'mach64'
     submodule anymore. Users of Rage or Mach boards should replace
     Driver 'ati' with 'r128' or 'mach64' in their /etc/X11/xorg.conf.
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 01 Mar 2008 22:58:35 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 02 Mar 2008 13:22:03 +0100
 
 xserver-xorg-video-ati (1:6.7.197-1) unstable; urgency=low
 
