@@ -5,6 +5,9 @@
 /* Use Damage extension */
 #undef DAMAGE
 
+/* Use linux pragma pack */
+#undef FGL_LINUX
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

@@ -1,3 +1,137 @@
+commit 38606b08b68842fbcc81c233009c1117269f3be9
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:22:59 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 9d710ee1a44cf2f3a948fbdbe17ef09521cbe744
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Fri Mar 7 15:09:14 2008 -0500
+
+    AVIVO: clean up some unused variables
+
+commit c28c30c9f3d7bfebfd56a5c982c96f0090982054
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri Mar 7 14:10:49 2008 -0500
+
+    RADEON: Fix crash in last commit
+
+commit c3a3635865e380c784a226c8ead069d4716d6b75
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Mar 6 20:17:45 2008 -0500
+
+    RADEON: fix tiling/interlaced interaction with randr 1.2
+
+commit df1b94dc4eb1f35b636dbf2ec0ab1c2da9937c0d
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Thu Mar 6 19:22:08 2008 -0500
+
+    DCE3: Ignore outputs with DIN connectors for now
+
+commit cb2dc19387c7b6494c47c76d683cf38a48700768
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 18:33:12 2008 -0500
+
+    AVIVO: fix typo from a previous commit
+    
+    Leave tv dpms hook disabled or you may get bad interactions
+    with the shared DAC
+
+commit 77355de48057e5e7e0d5b3f3cf5a7a92220a53b1
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 17:46:00 2008 -0500
+
+    AVIVO: don't add outputs for invalid connectors
+
+commit 600dbe080997a01ceaf6be86723189d518bc1281
+Merge: 594743a... 5b7875d...
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 17:31:37 2008 -0500
+
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit 594743a99811a8b0f391412892414fcd158eeb56
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 17:30:21 2008 -0500
+
+    AVIVO: fix up memsize detection for IGP chips
+
+commit 5b7875d0cbfbdbcd1515c4e942d30de298b49dff
+Author: Doug Chapman <doug.chapman@hp.com>
+Date:   Thu Mar 6 14:31:06 2008 -0500
+
+    Bug #14826: Fix a bogus check around xf86SetOperatingState.
+
+commit 651fe23f4c650ed91843dec48db24e18e8b91219
+Merge: 3de2dc8... 766f464...
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 14:28:27 2008 -0500
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit 41171c25cd235bafad26bcbabced16ead4b8c54b
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 14:05:18 2008 -0500
+
+    DCE3.0: add support for crtc memreq table
+
+commit 766f464dfdfccadef23e4232f2bce5db22195513
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 13:35:43 2008 -0500
+
+    RADEON: take 2 on proper pragma pack support for bsds
+    
+    See bug 14594.  Based on suggestion by Henry Zhao
+
+commit a842ce9ca6494e724a7828cead9b61c9ef02b6aa
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 12:32:18 2008 -0500
+
+    DCE3.0: Minor fixups
+
+commit 8a1ba374033591c725a78923aa30829e4de2a5ae
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Thu Mar 6 09:53:51 2008 -0500
+
+    RADEON: option to override TVDAC adj values from bios with driver defaults
+    
+    If you have a washed out image on the tv dac, try this option.
+    Option "DefaultTVDACAdj" "TRUE"
+
+commit 0ed48f8f651a28e189f9fee8c6b593da0178d21c
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Wed Mar 5 18:41:01 2008 -0500
+
+    AVIVO: Initial support for DCE 3.0 using atombios
+    
+    DACs are working well, DIG support (DVI, HDMI, LVDS, etc.)
+    still has some issues.
+
+commit 2901e99f1942842856cd39c1dcc8b22f3cf7d9e3
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Wed Mar 5 10:40:06 2008 -0500
+
+    RADEON: fix fetching of dac2 adj values from newer bios tables
+
+commit 74eb981287d76836327830bd51272f605a07e0cc
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Mar 3 12:02:44 2008 -0500
+
+    ATOMBIOS: fix atombios parser support on *bsd
+    
+    bsd requires a different pragma pack than Linux.
+    See bug 14594.
+
+commit f7769ea86e265f347eb58c517ccb5ef8b35eec27
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sun Mar 2 14:49:21 2008 -0500
+
+    [PATCH] Ensure symbols used by other modules are visible.
+    
+    The xf86-video-ati drivers are one of the cases where LoaderSymbol is
+    widely used in some obscure ways. This patch fixes the problem, and
+    allows compiling with -fvisibility=hidden.
+
 commit a4398ac3ad77216f2c8aa628425bef5f2912a0a9
 Author: Alex Deucher <alex@cube.(none)>
 Date:   Sat Mar 1 18:52:26 2008 -0500
@@ -895,6 +1029,16 @@ Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Jan 18 20:11:57 2008 +1000
 
     fixup register 6594 save/restore
+
+commit 3de2dc88cf26ff5932f11cecdf975777b8aa2a4a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 14:55:05 2008 -0500
+
+    Bump CRTC size limits on AVIVO chips so 30" displays work without tweaking.
+    
+    Note that the CRTC size limits we're using right now are _not_ the
+    hardware limits, they're just heuristics until we can resize the front
+    buffer properly.
 
 commit 2a89a31481d71a56a9930073cf99d3ae7b4290e1
 Author: Alex Deucher <alex@samba.(none)>

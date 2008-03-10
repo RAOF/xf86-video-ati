@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.8.1~git20080310.38606b08-1) experimental; urgency=low
+
+  * New upstream snapshap, up to commit 38606b08.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 10 Mar 2008 23:48:13 +0100
+
 xserver-xorg-video-ati (1:6.8.1~git20080302.a4398ac3-1) experimental; urgency=low
 
   * New upstream snapshot, after r128 and mach64 got split out.
