@@ -1,10 +1,5 @@
  /*
  * Copyright © 2007 Red Hat, Inc.
- *
- * PLL code is:
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
  * Copyright 2007  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,6 +23,7 @@
  *
  * Authors:
  *    Dave Airlie <airlied@redhat.com>
+ *    Alex Deucher <alexander.deucher@amd.com>
  *
  */
 /*
@@ -52,7 +48,7 @@
 #include "sarea.h"
 #endif
 
-AtomBiosResult
+static AtomBiosResult
 atombios_enable_crtc(atomBiosHandlePtr atomBIOS, int crtc, int state)
 {
     ENABLE_CRTC_PS_ALLOCATION crtc_data;
@@ -75,7 +71,30 @@ atombios_enable_crtc(atomBiosHandlePtr atomBIOS, int crtc, int state)
     return ATOM_NOT_IMPLEMENTED;
 }
 
-AtomBiosResult
+static AtomBiosResult
+atombios_enable_crtc_memreq(atomBiosHandlePtr atomBIOS, int crtc, int state)
+{
+    ENABLE_CRTC_PS_ALLOCATION crtc_data;
+    AtomBiosArgRec data;
+    unsigned char *space;
+
+    crtc_data.ucCRTC = crtc;
+    crtc_data.ucEnable = state;
+
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, EnableCRTCMemReq);
+    data.exec.dataSpace = (void *)&space;
+    data.exec.pspace = &crtc_data;
+
+    if (RHDAtomBiosFunc(atomBIOS->scrnIndex, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+	ErrorF("%s CRTC memreq %d success\n", state? "Enable":"Disable", crtc);
+	return ATOM_SUCCESS ;
+    }
+
+    ErrorF("Enable CRTC memreq failed\n");
+    return ATOM_NOT_IMPLEMENTED;
+}
+
+static AtomBiosResult
 atombios_blank_crtc(atomBiosHandlePtr atomBIOS, int crtc, int state)
 {
     BLANK_CRTC_PS_ALLOCATION crtc_data;
@@ -99,19 +118,6 @@ atombios_blank_crtc(atomBiosHandlePtr atomBIOS, int crtc, int state)
     return ATOM_NOT_IMPLEMENTED;
 }
 
-#if 0
-static void
-atombios_crtc_enable(xf86CrtcPtr crtc, int enable)
-{
-    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
-    RADEONInfoPtr  info = RADEONPTR(crtc->scrn);
-
-    atombios_enable_crtc(info->atomBIOS, radeon_crtc->crtc_id, enable);
-
-    //TODOavivo_wait_idle(avivo);
-}
-#endif
-
 void
 atombios_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
@@ -121,12 +127,16 @@ atombios_crtc_dpms(xf86CrtcPtr crtc, int mode)
     case DPMSModeOn:
     case DPMSModeStandby:
     case DPMSModeSuspend:
+	if (IS_DCE3_VARIANT)
+	    atombios_enable_crtc_memreq(info->atomBIOS, radeon_crtc->crtc_id, 1);
 	atombios_enable_crtc(info->atomBIOS, radeon_crtc->crtc_id, 1);
 	atombios_blank_crtc(info->atomBIOS, radeon_crtc->crtc_id, 0);
 	break;
     case DPMSModeOff:
 	atombios_blank_crtc(info->atomBIOS, radeon_crtc->crtc_id, 1);
 	atombios_enable_crtc(info->atomBIOS, radeon_crtc->crtc_id, 0);
+	if (IS_DCE3_VARIANT)
+	    atombios_enable_crtc_memreq(info->atomBIOS, radeon_crtc->crtc_id, 0);
 	break;
     }
 }
@@ -155,12 +165,19 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 {
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     RADEONInfoPtr  info = RADEONPTR(crtc->scrn);
+    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
     unsigned char *RADEONMMIO = info->MMIO;
     int index = GetIndexIntoMasterTable(COMMAND, SetPixelClock);
     CARD32 sclock = mode->Clock;
     CARD32 ref_div = 0, fb_div = 0, post_div = 0;
-    int major, minor;
+    int major, minor, i;
     SET_PIXEL_CLOCK_PS_ALLOCATION spc_param;
+    PIXEL_CLOCK_PARAMETERS_V2 *spc2_ptr;
+    PIXEL_CLOCK_PARAMETERS_V3 *spc3_ptr;
+
+    xf86OutputPtr output;
+    RADEONOutputPrivatePtr radeon_output = NULL;
+
     void *ptr;
     AtomBiosArgRec data;
     unsigned char *space;
@@ -193,6 +210,20 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 	       "crtc(%d) PLL  : refdiv %u, fbdiv 0x%X(%u), pdiv %u\n",
 	       radeon_crtc->crtc_id, (unsigned int)ref_div, (unsigned int)fb_div, (unsigned int)fb_div, (unsigned int)post_div);
 
+    /* Can't really do cloning easily on DCE3 cards */
+    for (i = 0; i < xf86_config->num_output; i++) {
+	output = xf86_config->output[i];
+	if (output->crtc == crtc) {
+	    radeon_output = output->driver_private;
+	    break;
+	}
+    }
+
+    if (radeon_output == NULL) {
+	xf86DrvMsg(crtc->scrn->scrnIndex, X_ERROR, "No output assigned to crtc!\n");
+	return;
+    }
+
     atombios_get_command_table_version(info->atomBIOS, index, &major, &minor);
 
     ErrorF("table is %d %d\n", major, minor);
@@ -200,18 +231,66 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
     case 1:
 	switch(minor) {
 	case 1:
-	case 2: {
-	    spc_param.sPCLKInput.usPixelClock = sclock;
-	    spc_param.sPCLKInput.usRefDiv = ref_div;
-	    spc_param.sPCLKInput.usFbDiv = fb_div;
-	    spc_param.sPCLKInput.ucPostDiv = post_div;
-	    spc_param.sPCLKInput.ucPpll = radeon_crtc->crtc_id ? ATOM_PPLL2 : ATOM_PPLL1;
-	    spc_param.sPCLKInput.ucCRTC = radeon_crtc->crtc_id;
-	    spc_param.sPCLKInput.ucRefDivSrc = 1;
+	case 2:
+	    spc2_ptr = &spc_param.sPCLKInput;
+	    spc2_ptr->usPixelClock = sclock;
+	    spc2_ptr->usRefDiv = ref_div;
+	    spc2_ptr->usFbDiv = fb_div;
+	    spc2_ptr->ucPostDiv = post_div;
+	    spc2_ptr->ucPpll = radeon_crtc->crtc_id ? ATOM_PPLL2 : ATOM_PPLL1;
+	    spc2_ptr->ucCRTC = radeon_crtc->crtc_id;
+	    spc2_ptr->ucRefDivSrc = 1;
+	    ptr = &spc_param;
+	    break;
+	case 3:
+	    spc3_ptr = &spc_param.sPCLKInput;
+
+	    spc3_ptr->usPixelClock = sclock;
+	    spc3_ptr->usRefDiv = ref_div;
+	    spc3_ptr->usFbDiv = fb_div;
+	    spc3_ptr->ucPostDiv = post_div;
+	    spc3_ptr->ucPpll = radeon_crtc->crtc_id ? ATOM_PPLL2 : ATOM_PPLL1;
+	    spc3_ptr->ucMiscInfo = (radeon_crtc->crtc_id << 2);
+
+	    if (radeon_output->MonType == MT_CRT) {
+		if (radeon_output->DACType == DAC_PRIMARY)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1;
+		else if (radeon_output->DACType == DAC_TVDAC)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2;
+		spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_CRT;
+	    } else if (radeon_output->MonType == MT_DFP) {
+		if (radeon_output->devices & ATOM_DEVICE_DFP1_SUPPORT)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_UNIPHY;
+		else if (radeon_output->devices & ATOM_DEVICE_DFP2_SUPPORT)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DVO1;
+		else if (radeon_output->devices & ATOM_DEVICE_DFP3_SUPPORT)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA;
+		if (OUTPUT_IS_DVI)
+		    spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_DVI;
+		else if (radeon_output->type == OUTPUT_HDMI)
+		    spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_HDMI;
+		else if (radeon_output->type == OUTPUT_DP)
+		    spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_DP;
+	    } else if (radeon_output->MonType == MT_LCD) {
+		if (radeon_output->devices & ATOM_DEVICE_LCD1_SUPPORT)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA;
+		spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_LVDS;
+	    } else if (OUTPUT_IS_TV) {
+		if (radeon_output->DACType == DAC_PRIMARY)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1;
+		else if (radeon_output->DACType == DAC_TVDAC)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2;
+		spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_TV;
+	    } else if (radeon_output->MonType == MT_CV) {
+		if (radeon_output->DACType == DAC_PRIMARY)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1;
+		else if (radeon_output->DACType == DAC_TVDAC)
+		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2;
+		spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_CV;
+	    }
 
 	    ptr = &spc_param;
 	    break;
-	}
 	default:
 	    ErrorF("Unknown table version\n");
 	    exit(-1);
@@ -251,22 +330,13 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
     int need_tv_timings = 0;
     int i, ret;
     SET_CRTC_TIMING_PARAMETERS_PS_ALLOCATION crtc_timing;
+    Bool tilingChanged = FALSE;
 
     memset(&crtc_timing, 0, sizeof(crtc_timing));
 
     if (info->allowColorTiling) {
-	info->tilingEnabled = (adjusted_mode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
-#ifdef XF86DRI
-	if (info->directRenderingEnabled && (info->tilingEnabled != tilingOld)) {
-	    RADEONSAREAPrivPtr pSAREAPriv;
-	    if (RADEONDRISetParam(pScrn, RADEON_SETPARAM_SWITCH_TILING, (info->tilingEnabled ? 1 : 0)) < 0)
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			   "[drm] failed changing tiling status\n");
-	    /* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
-	    pSAREAPriv = DRIGetSAREAPrivate(screenInfo.screens[pScrn->scrnIndex]);
-	    info->tilingEnabled = pSAREAPriv->tiling_enabled ? TRUE : FALSE;
-	}
-#endif
+        radeon_crtc->can_tile = (adjusted_mode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
+	tilingChanged = RADEONSetTiling(pScrn);
     }
 
     for (i = 0; i < xf86_config->num_output; i++) {
@@ -331,27 +401,25 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
 	   adjusted_mode->CrtcHTotal, adjusted_mode->CrtcVTotal, adjusted_mode->Flags);
 
     if (IS_AVIVO_VARIANT) {
-	radeon_crtc->fb_width = mode->CrtcHDisplay;
-	radeon_crtc->fb_height = pScrn->virtualY;
-	radeon_crtc->fb_pitch = mode->CrtcHDisplay;
-	radeon_crtc->fb_length = radeon_crtc->fb_pitch * radeon_crtc->fb_height * 4;
+	CARD32 fb_format;
+
 	switch (crtc->scrn->bitsPerPixel) {
 	case 15:
-	    radeon_crtc->fb_format = AVIVO_D1GRPH_CONTROL_DEPTH_16BPP | AVIVO_D1GRPH_CONTROL_16BPP_ARGB1555;
+	    fb_format = AVIVO_D1GRPH_CONTROL_DEPTH_16BPP | AVIVO_D1GRPH_CONTROL_16BPP_ARGB1555;
 	    break;
 	case 16:
-	    radeon_crtc->fb_format = AVIVO_D1GRPH_CONTROL_DEPTH_16BPP | AVIVO_D1GRPH_CONTROL_16BPP_RGB565;
+	    fb_format = AVIVO_D1GRPH_CONTROL_DEPTH_16BPP | AVIVO_D1GRPH_CONTROL_16BPP_RGB565;
 	    break;
 	case 24:
 	case 32:
-	    radeon_crtc->fb_format = AVIVO_D1GRPH_CONTROL_DEPTH_32BPP | AVIVO_D1GRPH_CONTROL_32BPP_ARGB8888;
+	    fb_format = AVIVO_D1GRPH_CONTROL_DEPTH_32BPP | AVIVO_D1GRPH_CONTROL_32BPP_ARGB8888;
 	    break;
 	default:
 	    FatalError("Unsupported screen depth: %d\n", xf86GetDepth());
 	}
 
 	if (info->tilingEnabled && (crtc->rotatedData == NULL)) {
-	    radeon_crtc->fb_format |= AVIVO_D1GRPH_MACRO_ADDRESS_MODE;
+	    fb_format |= AVIVO_D1GRPH_MACRO_ADDRESS_MODE;
 	}
 
 	if (radeon_crtc->crtc_id == 0)
@@ -373,8 +441,7 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
 
 	OUTREG(AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS + radeon_crtc->crtc_offset, fb_location);
 	OUTREG(AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS + radeon_crtc->crtc_offset, fb_location);
-	OUTREG(AVIVO_D1GRPH_CONTROL + radeon_crtc->crtc_offset,
-	       radeon_crtc->fb_format);
+	OUTREG(AVIVO_D1GRPH_CONTROL + radeon_crtc->crtc_offset, fb_format);
 
 	OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_X + radeon_crtc->crtc_offset, 0);
 	OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_Y + radeon_crtc->crtc_offset, 0);
@@ -408,7 +475,7 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
 
     atombios_set_crtc_timing(info->atomBIOS, &crtc_timing);
 
-    if (info->tilingEnabled != tilingOld) {
+    if (tilingChanged) {
 	/* need to redraw front buffer, I guess this can be considered a hack ? */
 	/* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
 	if (pScrn->pScreen)

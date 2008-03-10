@@ -232,6 +232,11 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 
+case $host_os in
+  *linux*)
+  AC_DEFINE(FGL_LINUX, 1, [Use linux pragma pack]) ;;
+esac
+
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([DRI_CFLAGS])
 AC_SUBST([moduledir])
