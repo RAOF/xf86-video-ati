@@ -178,15 +178,9 @@ static Bool AVIVOI2CDoLock(xf86OutputPtr output, int lock_state);
 extern void atombios_output_mode_set(xf86OutputPtr output,
 				     DisplayModePtr mode,
 				     DisplayModePtr adjusted_mode);
-extern void legacy_output_mode_set(xf86OutputPtr output,
-				   DisplayModePtr mode,
-				   DisplayModePtr adjusted_mode);
 extern void atombios_output_dpms(xf86OutputPtr output, int mode);
-extern void legacy_output_dpms(xf86OutputPtr output, int mode);
 extern RADEONMonitorType atombios_dac_detect(ScrnInfoPtr pScrn, xf86OutputPtr output);
-extern RADEONMonitorType legacy_dac_detect(ScrnInfoPtr pScrn, xf86OutputPtr output);
 extern int atombios_external_tmds_setup(xf86OutputPtr output, DisplayModePtr mode);
-extern I2CDevPtr RADEONDVODeviceInit(I2CBusPtr b, I2CSlaveAddr addr);
 static void
 radeon_bios_output_dpms(xf86OutputPtr output, int mode);
 static void
@@ -238,6 +232,8 @@ avivo_display_ddc_connected(ScrnInfoPtr pScrn, xf86OutputPtr output)
 	else if (radeon_output->type == OUTPUT_DVI_D)
 	    MonType = MT_DFP;
 	else if (radeon_output->type == OUTPUT_HDMI)
+	    MonType = MT_DFP;
+	else if (radeon_output->type == OUTPUT_DP)
 	    MonType = MT_DFP;
 	else if (radeon_output->type == OUTPUT_DVI_I && (MonInfo->rawData[0x14] & 0x80)) /* if it's digital and DVI */
 	    MonType = MT_DFP;
@@ -1168,6 +1164,7 @@ static Atom tmds_pll_atom;
 static Atom rmx_atom;
 static Atom monitor_type_atom;
 static Atom load_detection_atom;
+static Atom coherent_mode_atom;
 static Atom tv_hsize_atom;
 static Atom tv_hpos_atom;
 static Atom tv_vpos_atom;
@@ -1227,6 +1224,30 @@ radeon_create_resources(xf86OutputPtr output)
 	    data = 0; /* shared tvdac between vga/dvi/tv */
 
 	err = RRChangeOutputProperty(output->randr_output, load_detection_atom,
+				     XA_INTEGER, 32, PropModeReplace, 1, &data,
+				     FALSE, TRUE);
+	if (err != 0) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "RRChangeOutputProperty error, %d\n", err);
+	}
+    }
+
+    if (IS_DCE3_VARIANT &&
+	(OUTPUT_IS_DVI || (radeon_output->type == OUTPUT_HDMI))) {
+	coherent_mode_atom = MAKE_ATOM("coherent_mode");
+
+	range[0] = 0; /* off */
+	range[1] = 1; /* on */
+	err = RRConfigureOutputProperty(output->randr_output, coherent_mode_atom,
+					FALSE, TRUE, FALSE, 2, range);
+	if (err != 0) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		       "RRConfigureOutputProperty error, %d\n", err);
+	}
+
+	data = 1; /* use coherent mode by default */
+
+	err = RRChangeOutputProperty(output->randr_output, coherent_mode_atom,
 				     XA_INTEGER, 32, PropModeReplace, 1, &data,
 				     FALSE, TRUE);
 	if (err != 0) {
@@ -1413,6 +1434,26 @@ radeon_create_resources(xf86OutputPtr output)
 }
 
 static Bool
+radeon_set_mode_for_property(xf86OutputPtr output)
+{
+    ScrnInfoPtr pScrn = output->scrn;
+
+    if (output->crtc) {
+	xf86CrtcPtr crtc = output->crtc;
+
+	if (crtc->enabled) {
+	    if (!xf86CrtcSetMode(crtc, &crtc->desiredMode, crtc->desiredRotation,
+				 crtc->desiredX, crtc->desiredY)) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "Failed to set mode after propery change!\n");
+		return FALSE;
+	    }
+	}
+    }
+    return TRUE;
+}
+
+static Bool
 radeon_set_property(xf86OutputPtr output, Atom property,
 		       RRPropertyValuePtr value)
 {
@@ -1451,22 +1492,47 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 
 	radeon_output->load_detection = val;
 
+    } else if (property == coherent_mode_atom) {
+	Bool coherent_mode = radeon_output->coherent_mode;
+
+	if (value->type != XA_INTEGER ||
+	    value->format != 32 ||
+	    value->size != 1) {
+	    return FALSE;
+	}
+
+	val = *(INT32 *)value->data;
+	if (val < 0 || val > 1)
+	    return FALSE;
+
+	radeon_output->coherent_mode = val;
+	if (!radeon_set_mode_for_property(output)) {
+	    radeon_output->coherent_mode = coherent_mode;
+	    (void)radeon_set_mode_for_property(output);
+	    return FALSE;
+	}
+
     } else if (property == rmx_atom) {
 	const char *s;
+	RADEONRMXType rmx = radeon_output->rmx_type;
+
 	if (value->type != XA_STRING || value->format != 8)
 	    return FALSE;
 	s = (char*)value->data;
 	if (value->size == strlen("full") && !strncmp("full", s, strlen("full"))) {
 	    radeon_output->rmx_type = RMX_FULL;
-	    return TRUE;
 	} else if (value->size == strlen("center") && !strncmp("center", s, strlen("center"))) {
 	    radeon_output->rmx_type = RMX_CENTER;
-	    return TRUE;
 	} else if (value->size == strlen("off") && !strncmp("off", s, strlen("off"))) {
 	    radeon_output->rmx_type = RMX_OFF;
-	    return TRUE;
+	} else
+	    return FALSE;
+
+	if (!radeon_set_mode_for_property(output)) {
+	    radeon_output->rmx_type = rmx;
+	    (void)radeon_set_mode_for_property(output);
+	    return FALSE;
 	}
-	return FALSE;
     } else if (property == tmds_pll_atom) {
 	const char *s;
 	if (value->type != XA_STRING || value->format != 8)
@@ -1475,12 +1541,12 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	if (value->size == strlen("bios") && !strncmp("bios", s, strlen("bios"))) {
 	    if (!RADEONGetTMDSInfoFromBIOS(output))
 		RADEONGetTMDSInfoFromTable(output);
-	    return TRUE;
 	} else if (value->size == strlen("driver") && !strncmp("driver", s, strlen("driver"))) {
 	    RADEONGetTMDSInfoFromTable(output);
-	    return TRUE;
-	}
-	return FALSE;
+	} else
+	    return FALSE;
+
+	return radeon_set_mode_for_property(output);
     } else if (property == monitor_type_atom) {
 	const char *s;
 	if (value->type != XA_STRING || value->format != 8)
@@ -1495,8 +1561,8 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	} else if (value->size == strlen("digital") && !strncmp("digital", s, strlen("digital"))) {
 	    radeon_output->DVIType = DVI_DIGITAL;
 	    return TRUE;
-	}
-	return FALSE;
+	} else
+	    return FALSE;
     } else if (property == tv_hsize_atom) {
 	if (value->type != XA_INTEGER ||
 	    value->format != 32 ||
@@ -1511,7 +1577,7 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	radeon_output->hSize = val;
 	if (radeon_output->tv_on && !IS_AVIVO_VARIANT)
 	    RADEONUpdateHVPosition(output, &output->crtc->mode);
-	return TRUE;
+
     } else if (property == tv_hpos_atom) {
 	if (value->type != XA_INTEGER ||
 	    value->format != 32 ||
@@ -1526,7 +1592,7 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	radeon_output->hPos = val;
 	if (radeon_output->tv_on && !IS_AVIVO_VARIANT)
 	    RADEONUpdateHVPosition(output, &output->crtc->mode);
-	return TRUE;
+
     } else if (property == tv_vpos_atom) {
 	if (value->type != XA_INTEGER ||
 	    value->format != 32 ||
@@ -1541,38 +1607,38 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	radeon_output->vPos = val;
 	if (radeon_output->tv_on && !IS_AVIVO_VARIANT)
 	    RADEONUpdateHVPosition(output, &output->crtc->mode);
-	return TRUE;
+
     } else if (property == tv_std_atom) {
 	const char *s;
+	TVStd std = radeon_output->tvStd;
+
 	if (value->type != XA_STRING || value->format != 8)
 	    return FALSE;
 	s = (char*)value->data;
 	if (value->size == strlen("ntsc") && !strncmp("ntsc", s, strlen("ntsc"))) {
 	    radeon_output->tvStd = TV_STD_NTSC;
-	    return TRUE;
 	} else if (value->size == strlen("pal") && !strncmp("pal", s, strlen("pal"))) {
 	    radeon_output->tvStd = TV_STD_PAL;
-	    return TRUE;
 	} else if (value->size == strlen("pal-m") && !strncmp("pal-m", s, strlen("pal-m"))) {
 	    radeon_output->tvStd = TV_STD_PAL_M;
-	    return TRUE;
 	} else if (value->size == strlen("pal-60") && !strncmp("pal-60", s, strlen("pal-60"))) {
 	    radeon_output->tvStd = TV_STD_PAL_60;
-	    return TRUE;
 	} else if (value->size == strlen("ntsc-j") && !strncmp("ntsc-j", s, strlen("ntsc-j"))) {
 	    radeon_output->tvStd = TV_STD_NTSC_J;
-	    return TRUE;
 	} else if (value->size == strlen("scart-pal") && !strncmp("scart-pal", s, strlen("scart-pal"))) {
 	    radeon_output->tvStd = TV_STD_SCART_PAL;
-	    return TRUE;
 	} else if (value->size == strlen("pal-cn") && !strncmp("pal-cn", s, strlen("pal-cn"))) {
 	    radeon_output->tvStd = TV_STD_PAL_CN;
-	    return TRUE;
 	} else if (value->size == strlen("secam") && !strncmp("secam", s, strlen("secam"))) {
 	    radeon_output->tvStd = TV_STD_SECAM;
-	    return TRUE;
+	} else
+	    return FALSE;
+
+	if (!radeon_set_mode_for_property(output)) {
+	    radeon_output->tvStd = std;
+	    (void)radeon_set_mode_for_property(output);
+	    return FALSE;
 	}
-	return FALSE;
     }
 
     return TRUE;
@@ -1622,6 +1688,8 @@ void RADEONSetOutputType(ScrnInfoPtr pScrn, RADEONOutputPrivatePtr radeon_output
     case CONNECTOR_HDMI_TYPE_A:
     case CONNECTOR_HDMI_TYPE_B:
 	output = OUTPUT_HDMI; break;
+    case CONNECTOR_DISPLAY_PORT:
+	output = OUTPUT_DP; break;
     case CONNECTOR_DIGITAL:
     case CONNECTOR_NONE:
     case CONNECTOR_UNSUPPORTED:
@@ -2139,16 +2207,17 @@ void RADEONInitConnector(xf86OutputPtr output)
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
-    if (radeon_output->DACType == DAC_PRIMARY)
+    if (info->IsAtomBios &&
+	((radeon_output->DACType == DAC_PRIMARY) ||
+	 (radeon_output->DACType == DAC_TVDAC)))
+	radeon_output->load_detection = 1;
+    else if (radeon_output->DACType == DAC_PRIMARY)
 	radeon_output->load_detection = 1; /* primary dac, only drives vga */
-    /*else if (radeon_output->DACType == DAC_TVDAC &&
-	     info->tvdac_use_count < 2)
-	     radeon_output->load_detection = 1;*/ /* only one output with tvdac */
     else if ((radeon_output->DACType == DAC_TVDAC) &&
 	     (xf86ReturnOptValBool(info->Options, OPTION_TVDAC_LOAD_DETECT, FALSE)))
 	radeon_output->load_detection = 1; /* shared tvdac between vga/dvi/tv */
     else
-	radeon_output->load_detection = 0; /* shared tvdac between vga/dvi/tv */
+	radeon_output->load_detection = 0;
 
     if (radeon_output->type == OUTPUT_LVDS) {
 	radeon_output->rmx_type = RMX_FULL;
@@ -2188,6 +2257,9 @@ void RADEONInitConnector(xf86OutputPtr output)
 	radeon_output->tv_on = FALSE;
 	RADEONGetTVDacAdjInfo(output);
     }
+
+    if (OUTPUT_IS_DVI || (radeon_output->type == OUTPUT_HDMI))
+	radeon_output->coherent_mode = TRUE;
 
     if (radeon_output->ddc_i2c.valid)
 	RADEONI2CInit(output, &radeon_output->pI2CBus, output->name, FALSE);
@@ -2729,11 +2801,12 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 
     for (i = 0 ; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->BiosConnector[i].valid) {
+	    RADEONOutputPrivatePtr radeon_output;
 
 	    if (info->BiosConnector[i].ConnectorType == CONNECTOR_NONE)
 		continue;
 
-	    RADEONOutputPrivatePtr radeon_output = xnfcalloc(sizeof(RADEONOutputPrivateRec), 1);
+	    radeon_output = xnfcalloc(sizeof(RADEONOutputPrivateRec), 1);
 	    if (!radeon_output) {
 		return FALSE;
 	    }
@@ -2742,6 +2815,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    radeon_output->devices = info->BiosConnector[i].devices;
 	    radeon_output->output_id = info->BiosConnector[i].output_id;
 	    radeon_output->ddc_i2c = info->BiosConnector[i].ddc_i2c;
+	    radeon_output->igp_lane_info = info->BiosConnector[i].igp_lane_info;
 
 	    if (radeon_output->ConnectorType == CONNECTOR_DVI_D)
 		radeon_output->DACType = DAC_NONE;

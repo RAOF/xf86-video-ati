@@ -177,9 +177,8 @@ static Bool R300GetDestFormat(PicturePtr pDstPicture, CARD32 *dst_format)
 	*dst_format = R300_COLORFORMAT_I8;
 	break;
     default:
-	ErrorF("Unsupported dest format 0x%x\n",
-	       (int)pDstPicture->format);
-	return FALSE;
+	RADEON_FALLBACK(("Unsupported dest format 0x%x\n",
+	       (int)pDstPicture->format));
     }
     return TRUE;
 }
@@ -346,7 +345,7 @@ RADEONGetDrawablePixmap(DrawablePtr pDrawable)
 	return pDrawable->pScreen->GetWindowPixmap((WindowPtr)pDrawable);
     else
 	return (PixmapPtr)pDrawable;
-}	
+}
 
 static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
 			       PicturePtr pMaskPicture, PicturePtr pDstPicture)
@@ -435,7 +434,9 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
     if (!info->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
-    RADEONGetDestFormat(pDstPicture, &dst_format);
+    if (!RADEONGetDestFormat(pDstPicture, &dst_format))
+	return FALSE;
+
     pixel_shift = pDst->drawable.bitsPerPixel >> 4;
 
     dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation;
@@ -567,7 +568,7 @@ static Bool FUNC_NAME(R200TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 	RADEON_FALLBACK(("Bad texture offset 0x%x\n", (int)txoffset));
     if ((txpitch & 0x1f) != 0)
 	RADEON_FALLBACK(("Bad texture pitch 0x%x\n", (int)txpitch));
-    
+
     for (i = 0; i < sizeof(R200TexFormats) / sizeof(R200TexFormats[0]); i++)
     {
 	if (R200TexFormats[i].fmt == pPict->format)
@@ -717,7 +718,9 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
     if (!info->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
-    RADEONGetDestFormat(pDstPicture, &dst_format);
+    if (!RADEONGetDestFormat(pDstPicture, &dst_format))
+	return FALSE;
+
     pixel_shift = pDst->drawable.bitsPerPixel >> 4;
 
     dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation;
@@ -808,13 +811,22 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
 
 #ifdef ONLY_ONCE
 
-static Bool R300CheckCompositeTexture(PicturePtr pPict, int unit)
+static Bool R300CheckCompositeTexture(PicturePtr pPict, int unit, Bool is_r500)
 {
     int w = pPict->pDrawable->width;
     int h = pPict->pDrawable->height;
     int i;
+    int max_tex_w, max_tex_h;
 
-    if ((w > 0x7ff) || (h > 0x7ff))
+    if (is_r500) {
+	max_tex_w = 4096;
+	max_tex_h = 4096;
+    } else {
+	max_tex_w = 2048;
+	max_tex_h = 2048;
+    }
+
+    if ((w > max_tex_w) || (h > max_tex_h))
 	RADEON_FALLBACK(("Picture w/h too large (%dx%d)\n", w, h));
 
     for (i = 0; i < sizeof(R300TexFormats) / sizeof(R300TexFormats[0]); i++)
@@ -873,11 +885,16 @@ static Bool FUNC_NAME(R300TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 
     txformat1 = R300TexFormats[i].card_fmt;
 
-    txformat0 = (((w - 1) << R300_TXWIDTH_SHIFT) |
-		 ((h - 1) << R300_TXHEIGHT_SHIFT));
+    txformat0 = ((((w - 1) & 0x7ff) << R300_TXWIDTH_SHIFT) |
+		 (((h - 1) & 0x7ff) << R300_TXHEIGHT_SHIFT));
+
+    if (IS_R500_3D && ((w - 1) & 0x800))
+	txpitch |= R500_TXWIDTH_11;
+
+    if (IS_R500_3D && ((h - 1) & 0x800))
+	txpitch |= R500_TXHEIGHT_11;
 
     if (pPict->repeat) {
-	ErrorF("repeat\n");
 	if ((h != 1) &&
 	    (((w * pPix->drawable.bitsPerPixel / 8 + 31) & ~31) != txpitch))
 	    RADEON_FALLBACK(("Width %d and pitch %u not compatible for repeat\n",
@@ -892,6 +909,8 @@ static Bool FUNC_NAME(R300TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
     txfilter = (R300_TX_CLAMP_S(R300_TX_CLAMP_CLAMP_LAST) |
 		R300_TX_CLAMP_T(R300_TX_CLAMP_CLAMP_LAST));
 
+    txfilter |= (unit << R300_TX_ID_SHIFT);
+
     switch (pPict->filter) {
     case PictFilterNearest:
 	txfilter |= (R300_TX_MAG_FILTER_NEAREST | R300_TX_MIN_FILTER_NEAREST);
@@ -905,7 +924,7 @@ static Bool FUNC_NAME(R300TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 
     BEGIN_ACCEL(6);
     OUT_ACCEL_REG(R300_TX_FILTER0_0 + (unit * 4), txfilter);
-    OUT_ACCEL_REG(R300_TX_FILTER1_0 + (unit * 4), 0x0);
+    OUT_ACCEL_REG(R300_TX_FILTER1_0 + (unit * 4), 0);
     OUT_ACCEL_REG(R300_TX_FORMAT0_0 + (unit * 4), txformat0);
     OUT_ACCEL_REG(R300_TX_FORMAT1_0 + (unit * 4), txformat1);
     OUT_ACCEL_REG(R300_TX_FORMAT2_0 + (unit * 4), txpitch);
@@ -931,8 +950,8 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     ScreenPtr pScreen = pDstPicture->pDrawable->pScreen;
     PixmapPtr pSrcPixmap, pDstPixmap;
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    int i;
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    int max_tex_w, max_tex_h, max_dst_w, max_dst_h;
 
     TRACE;
 
@@ -940,39 +959,22 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     if (op >= sizeof(RadeonBlendOp) / sizeof(RadeonBlendOp[0]))
 	RADEON_FALLBACK(("Unsupported Composite op 0x%x\n", op));
 
-#if 1
-    /* Throw out cases that aren't going to be our rotation first */
-    if (pMaskPicture != NULL || op != PictOpSrc || pSrcPicture->pDrawable == NULL)
-	RADEON_FALLBACK(("Junk driver\n"));
-
-    if (pSrcPicture->pDrawable->type != DRAWABLE_WINDOW ||
-	pDstPicture->pDrawable->type != DRAWABLE_PIXMAP) {
-	RADEON_FALLBACK(("bad drawable\n"));
-    }
-
-    pSrcPixmap = (*pScreen->GetWindowPixmap) ((WindowPtr) pSrcPicture->pDrawable);
-    pDstPixmap = (PixmapPtr)pDstPicture->pDrawable;
-
-    /* Check if the dest is one of our shadow pixmaps */
-    for (i = 0; i < xf86_config->num_crtc; i++) {
-	xf86CrtcPtr crtc = xf86_config->crtc[i];
-
-	if (crtc->rotatedPixmap == pDstPixmap)
-	    break;
-    }
-    if (i == xf86_config->num_crtc)
-	RADEON_FALLBACK(("no rotated pixmap\n"));
-
-    if (pSrcPixmap != pScreen->GetScreenPixmap(pScreen))
-	RADEON_FALLBACK(("src not screen\n"));
-#endif
-
     pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
 
-    /* XXX: R(V)5xx may have higher limits
-     */
-    if (pSrcPixmap->drawable.width >= 2048 ||
-	pSrcPixmap->drawable.height >= 2048) {
+    if (IS_R500_3D) {
+	max_tex_w = 4096;
+	max_tex_h = 4096;
+	max_dst_w = 4096;
+	max_dst_h = 4096;
+    } else {
+	max_tex_w = 2048;
+	max_tex_h = 2048;
+	max_dst_w = 2560;
+	max_dst_h = 2560;
+    }
+
+    if (pSrcPixmap->drawable.width >= max_tex_w ||
+	pSrcPixmap->drawable.height >= max_tex_h) {
 	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
 			 pSrcPixmap->drawable.width,
 			 pSrcPixmap->drawable.height));
@@ -980,8 +982,8 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 
     pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
 
-    if (pDstPixmap->drawable.width >= 2560 ||
-	pDstPixmap->drawable.height >= 2560) {
+    if (pDstPixmap->drawable.width >= max_dst_w ||
+	pDstPixmap->drawable.height >= max_dst_h) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
 			 pDstPixmap->drawable.width,
 			 pDstPixmap->drawable.height));
@@ -990,8 +992,8 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     if (pMaskPicture) {
 	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
-	if (pMaskPixmap->drawable.width >= 2048 ||
-	    pMaskPixmap->drawable.height >= 2048) {
+	if (pMaskPixmap->drawable.width >= max_tex_w ||
+	    pMaskPixmap->drawable.height >= max_tex_h) {
 	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
 			     pMaskPixmap->drawable.width,
 			     pMaskPixmap->drawable.height));
@@ -1010,11 +1012,11 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 	    }
 	}
 
-	if (!R300CheckCompositeTexture(pMaskPicture, 1))
+	if (!R300CheckCompositeTexture(pMaskPicture, 1, IS_R500_3D))
 	    return FALSE;
     }
 
-    if (!R300CheckCompositeTexture(pSrcPicture, 0))
+    if (!R300CheckCompositeTexture(pSrcPicture, 0, IS_R500_3D))
 	return FALSE;
 
     if (!R300GetDestFormat(pDstPicture, &tmp1))
@@ -1036,7 +1038,8 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     int pixel_shift;
     int has_tcl = ((info->ChipFamily != CHIP_FAMILY_RS690) &&
 		   (info->ChipFamily != CHIP_FAMILY_RS740) &&
-		   (info->ChipFamily != CHIP_FAMILY_RS400));
+		   (info->ChipFamily != CHIP_FAMILY_RS400) &&
+		   (info->ChipFamily != CHIP_FAMILY_RV515));
     ACCEL_PREAMBLE();
 
     TRACE;
@@ -1044,7 +1047,9 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     if (!info->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
-    R300GetDestFormat(pDstPicture, &dst_format);
+    if (!R300GetDestFormat(pDstPicture, &dst_format))
+	return FALSE;
+
     pixel_shift = pDst->drawable.bitsPerPixel >> 4;
 
     dst_offset = exaGetPixmapOffset(pDst) + info->fbLocation;
@@ -1076,9 +1081,8 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     RADEON_SWITCH_TO_3D();
 
     /* setup the VAP */
-
     if (has_tcl) {
-	BEGIN_ACCEL(28);
+	BEGIN_ACCEL(9);
 	OUT_ACCEL_REG(R300_VAP_CNTL_STATUS, 0);
 	OUT_ACCEL_REG(R300_VAP_PVS_STATE_FLUSH_REG, 0);
 	OUT_ACCEL_REG(R300_VAP_CNTL, ((6 << R300_PVS_NUM_SLOTS_SHIFT) |
@@ -1086,7 +1090,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 				      (4 << R300_PVS_NUM_FPUS_SHIFT) |
 				      (12 << R300_VF_MAX_VTX_NUM_SHIFT)));
     } else {
-	BEGIN_ACCEL(10);
+	BEGIN_ACCEL(8);
 	OUT_ACCEL_REG(R300_VAP_CNTL_STATUS, R300_PVS_BYPASS);
 	OUT_ACCEL_REG(R300_VAP_CNTL, ((10 << R300_PVS_NUM_SLOTS_SHIFT) |
 				      (5 << R300_PVS_NUM_CNTLRS_SHIFT) |
@@ -1105,32 +1109,32 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 		       R300_SIGNED_0 |
 		       (R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_1_SHIFT) |
 		       (0 << R300_SKIP_DWORDS_1_SHIFT) |
-		       (10 << R300_DST_VEC_LOC_1_SHIFT) |
+		       (1 << R300_DST_VEC_LOC_1_SHIFT) |
 		       R300_SIGNED_1));
 	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_1,
 		      ((R300_DATA_TYPE_FLOAT_2 << R300_DATA_TYPE_2_SHIFT) |
 		       (0 << R300_SKIP_DWORDS_2_SHIFT) |
-		       (11 << R300_DST_VEC_LOC_2_SHIFT) |
+		       (2 << R300_DST_VEC_LOC_2_SHIFT) |
 		       R300_LAST_VEC_2 |
 		       R300_SIGNED_2));
 	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_EXT_0,
 		      ((R300_SWIZZLE_SELECT_X << R300_SWIZZLE_SELECT_X_0_SHIFT) |
 		       (R300_SWIZZLE_SELECT_Y << R300_SWIZZLE_SELECT_Y_0_SHIFT) |
-		       (R300_SWIZZLE_SELECT_Z << R300_SWIZZLE_SELECT_Z_0_SHIFT) |
-		       (R300_SWIZZLE_SELECT_W << R300_SWIZZLE_SELECT_W_0_SHIFT) |
+		       (R300_SWIZZLE_SELECT_FP_ZERO << R300_SWIZZLE_SELECT_Z_0_SHIFT) |
+		       (R300_SWIZZLE_SELECT_FP_ONE << R300_SWIZZLE_SELECT_W_0_SHIFT) |
 		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y | R300_WRITE_ENA_Z | R300_WRITE_ENA_W)
 			<< R300_WRITE_ENA_0_SHIFT) |
 		       (R300_SWIZZLE_SELECT_X << R300_SWIZZLE_SELECT_X_1_SHIFT) |
 		       (R300_SWIZZLE_SELECT_Y << R300_SWIZZLE_SELECT_Y_1_SHIFT) |
-		       (R300_SWIZZLE_SELECT_Z << R300_SWIZZLE_SELECT_Z_1_SHIFT) |
-		       (R300_SWIZZLE_SELECT_W << R300_SWIZZLE_SELECT_W_1_SHIFT) |
+		       (R300_SWIZZLE_SELECT_FP_ZERO << R300_SWIZZLE_SELECT_Z_1_SHIFT) |
+		       (R300_SWIZZLE_SELECT_FP_ONE << R300_SWIZZLE_SELECT_W_1_SHIFT) |
 		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y | R300_WRITE_ENA_Z | R300_WRITE_ENA_W)
 			<< R300_WRITE_ENA_1_SHIFT)));
 	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_EXT_1,
 		      ((R300_SWIZZLE_SELECT_X << R300_SWIZZLE_SELECT_X_2_SHIFT) |
 		       (R300_SWIZZLE_SELECT_Y << R300_SWIZZLE_SELECT_Y_2_SHIFT) |
-		       (R300_SWIZZLE_SELECT_Z << R300_SWIZZLE_SELECT_Z_2_SHIFT) |
-		       (R300_SWIZZLE_SELECT_W << R300_SWIZZLE_SELECT_W_2_SHIFT) |
+		       (R300_SWIZZLE_SELECT_FP_ZERO << R300_SWIZZLE_SELECT_Z_2_SHIFT) |
+		       (R300_SWIZZLE_SELECT_FP_ONE << R300_SWIZZLE_SELECT_W_2_SHIFT) |
 		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y | R300_WRITE_ENA_Z | R300_WRITE_ENA_W)
 			<< R300_WRITE_ENA_2_SHIFT)));
     } else {
@@ -1154,40 +1158,138 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 		       (R300_SWIZZLE_SELECT_Y << R300_SWIZZLE_SELECT_Y_0_SHIFT) |
 		       (R300_SWIZZLE_SELECT_FP_ZERO << R300_SWIZZLE_SELECT_Z_0_SHIFT) |
 		       (R300_SWIZZLE_SELECT_FP_ONE << R300_SWIZZLE_SELECT_W_0_SHIFT) |
-		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y)
+		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y | R300_WRITE_ENA_Z | R300_WRITE_ENA_W)
 			<< R300_WRITE_ENA_0_SHIFT) |
 		       (R300_SWIZZLE_SELECT_X << R300_SWIZZLE_SELECT_X_1_SHIFT) |
 		       (R300_SWIZZLE_SELECT_Y << R300_SWIZZLE_SELECT_Y_1_SHIFT) |
 		       (R300_SWIZZLE_SELECT_FP_ZERO << R300_SWIZZLE_SELECT_Z_1_SHIFT) |
 		       (R300_SWIZZLE_SELECT_FP_ONE << R300_SWIZZLE_SELECT_W_1_SHIFT) |
-		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y)
+		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y | R300_WRITE_ENA_Z | R300_WRITE_ENA_W)
 			<< R300_WRITE_ENA_1_SHIFT)));
 	OUT_ACCEL_REG(R300_VAP_PROG_STREAM_CNTL_EXT_1,
 		      ((R300_SWIZZLE_SELECT_X << R300_SWIZZLE_SELECT_X_2_SHIFT) |
 		       (R300_SWIZZLE_SELECT_Y << R300_SWIZZLE_SELECT_Y_2_SHIFT) |
 		       (R300_SWIZZLE_SELECT_FP_ZERO << R300_SWIZZLE_SELECT_Z_2_SHIFT) |
 		       (R300_SWIZZLE_SELECT_FP_ONE << R300_SWIZZLE_SELECT_W_2_SHIFT) |
-		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y)
+		       ((R300_WRITE_ENA_X | R300_WRITE_ENA_Y | R300_WRITE_ENA_Z | R300_WRITE_ENA_W)
 			<< R300_WRITE_ENA_2_SHIFT)));
     }
+    FINISH_ACCEL();
 
     /* setup the vertex shader */
     if (has_tcl) {
-	OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_0,
-		      ((0 << R300_PVS_FIRST_INST_SHIFT) |
-		       (1 << R300_PVS_XYZW_VALID_INST_SHIFT) |
-		       (1 << R300_PVS_LAST_INST_SHIFT)));
-	OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_1,
-		      (1 << R300_PVS_LAST_VTX_SRC_INST_SHIFT));
+	if (pMask) {
+	    BEGIN_ACCEL(22);
+	    /* flush the PVS before updating??? */
+	    OUT_ACCEL_REG(R300_VAP_PVS_STATE_FLUSH_REG, 0);
+
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_0,
+			  ((0 << R300_PVS_FIRST_INST_SHIFT) |
+			   (2 << R300_PVS_XYZW_VALID_INST_SHIFT) |
+			   (2 << R300_PVS_LAST_INST_SHIFT)));
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_1,
+			  (2 << R300_PVS_LAST_VTX_SRC_INST_SHIFT));
+	} else {
+	    BEGIN_ACCEL(18);
+	    /* flush the PVS before updating??? */
+	    OUT_ACCEL_REG(R300_VAP_PVS_STATE_FLUSH_REG, 0);
+
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_0,
+			  ((0 << R300_PVS_FIRST_INST_SHIFT) |
+			   (1 << R300_PVS_XYZW_VALID_INST_SHIFT) |
+			   (1 << R300_PVS_LAST_INST_SHIFT)));
+	    OUT_ACCEL_REG(R300_VAP_PVS_CODE_CNTL_1,
+			  (1 << R300_PVS_LAST_VTX_SRC_INST_SHIFT));
+	}
 	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_INDX_REG, 0);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x00f00203);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x00d10001);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x01248001);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x01248001);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x00f02203);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x00d10141);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x01248141);
-	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,0x01248141);
+	/* PVS inst 0 */
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_DST_OPCODE(R300_VE_ADD) |
+		       R300_PVS_DST_REG_TYPE(R300_PVS_DST_REG_OUT) |
+		       R300_PVS_DST_OFFSET(0) |
+		       R300_PVS_DST_WE_X | R300_PVS_DST_WE_Y |
+		       R300_PVS_DST_WE_Z | R300_PVS_DST_WE_W));
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+		       R300_PVS_SRC_OFFSET(0) |
+		       R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_X) |
+		       R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_Y) |
+		       R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_Z) |
+		       R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_W)));
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+		       R300_PVS_SRC_OFFSET(0) |
+		       R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_FORCE_0)));
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+		       R300_PVS_SRC_OFFSET(0) |
+		       R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_FORCE_0)));
+
+	/* PVS inst 1 */
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_DST_OPCODE(R300_VE_ADD) |
+		       R300_PVS_DST_REG_TYPE(R300_PVS_DST_REG_OUT) |
+		       R300_PVS_DST_OFFSET(1) |
+		       R300_PVS_DST_WE_X | R300_PVS_DST_WE_Y |
+		       R300_PVS_DST_WE_Z | R300_PVS_DST_WE_W));
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+		       R300_PVS_SRC_OFFSET(1) |
+		       R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_X) |
+		       R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_Y) |
+		       R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_Z) |
+		       R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_W)));
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+		       R300_PVS_SRC_OFFSET(1) |
+		       R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_FORCE_0)));
+	OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+		      (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+		       R300_PVS_SRC_OFFSET(1) |
+		       R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_FORCE_0) |
+		       R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_FORCE_0)));
+
+	if (pMask) {
+	    /* PVS inst 2 */
+	    OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+			  (R300_PVS_DST_OPCODE(R300_VE_ADD) |
+			   R300_PVS_DST_REG_TYPE(R300_PVS_DST_REG_OUT) |
+			   R300_PVS_DST_OFFSET(2) |
+			   R300_PVS_DST_WE_X | R300_PVS_DST_WE_Y |
+			   R300_PVS_DST_WE_Z | R300_PVS_DST_WE_W));
+	    OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+			  (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+			   R300_PVS_SRC_OFFSET(2) |
+			   R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_X) |
+			   R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_Y) |
+			   R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_Z) |
+			   R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_W)));
+	    OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+			  (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+			   R300_PVS_SRC_OFFSET(2) |
+			   R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_FORCE_0) |
+			   R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_FORCE_0) |
+			   R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_FORCE_0) |
+			   R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_FORCE_0)));
+	    OUT_ACCEL_REG(R300_VAP_PVS_VECTOR_DATA_REG,
+			  (R300_PVS_SRC_REG_TYPE(R300_PVS_SRC_REG_INPUT) |
+			   R300_PVS_SRC_OFFSET(2) |
+			   R300_PVS_SRC_SWIZZLE_X(R300_PVS_SRC_SELECT_FORCE_0) |
+			   R300_PVS_SRC_SWIZZLE_Y(R300_PVS_SRC_SELECT_FORCE_0) |
+			   R300_PVS_SRC_SWIZZLE_Z(R300_PVS_SRC_SELECT_FORCE_0) |
+			   R300_PVS_SRC_SWIZZLE_W(R300_PVS_SRC_SELECT_FORCE_0)));
+	}
 
 	OUT_ACCEL_REG(R300_VAP_PVS_FLOW_CNTL_OPC, 0);
 
@@ -1196,259 +1298,632 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 	OUT_ACCEL_REG(R300_VAP_GB_HORZ_CLIP_ADJ, 0x3f800000);
 	OUT_ACCEL_REG(R300_VAP_GB_HORZ_DISC_ADJ, 0x3f800000);
 	OUT_ACCEL_REG(R300_VAP_CLIP_CNTL, R300_CLIP_DISABLE);
+	FINISH_ACCEL();
     }
+
+    BEGIN_ACCEL(4);
     OUT_ACCEL_REG(R300_VAP_OUT_VTX_FMT_0, R300_VTX_POS_PRESENT);
     OUT_ACCEL_REG(R300_VAP_OUT_VTX_FMT_1,
 		  ((2 << R300_TEX_0_COMP_CNT_SHIFT) |
 		   (2 << R300_TEX_1_COMP_CNT_SHIFT)));
 
+    OUT_ACCEL_REG(R300_TX_INVALTAGS, 0x0);
+    OUT_ACCEL_REG(R300_TX_ENABLE, txenable);
     FINISH_ACCEL();
 
     /* setup pixel shader */
-    if (IS_R300_VARIANT ||
-	(info->ChipFamily == CHIP_FAMILY_RS690) ||
-	(info->ChipFamily == CHIP_FAMILY_RS740)) {
-      BEGIN_ACCEL(16);
-      OUT_ACCEL_REG(R300_RS_COUNT,
-		    ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
-		     R300_RS_COUNT_HIRES_EN));
-      OUT_ACCEL_REG(R300_RS_IP_0,
-		    (R300_RS_TEX_PTR(0) |
-		     R300_RS_COL_PTR(0) |
-		     R300_RS_COL_FMT(R300_RS_COL_FMT_RGBA) |
-		     R300_RS_SEL_S(R300_RS_SEL_C0) |
-		     R300_RS_SEL_T(R300_RS_SEL_C1) |
-		     R300_RS_SEL_R(R300_RS_SEL_K0) |
-		     R300_RS_SEL_Q(R300_RS_SEL_K1)));
-      OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_TX_OFFSET_RS(6));
-      OUT_ACCEL_REG(R300_RS_INST_0, R300_RS_INST_TEX_CN_WRITE);
-      OUT_ACCEL_REG(R300_US_CONFIG, (0 << R300_NLEVEL_SHIFT) | R300_FIRST_TEX);
-      OUT_ACCEL_REG(R300_US_PIXSIZE, 0);
-      OUT_ACCEL_REG(R300_US_CODE_OFFSET,
-		    (R300_ALU_CODE_OFFSET(0) |
-		     R300_ALU_CODE_SIZE(1) |
-		     R300_TEX_CODE_OFFSET(0) |
-		     R300_TEX_CODE_SIZE(1)));
-      OUT_ACCEL_REG(R300_US_CODE_ADDR_0,
-		    (R300_ALU_START(0) |
-		     R300_ALU_SIZE(0) |
-		     R300_TEX_START(0) |
-		     R300_TEX_SIZE(0)));
-      OUT_ACCEL_REG(R300_US_CODE_ADDR_1,
-		    (R300_ALU_START(0) |
-		     R300_ALU_SIZE(0) |
-		     R300_TEX_START(0) |
-		     R300_TEX_SIZE(0)));
-      OUT_ACCEL_REG(R300_US_CODE_ADDR_2,
-		    (R300_ALU_START(0) |
-		     R300_ALU_SIZE(0) |
-		     R300_TEX_START(0) |
-		     R300_TEX_SIZE(0)));
-      OUT_ACCEL_REG(R300_US_CODE_ADDR_3,
-		    (R300_ALU_START(0) |
-		     R300_ALU_SIZE(0) |
-		     R300_TEX_START(0) |
-		     R300_TEX_SIZE(0) |
-		     R300_RGBA_OUT));
-      OUT_ACCEL_REG(R300_US_TEX_INST_0,
-		    (R300_TEX_SRC_ADDR(0) |
-		     R300_TEX_DST_ADDR(0) |
-		     R300_TEX_ID(0) |
-		     R300_TEX_INST(R300_TEX_INST_LD)));
-      OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR_0,
-		    (R300_ALU_RGB_ADDR0(0) |
-		     R300_ALU_RGB_ADDR1(0) |
-		     R300_ALU_RGB_ADDR2(0) |
-		     R300_ALU_RGB_ADDRD(0) |
-		     R300_ALU_RGB_WMASK((R300_ALU_RGB_MASK_R |
-					 R300_ALU_RGB_MASK_G |
-					 R300_ALU_RGB_MASK_B)) |
-		     R300_ALU_RGB_OMASK((R300_ALU_RGB_MASK_R |
-					 R300_ALU_RGB_MASK_G |
-					 R300_ALU_RGB_MASK_B)) |
-		     R300_ALU_RGB_TARGET_A));
-      OUT_ACCEL_REG(R300_US_ALU_RGB_INST_0,
-		    (R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
-		     R300_ALU_RGB_MOD_A(R300_ALU_RGB_MOD_NOP) |
-		     R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
-		     R300_ALU_RGB_MOD_B(R300_ALU_RGB_MOD_NOP) |
-		     R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0) |
-		     R300_ALU_RGB_MOD_C(R300_ALU_RGB_MOD_NOP) |
-		     R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
-		     R300_ALU_RGB_OMOD(R300_ALU_RGB_OMOD_NONE)));
-      OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR_0,
-		    (R300_ALU_ALPHA_ADDR0(0) |
-		     R300_ALU_ALPHA_ADDR1(0) |
-		     R300_ALU_ALPHA_ADDR2(0) |
-		     R300_ALU_ALPHA_ADDRD(0) |
-		     R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_A) |
-		     R300_ALU_ALPHA_OMASK(R300_ALU_ALPHA_MASK_A) |
-		     R300_ALU_ALPHA_TARGET_A |
-		     R300_ALU_ALPHA_OMASK_W(R300_ALU_ALPHA_MASK_NONE)));
-      OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST_0,
-		    (R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_SRC0_A) |
-		     R300_ALU_ALPHA_MOD_A(R300_ALU_ALPHA_MOD_NOP) |
-		     R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_1_0) |
-		     R300_ALU_ALPHA_MOD_B(R300_ALU_ALPHA_MOD_NOP) |
-		     R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0) |
-		     R300_ALU_ALPHA_MOD_C(R300_ALU_ALPHA_MOD_NOP) |
-		     R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
-		     R300_ALU_ALPHA_OMOD(R300_ALU_ALPHA_OMOD_NONE)));
-      FINISH_ACCEL();
+    if (IS_R300_3D) {
+	CARD32 output_fmt;
+	int src_color, src_alpha;
+	int mask_color, mask_alpha;
+
+	if (PICT_FORMAT_RGB(pSrcPicture->format) == 0)
+	    src_color = R300_ALU_RGB_0_0;
+	else
+	    src_color = R300_ALU_RGB_SRC0_RGB;
+
+	if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+	    src_alpha = R300_ALU_ALPHA_1_0;
+	else
+	    src_alpha = R300_ALU_ALPHA_SRC0_A;
+
+	if (pMask && pMaskPicture->componentAlpha) {
+	    if (RadeonBlendOp[op].src_alpha) {
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0) {
+		    src_color = R300_ALU_RGB_1_0;
+		    src_alpha = R300_ALU_ALPHA_1_0;
+		} else {
+		    src_color = R300_ALU_RGB_SRC0_AAA;
+		    src_alpha = R300_ALU_ALPHA_SRC0_A;
+		}
+
+		mask_color = R300_ALU_RGB_SRC1_RGB;
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    mask_alpha = R300_ALU_ALPHA_1_0;
+		else
+		    mask_alpha = R300_ALU_ALPHA_SRC1_A;
+
+	    } else {
+		src_color = R300_ALU_RGB_SRC0_RGB;
+
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+		    src_alpha = R300_ALU_ALPHA_1_0;
+		else
+		    src_alpha = R300_ALU_ALPHA_SRC0_A;
+
+		mask_color = R300_ALU_RGB_SRC1_RGB;
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    mask_alpha = R300_ALU_ALPHA_1_0;
+		else
+		    mask_alpha = R300_ALU_ALPHA_SRC1_A;
+
+	    }
+	} else if (pMask) {
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		mask_color = R300_ALU_RGB_1_0;
+	    else
+		mask_color = R300_ALU_RGB_SRC1_AAA;
+
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		mask_alpha = R300_ALU_ALPHA_1_0;
+	    else
+		mask_alpha = R300_ALU_ALPHA_SRC1_A;
+	} else {
+	    mask_color = R300_ALU_RGB_1_0;
+	    mask_alpha = R300_ALU_ALPHA_1_0;
+	}
+
+	/* shader output swizzling */
+	switch (pDstPicture->format) {
+	case PICT_a8r8g8b8:
+	case PICT_x8r8g8b8:
+	default:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_BLUE |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_RED |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8b8g8r8:
+	case PICT_x8b8g8r8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_RED |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_BLUE |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_r5g6b5:
+	case PICT_a1r5g5b5:
+	case PICT_x1r5g5b5:
+	    output_fmt = (R300_OUT_FMT_C_5_6_5 |
+			  R300_OUT_FMT_C0_SEL_BLUE |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_RED |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_ALPHA);
+	    break;
+	}
+
+
+	/* setup the rasterizer */
+	if (pMask) {
+	    BEGIN_ACCEL(20);
+	    /* 4 components: 2 for tex0, 2 for tex1 */
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((4 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+	    /* rasterizer source table */
+	    OUT_ACCEL_REG(R300_RS_IP_0,
+			  (R300_RS_TEX_PTR(0) |
+			   R300_RS_SEL_S(R300_RS_SEL_C0) |
+			   R300_RS_SEL_T(R300_RS_SEL_C1) |
+			   R300_RS_SEL_R(R300_RS_SEL_K0) |
+			   R300_RS_SEL_Q(R300_RS_SEL_K1)));
+	    OUT_ACCEL_REG(R300_RS_IP_1,
+			  (R300_RS_TEX_PTR(2) |
+			   R300_RS_SEL_S(R300_RS_SEL_C0) |
+			   R300_RS_SEL_T(R300_RS_SEL_C1) |
+			   R300_RS_SEL_R(R300_RS_SEL_K0) |
+			   R300_RS_SEL_Q(R300_RS_SEL_K1)));
+
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+	    /* src tex */
+	    OUT_ACCEL_REG(R300_RS_INST_0, (R300_INST_TEX_ID(0) |
+					   R300_RS_INST_TEX_CN_WRITE |
+					   R300_INST_TEX_ADDR(0)));
+	    /* mask tex */
+	    OUT_ACCEL_REG(R300_RS_INST_1, (R300_INST_TEX_ID(1) |
+					   R300_RS_INST_TEX_CN_WRITE |
+					   R300_INST_TEX_ADDR(1)));
+
+	    OUT_ACCEL_REG(R300_US_CONFIG, (0 << R300_NLEVEL_SHIFT) | R300_FIRST_TEX);
+	    OUT_ACCEL_REG(R300_US_PIXSIZE, 1); /* max num of temps used */
+	    OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
+						R300_ALU_CODE_SIZE(0) |
+						R300_TEX_CODE_OFFSET(0) |
+						R300_TEX_CODE_SIZE(1)));
+
+	} else {
+	    BEGIN_ACCEL(17);
+	    /* 2 components: 2 for tex0 */
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+	    OUT_ACCEL_REG(R300_RS_IP_0,
+			  (R300_RS_TEX_PTR(0) |
+			   R300_RS_SEL_S(R300_RS_SEL_C0) |
+			   R300_RS_SEL_T(R300_RS_SEL_C1) |
+			   R300_RS_SEL_R(R300_RS_SEL_K0) |
+			   R300_RS_SEL_Q(R300_RS_SEL_K1)));
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
+	    /* src tex */
+	    OUT_ACCEL_REG(R300_RS_INST_0, (R300_INST_TEX_ID(0) |
+					   R300_RS_INST_TEX_CN_WRITE |
+					   R300_INST_TEX_ADDR(0)));
+
+	    OUT_ACCEL_REG(R300_US_CONFIG, (0 << R300_NLEVEL_SHIFT) | R300_FIRST_TEX);
+	    OUT_ACCEL_REG(R300_US_PIXSIZE, 1); /* max num of temps used */
+	    OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
+						R300_ALU_CODE_SIZE(0) |
+						R300_TEX_CODE_OFFSET(0) |
+						R300_TEX_CODE_SIZE(0)));
+
+	}
+
+	OUT_ACCEL_REG(R300_US_CODE_ADDR_0,
+		      (R300_ALU_START(0) |
+		       R300_ALU_SIZE(0) |
+		       R300_TEX_START(0) |
+		       R300_TEX_SIZE(0)));
+	OUT_ACCEL_REG(R300_US_CODE_ADDR_1,
+		      (R300_ALU_START(0) |
+		       R300_ALU_SIZE(0) |
+		       R300_TEX_START(0) |
+		       R300_TEX_SIZE(0)));
+	OUT_ACCEL_REG(R300_US_CODE_ADDR_2,
+		      (R300_ALU_START(0) |
+		       R300_ALU_SIZE(0) |
+		       R300_TEX_START(0) |
+		       R300_TEX_SIZE(0)));
+
+	if (pMask) {
+	    OUT_ACCEL_REG(R300_US_CODE_ADDR_3,
+			  (R300_ALU_START(0) |
+			   R300_ALU_SIZE(0) |
+			   R300_TEX_START(0) |
+			   R300_TEX_SIZE(1) |
+			   R300_RGBA_OUT));
+	} else {
+	    OUT_ACCEL_REG(R300_US_CODE_ADDR_3,
+			  (R300_ALU_START(0) |
+			   R300_ALU_SIZE(0) |
+			   R300_TEX_START(0) |
+			   R300_TEX_SIZE(0) |
+			   R300_RGBA_OUT));
+	}
+
+	OUT_ACCEL_REG(R300_US_OUT_FMT_0, output_fmt);
+
+	OUT_ACCEL_REG(R300_US_TEX_INST_0,
+		      (R300_TEX_SRC_ADDR(0) |
+		       R300_TEX_DST_ADDR(0) |
+		       R300_TEX_ID(0) |
+		       R300_TEX_INST(R300_TEX_INST_LD)));
+
+	if (pMask) {
+	    OUT_ACCEL_REG(R300_US_TEX_INST_1,
+			  (R300_TEX_SRC_ADDR(1) |
+			   R300_TEX_DST_ADDR(1) |
+			   R300_TEX_ID(1) |
+			   R300_TEX_INST(R300_TEX_INST_LD)));
+	}
+
+	OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR_0,
+		      (R300_ALU_RGB_ADDR0(0) |
+		       R300_ALU_RGB_ADDR1(1) |
+		       R300_ALU_RGB_ADDR2(0) |
+		       R300_ALU_RGB_ADDRD(0) |
+		       R300_ALU_RGB_OMASK((R300_ALU_RGB_MASK_R |
+					   R300_ALU_RGB_MASK_G |
+					   R300_ALU_RGB_MASK_B)) |
+		       R300_ALU_RGB_TARGET_A));
+	OUT_ACCEL_REG(R300_US_ALU_RGB_INST_0,
+		      (R300_ALU_RGB_SEL_A(src_color) |
+		       R300_ALU_RGB_MOD_A(R300_ALU_RGB_MOD_NOP) |
+		       R300_ALU_RGB_SEL_B(mask_color) |
+		       R300_ALU_RGB_MOD_B(R300_ALU_RGB_MOD_NOP) |
+		       R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0) |
+		       R300_ALU_RGB_MOD_C(R300_ALU_RGB_MOD_NOP) |
+		       R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+		       R300_ALU_RGB_OMOD(R300_ALU_RGB_OMOD_NONE) |
+		       R300_ALU_RGB_CLAMP));
+	OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR_0,
+		      (R300_ALU_ALPHA_ADDR0(0) |
+		       R300_ALU_ALPHA_ADDR1(1) |
+		       R300_ALU_ALPHA_ADDR2(0) |
+		       R300_ALU_ALPHA_ADDRD(0) |
+		       R300_ALU_ALPHA_OMASK(R300_ALU_ALPHA_MASK_A) |
+		       R300_ALU_ALPHA_TARGET_A |
+		       R300_ALU_ALPHA_OMASK_W(R300_ALU_ALPHA_MASK_NONE)));
+	OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST_0,
+		      (R300_ALU_ALPHA_SEL_A(src_alpha) |
+		       R300_ALU_ALPHA_MOD_A(R300_ALU_ALPHA_MOD_NOP) |
+		       R300_ALU_ALPHA_SEL_B(mask_alpha) |
+		       R300_ALU_ALPHA_MOD_B(R300_ALU_ALPHA_MOD_NOP) |
+		       R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0) |
+		       R300_ALU_ALPHA_MOD_C(R300_ALU_ALPHA_MOD_NOP) |
+		       R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+		       R300_ALU_ALPHA_OMOD(R300_ALU_ALPHA_OMOD_NONE) |
+		       R300_ALU_ALPHA_CLAMP));
+	FINISH_ACCEL();
     } else {
-      BEGIN_ACCEL(23);
-      OUT_ACCEL_REG(R300_RS_COUNT,
-		    ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
-		     R300_RS_COUNT_HIRES_EN));
-      OUT_ACCEL_REG(R500_RS_IP_0, ((0 << R500_RS_IP_TEX_PTR_S_SHIFT) |
-				   (1 << R500_RS_IP_TEX_PTR_T_SHIFT) |
-				   (R500_RS_IP_PTR_K0 << R500_RS_IP_TEX_PTR_R_SHIFT) |
-				   (R500_RS_IP_PTR_K1 << R500_RS_IP_TEX_PTR_Q_SHIFT)));
+	CARD32 output_fmt;
+	CARD32 src_color, src_alpha;
+	CARD32 mask_color, mask_alpha;
 
-      OUT_ACCEL_REG(R300_RS_INST_COUNT, 0);
-      OUT_ACCEL_REG(R500_RS_INST_0, R500_RS_INST_TEX_CN_WRITE);
-      OUT_ACCEL_REG(R300_US_CONFIG, R500_ZERO_TIMES_ANYTHING_EQUALS_ZERO);
-      OUT_ACCEL_REG(R300_US_PIXSIZE, 0);
-      OUT_ACCEL_REG(R500_US_FC_CTRL, 0);
-      OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
-					R500_US_CODE_END_ADDR(1)));
-      OUT_ACCEL_REG(R500_US_CODE_RANGE, (R500_US_CODE_RANGE_ADDR(0) |
-					 R500_US_CODE_RANGE_SIZE(1)));
-      OUT_ACCEL_REG(R500_US_CODE_OFFSET, 0);
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_INDEX, 0);
-      // 7807
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
-					     R500_INST_TEX_SEM_WAIT |
-					     R500_INST_RGB_WMASK_R |
-					     R500_INST_RGB_WMASK_G |
-					     R500_INST_RGB_WMASK_B |
-					     R500_INST_ALPHA_WMASK));
+	if (PICT_FORMAT_RGB(pSrcPicture->format) == 0)
+	    //src_color = R300_ALU_RGB_0_0;
+	    src_color = (R500_ALU_RGB_R_SWIZ_A_0 |
+			 R500_ALU_RGB_G_SWIZ_A_0 |
+			 R500_ALU_RGB_B_SWIZ_A_0);
+	else
+	    //src_color = R300_ALU_RGB_SRC0_RGB;
+	    src_color = (R500_ALU_RGB_R_SWIZ_A_R |
+			 R500_ALU_RGB_G_SWIZ_A_G |
+			 R500_ALU_RGB_B_SWIZ_A_B);
 
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(0) |
-					     R500_TEX_INST_LD |
-					     R500_TEX_SEM_ACQUIRE |
-					     R500_TEX_IGNORE_UNCOVERED));
+	if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+	    //src_alpha = R300_ALU_ALPHA_1_0;
+	    src_alpha = R500_ALPHA_SWIZ_A_1;
+	else
+	    //src_alpha = R300_ALU_ALPHA_SRC0_A;
+	    src_alpha = R500_ALPHA_SWIZ_A_A;
 
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(0) |
-					     R500_TEX_SRC_S_SWIZ_R |
-					     R500_TEX_SRC_T_SWIZ_G |
-					     R500_TEX_DST_ADDR(0) |
-					     R500_TEX_DST_R_SWIZ_R |
-					     R500_TEX_DST_G_SWIZ_G |
-					     R500_TEX_DST_B_SWIZ_B |
-					     R500_TEX_DST_A_SWIZ_A));
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(0) |
-					     R500_DX_S_SWIZ_R |
-					     R500_DX_T_SWIZ_R |
-					     R500_DX_R_SWIZ_R |
-					     R500_DX_Q_SWIZ_R |
-					     R500_DY_ADDR(0) |
-					     R500_DY_S_SWIZ_R |
-					     R500_DY_T_SWIZ_R |
-					     R500_DY_R_SWIZ_R |
-					     R500_DY_Q_SWIZ_R)); // TEX_ADDR_DXDY
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+	if (pMask && pMaskPicture->componentAlpha) {
+	    if (RadeonBlendOp[op].src_alpha) {
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0) {
+		    //src_color = R300_ALU_RGB_1_0;
+		    //src_alpha = R300_ALU_ALPHA_1_0;
+		    src_color = (R500_ALU_RGB_R_SWIZ_A_1 |
+				 R500_ALU_RGB_G_SWIZ_A_1 |
+				 R500_ALU_RGB_B_SWIZ_A_1);
+		    src_alpha = R500_ALPHA_SWIZ_A_1;
+		} else {
+		    //src_color = R300_ALU_RGB_SRC0_AAA;
+		    //src_alpha = R300_ALU_ALPHA_SRC0_A;
+		    src_color = (R500_ALU_RGB_R_SWIZ_A_A |
+				 R500_ALU_RGB_G_SWIZ_A_A |
+				 R500_ALU_RGB_B_SWIZ_A_A);
+		    src_alpha = R500_ALPHA_SWIZ_A_A;
+		}
 
-      // 0x78105
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_OUT |
-					     R500_INST_TEX_SEM_WAIT |
-					     R500_INST_LAST |
-					     R500_INST_RGB_OMASK_R |
-					     R500_INST_RGB_OMASK_G |
-					     R500_INST_RGB_OMASK_B |
-					     R500_INST_ALPHA_OMASK));
+		//mask_color = R300_ALU_RGB_SRC1_RGB;
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_R |
+			      R500_ALU_RGB_G_SWIZ_B_G |
+			      R500_ALU_RGB_B_SWIZ_B_B);
 
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_RGB_ADDR0(0) |
-					     R500_RGB_ADDR1(0) |
-					     R500_RGB_ADDR1_CONST |
-					     R500_RGB_ADDR2(0) |
-					     R500_RGB_ADDR2_CONST |
-					     R500_RGB_SRCP_OP_1_MINUS_2RGB0)); //0x10040000
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALPHA_ADDR0(0) |
-					     R500_ALPHA_ADDR1(0) |
-					     R500_ALPHA_ADDR1_CONST |
-					     R500_ALPHA_ADDR2(0) |
-					     R500_ALPHA_ADDR2_CONST |
-					     R500_ALPHA_SRCP_OP_1_MINUS_2A0)); //0x10040000
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    //mask_alpha = R300_ALU_ALPHA_1_0;
+		    mask_alpha = R500_ALPHA_SWIZ_B_1;
+		else
+		    //mask_alpha = R300_ALU_ALPHA_SRC1_A;
+		    mask_alpha = R500_ALPHA_SWIZ_B_A;
 
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALU_RGB_SEL_A_SRC0 |
-					     R500_ALU_RGB_R_SWIZ_A_R |
-					     R500_ALU_RGB_G_SWIZ_A_G |
-					     R500_ALU_RGB_B_SWIZ_A_B |
-					     R500_ALU_RGB_SEL_B_SRC0 |
-					     R500_ALU_RGB_R_SWIZ_B_1 |
-					     R500_ALU_RGB_B_SWIZ_B_1 |
-					     R500_ALU_RGB_G_SWIZ_B_1));//0x00db0220
+	    } else {
+		//src_color = R300_ALU_RGB_SRC0_RGB;
+		src_color = (R500_ALU_RGB_R_SWIZ_A_R |
+			     R500_ALU_RGB_G_SWIZ_A_G |
+			     R500_ALU_RGB_B_SWIZ_A_B);
 
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALPHA_OP_MAD |
-					     R500_ALPHA_SWIZ_A_A |
-					     R500_ALPHA_SWIZ_B_1));//0x00c0c000)
+		if (PICT_FORMAT_A(pSrcPicture->format) == 0)
+		    //src_alpha = R300_ALU_ALPHA_1_0;
+		    src_alpha = R500_ALPHA_SWIZ_A_1;
+		else
+		    //src_alpha = R300_ALU_ALPHA_SRC0_A;
+		    src_alpha = R500_ALPHA_SWIZ_A_A;
 
-      OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALU_RGBA_OP_MAD |
-					     R500_ALU_RGBA_R_SWIZ_0 |
-					     R500_ALU_RGBA_G_SWIZ_0 |
-					     R500_ALU_RGBA_B_SWIZ_0 |
-					     R500_ALU_RGBA_A_SWIZ_0));//0x20490000
-      FINISH_ACCEL();
+		//mask_color = R300_ALU_RGB_SRC1_RGB;
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_R |
+			      R500_ALU_RGB_G_SWIZ_B_G |
+			      R500_ALU_RGB_B_SWIZ_B_B);
+
+		if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		    //mask_alpha = R300_ALU_ALPHA_1_0;
+		    mask_alpha = R500_ALPHA_SWIZ_B_1;
+		else
+		    //mask_alpha = R300_ALU_ALPHA_SRC1_A;
+		    mask_alpha = R500_ALPHA_SWIZ_B_A;
+
+	    }
+	} else if (pMask) {
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		//mask_color = R300_ALU_RGB_1_0;
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_1 |
+			      R500_ALU_RGB_G_SWIZ_B_1 |
+			      R500_ALU_RGB_B_SWIZ_B_1);
+	    else
+		//mask_color = R300_ALU_RGB_SRC1_AAA;
+		mask_color = (R500_ALU_RGB_R_SWIZ_B_A |
+			      R500_ALU_RGB_G_SWIZ_B_A |
+			      R500_ALU_RGB_B_SWIZ_B_A);
+
+	    if (PICT_FORMAT_A(pMaskPicture->format) == 0)
+		//mask_alpha = R300_ALU_ALPHA_1_0;
+		mask_alpha = R500_ALPHA_SWIZ_B_1;
+	    else
+		//mask_alpha = R300_ALU_ALPHA_SRC1_A;
+		mask_alpha = R500_ALPHA_SWIZ_B_A;
+	} else {
+	    //mask_color = R300_ALU_RGB_1_0;
+	    mask_color = (R500_ALU_RGB_R_SWIZ_B_1 |
+			  R500_ALU_RGB_G_SWIZ_B_1 |
+			  R500_ALU_RGB_B_SWIZ_B_1);
+	    //mask_alpha = R300_ALU_ALPHA_1_0;
+	    mask_alpha = R500_ALPHA_SWIZ_B_1;
+	}
+
+	/* shader output swizzling */
+	switch (pDstPicture->format) {
+	case PICT_a8r8g8b8:
+	case PICT_x8r8g8b8:
+	default:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_BLUE |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_RED |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8b8g8r8:
+	case PICT_x8b8g8r8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_RED |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_BLUE |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_r5g6b5:
+	case PICT_a1r5g5b5:
+	case PICT_x1r5g5b5:
+	    output_fmt = (R300_OUT_FMT_C_5_6_5 |
+			  R300_OUT_FMT_C0_SEL_BLUE |
+			  R300_OUT_FMT_C1_SEL_GREEN |
+			  R300_OUT_FMT_C2_SEL_RED |
+			  R300_OUT_FMT_C3_SEL_ALPHA);
+	    break;
+	case PICT_a8:
+	    output_fmt = (R300_OUT_FMT_C4_8 |
+			  R300_OUT_FMT_C0_SEL_ALPHA);
+	    break;
+	}
+
+	if (pMask) {
+	    BEGIN_ACCEL(13);
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((4 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+	    OUT_ACCEL_REG(R500_RS_IP_0, ((0 << R500_RS_IP_TEX_PTR_S_SHIFT) |
+					 (1 << R500_RS_IP_TEX_PTR_T_SHIFT) |
+					 (R500_RS_IP_PTR_K0 << R500_RS_IP_TEX_PTR_R_SHIFT) |
+					 (R500_RS_IP_PTR_K1 << R500_RS_IP_TEX_PTR_Q_SHIFT)));
+
+	    OUT_ACCEL_REG(R500_RS_IP_1, ((2 << R500_RS_IP_TEX_PTR_S_SHIFT) |
+					 (3 << R500_RS_IP_TEX_PTR_T_SHIFT) |
+					 (R500_RS_IP_PTR_K0 << R500_RS_IP_TEX_PTR_R_SHIFT) |
+					 (R500_RS_IP_PTR_K1 << R500_RS_IP_TEX_PTR_Q_SHIFT)));
+
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+
+	    /* src tex */
+	    OUT_ACCEL_REG(R500_RS_INST_0, ((0 << R500_RS_INST_TEX_ID_SHIFT) |
+					   R500_RS_INST_TEX_CN_WRITE |
+					   (0 << R500_RS_INST_TEX_ADDR_SHIFT)));
+	    /* mask tex */
+	    OUT_ACCEL_REG(R500_RS_INST_1, ((1 << R500_RS_INST_TEX_ID_SHIFT) |
+					   R500_RS_INST_TEX_CN_WRITE |
+					   (1 << R500_RS_INST_TEX_ADDR_SHIFT)));
+
+	    OUT_ACCEL_REG(R300_US_CONFIG, R500_ZERO_TIMES_ANYTHING_EQUALS_ZERO);
+	    OUT_ACCEL_REG(R300_US_PIXSIZE, 1);
+	    OUT_ACCEL_REG(R500_US_FC_CTRL, 0);
+	    OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
+					      R500_US_CODE_END_ADDR(2)));
+	    OUT_ACCEL_REG(R500_US_CODE_RANGE, (R500_US_CODE_RANGE_ADDR(0) |
+					       R500_US_CODE_RANGE_SIZE(2)));
+	    OUT_ACCEL_REG(R500_US_CODE_OFFSET, 0);
+	} else {
+	    BEGIN_ACCEL(11);
+	    OUT_ACCEL_REG(R300_RS_COUNT,
+			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+			   R300_RS_COUNT_HIRES_EN));
+
+	    OUT_ACCEL_REG(R500_RS_IP_0, ((0 << R500_RS_IP_TEX_PTR_S_SHIFT) |
+					 (1 << R500_RS_IP_TEX_PTR_T_SHIFT) |
+					 (R500_RS_IP_PTR_K0 << R500_RS_IP_TEX_PTR_R_SHIFT) |
+					 (R500_RS_IP_PTR_K1 << R500_RS_IP_TEX_PTR_Q_SHIFT)));
+
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+
+	    /* src tex */
+	    OUT_ACCEL_REG(R500_RS_INST_0, ((0 << R500_RS_INST_TEX_ID_SHIFT) |
+					   R500_RS_INST_TEX_CN_WRITE |
+					   (0 << R500_RS_INST_TEX_ADDR_SHIFT)));
+
+	    OUT_ACCEL_REG(R300_US_CONFIG, R500_ZERO_TIMES_ANYTHING_EQUALS_ZERO);
+	    OUT_ACCEL_REG(R300_US_PIXSIZE, 1);
+	    OUT_ACCEL_REG(R500_US_FC_CTRL, 0);
+	    OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
+					      R500_US_CODE_END_ADDR(1)));
+	    OUT_ACCEL_REG(R500_US_CODE_RANGE, (R500_US_CODE_RANGE_ADDR(0) |
+					       R500_US_CODE_RANGE_SIZE(1)));
+	    OUT_ACCEL_REG(R500_US_CODE_OFFSET, 0);
+	}
+
+	OUT_ACCEL_REG(R300_US_OUT_FMT_0, output_fmt);
+	FINISH_ACCEL();
+
+	if (pMask) {
+	    BEGIN_ACCEL(19);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_INDEX, 0);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
+						   R500_INST_RGB_WMASK_R |
+						   R500_INST_RGB_WMASK_G |
+						   R500_INST_RGB_WMASK_B |
+						   R500_INST_ALPHA_WMASK |
+						   R500_INST_RGB_CLAMP |
+						   R500_INST_ALPHA_CLAMP));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(0) |
+						   R500_TEX_INST_LD |
+						   R500_TEX_IGNORE_UNCOVERED));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(0) |
+						   R500_TEX_SRC_S_SWIZ_R |
+						   R500_TEX_SRC_T_SWIZ_G |
+						   R500_TEX_DST_ADDR(0) |
+						   R500_TEX_DST_R_SWIZ_R |
+						   R500_TEX_DST_G_SWIZ_G |
+						   R500_TEX_DST_B_SWIZ_B |
+						   R500_TEX_DST_A_SWIZ_A));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(0) |
+						   R500_DX_S_SWIZ_R |
+						   R500_DX_T_SWIZ_R |
+						   R500_DX_R_SWIZ_R |
+						   R500_DX_Q_SWIZ_R |
+						   R500_DY_ADDR(0) |
+						   R500_DY_S_SWIZ_R |
+						   R500_DY_T_SWIZ_R |
+						   R500_DY_R_SWIZ_R |
+						   R500_DY_Q_SWIZ_R)); // TEX_ADDR_DXDY
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
+						   R500_INST_TEX_SEM_WAIT |
+						   R500_INST_RGB_WMASK_R |
+						   R500_INST_RGB_WMASK_G |
+						   R500_INST_RGB_WMASK_B |
+						   R500_INST_ALPHA_WMASK |
+						   R500_INST_RGB_CLAMP |
+						   R500_INST_ALPHA_CLAMP));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(1) |
+						   R500_TEX_INST_LD |
+						   R500_TEX_SEM_ACQUIRE |
+						   R500_TEX_IGNORE_UNCOVERED));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(1) |
+						   R500_TEX_SRC_S_SWIZ_R |
+						   R500_TEX_SRC_T_SWIZ_G |
+						   R500_TEX_DST_ADDR(1) |
+						   R500_TEX_DST_R_SWIZ_R |
+						   R500_TEX_DST_G_SWIZ_G |
+						   R500_TEX_DST_B_SWIZ_B |
+						   R500_TEX_DST_A_SWIZ_A));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(1) |
+						   R500_DX_S_SWIZ_R |
+						   R500_DX_T_SWIZ_R |
+						   R500_DX_R_SWIZ_R |
+						   R500_DX_Q_SWIZ_R |
+						   R500_DY_ADDR(1) |
+						   R500_DY_S_SWIZ_R |
+						   R500_DY_T_SWIZ_R |
+						   R500_DY_R_SWIZ_R |
+						   R500_DY_Q_SWIZ_R)); // TEX_ADDR_DXDY
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+	} else {
+	    BEGIN_ACCEL(13);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_INDEX, 0);
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
+						   R500_INST_TEX_SEM_WAIT |
+						   R500_INST_RGB_WMASK_R |
+						   R500_INST_RGB_WMASK_G |
+						   R500_INST_RGB_WMASK_B |
+						   R500_INST_ALPHA_WMASK |
+						   R500_INST_RGB_CLAMP |
+						   R500_INST_ALPHA_CLAMP));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_ID(0) |
+						   R500_TEX_INST_LD |
+						   R500_TEX_SEM_ACQUIRE |
+						   R500_TEX_IGNORE_UNCOVERED));
+
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_TEX_SRC_ADDR(0) |
+						   R500_TEX_SRC_S_SWIZ_R |
+						   R500_TEX_SRC_T_SWIZ_G |
+						   R500_TEX_DST_ADDR(0) |
+						   R500_TEX_DST_R_SWIZ_R |
+						   R500_TEX_DST_G_SWIZ_G |
+						   R500_TEX_DST_B_SWIZ_B |
+						   R500_TEX_DST_A_SWIZ_A));
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_DX_ADDR(0) |
+						   R500_DX_S_SWIZ_R |
+						   R500_DX_T_SWIZ_R |
+						   R500_DX_R_SWIZ_R |
+						   R500_DX_Q_SWIZ_R |
+						   R500_DY_ADDR(0) |
+						   R500_DY_S_SWIZ_R |
+						   R500_DY_T_SWIZ_R |
+						   R500_DY_R_SWIZ_R |
+						   R500_DY_Q_SWIZ_R)); // TEX_ADDR_DXDY
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+	    OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000); // mbz
+	}
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_OUT |
+					       R500_INST_TEX_SEM_WAIT |
+					       R500_INST_LAST |
+					       R500_INST_RGB_OMASK_R |
+					       R500_INST_RGB_OMASK_G |
+					       R500_INST_RGB_OMASK_B |
+					       R500_INST_ALPHA_OMASK |
+					       R500_INST_RGB_CLAMP |
+					       R500_INST_ALPHA_CLAMP));
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_RGB_ADDR0(0) |
+					       R500_RGB_ADDR1(1) |
+					       R500_RGB_ADDR2(0)));
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALPHA_ADDR0(0) |
+					       R500_ALPHA_ADDR1(1) |
+					       R500_ALPHA_ADDR2(0)));
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALU_RGB_SEL_A_SRC0 |
+					       src_color |
+					       R500_ALU_RGB_SEL_B_SRC1 |
+					       mask_color |
+					       R500_ALU_RGB_TARGET(0)));
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALPHA_OP_MAD |
+					       R500_ALPHA_ADDRD(0) |
+					       R500_ALPHA_SEL_A_SRC0 |
+					       src_alpha |
+					       R500_ALPHA_SEL_B_SRC1 |
+					       mask_alpha |
+					       R500_ALPHA_TARGET(0)));
+
+	OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_ALU_RGBA_OP_MAD |
+					       R500_ALU_RGBA_ADDRD(0) |
+					       R500_ALU_RGBA_R_SWIZ_0 |
+					       R500_ALU_RGBA_G_SWIZ_0 |
+					       R500_ALU_RGBA_B_SWIZ_0 |
+					       R500_ALU_RGBA_A_SWIZ_0));
+	FINISH_ACCEL();
     }
 
-    BEGIN_ACCEL(6);
-    OUT_ACCEL_REG(R300_TX_INVALTAGS, 0x0);
-    OUT_ACCEL_REG(R300_TX_ENABLE, txenable);
+    BEGIN_ACCEL(4);
 
     OUT_ACCEL_REG(R300_RB3D_COLOROFFSET0, dst_offset);
     OUT_ACCEL_REG(R300_RB3D_COLORPITCH0, colorpitch);
 
     blendcntl = RADEONGetBlendCntl(op, pMaskPicture, pDstPicture->format);
-    OUT_ACCEL_REG(R300_RB3D_BLENDCNTL, blendcntl);
+    OUT_ACCEL_REG(R300_RB3D_BLENDCNTL, blendcntl | R300_ALPHA_BLEND_ENABLE | R300_READ_ENABLE);
     OUT_ACCEL_REG(R300_RB3D_ABLENDCNTL, 0);
-
-#if 0
-    /* IN operator: Multiply src by mask components or mask alpha.
-     * BLEND_CTL_ADD is A * B + C.
-     * If a picture is a8, we have to explicitly zero its color values.
-     * If the destination is a8, we have to route the alpha to red, I think.
-     * If we're doing component alpha where the source for blending is going to
-     * be the source alpha (and there's no source value used), we have to zero
-     * the source's color values.
-     */
-    cblend = R200_TXC_OP_MADD | R200_TXC_ARG_C_ZERO;
-    ablend = R200_TXA_OP_MADD | R200_TXA_ARG_C_ZERO;
-
-    if (pDstPicture->format == PICT_a8 ||
-	(pMask && pMaskPicture->componentAlpha && RadeonBlendOp[op].src_alpha))
-    {
-	cblend |= R200_TXC_ARG_A_R0_ALPHA;
-    } else if (pSrcPicture->format == PICT_a8)
-	cblend |= R200_TXC_ARG_A_ZERO;
-    else
-	cblend |= R200_TXC_ARG_A_R0_COLOR;
-    ablend |= R200_TXA_ARG_A_R0_ALPHA;
-
-    if (pMask) {
-	if (pMaskPicture->componentAlpha &&
-	    pDstPicture->format != PICT_a8)
-	    cblend |= R200_TXC_ARG_B_R1_COLOR;
-	else
-	    cblend |= R200_TXC_ARG_B_R1_ALPHA;
-	ablend |= R200_TXA_ARG_B_R1_ALPHA;
-    } else {
-	cblend |= R200_TXC_ARG_B_ZERO | R200_TXC_COMP_ARG_B;
-	ablend |= R200_TXA_ARG_B_ZERO | R200_TXA_COMP_ARG_B;
-    }
-
-    OUT_ACCEL_REG(R200_PP_TXCBLEND_0, cblend);
-    OUT_ACCEL_REG(R200_PP_TXCBLEND2_0,
-	R200_TXC_CLAMP_0_1 | R200_TXC_OUTPUT_REG_R0);
-    OUT_ACCEL_REG(R200_PP_TXABLEND_0, ablend);
-    OUT_ACCEL_REG(R200_PP_TXABLEND2_0,
-	R200_TXA_CLAMP_0_1 | R200_TXA_OUTPUT_REG_R0);
-
-    /* Op operator. */
-    blendcntl = RADEONGetBlendCntl(op, pMaskPicture, pDstPicture->format);
-    OUT_ACCEL_REG(RADEON_RB3D_BLENDCNTL, blendcntl);
-#endif
 
     FINISH_ACCEL();
 

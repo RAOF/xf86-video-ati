@@ -57,12 +57,7 @@ extern void atombios_crtc_mode_set(xf86CrtcPtr crtc,
 				   DisplayModePtr mode,
 				   DisplayModePtr adjusted_mode,
 				   int x, int y);
-extern void legacy_crtc_mode_set(xf86CrtcPtr crtc,
-				 DisplayModePtr mode,
-				 DisplayModePtr adjusted_mode,
-				 int x, int y);
 extern void atombios_crtc_dpms(xf86CrtcPtr crtc, int mode);
-extern void legacy_crtc_dpms(xf86CrtcPtr crtc, int mode);
 
 static void
 radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
@@ -190,8 +185,10 @@ RADEONComputePLL(RADEONPLLPtr pll,
 		best_vco_diff = vco_diff;
 	    }
 	}
-	if (best_freq == freq)
-	    break;
+	if (!(flags & RADEON_PLL_DCE3)) {
+	    if (best_freq == freq)
+		break;
+	}
     }
 
     ErrorF("best_freq: %u\n", (unsigned int)best_freq);
