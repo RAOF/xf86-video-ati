@@ -1,11 +1,11 @@
-xserver-xorg-video-ati (1:6.8.1~git20080320.5e3b2128-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.8.1~git20080320.5e3b2128-1) experimental; urgency=low
 
   * New upstream snapshot, up to commit 5e3b2128.
     + Driver-side fix of two colour cursors to ARGB conversion on
       big endian platforms, needs a recent xserver-xorg-core to be
       be complete, closes: #446123.
 
- -- Brice Goglin <bgoglin@debian.org>  Thu, 20 Mar 2008 09:04:23 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Thu, 20 Mar 2008 09:10:18 +0100
 
 xserver-xorg-video-ati (1:6.8.1~git20080310.38606b08-1) experimental; urgency=low
 
