@@ -1,3 +1,378 @@
+commit 5e3b21284482df9974c9a58f248f0100def2bb0c
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 19:15:05 2008 -0400
+
+    Disable the setting of HARDWARE_CURSOR_BIT_ORDER_MSBFIRST
+    
+    See bug 11796
+
+commit 17cd42ed31814ba329a6a68edd0d75390a7da40e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Mar 19 18:17:10 2008 -0400
+
+    Enable BSR in Log2 functions
+    
+    This patch edits RADEONLog2 and ATILog2 to use the x86 BSR instruction instead
+    of looping through bits. It should provide a somewhat of a speed increase in
+    this function on x86 and AMD64 architectures.
+    
+    Note: the BSR instruction was added with the 80386 CPU and is therefore not
+    compatible with earlier CPUs, though I highly doubt it's even possible to use a
+    286 in conjunction with a Radeon.
+    
+    The inline assembly also works with Intel's compiler (icc).
+
+commit c83827b4d2b6f03c54429e757a756eb99ff8be6b
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Mar 19 17:58:34 2008 -0400
+
+    [PATCH] Compile warning fixes.
+    
+      Minor changes to avoid declarations mixed with code.
+      Ansified functions with empty prototype to specify they don't
+    receive arguments.
+      Added some prototypes to radeon.h, and major reorder on radeon.h
+    adding prototypes in alphabetical order and specifying to file that
+    defines it.
+
+commit bed9754ad21d6c0a7f61067b04ba31c430a7cecb
+Merge: 55e446b... f71ac0e...
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 16:06:41 2008 -0400
+
+    Merge branch 'master' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into r3xx-render
+
+commit 55e446b5bc091e6c7b3c2e9ae20b45130555c246
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 13:15:32 2008 -0400
+
+    R3xx/R5xx: Make sure to clamp the output of the FS
+
+commit b6aa4279cbe68cc8e4523795e9714fb798b62d98
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 12:45:01 2008 -0400
+
+    R5xx: bump textured video limits to 4096
+
+commit 4a445a3e8c4c5ecd9d4ef8daa26906c3ceaa94a1
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 12:31:51 2008 -0400
+
+    RADEON: add new macros to distinguish between R3xx and R5xx 3D
+
+commit 85d0c9e8d22ccc72bec87b3fd44da5d7609293e0
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 12:07:33 2008 -0400
+
+    RADEON: fixed textured video with XAA and tiling
+
+commit f5951db7b3522e0fe6af7f46a170c9c9a60a9bff
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Wed Mar 19 12:01:50 2008 -0400
+
+    RV515: fix textured video and EXA Composite
+    
+    There seems to be an issue with the PVS setup on RV515, but
+    bypassing it seems to work fine.
+
+commit 13573879fe56368ad06234712b677c23fabc56c6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Mar 19 15:06:47 2008 +1000
+
+    r500: make it work from startup.
+    
+    I'm not sure why this worked or what is going wrong here, really the
+    VAP internal architecture escapes me :)
+
+commit d331dd64d644a18ec99a2136cd0943b5edca1f03
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 18 19:44:26 2008 -0400
+
+    R3xx/R5xx: remove extra return after last commit
+
+commit bc34df7a9c35cdd38c49d5c22471f3f487a33d6e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 18 19:39:47 2008 -0400
+
+    R3xx/R5xx: switch an ErrorF() to RADEONFALLBACK()
+
+commit 6f03f8fe0ecf4181dcf125049cf63bece0451fb2
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 18 19:36:05 2008 -0400
+
+    R3xx: we only use 2 temps, not 3
+
+commit 8bb71ab4a3eb4fb6ef7f709e87c8df387cb70ee3
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Tue Mar 18 14:36:08 2008 -0400
+
+    R3xx/R5xx: fix up a8-src-something_with_colors
+
+commit c362591d9b496df30668543158e4de44de742dc3
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 18 11:15:17 2008 -0400
+
+    R3xx/R5xx: remove some cruft
+
+commit 89fe6d2c7d7471e6088558130f6e49f46c31dd47
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Mar 18 09:43:43 2008 -0400
+
+    R5xx: fix typ in r5xx render accel
+    
+    This gets render working on r5xx
+
+commit 79b40ebcd8dedfc83e484c1024beeeaccc6124f3
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 18 02:46:49 2008 -0400
+
+    R5xx: first pass at render support (untested)
+
+commit 71292c8f193230255d1d980c2e996bb01d04fab6
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 18 00:45:37 2008 -0400
+
+    R5xx: bump tex/dst limits to 4096
+
+commit 30b52f8aa6a471455284f59b5b27252743892b13
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 17 23:20:10 2008 -0400
+
+    R3xx/R5xx: whitespace cleanup and cruft removal
+
+commit 9c9f1b538ed710c3066775fba0a8e936b63087b1
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 17 23:01:37 2008 -0400
+
+    R3xx: get masks working and cleanup
+    
+    RS offset was wrong for mask texture
+
+commit ef94febd74f8ee63081b61e42f093a5a2b8fbf1e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 17 22:27:19 2008 -0400
+
+    R3xx: minor adjustments
+
+commit f71ac0e40b9d950bcb3bba42a75d41f45b6ed1bf
+Author: Alban Browaeys <prahal@yahoo.com>
+Date:   Mon Mar 17 20:48:48 2008 -0400
+
+    RADEON: Revert to old behavior when resetting the memmap on VT switch
+    
+    Not sure why this needs to be done twice.  Should fix bug 14980
+    Probably needs more investigation.
+
+commit bedbbf196dc97ee5142e7dfae16fb6f317fca5a7
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 17 20:16:25 2008 -0400
+
+    R3xx: some progress
+
+commit af0e626c132de2dd9958fec657fcc85d4c0fe5e1
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 17 18:07:12 2008 -0400
+
+    R3xx: fix errant w
+
+commit 29ea5bfc0eb3194e2454fc3ee863df54f0300880
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Mon Mar 17 16:41:57 2008 -0400
+
+    RADEON: fix typo in RADEONAdjustMemMapRegisters()
+
+commit ab317e85c5ab1a249a510c34aeb3a908be1a66fc
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Mon Mar 17 15:28:09 2008 -0400
+
+    RADEON: make sure var is initialized properly in RADEONAdjustMemMapRegisters()
+
+commit 208d307227e15f37a6af5194398ed23266ff743a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Mar 16 19:39:23 2008 +1000
+
+    radeon: the 0x5974 appears to be a mobility chip...
+    
+    After debugging with partymola on #radeon, adding this allowed his
+    Dell Vostro 1000 to work properly
+
+commit 9bc7c2ec4048e1677547c1d60c51ccb954f7589a
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 14 20:12:22 2008 -0400
+
+    R3xx: odds and ends...
+    
+    still not working.
+    - swizzle US output for BGR formats
+    - no need to write to temps in ALU ops,
+    write to output only
+    - flush the PVS before updating
+
+commit 96bea7906c4706fcd57a9cd8f1ce3feab6ac676d
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 14 15:59:36 2008 -0400
+
+    R3xx: theoretical support for component alpha
+    
+    masks are still broken so...
+
+commit cffe3dcc8991cd7c457a9c1a9f41055aa9ea3436
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 14 14:37:43 2008 -0400
+
+    R3xx: VS WIP
+
+commit b73f52a50dfd6ff8d92f04d6b510c39582c6ac67
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 14 14:20:49 2008 -0400
+
+    R3xx/R5xx: enable VS for mask texture
+
+commit 569a14ca9be1e18fe9921edc816ac3dc32d6cca7
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 14 13:32:12 2008 -0400
+
+    R3xx/R5xx: Fix magic numbers in vertex shaders
+
+commit 4878997529601d62e257aa1c9112bd460561de73
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 21:23:40 2008 -0400
+
+    R3xx: make sure to set the FS code size correctly
+
+commit 22f46b88ef05afb6a6b6d70007ac4980a446430e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 20:25:33 2008 -0400
+
+    R3xx: attempt to setup the rasterizer properly for mask texture
+    
+    Not working yet
+
+commit 081fc9e892fa3d2e07b7db65b2e2719646255463
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 18:38:26 2008 -0400
+
+    R3xx: more mask work
+
+commit 2bf0236c03538ace3ce6d0e68f0829fc47d1385b
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 18:32:00 2008 -0400
+
+    R3xx: enable composite for non-mask cases
+
+commit 74286ba41302107d2fc626fee2181f7c4bc18164
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 18:25:32 2008 -0400
+
+    R3xx: add basic mask support
+
+commit a2bbe10d866567911b68f222b4758624bfe9bf84
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 18:16:53 2008 -0400
+
+    R300: setup source selects and output swizzling
+
+commit b9974ecce7d1932595226004858b08a7a6b188dc
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 17:35:38 2008 -0400
+
+    R3xx: set the texture id and add some register info
+
+commit 0ef700b7da5e554a0d0d166f3fde85ff45c9eb1f
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Mar 13 17:02:25 2008 -0400
+
+    R3xx/R5xx: enable blending
+
+commit b35c09a597c93a1d9f06ef0091c96822b0653f98
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Mar 13 18:42:29 2008 +1000
+
+    xv: fixup XAA on r500 textured video
+    
+    the XAA area should never end up tiled. This may break with nooffscreen pixmaps
+
+commit d4446461c3630caff166456c351ace34f57cc119
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Mar 11 21:20:53 2008 -0400
+
+    Properly fix uninitialized variables warnings
+    
+    According to commit 9fd13e6773371c82b9799a5bda7c96ffa5cafe8c to
+    xf86-video-intel by Kristian Høgsberg, there is a better way to fix the
+    possibly initialized variables warnings. This patch will use Kristian's fix.
+
+commit 20adfd7390d9b1f100e0c4a14f175377b8335c82
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 20:09:35 2008 -0400
+
+    RADEON: enable output attributes that require a modeset immediately
+    
+    This should fix bug 14915
+
+commit 53ba7f5771b0b53fb0d3bc29d64bdd3813756d10
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 19:12:40 2008 -0400
+
+    RADEON: fix vblank interrupts after VT switch or suspend/resume
+
+commit e946c097f0438afbea6f3dd37ee39d67d415708c
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Mar 11 19:07:58 2008 -0400
+
+    [PATCH] Fix a few warnings
+
+commit 8e160508520c0a24ca90aad182f296461ca0d9b6
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 18:11:13 2008 -0400
+
+    DCE3: add support for PCIEPHY (untested)
+
+commit fbded88a2925f9f049936dad0736721e7b84a6ee
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 14:10:31 2008 -0400
+
+    ATOM: remove some cruft
+
+commit 3263f6e4a410281d620c288a92bb4521f7b6fc06
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 14:05:48 2008 -0400
+
+    DCE3: enable DPMS on DIG ports
+
+commit eb90e235b58c94f3d4d75394725ab2fe246a42ff
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 13:53:54 2008 -0400
+
+    DCE3: adjust PLL for DCE3 chips
+    
+    this fixes stability issues on digital outputs and certain modes.
+
+commit 552615ccc5360baafb8bb41698c1ca27816fd4b2
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 13:38:29 2008 -0400
+
+    ATOMBIOS: enable load detection by default on both DACs
+    
+    Load detection is reliable with atom, so enable it by default
+    on both DACA and DACB, rather than just DACA.
+
+commit 78b10487cf222c96f8944ba25e2ea970506b3535
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Mar 11 13:16:00 2008 -0400
+
+    DCE3: add output attribute to enable/disable coherent mode
+    
+    Enabled by default.  The TMDS transmitter can be programmed
+    slightly differently depending on the chips in the panel.  If you
+    have problems with tmds on a particular panel, try disabling it.
+
+commit d20be31c46fbec623af4c3628a7c603ceacf500f
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Mar 10 21:05:43 2008 -0400
+
+    RV550: MC setup is like RV515 not RV530
+
 commit 38606b08b68842fbcc81c233009c1117269f3be9
 Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
 Date:   Sat Mar 8 23:22:59 2008 +0100
