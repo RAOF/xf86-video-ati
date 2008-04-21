@@ -887,6 +887,33 @@
 #       define RADEON_VERT_STRETCH_BLEND       (1     << 26)
 #       define RADEON_VERT_AUTO_RATIO_EN       (1     << 27)
 #       define RADEON_VERT_STRETCH_RESERVED    0xf1000000
+#define RS400_FP_2ND_GEN_CNTL               0x0384
+#       define RS400_FP_2ND_ON              (1 << 0)
+#       define RS400_FP_2ND_BLANK_EN        (1 << 1)
+#       define RS400_TMDS_2ND_EN            (1 << 2)
+#       define RS400_PANEL_FORMAT_2ND       (1 << 3)
+#       define RS400_FP_2ND_EN_TMDS         (1 << 7)
+#       define RS400_FP_2ND_DETECT_SENSE    (1 << 8)
+#       define RS400_FP_2ND_SOURCE_SEL_MASK        (3 << 10)
+#       define RS400_FP_2ND_SOURCE_SEL_CRTC1       (0 << 10)
+#       define RS400_FP_2ND_SOURCE_SEL_CRTC2       (1 << 10)
+#       define RS400_FP_2ND_SOURCE_SEL_RMX         (2 << 10)
+#       define RS400_FP_2ND_DETECT_EN       (1 << 12)
+#       define RS400_HPD_2ND_SEL            (1 << 13)
+#define RS400_FP2_2_GEN_CNTL                0x0388
+#       define RS400_FP2_2_BLANK_EN         (1 << 1)
+#       define RS400_FP2_2_ON               (1 << 2)
+#       define RS400_FP2_2_PANEL_FORMAT     (1 << 3)
+#       define RS400_FP2_2_DETECT_SENSE     (1 << 8)
+#       define RS400_FP2_2_SOURCE_SEL_MASK        (3 << 10)
+#       define RS400_FP2_2_SOURCE_SEL_CRTC1       (0 << 10)
+#       define RS400_FP2_2_SOURCE_SEL_CRTC2       (1 << 10)
+#       define RS400_FP2_2_SOURCE_SEL_RMX         (2 << 10)
+#       define RS400_FP2_2_DVO2_EN          (1 << 25)
+#define RS400_TMDS2_CNTL                    0x0394
+#define RS400_TMDS2_TRANSMITTER_CNTL        0x03a4
+#       define RS400_TMDS2_PLLEN            (1 << 0)
+#       define RS400_TMDS2_PLLRST           (1 << 1)
 
 #define RADEON_GEN_INT_CNTL                 0x0040
 #define RADEON_GEN_INT_STATUS               0x0044
@@ -3328,10 +3355,32 @@
 #       define RADEON_TVPLL_TEST_DIS             (1 << 31)
 #       define RADEON_TVCLK_SRC_SEL_TVPLL        (1 << 30)
 
-#define RADEON_RS480_UNK_e30			0xe30
-#define RADEON_RS480_UNK_e34			0xe34
-#define RADEON_RS480_UNK_e38			0xe38
-#define RADEON_RS480_UNK_e3c			0xe3c
+#define RS400_DISP2_REQ_CNTL1			0xe30
+#       define RS400_DISP2_START_REQ_LEVEL_SHIFT   0
+#       define RS400_DISP2_START_REQ_LEVEL_MASK    0x3ff
+#       define RS400_DISP2_STOP_REQ_LEVEL_SHIFT    12
+#       define RS400_DISP2_STOP_REQ_LEVEL_MASK     0x3ff
+#       define RS400_DISP2_ALLOW_FID_LEVEL_SHIFT   22
+#       define RS400_DISP2_ALLOW_FID_LEVEL_MASK    0x3ff
+#define RS400_DISP2_REQ_CNTL2			0xe34
+#       define RS400_DISP2_CRITICAL_POINT_START_SHIFT    12
+#       define RS400_DISP2_CRITICAL_POINT_START_MASK     0x3ff
+#       define RS400_DISP2_CRITICAL_POINT_STOP_SHIFT     22
+#       define RS400_DISP2_CRITICAL_POINT_STOP_MASK      0x3ff
+#define RS400_DMIF_MEM_CNTL1			0xe38
+#       define RS400_DISP2_START_ADR_SHIFT      0
+#       define RS400_DISP2_START_ADR_MASK       0x3ff
+#       define RS400_DISP1_CRITICAL_POINT_START_SHIFT    12
+#       define RS400_DISP1_CRITICAL_POINT_START_MASK     0x3ff
+#       define RS400_DISP1_CRITICAL_POINT_STOP_SHIFT     22
+#       define RS400_DISP1_CRITICAL_POINT_STOP_MASK      0x3ff
+#define RS400_DISP1_REQ_CNTL1			0xe3c
+#       define RS400_DISP1_START_REQ_LEVEL_SHIFT   0
+#       define RS400_DISP1_START_REQ_LEVEL_MASK    0x3ff
+#       define RS400_DISP1_STOP_REQ_LEVEL_SHIFT    12
+#       define RS400_DISP1_STOP_REQ_LEVEL_MASK     0x3ff
+#       define RS400_DISP1_ALLOW_FID_LEVEL_SHIFT   22
+#       define RS400_DISP1_ALLOW_FID_LEVEL_MASK    0x3ff
 
 #define RS690_MC_INDEX				0x78
 #	define RS690_MC_INDEX_MASK		0x1ff
@@ -3836,6 +3885,7 @@
 #define R300_GB_SELECT				        0x401c
 #define R300_GB_ENABLE				        0x4008
 #define R300_GB_AA_CONFIG				0x4020
+#define R400_GB_PIPE_SELECT                             0x402c
 #define R300_GB_MSPOS0				        0x4010
 #       define R300_MS_X0_SHIFT                         0
 #       define R300_MS_Y0_SHIFT                         4
@@ -3853,6 +3903,10 @@
 #       define R300_MS_X5_SHIFT                         16
 #       define R300_MS_Y5_SHIFT                         20
 #       define R300_MSBD1_SHIFT                         24
+
+#define R300_GA_ENHANCE				        0x4274
+#       define R300_GA_DEADLOCK_CNTL                    (1 << 0)
+#       define R300_GA_FASTSYNC_CNTL                    (1 << 1)
 
 #define R300_GA_POLY_MODE				0x4288
 #       define R300_FRONT_PTYPE_POINT                   (0 << 4)
@@ -3893,6 +3947,8 @@
 #       define R300_ALPHA3_SHADING_GOURAUD              (2 << 14)
 #define R300_GA_OFFSET				        0x4290
 
+#define R500_SU_REG_DEST                                0x42c8
+
 #define R300_VAP_CNTL_STATUS				0x2140
 #       define R300_PVS_BYPASS                          (1 << 8)
 #define R300_VAP_PVS_STATE_FLUSH_REG		        0x2284
@@ -3903,6 +3959,7 @@
 #       define R300_VF_MAX_VTX_NUM_SHIFT                18
 #       define R300_GL_CLIP_SPACE_DEF                   (0 << 22)
 #       define R300_DX_CLIP_SPACE_DEF                   (1 << 22)
+#       define R500_TCL_STATE_OPTIMIZATION              (1 << 23)
 #define R300_VAP_VTE_CNTL				0x20B0
 #       define R300_VPORT_X_SCALE_ENA                   (1 << 0)
 #       define R300_VPORT_X_OFFSET_ENA                  (1 << 1)
@@ -3913,6 +3970,7 @@
 #       define R300_VTX_XY_FMT                          (1 << 8)
 #       define R300_VTX_Z_FMT                           (1 << 9)
 #       define R300_VTX_W0_FMT                          (1 << 10)
+#define R300_VAP_VTX_STATE_CNTL		                0x2180
 #define R300_VAP_PSC_SGN_NORM_CNTL		        0x21DC
 #define R300_VAP_PROG_STREAM_CNTL_0		        0x2150
 #       define R300_DATA_TYPE_0_SHIFT                   0
@@ -4142,6 +4200,8 @@
 #       define R300_BOUNDARY_EDGE_FLAG_ENA              (1 << 18)
 #define R300_VAP_PVS_STATE_FLUSH_REG			0x2284
 
+#define R500_VAP_INDEX_OFFSET			        0x208c
+
 #define R300_SU_TEX_WRAP				0x42a0
 #define R300_SU_POLY_OFFSET_ENABLE		        0x42b4
 #define R300_SU_CULL_MODE				0x42b8
@@ -4299,6 +4359,8 @@
 #       define R300_ENDIAN_SWAP_32_BIT                  (2 << 0)
 #       define R300_ENDIAN_SWAP_HALF_DWORD              (3 << 0)
 #       define R300_MACRO_TILE                          (1 << 2)
+
+#define R300_TX_BORDER_COLOR_0			        0x45c0
 
 #define R300_TX_ENABLE				        0x4104
 #       define R300_TEX_0_ENABLE                        (1 << 0)
@@ -4553,12 +4615,25 @@
 #define R300_FG_FOG_BLEND				0x4bc0
 #define R300_FG_ALPHA_FUNC				0x4bd4
 
+#define R300_DST_PIPE_CONFIG		                0x170c
+#       define R300_PIPE_AUTO_CONFIG                    (1 << 31)
+#define R300_RB2D_DSTCACHE_MODE		                0x3428
+#       define R300_DC_AUTOFLUSH_ENABLE                 (1 << 8)
+#       define R300_DC_DC_DISABLE_IGNORE_PE             (1 << 17)
+#define R300_RB2D_DSTCACHE_CTLSTAT		        0x342c
+#       define R300_DC_FLUSH_2D                         (1 << 0)
+#       define R300_DC_FREE_2D                          (1 << 2)
+#       define R300_RB2D_DC_FLUSH_ALL                   (R300_DC_FLUSH_2D | R300_DC_FREE_2D)
+#       define R300_RB2D_DC_BUSY                        (1 << 31)
 #define R300_RB3D_DSTCACHE_CTLSTAT		        0x4e4c
 #       define R300_DC_FLUSH_3D                         (2 << 0)
 #       define R300_DC_FREE_3D                          (2 << 2)
+#       define R300_RB3D_DC_FLUSH_ALL                   (R300_DC_FLUSH_3D | R300_DC_FREE_3D)
+#       define R300_DC_FINISH_3D                        (1 << 4)
 #define R300_RB3D_ZCACHE_CTLSTAT			0x4f18
 #       define R300_ZC_FLUSH                            (1 << 0)
 #       define R300_ZC_FREE                             (1 << 1)
+#       define R300_ZC_FLUSH_ALL                        0x3
 #define R300_WAIT_UNTIL				        0x1720
 #       define R300_WAIT_2D_IDLECLEAN                   (1 << 16)
 #       define R300_WAIT_3D_IDLECLEAN                   (1 << 17)
@@ -5126,5 +5201,6 @@
 #   define R500_RS_IP_COL_FMT_RGBA			(0 << 27)
 #   define R500_RS_IP_OFFSET_EN 			(1 << 31)
 
+#define R500_DYN_SCLK_PWMEM_PIPE                        0x000d /* PLL */
 
 #endif

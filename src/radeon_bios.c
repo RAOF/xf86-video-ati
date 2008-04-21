@@ -75,7 +75,8 @@ Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 
 #ifdef XSERVER_LIBPCIACCESS
     //info->VBIOS = xalloc(info->PciInfo->rom_size);
-    info->VBIOS = xalloc(RADEON_VBIOS_SIZE);
+    int size = info->PciInfo->rom_size > RADEON_VBIOS_SIZE ? info->PciInfo->rom_size : RADEON_VBIOS_SIZE;
+    info->VBIOS = xalloc(size);
 #else
     info->VBIOS = xalloc(RADEON_VBIOS_SIZE);
 #endif
@@ -216,6 +217,54 @@ static Bool RADEONGetATOMConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
     return FALSE;
 }
 
+static void RADEONApplyLegacyQuirks(ScrnInfoPtr pScrn, int index)
+{
+    RADEONInfoPtr info = RADEONPTR (pScrn);
+
+    /* most XPRESS chips seem to specify DDC_CRT2 for their 
+     * VGA DDC port, however DDC never seems to work on that
+     * port.  Some have reported success on DDC_MONID, so 
+     * lets see what happens with that.
+     */
+    if (info->ChipFamily == CHIP_FAMILY_RS400 &&
+	info->BiosConnector[index].ConnectorType == CONNECTOR_VGA &&
+	info->BiosConnector[index].ddc_i2c.mask_clk_reg == RADEON_GPIO_CRT2_DDC) {
+	info->BiosConnector[index].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_MONID);
+    }
+    
+    /* XPRESS desktop chips seem to have a proprietary connector listed for
+     * DVI-D, try and do the right thing here.
+     */
+    if ((!info->IsMobility) &&
+	(info->BiosConnector[index].ConnectorType == CONNECTOR_LVDS)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		   "Proprietary connector found, assuming DVI-D\n");
+	info->BiosConnector[index].DACType = DAC_NONE;
+	info->BiosConnector[index].TMDSType = TMDS_EXT;
+	info->BiosConnector[index].ConnectorType = CONNECTOR_DVI_D;
+    }
+
+    /* Certain IBM chipset RN50s have a BIOS reporting two VGAs,
+       one with VGA DDC and one with CRT2 DDC. - kill the CRT2 DDC one */
+    if (info->Chipset == PCI_CHIP_RN50_515E &&
+	PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1014) {
+	if (info->BiosConnector[index].ConnectorType == CONNECTOR_VGA &&
+	    info->BiosConnector[index].ddc_i2c.mask_clk_reg == RADEON_GPIO_CRT2_DDC) {
+	    info->BiosConnector[index].valid = FALSE;
+	}
+    }
+
+    /* Some RV100 cards with 2 VGA ports show up with DVI+VGA */
+    if (info->Chipset == PCI_CHIP_RV100_QY &&
+	PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1002 &&
+	PCI_SUB_DEVICE_ID(info->PciInfo) == 0x013a) {
+	if (info->BiosConnector[index].ConnectorType == CONNECTOR_DVI_I) {
+	    info->BiosConnector[index].ConnectorType = CONNECTOR_VGA;
+	}
+    }
+
+}
+
 static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info = RADEONPTR (pScrn);
@@ -297,28 +346,8 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 	    else
 		info->BiosConnector[i].TMDSType = TMDS_INT;
 
-	    /* most XPRESS chips seem to specify DDC_CRT2 for their 
-	     * VGA DDC port, however DDC never seems to work on that
-	     * port.  Some have reported success on DDC_MONID, so 
-	     * lets see what happens with that.
-	     */
-	    if (info->ChipFamily == CHIP_FAMILY_RS400 &&
-		info->BiosConnector[i].ConnectorType == CONNECTOR_VGA &&
-		info->BiosConnector[i].ddc_i2c.mask_clk_reg == RADEON_GPIO_CRT2_DDC) {
-		info->BiosConnector[i].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_MONID);
-	    }
+	    RADEONApplyLegacyQuirks(pScrn, i);
 
-	    /* XPRESS desktop chips seem to have a proprietary connector listed for
-	     * DVI-D, try and do the right thing here.
-	    */
-	    if ((!info->IsMobility) &&
-		(info->BiosConnector[i].ConnectorType == CONNECTOR_LVDS)) {
-		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-			   "Proprietary connector found, assuming DVI-D\n");
-		info->BiosConnector[i].DACType = DAC_NONE;
-		info->BiosConnector[i].TMDSType = TMDS_EXT;
-		info->BiosConnector[i].ConnectorType = CONNECTOR_DVI_D;
-	    }
 	}
     } else {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No Connector Info Table found!\n");

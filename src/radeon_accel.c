@@ -158,17 +158,32 @@ void RADEONEngineFlush(ScrnInfoPtr pScrn)
     unsigned char *RADEONMMIO = info->MMIO;
     int            i;
 
-    OUTREGP(RADEON_RB3D_DSTCACHE_CTLSTAT,
-	    RADEON_RB3D_DC_FLUSH_ALL,
-	    ~RADEON_RB3D_DC_FLUSH_ALL);
-    for (i = 0; i < RADEON_TIMEOUT; i++) {
-	if (!(INREG(RADEON_RB3D_DSTCACHE_CTLSTAT) & RADEON_RB3D_DC_BUSY))
-	    break;
-    }
-    if (i == RADEON_TIMEOUT) {
-	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		       "DC flush timeout: %x\n",
-		       (unsigned int)INREG(RADEON_RB3D_DSTCACHE_CTLSTAT));
+    if (info->ChipFamily <= CHIP_FAMILY_RV280) {
+	OUTREGP(RADEON_RB3D_DSTCACHE_CTLSTAT,
+		RADEON_RB3D_DC_FLUSH_ALL,
+		~RADEON_RB3D_DC_FLUSH_ALL);
+	for (i = 0; i < RADEON_TIMEOUT; i++) {
+	    if (!(INREG(RADEON_RB3D_DSTCACHE_CTLSTAT) & RADEON_RB3D_DC_BUSY))
+		break;
+	}
+	if (i == RADEON_TIMEOUT) {
+	    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+			   "DC flush timeout: %x\n",
+			   (unsigned int)INREG(RADEON_RB3D_DSTCACHE_CTLSTAT));
+	}
+    } else {
+	OUTREGP(R300_RB2D_DSTCACHE_CTLSTAT,
+		R300_RB2D_DC_FLUSH_ALL,
+		~R300_RB2D_DC_FLUSH_ALL);
+	for (i = 0; i < RADEON_TIMEOUT; i++) {
+	    if (!(INREG(R300_RB2D_DSTCACHE_CTLSTAT) & R300_RB2D_DC_BUSY))
+		break;
+	}
+	if (i == RADEON_TIMEOUT) {
+	    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+			   "DC flush timeout: %x\n",
+			   (unsigned int)INREG(R300_RB2D_DSTCACHE_CTLSTAT));
+	}
     }
 }
 
@@ -355,7 +370,52 @@ void RADEONEngineInit(ScrnInfoPtr pScrn)
 		   info->CurrentLayout.pixel_code,
 		   info->CurrentLayout.bitsPerPixel);
 
-    OUTREG(RADEON_RB3D_CNTL, 0);
+    if ((info->ChipFamily == CHIP_FAMILY_RV410) ||
+	(info->ChipFamily == CHIP_FAMILY_R420)  ||
+	(info->ChipFamily == CHIP_FAMILY_RS690) ||
+	(info->ChipFamily == CHIP_FAMILY_RS740) ||
+	(info->ChipFamily == CHIP_FAMILY_RS400) ||
+	IS_R500_3D) {
+	uint32_t gb_pipe_sel = INREG(R400_GB_PIPE_SELECT);
+	if (info->num_gb_pipes == 0) {
+	    info->num_gb_pipes = ((gb_pipe_sel >> 12) & 0x3) + 1;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "%s: num pipes is %d\n", __FUNCTION__, info->num_gb_pipes);
+	}
+	if (IS_R500_3D)
+	    OUTPLL(pScrn, R500_DYN_SCLK_PWMEM_PIPE, (1 | ((gb_pipe_sel >> 8) & 0xf) << 4));
+    } else {
+	if (info->num_gb_pipes == 0) {
+	    if ((info->ChipFamily == CHIP_FAMILY_R300) ||
+		(info->ChipFamily == CHIP_FAMILY_R350)) {
+		/* R3xx chips */
+		info->num_gb_pipes = 2;
+	    } else {
+		/* RV3xx chips */
+		info->num_gb_pipes = 1;
+	    }
+	}
+    }
+
+    if (IS_R300_3D | IS_R500_3D) {
+	CARD32 gb_tile_config = (R300_ENABLE_TILING | R300_TILE_SIZE_16 | R300_SUBPIXEL_1_16);
+
+	switch(info->num_gb_pipes) {
+	case 2: gb_tile_config |= R300_PIPE_COUNT_R300; break;
+	case 3: gb_tile_config |= R300_PIPE_COUNT_R420_3P; break;
+	case 4: gb_tile_config |= R300_PIPE_COUNT_R420; break;
+	default:
+	case 1: gb_tile_config |= R300_PIPE_COUNT_RV350; break;
+	}
+
+	OUTREG(R300_GB_TILE_CONFIG, gb_tile_config);
+	OUTREG(R300_WAIT_UNTIL, R300_WAIT_2D_IDLECLEAN | R300_WAIT_3D_IDLECLEAN);
+	OUTREG(R300_DST_PIPE_CONFIG, INREG(R300_DST_PIPE_CONFIG) | R300_PIPE_AUTO_CONFIG);
+	OUTREG(R300_RB2D_DSTCACHE_MODE, (INREG(R300_RB2D_DSTCACHE_MODE) |
+					 R300_DC_AUTOFLUSH_ENABLE |
+					 R300_DC_DC_DISABLE_IGNORE_PE));
+    } else
+	OUTREG(RADEON_RB3D_CNTL, 0);
 
     RADEONEngineReset(pScrn);
 

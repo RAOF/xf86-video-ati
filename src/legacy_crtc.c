@@ -78,6 +78,13 @@ RADEONRestoreCommonRegisters(ScrnInfoPtr pScrn,
     OUTREG(RADEON_BUS_CNTL,           restore->bus_cntl);
     OUTREG(RADEON_SURFACE_CNTL,       restore->surface_cntl);
 
+    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+	OUTREG(RS400_DISP2_REQ_CNTL1, restore->disp2_req_cntl1);
+	OUTREG(RS400_DISP2_REQ_CNTL2, restore->disp2_req_cntl2);
+	OUTREG(RS400_DMIF_MEM_CNTL1,  restore->dmif_mem_cntl1);
+	OUTREG(RS400_DISP1_REQ_CNTL1, restore->disp1_req_cntl1);
+    }
+
     /* Workaround for the VT switching problem in dual-head mode.  This
      * problem only occurs on RV style chips, typically when a FP and
      * CRT are connected.
@@ -178,12 +185,6 @@ RADEONRestoreCrtc2Registers(ScrnInfoPtr pScrn,
     OUTREG(RADEON_CRTC2_PITCH,           restore->crtc2_pitch);
     OUTREG(RADEON_DISP2_MERGE_CNTL,      restore->disp2_merge_cntl);
 
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
-	OUTREG(RADEON_RS480_UNK_e30, restore->rs480_unk_e30);
-	OUTREG(RADEON_RS480_UNK_e34, restore->rs480_unk_e34);
-	OUTREG(RADEON_RS480_UNK_e38, restore->rs480_unk_e38);
-	OUTREG(RADEON_RS480_UNK_e3c, restore->rs480_unk_e3c);
-    }
     OUTREG(RADEON_CRTC2_GEN_CNTL, restore->crtc2_gen_cntl);
 
 }
@@ -489,6 +490,13 @@ RADEONSaveCommonRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
     save->surface_cntl	     = INREG(RADEON_SURFACE_CNTL);
     save->grph_buffer_cntl   = INREG(RADEON_GRPH_BUFFER_CNTL);
     save->grph2_buffer_cntl  = INREG(RADEON_GRPH2_BUFFER_CNTL);
+
+    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+	save->disp2_req_cntl1 = INREG(RS400_DISP2_REQ_CNTL1);
+	save->disp2_req_cntl2 = INREG(RS400_DISP2_REQ_CNTL2);
+	save->dmif_mem_cntl1  = INREG(RS400_DMIF_MEM_CNTL1);
+	save->disp1_req_cntl1 = INREG(RS400_DISP1_REQ_CNTL1);
+    }
 }
 
 /* Read CRTC registers */
@@ -550,13 +558,6 @@ RADEONSaveCrtc2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save)
     save->fp_h2_sync_strt_wid   = INREG (RADEON_FP_H2_SYNC_STRT_WID);
     save->fp_v2_sync_strt_wid   = INREG (RADEON_FP_V2_SYNC_STRT_WID);
 
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
-	save->rs480_unk_e30 = INREG(RADEON_RS480_UNK_e30);
-	save->rs480_unk_e34 = INREG(RADEON_RS480_UNK_e34);
-	save->rs480_unk_e38 = INREG(RADEON_RS480_UNK_e38);
-	save->rs480_unk_e3c = INREG(RADEON_RS480_UNK_e3c);
-    }
-    
     save->disp2_merge_cntl      = INREG(RADEON_DISP2_MERGE_CNTL);
 
     /* track if the crtc is enabled for text restore */
@@ -677,6 +678,14 @@ RADEONInitCommonRegisters(RADEONSavePtr save, RADEONInfoPtr info)
     save->cap0_trig_cntl     = 0;
     save->cap1_trig_cntl     = 0;
     save->bus_cntl           = info->BusCntl;
+
+    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+	save->disp2_req_cntl1 = info->SavedReg->disp2_req_cntl1;
+	save->disp2_req_cntl2 = info->SavedReg->disp2_req_cntl2;
+	save->dmif_mem_cntl1  = info->SavedReg->dmif_mem_cntl1;
+	save->disp1_req_cntl1 = info->SavedReg->disp1_req_cntl1;
+    }
+
     /*
      * If bursts are enabled, turn on discards
      * Radeon doesn't have write bursts
@@ -1125,13 +1134,6 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
     save->fp_h2_sync_strt_wid = save->crtc2_h_sync_strt_wid;
     save->fp_v2_sync_strt_wid = save->crtc2_v_sync_strt_wid;
 
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
-	save->rs480_unk_e30 = 0x105DC1CC; /* because I'm worth it */
-	save->rs480_unk_e34 = 0x2749D000; /* AMD really should */
-	save->rs480_unk_e38 = 0x29ca71dc; /* release docs */
-	save->rs480_unk_e3c = 0x28FBC3AC; /* this is so a trade secret */
-    }
-
     return TRUE;
 }
 
@@ -1554,6 +1556,24 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     OUTREG(RADEON_GRPH_BUFFER_CNTL, ((temp & ~RADEON_GRPH_CRITICAL_POINT_MASK) |
 				     (critical_point << RADEON_GRPH_CRITICAL_POINT_SHIFT)));
 
+#if 0
+    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+	/* attempt to program RS400 disp regs correctly ??? */
+	temp = info->SavedReg->disp1_req_cntl1;
+	temp &= ~(RS400_DISP1_START_REQ_LEVEL_MASK |
+		  RS400_DISP1_STOP_REQ_LEVEL_MASK);
+	OUTREG(RS400_DISP1_REQ_CNTL1, (temp |
+				       (critical_point << RS400_DISP1_START_REQ_LEVEL_SHIFT) |
+				       (critical_point << RS400_DISP1_STOP_REQ_LEVEL_SHIFT)));
+	temp = info->SavedReg->dmif_mem_cntl1;
+	temp &= ~(RS400_DISP1_CRITICAL_POINT_START_MASK |
+		  RS400_DISP1_CRITICAL_POINT_STOP_MASK);
+	OUTREG(RS400_DMIF_MEM_CNTL1, (temp |
+				      (critical_point << RS400_DISP1_CRITICAL_POINT_START_SHIFT) |
+				      (critical_point << RS400_DISP1_CRITICAL_POINT_STOP_SHIFT)));
+    }
+#endif
+
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "GRPH_BUFFER_CNTL from %x to %x\n",
 		   (unsigned int)info->SavedReg->grph_buffer_cntl,
@@ -1603,6 +1623,28 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
 
 	OUTREG(RADEON_GRPH2_BUFFER_CNTL, ((temp & ~RADEON_GRPH_CRITICAL_POINT_MASK) |
 					  (critical_point2 << RADEON_GRPH_CRITICAL_POINT_SHIFT)));
+
+	if (info->ChipFamily == CHIP_FAMILY_RS400) {
+#if 0
+	    /* attempt to program RS400 disp2 regs correctly ??? */
+	    temp = info->SavedReg->disp2_req_cntl1;
+	    temp &= ~(RS400_DISP2_START_REQ_LEVEL_MASK |
+		      RS400_DISP2_STOP_REQ_LEVEL_MASK);
+	    OUTREG(RS400_DISP2_REQ_CNTL1, (temp |
+					   (critical_point2 << RS400_DISP1_START_REQ_LEVEL_SHIFT) |
+					   (critical_point2 << RS400_DISP1_STOP_REQ_LEVEL_SHIFT)));
+	    temp = info->SavedReg->disp2_req_cntl2;
+	    temp &= ~(RS400_DISP2_CRITICAL_POINT_START_MASK |
+		      RS400_DISP2_CRITICAL_POINT_STOP_MASK);
+	    OUTREG(RS400_DISP2_REQ_CNTL2, (temp |
+					   (critical_point2 << RS400_DISP2_CRITICAL_POINT_START_SHIFT) |
+					   (critical_point2 << RS400_DISP2_CRITICAL_POINT_STOP_SHIFT)));
+#endif
+	    OUTREG(RS400_DISP2_REQ_CNTL1, 0x105DC1CC);
+	    OUTREG(RS400_DISP2_REQ_CNTL2, 0x2749D000);
+	    OUTREG(RS400_DMIF_MEM_CNTL1,  0x29CA71DC);
+	    OUTREG(RS400_DISP1_REQ_CNTL1, 0x28FBC3AC);
+	}
 
 	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		       "GRPH2_BUFFER_CNTL from %x to %x\n",
@@ -1682,6 +1724,8 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     }
 
 
+    ErrorF("init memmap\n");
+    RADEONInitMemMapRegisters(pScrn, info->ModeReg, info);
     ErrorF("init common\n");
     RADEONInitCommonRegisters(info->ModeReg, info);
 
@@ -1735,6 +1779,8 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	}
     }
 
+    ErrorF("restore memmap\n");
+    RADEONRestoreMemMapRegisters(pScrn, info->ModeReg);
     ErrorF("restore common\n");
     RADEONRestoreCommonRegisters(pScrn, info->ModeReg);
 
@@ -1758,7 +1804,7 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	radeon_update_tv_routing(pScrn, info->ModeReg);
 
     if (info->DispPriority)
-	RADEONInitDispBandwidth(pScrn);
+        RADEONInitDispBandwidth(pScrn);
 
     if (tilingChanged) {
 	/* need to redraw front buffer, I guess this can be considered a hack ? */

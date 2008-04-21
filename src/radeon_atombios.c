@@ -35,6 +35,8 @@
 #include "radeon_probe.h"
 #include "radeon_macros.h"
 
+#include "ati_pciids_gen.h"
+
 #include "xorg-server.h"
 
 /* only for testing now */
@@ -517,25 +519,52 @@ rhdAtomASICInit(atomBiosHandlePtr handle)
     return FALSE;
 }
 
-Bool
-rhdAtomSetScaler(atomBiosHandlePtr handle, unsigned char scalerID, int setting)
+int
+atombios_dyn_clk_setup(ScrnInfoPtr pScrn, int enable)
 {
-    ENABLE_SCALER_PARAMETERS scaler;
+    RADEONInfoPtr info       = RADEONPTR(pScrn);
+    DYNAMIC_CLOCK_GATING_PS_ALLOCATION dynclk_data;
     AtomBiosArgRec data;
+    unsigned char *space;
 
-    scaler.ucScaler = scalerID;
-    scaler.ucEnable = setting;
-    data.exec.dataSpace = NULL;
-    data.exec.index = 0x21;
-    data.exec.pspace = &scaler;
-    xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling EnableScaler\n");
-    if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
-	xf86DrvMsg(handle->scrnIndex, X_INFO, "EnableScaler Successful\n");
-	return TRUE;
+    dynclk_data.ucEnable = enable;
+
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, DynamicClockGating);
+    data.exec.dataSpace = (void *)&space;
+    data.exec.pspace = &dynclk_data;
+
+    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+	ErrorF("Dynamic clock gating %s success\n", enable? "enable" : "disable");
+	return ATOM_SUCCESS;
     }
-    xf86DrvMsg(handle->scrnIndex, X_INFO, "EableScaler Failed\n");
-    return FALSE;
+
+    ErrorF("Dynamic clock gating %s failure\n", enable? "enable" : "disable");
+    return ATOM_NOT_IMPLEMENTED;
+
+}
+
+int
+atombios_static_pwrmgt_setup(ScrnInfoPtr pScrn, int enable)
+{
+    RADEONInfoPtr info       = RADEONPTR(pScrn);
+    ENABLE_ASIC_STATIC_PWR_MGT_PS_ALLOCATION pwrmgt_data;
+    AtomBiosArgRec data;
+    unsigned char *space;
+
+    pwrmgt_data.ucEnable = enable;
+
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, EnableASIC_StaticPwrMgt);
+    data.exec.dataSpace = (void *)&space;
+    data.exec.pspace = &pwrmgt_data;
+
+    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+	ErrorF("Static power management %s success\n", enable? "enable" : "disable");
+	return ATOM_SUCCESS;
+    }
+
+    ErrorF("Static power management %s failure\n", enable? "enable" : "disable");
+    return ATOM_NOT_IMPLEMENTED;
+
 }
 
 # endif
@@ -1747,6 +1776,22 @@ RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, SET_CRTC_TIMING_PARAMETERS_
     return TRUE;
 }
 
+static void RADEONApplyATOMQuirks(ScrnInfoPtr pScrn, int index)
+{
+    RADEONInfoPtr info = RADEONPTR (pScrn);
+
+    /* Asus M2A-VM HDMI board lists the DVI port as HDMI */
+    if ((info->Chipset == PCI_CHIP_RS690_791E) &&
+	(PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1043) &&
+	(PCI_SUB_DEVICE_ID(info->PciInfo) == 0x826d)) {
+	if ((info->BiosConnector[index].ConnectorType == CONNECTOR_HDMI_TYPE_A) &&
+	    (info->BiosConnector[index].TMDSType == TMDS_LVTMA)) {
+	    info->BiosConnector[index].ConnectorType = CONNECTOR_DVI_D;
+	}
+    }
+
+}
+
 Bool
 RADEONGetATOMConnectorInfoFromBIOSConnectorTable (ScrnInfoPtr pScrn)
 {
@@ -1849,6 +1894,9 @@ RADEONGetATOMConnectorInfoFromBIOSConnectorTable (ScrnInfoPtr pScrn)
 	} else {
 	    info->BiosConnector[i].hpd_mask = 0;
 	}
+
+	RADEONApplyATOMQuirks(pScrn, i);
+
     }
 
     /* CRTs/DFPs may share a port */
