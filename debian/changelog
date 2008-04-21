@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.8.1~git20080417.c5d62fa0-1) UNRELEASED; urgency=low
+
+  * New upstream snapshot, up to commit c5d62fa0.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 21 Apr 2008 02:35:05 +0200
+
 xserver-xorg-video-ati (1:6.8.1~git20080320.5e3b2128-1) experimental; urgency=low
 
   * New upstream snapshot, up to commit 5e3b2128.

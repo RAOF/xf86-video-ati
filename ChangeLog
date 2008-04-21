@@ -1,3 +1,476 @@
+commit c5d62fa0e8f52c3264ff9db3ff10cdf5a806bfc0
+Author: Owen Taylor <otaylor@huygens.home.fishsoup.net>
+Date:   Thu Apr 17 13:14:53 2008 +0200
+
+    Emulate repeats by drawing in tiles
+    
+    When we can't turn on hardware repeats, because the texture
+    is non-power-of-two, or has padding at the ends of lines,
+    try to draw the image in multiple tiles rather than falling
+    back to software. (We can only do this when there is no
+    transform.)
+
+commit eeb7b74bb6c813b0e3afa4b704f6ffb0d0aab92b
+Author: Owen Taylor <otaylor@huygens.home.fishsoup.net>
+Date:   Thu Apr 17 13:14:25 2008 +0200
+
+    Turn on wrapping when repeating on R100 + R200
+    
+    Actually enable repeats for R100 and R200. This corresponds
+    to a R300 change made in the patch in:
+    http://bugs.freedesktop.org/show_bug.cgi?id=15333
+
+commit e511f39dfef503006cf249b9f6934091eaade9b5
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Apr 17 05:04:34 2008 -0400
+
+    R300+: move more common code into init3d()
+    
+    - pre-load r3xx tex instructions
+    - setup RS instructions in init3d()
+
+commit 99435b7c18d931ea620044d0fdb4cc93dfcc6331
+Author: Owen Taylor <otaylor@redhat.com>
+Date:   Thu Apr 17 02:46:11 2008 -0400
+
+    Radeon: Omit mask coordinates
+    
+    Adapted from Owen's patch on bug 15546
+    This fixes the slowness with aatext on r300
+    and may speed up other chips marginally.
+
+commit 37614e1db9a595fbe8a21d7a045895e11d272db9
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Apr 15 09:48:16 2008 -0400
+
+    fix up some things from the last commit
+
+commit 1286fe5ce1c77453d57817b9b26b1bdb32ca7bc8
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Mon Apr 14 20:02:14 2008 -0400
+
+    R300+: properly setup vap_cntl
+    
+    this fixes tcl/pvs on RV515 among other things
+
+commit f72a4b805db26f10f69330b88459cbeae661189b
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Apr 14 14:10:40 2008 -0400
+
+    EXA: Don't wait for 3D idle after each Composite()
+    
+    wait in CompositeDone() instead
+
+commit 4cd4acf1092aeb696b086a382a033aee471d2de9
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Apr 14 11:50:59 2008 -0400
+
+    R300: move more common code to init3d()
+
+commit 3c523c9a07402e17dff588fad842224c57e98223
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Apr 14 11:21:42 2008 -0400
+
+    R3xx+: 3D engine documentation and minor cleanups
+    
+    - document the R300 exa/textured video code
+    - minor cleanups of textured video code to clarify meaning
+
+commit ce025bbb2496d4de94b8d4ac450c64441b64ee04
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Apr 12 21:22:03 2008 -0400
+
+    R300+: consolidate some tcl/non-tcl paths
+    
+    - Move more code to init3d()
+    - MMIO textured video seems more reliable now on newer chips
+
+commit 11b54a319c7c9dd52e3fb13372697059dafe1cd3
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Apr 12 16:50:22 2008 -0400
+
+    R3xx+: fix XAA + textured video on non-TCL path
+
+commit dd15a2f5906725116b8cd9954243099055e88e37
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Apr 12 16:49:03 2008 -0400
+
+    R3xx+: more fixes to 2D/3D engine init
+
+commit f3e68d4b7afd2e23675bf6361c496814c9cb4b94
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri Apr 11 10:59:07 2008 -0400
+
+    Fix exa glyph corruption on newer chips
+
+commit b59686d6427cbf8b35e36b020cbbc6a0c5149b22
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri Apr 11 10:15:25 2008 -0400
+
+    R300+: pre-load vertex programs in init3D()
+
+commit acc5833a35ad6c29a57f659607afb27eebdc2ea5
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 17:52:52 2008 -0400
+
+    R3xx+: consolidate more tcl code
+
+commit 6f8f75bd19ef1919c0291141675be2d0e29b3251
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 17:08:50 2008 -0400
+
+    R3xx+: consolidate some common 3D code
+
+commit 4b9234e1c4f7c7f419cb4245d64f3f9756c98bb6
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 16:58:22 2008 -0400
+
+    R3xx+: tcl wip
+
+commit 865c463e3afb4759758f569132be8bf1386da5cc
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 16:51:04 2008 -0400
+
+    R300+: textured video tcl cleanup
+
+commit 79c8d4ca36a1c3e5fe759d4ccc379c36af8f1676
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 16:28:18 2008 -0400
+
+    RADEON: cleanup
+
+commit c4821a287d29a65f3bcb7d60dc72ec13c0384008
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 16:20:17 2008 -0400
+
+    Revert "R3xx/R5xx: move more VAP, etc. state setup into common init3d() function"
+    
+    This reverts commit 305a3310963a5dd07b3495015b06aa8c7c4e6b02.
+    
+    Conflicts:
+    
+    	src/radeon_commonfuncs.c
+    	src/radeon_exa_render.c
+    	src/radeon_textured_videofuncs.c
+
+commit 0032c80bf30bab189204e3e6929e18a19d753138
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 14:35:00 2008 -0400
+
+    RADEON: store tcl status in driver rec
+
+commit 9e2ffe66d106abe34a670d2edc9905ed62c485e8
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 14:24:04 2008 -0400
+
+    R3xx+: use the right register for engine flush
+
+commit e1a9f26c2d2cbca9ad159e723ec95b95be1ef349
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 14:12:15 2008 -0400
+
+    R3xx+: minor textured video fixes
+    
+    - set shader output swizzling correctly
+    - flush the right cache register on r3xx+
+
+commit d79040906cd25bd494feb5901f465bbd050aa923
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 10 13:59:58 2008 -0400
+
+    R3xx+: EXA/textured video fixes
+    
+    - get pipe config based on GB_PIPE_SELECT where applicable
+    (adapted from a similar patch from Dave)
+    - only flush the dst cache after submitting vertices, freeing
+    the cache lines stalls the pipe
+    - no need to wait for 3D idle after submitting vertices
+    - fix PURGE_CACHE() and PURGE_ZCACHE() for r3xx+
+    - fix depth 16 with EXA composite
+
+commit 0a96173cc38e506728d4c3f2dd383ba56e856578
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Mon Apr 7 18:15:34 2008 +0200
+
+    Increase default CP timeout.
+    
+    Helps avoid spurious timeouts causing problems, see
+    http://bugs.freedesktop.org/show_bug.cgi?id=15203 .
+
+commit 255fbf465f5e7db2609a5a151bfa810249db52a0
+Author: Owen W. Taylor <otaylor@fishsoup.net>
+Date:   Thu Apr 3 02:25:41 2008 -0400
+
+    Fix rendering of transformed sources for REPEAT_NONE with EXA on >= R300.
+    
+    Use the border color when possible, otherwise fall back to software.
+
+commit bc0407e53237d7968808110bc0243076377acf6e
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Fri Apr 4 18:40:16 2008 -0400
+
+    ATOMBIOS: Add support for DynamicClocks option
+    
+    This patch adds support for dynamic clock gating and static
+    power management using the atom command tables.  In some cases
+    the bios may already set this up during post, so YMMV.
+    
+    I was only able to test on desktop cards, so I haven't tested
+    to see how much (if any) power this saves or how it affects the
+    thermal footprint.
+
+commit 5f5e21bb50555c56bd371576074c28c929307ff1
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Fri Apr 4 14:29:45 2008 -0400
+
+    RADEON: warning fixes
+
+commit c8e9a973aaded24aad567a0e36d0c78a05d6b2fd
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Fri Apr 4 14:26:19 2008 -0400
+
+    RADEON: add some quirks
+
+commit 091963a635b79884afe77c026eabb48972fbe175
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 3 22:35:16 2008 -0400
+
+    Minor cleanup
+
+commit 950e9860643c20acde0eca4e4ff26baacc1f2b69
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 3 22:11:48 2008 -0400
+
+    Revert "RADEON: memmap rework 1"
+    
+    This reverts commit dd8ee1b444f4b973a1e0fadca5f943f2162b5e94.
+    
+    Conflicts:
+    
+    	src/radeon.h
+    	src/radeon_driver.c
+    
+    This rework seems to have caused more trouble than it was worth.
+
+commit 88a1fe4a94c5d11aff22734b21c89890e4428cd5
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Apr 3 22:04:43 2008 -0400
+
+    Revert "RADEON: remove driver rec copies of mc info, use save rec directly"
+    
+    This reverts commit be0858a84fbdf74c0b844f462933a221d48c707d.
+    
+    Conflicts:
+    
+    	src/radeon_driver.c
+
+commit c40a7aa3989576a8144213e2f31b892d21df8686
+Author: Owen W. Taylor <otaylor@fishsoup.net>
+Date:   Thu Apr 3 14:43:55 2008 -0400
+
+    R3xx/R5xx: Fix pitch and clamp mode for repeating textures
+    
+         - We can always use TXPITCH on a R300 even when repeating,
+           (previous check for pitch matching width was also wrong)
+         - Fix clamp mode for repeating textures to be WRAP
+
+commit a8593482c1f2e0f2dbac06c2e5325ba8c83ed9ff
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Apr 2 09:58:05 2008 +1000
+
+    atombios: fix the dual-head hopefully.
+    
+    tested on r600 with DVI and VGA
+
+commit 61d883d116fab3e9b513432d65e705afc5bb39f1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Apr 2 09:57:38 2008 +1000
+
+    Revert "Revert "atombios: fixup the width/height to use the mode values not the scrn ones""
+    
+    This reverts commit fc9af578997b6f22ee8b17e83f37d98689291b0e.
+    
+    I see your revert and raise you one...
+
+commit fc9af578997b6f22ee8b17e83f37d98689291b0e
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Tue Apr 1 09:25:45 2008 -0400
+
+    Revert "atombios: fixup the width/height to use the mode values not the scrn ones"
+    
+    This reverts commit c2b1c8b706a6c7c1fd0af80091958473133d54e7.
+    
+    These registers hold surface size.  Using the mode values
+    breaks dualhead.
+
+commit 959509dd54de053f526b534e379a46934127231f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 31 14:29:44 2008 +1000
+
+    radeon: use correct DDC interfaces so quirks get applied
+    
+    Radeon seemed to mess up applying certain quirks, hopefully this will fix it.
+
+commit 18f5f1cd2f52afed89fc11ade0920f3dfea87306
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 31 14:11:49 2008 +1000
+
+    radeon: split quirks into separate function and new quirk for IBM RN50
+    
+    Add a connector table quirk for the IBM RN50.
+
+commit c2b1c8b706a6c7c1fd0af80091958473133d54e7
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sun Mar 30 11:44:14 2008 +1000
+
+    atombios: fixup the width/height to use the mode values not the scrn ones
+    
+    this fixes it properly, legacy appears to be okay.
+
+commit c5edea3d8c9254d3a21e390b8309e39e4c9635db
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sun Mar 30 11:11:22 2008 +1000
+
+    r500/r600: fix rotation to fill screen
+    
+    I'm not 100% sure this is the correct fix (maybe we shouldn't be using scrn
+    virtualX/Y)... this will fix it for now until I get more time.
+
+commit 9c62c820ba45ebc14d5f36f5d7885863800b6adb
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Fri Mar 28 12:37:29 2008 +0100
+
+    Include config.h, so FGL_LINUX can actually be defined when it's tested...
+
+commit a00d9260a85b94a522c442aee24bc5ea4dc31c5c
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu Mar 27 20:03:13 2008 -0400
+
+    RADEON: fix lid issues on AVIVO chips for real this time :)
+
+commit f0e89c09074b2c7e641f73692bb39b0bf68eb49c
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Mar 27 19:15:18 2008 -0400
+
+    Revert "RADEON: attempt to fix lid issues"
+    
+    This reverts commit 9b4473c1d830b88866dd22e8174a07195bd6fcf4.
+    This doesn't help.
+
+commit 1442d396b938049b83f009a78ddabe2bf85641b6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Mar 27 14:02:51 2008 +1000
+
+    radeon: size bios to max of bar vs 64k.
+    
+    reported by dwmw2: rhbz 438299
+
+commit de2f609ff0004ef8b74727bfebc2c74fb91205ea
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Mar 26 18:35:21 2008 -0400
+
+    AVIVO: no need to call PreinitXv() on AVIVO chips as they have no overlay
+
+commit 75884c257bc2bcfa5b498a77d4c403f09face036
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Mar 26 18:16:47 2008 -0400
+
+    XAA: update message about render so as to not confuse users
+
+commit 9b4473c1d830b88866dd22e8174a07195bd6fcf4
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Wed Mar 26 18:01:29 2008 -0400
+
+    RADEON: attempt to fix lid issues
+    
+    On some laptops the bios attempts to re-program the chip
+    when a lid event comes in.  This should hopefully prevent
+    the bios from doing that.
+
+commit 8b144830fe9b4a0cee4745023de5e7d387070f60
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Mar 25 01:15:05 2008 -0400
+
+    RV250: disable textured video due to HW bug
+    
+    The YUV->RGB conversion in the texture engine is broken
+    on RV250 so the colors come out wrong.
+
+commit 1789f11ab91633d3928f8b71988d51ff44bda9d1
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 24 19:03:30 2008 -0400
+
+    R3xx/R5xx: flush PVS state before enabling pvs-bypass
+
+commit 305a3310963a5dd07b3495015b06aa8c7c4e6b02
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 24 14:25:03 2008 -0400
+
+    R3xx/R5xx: move more VAP, etc. state setup into common init3d() function
+    
+    Also some minor code cleanups
+
+commit 399b1d405e602c62d6deebea6d7e1f38886cd8e2
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Mar 24 13:04:57 2008 -0400
+
+    R3xx/R5xx: use non VAP/TCP for textured video
+    
+    Just extra state to emit.
+
+commit cd77ec18f32a7b36acb655c927bbfd7044019f97
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 24 18:42:21 2008 +1000
+
+    r300: don't bother with VAP/TCL for render.
+    
+    We just send more data to the card to process per transaction, without getting
+    any actual gains, as we already pre-compute the vertices without needing
+    any clipping or transforms from the card.
+    
+    Perhaps some stuff could be done on-card, but so far the code is a lot
+    faster if we avoid sending this extra info.
+    
+    pre: 150000 glyphs/sec
+    post: 185000 glyphs/sec
+
+commit 301c6739b88676a0c78fc72194e993f894b8dc28
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Mar 23 11:14:02 2008 -0400
+
+    RS4xx: Revert back to previous fifo settings for now
+    
+    Setup of these registers needs more investigation.
+
+commit 9bea60b3eb378de5e1d44cc02a2763f4feae7882
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Mar 22 11:46:15 2008 -0400
+
+    RS4xx: more work on disp/disp2 fifo setup
+
+commit 90f11c3986c28daa7b600b9662da145af325d264
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Mar 22 11:29:51 2008 -0400
+
+    RS4xx: missed this on the last commit.
+
+commit 6d5066a451017a2683addc9e2496987626795dda
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 21 16:21:54 2008 -0400
+
+    RS4xx: attempt to set up disp/disp2 fifos correctly
+    
+    If you have an XPRESS chip, please test!!!
+
+commit fb1cffac05ae20c8365b25a2042b0ae961880faf
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Fri Mar 21 15:24:36 2008 -0400
+
+    RS4xx: attempt to fix TMDS/DVO support
+    
+    XPRESS chips added a second set of FP control registers.
+    I don't have the hw to test however.
+
 commit 5e3b21284482df9974c9a58f248f0100def2bb0c
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Mar 19 19:15:05 2008 -0400
