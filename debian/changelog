@@ -1,8 +1,11 @@
 xserver-xorg-video-ati (1:6.8.1~git20080417.c5d62fa0-1) UNRELEASED; urgency=low
 
   * New upstream snapshot, up to commit c5d62fa0.
+  * Run dpkg-shlibdeps with --warnings=6.  Drivers reference symbols from
+    /usr/bin/Xorg and other modules, and that's not a bug, so we want
+    dpkg-shlibdeps to shut up about symbols it can't find.
 
- -- Brice Goglin <bgoglin@debian.org>  Mon, 21 Apr 2008 02:35:05 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 21 Apr 2008 02:39:24 +0200
 
 xserver-xorg-video-ati (1:6.8.1~git20080320.5e3b2128-1) experimental; urgency=low
 
