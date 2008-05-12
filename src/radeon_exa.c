@@ -189,7 +189,7 @@ Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, CARD32 *pitch_offset)
 	if (bpp == 24)
 		bpp = 8;
 
-	offset = exaGetPixmapOffset(pPix) + info->fbLocation;
+	offset = exaGetPixmapOffset(pPix) + info->fbLocation + pScrn->fbOffset;
 	pitch = exaGetPixmapPitch(pPix);
 
 	return RADEONGetOffsetPitch(pPix, bpp, pitch_offset, offset, pitch);
@@ -402,7 +402,7 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
     else
 	screen_size = pScrn->virtualY * byteStride;
 
-    info->exa->memoryBase = info->FB + pScrn->fbOffset;
+    info->exa->memoryBase = info->FB;
     info->exa->memorySize = info->FbMapSize - info->FbSecureSize;
     info->exa->offScreenBase = screen_size;
 

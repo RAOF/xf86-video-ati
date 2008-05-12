@@ -1661,9 +1661,25 @@
 
 #define RADEON_WAIT_UNTIL                   0x1720
 #       define RADEON_WAIT_CRTC_PFLIP       (1 << 0)
+#       define RADEON_WAIT_RE_CRTC_VLINE    (1 << 1)
+#       define RADEON_WAIT_FE_CRTC_VLINE    (1 << 2)
+#       define RADEON_WAIT_CRTC_VLINE       (1 << 3)
+#       define RADEON_WAIT_DMA_VID_IDLE     (1 << 8)
+#       define RADEON_WAIT_DMA_GUI_IDLE     (1 << 9)
+#       define RADEON_WAIT_CMDFIFO          (1 << 10) /* wait for CMDFIFO_ENTRIES */
+#       define RADEON_WAIT_OV0_FLIP         (1 << 11)
+#       define RADEON_WAIT_AGP_FLUSH        (1 << 13)
+#       define RADEON_WAIT_2D_IDLE          (1 << 14)
+#       define RADEON_WAIT_3D_IDLE          (1 << 15)
 #       define RADEON_WAIT_2D_IDLECLEAN     (1 << 16)
 #       define RADEON_WAIT_3D_IDLECLEAN     (1 << 17)
 #       define RADEON_WAIT_HOST_IDLECLEAN   (1 << 18)
+#       define RADEON_CMDFIFO_ENTRIES_SHIFT 10
+#       define RADEON_CMDFIFO_ENTRIES_MASK  0x7f
+#       define RADEON_WAIT_VAP_IDLE         (1 << 28)
+#       define RADEON_WAIT_BOTH_CRTC_PFLIP  (1 << 30)
+#       define RADEON_ENG_DISPLAY_SELECT_CRTC0    (0 << 31)
+#       define RADEON_ENG_DISPLAY_SELECT_CRTC1    (1 << 31)
 
 #define RADEON_X_MPLL_REF_FB_DIV            0x000a /* PLL */
 #define RADEON_XCLK_CNTL                    0x000d /* PLL */
@@ -3524,6 +3540,8 @@
 #define AVIVO_D1CUR_SIZE                        0x6410
 #define AVIVO_D1CUR_POSITION                    0x6414
 #define AVIVO_D1CUR_HOT_SPOT                    0x6418
+#define AVIVO_D1CUR_UPDATE                      0x6424
+#       define AVIVO_D1CURSOR_UPDATE_LOCK (1 << 16)
 
 #define AVIVO_DC_LUT_RW_SELECT                  0x6480
 #define AVIVO_DC_LUT_RW_MODE                    0x6484
@@ -4634,9 +4652,6 @@
 #       define R300_ZC_FLUSH                            (1 << 0)
 #       define R300_ZC_FREE                             (1 << 1)
 #       define R300_ZC_FLUSH_ALL                        0x3
-#define R300_WAIT_UNTIL				        0x1720
-#       define R300_WAIT_2D_IDLECLEAN                   (1 << 16)
-#       define R300_WAIT_3D_IDLECLEAN                   (1 << 17)
 #define R300_RB3D_ZSTENCILCNTL			        0x4f04
 #define R300_RB3D_ZCACHE_CTLSTAT		        0x4f18
 #define R300_RB3D_BW_CNTL				0x4f1c

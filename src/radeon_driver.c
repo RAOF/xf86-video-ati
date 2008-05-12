@@ -357,6 +357,12 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
 static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+
+    if (pRADEONEnt->MMIO) {
+        info->MMIO = pRADEONEnt->MMIO;
+        return TRUE;
+    }
 
 #ifndef XSERVER_LIBPCIACCESS
 
@@ -367,7 +373,6 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 			       info->MMIOSize);
 
     if (!info->MMIO) return FALSE;
-
 #else
 
     void** result = (void**)&info->MMIO;
@@ -386,6 +391,7 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 
 #endif
 
+    pRADEONEnt->MMIO = info->MMIO;
     return TRUE;
 }
 
@@ -395,6 +401,13 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 static Bool RADEONUnmapMMIO(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+
+    if (info->IsPrimary || info->IsSecondary) {
+      /* never unmap on zaphod */
+      info->MMIO = NULL;
+      return TRUE;
+    }
 
 #ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, info->MMIO, info->MMIOSize);
@@ -402,6 +415,7 @@ static Bool RADEONUnmapMMIO(ScrnInfoPtr pScrn)
     pci_device_unmap_range(info->PciInfo, info->MMIO, info->MMIOSize);
 #endif
 
+    pRADEONEnt->MMIO = NULL;
     info->MMIO = NULL;
     return TRUE;
 }
@@ -1610,6 +1624,13 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "DELL server detected, force to special setup\n");
 	}
 	break;
+    case PCI_CHIP_RS482_5974:
+	/* RH BZ 444586 - non mobility version
+ 	 * Dell appear to have the Vostro 1100 with a mobility part with the same pci-id */
+	if ((PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1462) &&
+            (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x7141)) {
+		info->IsMobility = FALSE;
+	}
     default:
 	break;
     }
@@ -5253,6 +5274,10 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 {
     ScrnInfoPtr    pScrn = xf86Screens[scrnIndex];
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
+#ifndef HAVE_FREE_SHADOW
+    xf86CrtcConfigPtr   config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int o;
+#endif
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONLeaveVT\n");
@@ -5284,6 +5309,23 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 	}
     }
 #endif
+
+#ifndef HAVE_FREE_SHADOW
+    for (o = 0; o < config->num_crtc; o++) {
+	xf86CrtcPtr crtc = config->crtc[o];
+
+	if (crtc->rotatedPixmap || crtc->rotatedData) {
+	    crtc->funcs->shadow_destroy(crtc, crtc->rotatedPixmap,
+					crtc->rotatedData);
+	    crtc->rotatedPixmap = NULL;
+	    crtc->rotatedData = NULL;
+	}
+    }
+#else
+    xf86RotateFreeShadow(pScrn);
+#endif
+
+    xf86_hide_cursors (pScrn);
 
     RADEONRestore(pScrn);
 
