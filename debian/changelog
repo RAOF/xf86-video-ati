@@ -1,3 +1,10 @@
+xserver-xorg-video-ati (1:6.8.1~git20080512.94bf8f01-1) UNRELEASED; urgency=low
+
+  * New upstream snapshot, up to commit 94bf8f01.
+    + Fix some DPMS-related brief blanking, closes: #467105.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 12 May 2008 13:37:22 +0200
+
 xserver-xorg-video-ati (1:6.8.1~git20080417.c5d62fa0-1) experimental; urgency=low
 
   * New upstream snapshot, up to commit c5d62fa0.

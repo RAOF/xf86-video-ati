@@ -1,3 +1,154 @@
+commit 94bf8f01bd43cb103fffecfe04d04a214f892baf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon May 12 20:02:51 2008 +1000
+
+    radeon: fix set_cursor_colours remove fb offset
+
+commit 1d0f1d31e2ed1d91ee87cb3e02ce48c8c07aa418
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon May 12 15:44:35 2008 +1000
+
+    radeon: rs485 vs rs485m.. mobile? non-mobile? bi?
+    
+    So it appears we have in the wild two chipsets with the same PCI ID (0x1002:0x5974)
+    that are mobile and non-mobile.
+    
+    the RH bug references is a desktop system.
+    The Dell Vostro 1100 also has this chipset with LVDS bits.
+
+commit 25e0c3945a51ae8c14b3a847ec75a256e1397f24
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 12 10:28:33 2008 +1000
+
+    radeon: add initial support for cloning outputs. (single-CRTC cards only)
+    
+    airlied - This code was originally written by Alex, and I've modified it to
+    only run on single-CRTC cards for now until we can test it some more.
+
+commit 94405eb1c9e4e0ababc6aef03b753d6ed9eb7838
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Fri May 9 05:28:44 2008 -0400
+
+    RADEON: fixup ifdef from last commit
+
+commit 18e20bc22a55ecfee9798c01079d7b24d19f0051
+Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
+Date:   Thu May 8 08:45:51 2008 -0400
+
+    RADEON: disable MMIO paths for EXA composite/texvid on IGP/R5xx
+    
+    The MMIO paths eventually lead to a hang on r5xx/IGP.  I haven't
+    been able to find out why yet.
+
+commit c3532268875fd24e6519bea2fb1b814d612bbdb4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 02:37:18 2008 +1000
+
+    radeon: fix zaphod EXA with texture video
+
+commit ffc437f3606ab8ceba1ff152e4bb08988a58b54c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 02:30:28 2008 +1000
+
+    avivo: fix zaphod cursor in theory
+
+commit e36ef14e3a1087e1fe41baa26ade2937f396001f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 01:39:28 2008 +1000
+
+    radeon: fix textured-xv on zaphod
+
+commit 8fc19bee27c0f151d2ab3354f6ac0992b358436d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 01:38:24 2008 +1000
+
+    radeon: zaphod: fix render accel for EXA
+
+commit fc41b9042a5220a8419cc7b69ca3850cae6b903c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 01:32:23 2008 +1000
+
+    radeon: fix EXA pixmap offset on zaphod
+
+commit 4568cb820d567c6909a4be956d7e79b91232535e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 01:19:39 2008 +1000
+
+    radeon: zaphod fixes for pciaccess not allowing multiple MMIO maps
+
+commit ca81fa086b21633a7fd926833fb6d1d4fa080646
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed May 7 01:12:01 2008 +1000
+
+    radeon: zaphod fix for cursor on second head
+    
+    We don't need to add fbOffset here as the mmap we have of the framebuffer
+    starts half way.
+
+commit 24b60c8965f6a0b3f0c2bb1e7236b4d6642c5918
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 2 15:30:45 2008 -0400
+
+    Add a test for __GLIBC__ to CD_Common_Types.h.
+    
+    Atombios redefines the standard types but the definitions conflict
+    with the ones from glibc (causes build failures on GNU/Hurd
+    and GNU/kFreeBSD).
+
+commit f051359ac09c6b9416e39b9ca7d9dc0880aa1557
+Author: thegraze <thegraze@googlemail.com>
+Date:   Fri May 2 14:02:16 2008 -0400
+
+    ATOM: add support for DragonFlyBSD
+
+commit 3d469cbc3225d890a895dac7cbc1ab7e08054b48
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Wed Apr 30 18:33:04 2008 -0400
+
+    RADEON: lock the cursors when updating
+    
+    this should fix occasional corruption seen when updating
+    the cursor.
+
+commit 445b71021843665ba32f37b2ce5c9d2857c07cc7
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue Apr 29 21:01:41 2008 -0400
+
+    RADEON: assorted fixes
+    
+    - free rotate pixmaps on VT switch
+    - save crtc/output status so we only turn on
+    crtcs/outputs if they are off
+    - show/hide cursors when changing modes
+
+commit 070cce5255a5c311f9d8b85ec54bd56655014933
+Author: Stephan Wolf <stephan@letzte-bankreihe.de>
+Date:   Mon Apr 28 11:26:37 2008 -0400
+
+    R3xx+: further fix for IGP chips
+    
+    see bug 15538
+
+commit 211e0041c7fc2df494b77428553943a2b526ee4e
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Sun Apr 27 21:08:00 2008 -0400
+
+    IGP: fix EXA composite corruption
+
+commit 656b06bdde129ca4fc370f5a2cf7311c9179b0ff
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Apr 27 20:20:49 2008 -0400
+
+    RADEON: remove duplicate register define
+    
+    Also add more bit defs to wait_until register
+
+commit 8a9820a3aa49bc667f90ac291a27e4d7b4ae38b3
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sun Apr 27 19:02:22 2008 -0400
+
+    RADEON: decrease crtc/output verbosity
+
 commit c5d62fa0e8f52c3264ff9db3ff10cdf5a806bfc0
 Author: Owen Taylor <otaylor@huygens.home.fishsoup.net>
 Date:   Thu Apr 17 13:14:53 2008 +0200
