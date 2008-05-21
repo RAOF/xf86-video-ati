@@ -886,7 +886,8 @@
 #       define RADEON_VERT_STRETCH_LINEREP     (0     << 26)
 #       define RADEON_VERT_STRETCH_BLEND       (1     << 26)
 #       define RADEON_VERT_AUTO_RATIO_EN       (1     << 27)
-#       define RADEON_VERT_STRETCH_RESERVED    0xf1000000
+#	define RADEON_VERT_AUTO_RATIO_INC      (1     << 31)
+#       define RADEON_VERT_STRETCH_RESERVED    0x71000000
 #define RS400_FP_2ND_GEN_CNTL               0x0384
 #       define RS400_FP_2ND_ON              (1 << 0)
 #       define RS400_FP_2ND_BLANK_EN        (1 << 1)
@@ -3408,7 +3409,17 @@
 #define RS690_MC_AGP_LOCATION			0x101
 #define RS690_MC_AGP_BASE			0x102
 #define RS690_MC_STATUS                         0x90
-#define RS690_MC_STATUS_IDLE                     (1 << 0)
+#define RS690_MC_STATUS_IDLE                    (1 << 0)
+
+#define RS600_MC_INDEX				0x78
+#	define RS600_MC_INDEX_MASK		0xff
+#	define RS600_MC_INDEX_WR_EN		(1 << 8)
+#	define RS600_MC_INDEX_WR_ACK		0xff
+#define RS600_MC_DATA				0x7c
+
+#define RS600_MC_FB_LOCATION			0xA
+#define RS600_MC_STATUS                         0x0
+#define RS600_MC_STATUS_IDLE                    (1 << 0)
 
 #define AVIVO_MC_INDEX						0x0070
 #define R520_MC_STATUS 0x00
@@ -4466,7 +4477,7 @@
 #       define R300_ALU_RGB_ADDR0(x)                    (x << 0)
 #       define R300_ALU_RGB_ADDR1(x)                    (x << 6)
 #       define R300_ALU_RGB_ADDR2(x)                    (x << 12)
-/* ADDRD - where on the pixle stack the result of this instruction
+/* ADDRD - where on the pixel stack the result of this instruction
    will be written */
 #       define R300_ALU_RGB_ADDRD(x)                    (x << 18)
 #       define R300_ALU_RGB_WMASK(x)                    (x << 23)
@@ -4558,7 +4569,7 @@
 #       define R300_ALU_ALPHA_ADDR0(x)                  (x << 0)
 #       define R300_ALU_ALPHA_ADDR1(x)                  (x << 6)
 #       define R300_ALU_ALPHA_ADDR2(x)                  (x << 12)
-/* ADDRD - where on the pixle stack the result of this instruction
+/* ADDRD - where on the pixel stack the result of this instruction
    will be written */
 #       define R300_ALU_ALPHA_ADDRD(x)                  (x << 18)
 #       define R300_ALU_ALPHA_WMASK(x)                  (x << 23)

@@ -78,7 +78,8 @@ RADEONRestoreCommonRegisters(ScrnInfoPtr pScrn,
     OUTREG(RADEON_BUS_CNTL,           restore->bus_cntl);
     OUTREG(RADEON_SURFACE_CNTL,       restore->surface_cntl);
 
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+    if ((info->ChipFamily == CHIP_FAMILY_RS400)  ||
+	(info->ChipFamily == CHIP_FAMILY_RS480)) {
 	OUTREG(RS400_DISP2_REQ_CNTL1, restore->disp2_req_cntl1);
 	OUTREG(RS400_DISP2_REQ_CNTL2, restore->disp2_req_cntl2);
 	OUTREG(RS400_DMIF_MEM_CNTL1,  restore->dmif_mem_cntl1);
@@ -92,7 +93,7 @@ RADEONRestoreCommonRegisters(ScrnInfoPtr pScrn,
     if (pRADEONEnt->HasCRTC2 &&
 	info->ChipFamily != CHIP_FAMILY_R200 &&
 	!IS_R300_VARIANT) {
-	CARD32        tmp;
+	uint32_t tmp;
 
 	tmp = INREG(RADEON_DAC_CNTL2);
 	OUTREG(RADEON_DAC_CNTL2, tmp & ~RADEON_DAC2_DAC_CLK_SEL);
@@ -155,7 +156,7 @@ RADEONRestoreCrtc2Registers(ScrnInfoPtr pScrn,
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    /*    CARD32	   crtc2_gen_cntl;*/
+    /*    uint32_t	   crtc2_gen_cntl;*/
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Programming CRTC2, offset: 0x%08x\n",
@@ -239,9 +240,9 @@ RADEONPLL2WriteUpdate(ScrnInfoPtr pScrn)
 	    ~(RADEON_P2PLL_ATOMIC_UPDATE_W));
 }
 
-static CARD8
-RADEONComputePLLGain(CARD16 reference_freq, CARD16 ref_div,
-		     CARD16 fb_div)
+static uint8_t
+RADEONComputePLLGain(uint16_t reference_freq, uint16_t ref_div,
+		     uint16_t fb_div)
 {
     unsigned vcoFreq;
 
@@ -278,7 +279,7 @@ RADEONRestorePLLRegisters(ScrnInfoPtr pScrn,
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD8 pllGain;
+    uint8_t pllGain;
 
 #if defined(__powerpc__)
     /* apparently restoring the pll causes a hang??? */
@@ -317,7 +318,7 @@ RADEONRestorePLLRegisters(ScrnInfoPtr pScrn,
 	    RADEON_PPLL_RESET
 	    | RADEON_PPLL_ATOMIC_UPDATE_EN
 	    | RADEON_PPLL_VGA_ATOMIC_UPDATE_EN
-	    | ((CARD32)pllGain << RADEON_PPLL_PVG_SHIFT),
+	    | ((uint32_t)pllGain << RADEON_PPLL_PVG_SHIFT),
 	    ~(RADEON_PPLL_RESET
 	      | RADEON_PPLL_ATOMIC_UPDATE_EN
 	      | RADEON_PPLL_VGA_ATOMIC_UPDATE_EN
@@ -330,7 +331,8 @@ RADEONRestorePLLRegisters(ScrnInfoPtr pScrn,
 
     if (IS_R300_VARIANT ||
 	(info->ChipFamily == CHIP_FAMILY_RS300) ||
-	(info->ChipFamily == CHIP_FAMILY_RS400)) {
+	(info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480)) {
 	if (restore->ppll_ref_div & R300_PPLL_REF_DIV_ACC_MASK) {
 	    /* When restoring console mode, use saved PPLL_REF_DIV
 	     * setting.
@@ -400,7 +402,7 @@ RADEONRestorePLL2Registers(ScrnInfoPtr pScrn,
 			   RADEONSavePtr restore)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
-    CARD8 pllGain;
+    uint8_t pllGain;
 
     pllGain = RADEONComputePLLGain(info->pll.reference_freq,
                                    restore->p2pll_ref_div & RADEON_P2PLL_REF_DIV_MASK,
@@ -415,7 +417,7 @@ RADEONRestorePLL2Registers(ScrnInfoPtr pScrn,
 	    RADEON_P2PLL_CNTL,
 	    RADEON_P2PLL_RESET
 	    | RADEON_P2PLL_ATOMIC_UPDATE_EN
-	    | ((CARD32)pllGain << RADEON_P2PLL_PVG_SHIFT),
+	    | ((uint32_t)pllGain << RADEON_P2PLL_PVG_SHIFT),
 	    ~(RADEON_P2PLL_RESET
 	      | RADEON_P2PLL_ATOMIC_UPDATE_EN
 	      | RADEON_P2PLL_PVG_MASK));
@@ -491,7 +493,8 @@ RADEONSaveCommonRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
     save->grph_buffer_cntl   = INREG(RADEON_GRPH_BUFFER_CNTL);
     save->grph2_buffer_cntl  = INREG(RADEON_GRPH2_BUFFER_CNTL);
 
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480)) {
 	save->disp2_req_cntl1 = INREG(RS400_DISP2_REQ_CNTL1);
 	save->disp2_req_cntl2 = INREG(RS400_DISP2_REQ_CNTL2);
 	save->dmif_mem_cntl1  = INREG(RS400_DMIF_MEM_CNTL1);
@@ -679,7 +682,8 @@ RADEONInitCommonRegisters(RADEONSavePtr save, RADEONInfoPtr info)
     save->cap1_trig_cntl     = 0;
     save->bus_cntl           = info->BusCntl;
 
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480)) {
 	save->disp2_req_cntl1 = info->SavedReg->disp2_req_cntl1;
 	save->disp2_req_cntl2 = info->SavedReg->disp2_req_cntl2;
 	save->dmif_mem_cntl1  = info->SavedReg->dmif_mem_cntl1;
@@ -1145,10 +1149,10 @@ RADEONInitPLLRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
 		       int flags)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
-    CARD32 feedback_div = 0;
-    CARD32 reference_div = 0;
-    CARD32 post_divider = 0;
-    CARD32 freq = 0;
+    uint32_t feedback_div = 0;
+    uint32_t reference_div = 0;
+    uint32_t post_divider = 0;
+    uint32_t freq = 0;
 
     struct {
 	int divider;
@@ -1226,10 +1230,10 @@ RADEONInitPLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save,
 			int flags)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
-    CARD32 feedback_div = 0;
-    CARD32 reference_div = 0;
-    CARD32 post_divider = 0;
-    CARD32 freq = 0;
+    uint32_t feedback_div = 0;
+    uint32_t reference_div = 0;
+    uint32_t post_divider = 0;
+    uint32_t freq = 0;
 
     struct {
 	int divider;
@@ -1308,16 +1312,16 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
-    CARD32 temp, data, mem_trcd, mem_trp, mem_tras, mem_trbs=0;
+    uint32_t temp, data, mem_trcd, mem_trp, mem_tras, mem_trbs=0;
     float mem_tcas;
     int k1, c;
-    CARD32 MemTrcdExtMemCntl[4]     = {1, 2, 3, 4};
-    CARD32 MemTrpExtMemCntl[4]      = {1, 2, 3, 4};
-    CARD32 MemTrasExtMemCntl[8]     = {1, 2, 3, 4, 5, 6, 7, 8};
+    uint32_t MemTrcdExtMemCntl[4]     = {1, 2, 3, 4};
+    uint32_t MemTrpExtMemCntl[4]      = {1, 2, 3, 4};
+    uint32_t MemTrasExtMemCntl[8]     = {1, 2, 3, 4, 5, 6, 7, 8};
 
-    CARD32 MemTrcdMemTimingCntl[8]     = {1, 2, 3, 4, 5, 6, 7, 8};
-    CARD32 MemTrpMemTimingCntl[8]      = {1, 2, 3, 4, 5, 6, 7, 8};
-    CARD32 MemTrasMemTimingCntl[16]    = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+    uint32_t MemTrcdMemTimingCntl[8]     = {1, 2, 3, 4, 5, 6, 7, 8};
+    uint32_t MemTrpMemTimingCntl[8]      = {1, 2, 3, 4, 5, 6, 7, 8};
+    uint32_t MemTrasMemTimingCntl[16]    = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 
     float MemTcas[8]  = {0, 1, 2, 3, 0, 1.5, 2.5, 0};
     float MemTcas2[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -1340,7 +1344,7 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
      * option.
      */
     if ((info->DispPriority == 2) && IS_R300_VARIANT) {
-	CARD32 mc_init_misc_lat_timer = INREG(R300_MC_INIT_MISC_LAT_TIMER);
+	uint32_t mc_init_misc_lat_timer = INREG(R300_MC_INIT_MISC_LAT_TIMER);
 	if (pRADEONEnt->pCrtc[1]->enabled) {
 	    mc_init_misc_lat_timer |= 0x1100; /* display 0 and 1 */
 	} else {
@@ -1514,7 +1518,7 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     /*
       Find the critical point of the display buffer.
     */
-    critical_point= (CARD32)(disp_drain_rate * disp_latency + 0.5);
+    critical_point= (uint32_t)(disp_drain_rate * disp_latency + 0.5);
 
     /* ???? */
     /*
@@ -1557,7 +1561,8 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
 				     (critical_point << RADEON_GRPH_CRITICAL_POINT_SHIFT)));
 
 #if 0
-    if (info->ChipFamily == CHIP_FAMILY_RS400) {
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480)) {
 	/* attempt to program RS400 disp regs correctly ??? */
 	temp = info->SavedReg->disp1_req_cntl1;
 	temp &= ~(RS400_DISP1_START_REQ_LEVEL_MASK |
@@ -1605,7 +1610,7 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
 	    read_return_rate = MIN(info->sclk, info->mclk*(info->RamWidth*(info->IsDDR+1)/128));
 	    time_disp1_drop_priority = critical_point / (read_return_rate - disp_drain_rate);
 
-	    critical_point2 = (CARD32)((disp_latency + time_disp1_drop_priority + 
+	    critical_point2 = (uint32_t)((disp_latency + time_disp1_drop_priority + 
 					disp_latency) * disp_drain_rate2 + 0.5);
 
 	    if (info->DispPriority == 2) {
@@ -1624,7 +1629,8 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
 	OUTREG(RADEON_GRPH2_BUFFER_CNTL, ((temp & ~RADEON_GRPH_CRITICAL_POINT_MASK) |
 					  (critical_point2 << RADEON_GRPH_CRITICAL_POINT_SHIFT)));
 
-	if (info->ChipFamily == CHIP_FAMILY_RS400) {
+	if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	    (info->ChipFamily == CHIP_FAMILY_RS480)) {
 #if 0
 	    /* attempt to program RS400 disp2 regs correctly ??? */
 	    temp = info->SavedReg->disp2_req_cntl1;

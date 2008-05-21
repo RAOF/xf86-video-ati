@@ -204,9 +204,9 @@ static int getRADEONEntityIndex(void)
 }
 
 struct RADEONInt10Save {
-	CARD32 MEM_CNTL;
-	CARD32 MEMSIZE;
-	CARD32 MPP_TB_CONFIG;
+	uint32_t MEM_CNTL;
+	uint32_t MEMSIZE;
+	uint32_t MPP_TB_CONFIG;
 };
 
 static Bool RADEONMapMMIO(ScrnInfoPtr pScrn);
@@ -223,7 +223,7 @@ radeonShadowWindow(ScreenPtr screen, CARD32 row, CARD32 offset, int mode,
     stride = (pScrn->displayWidth * pScrn->bitsPerPixel) / 8;
     *size = stride;
 
-    return ((CARD8 *)info->FB + pScrn->fbOffset +
+    return ((uint8_t *)info->FB + pScrn->fbOffset +
             row * stride + offset);
 }
 static Bool
@@ -262,8 +262,8 @@ RADEONPreInt10Save(ScrnInfoPtr pScrn, void **pPtr)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 CardTmp;
-    static struct RADEONInt10Save SaveStruct = { 0, 0, 0 };
+    uint32_t       CardTmp;
+    static struct  RADEONInt10Save SaveStruct = { 0, 0, 0 };
 
     if (!IS_AVIVO_VARIANT) {
 	/* Save the values and zap MEM_CNTL */
@@ -289,7 +289,7 @@ RADEONPostInt10Check(ScrnInfoPtr pScrn, void *ptr)
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     struct RADEONInt10Save *pSave = ptr;
-    CARD32 CardTmp;
+    uint32_t CardTmp;
 
     /* If we don't have a valid (non-zero) saved MEM_CNTL, get out now */
     if (!pSave || !pSave->MEM_CNTL)
@@ -527,7 +527,7 @@ void RADEONPllErrataAfterData(RADEONInfoPtr info)
      * may not be correct.
      */
     if (info->ChipErrata & CHIP_ERRATA_R300_CG) {
-	CARD32         save, tmp;
+	uint32_t save, tmp;
 
 	save = INREG(RADEON_CLOCK_CNTL_INDEX);
 	tmp = save & ~(0x3f | RADEON_PLL_WR_EN);
@@ -542,7 +542,7 @@ unsigned RADEONINPLL(ScrnInfoPtr pScrn, int addr)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32         data;
+    uint32_t       data;
 
     OUTREG8(RADEON_CLOCK_CNTL_INDEX, addr & 0x3f);
     RADEONPllErrataAfterIndex(info);
@@ -553,7 +553,7 @@ unsigned RADEONINPLL(ScrnInfoPtr pScrn, int addr)
 }
 
 /* Write PLL information */
-void RADEONOUTPLL(ScrnInfoPtr pScrn, int addr, CARD32 data)
+void RADEONOUTPLL(ScrnInfoPtr pScrn, int addr, uint32_t data)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
@@ -570,12 +570,15 @@ unsigned RADEONINMC(ScrnInfoPtr pScrn, int addr)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32         data;
+    uint32_t       data;
 
     if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
 	(info->ChipFamily == CHIP_FAMILY_RS740)) {
 	OUTREG(RS690_MC_INDEX, (addr & RS690_MC_INDEX_MASK));
 	data = INREG(RS690_MC_DATA);
+    } else if (info->ChipFamily == CHIP_FAMILY_RS600) {
+	OUTREG(RS600_MC_INDEX, (addr & RS600_MC_INDEX_MASK));
+	data = INREG(RS600_MC_DATA);
     } else if (IS_AVIVO_VARIANT) {
 	OUTREG(AVIVO_MC_INDEX, (addr & 0xff) | 0x7f0000);
 	(void)INREG(AVIVO_MC_INDEX);
@@ -596,7 +599,7 @@ unsigned RADEONINMC(ScrnInfoPtr pScrn, int addr)
 }
 
 /* Write MC information */
-void RADEONOUTMC(ScrnInfoPtr pScrn, int addr, CARD32 data)
+void RADEONOUTMC(ScrnInfoPtr pScrn, int addr, uint32_t data)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
@@ -607,6 +610,11 @@ void RADEONOUTMC(ScrnInfoPtr pScrn, int addr, CARD32 data)
 				RS690_MC_INDEX_WR_EN));
 	OUTREG(RS690_MC_DATA, data);
 	OUTREG(RS690_MC_INDEX, RS690_MC_INDEX_WR_ACK);
+    } else if (info->ChipFamily == CHIP_FAMILY_RS600) {
+	OUTREG(RS600_MC_INDEX, ((addr & RS600_MC_INDEX_MASK) |
+				RS600_MC_INDEX_WR_EN));
+	OUTREG(RS600_MC_DATA, data);
+	OUTREG(RS600_MC_INDEX, RS600_MC_INDEX_WR_ACK);
     } else if (IS_AVIVO_VARIANT) {
 	OUTREG(AVIVO_MC_INDEX, (addr & 0xff) | 0xff0000);
 	(void)INREG(AVIVO_MC_INDEX);
@@ -635,6 +643,11 @@ static Bool avivo_get_mc_idle(ScrnInfoPtr pScrn)
 	    return TRUE;
 	else
 	    return FALSE;
+    } else if (info->ChipFamily == CHIP_FAMILY_RS600) {
+	if (INMC(pScrn, RS600_MC_STATUS) & RS600_MC_STATUS_IDLE)
+	    return TRUE;
+	else
+	    return FALSE;
     } else if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
 	       (info->ChipFamily == CHIP_FAMILY_RS740)) {
 	if (INMC(pScrn, RS690_MC_STATUS) & RS690_MC_STATUS_IDLE)
@@ -651,7 +664,7 @@ static Bool avivo_get_mc_idle(ScrnInfoPtr pScrn)
 
 #define LOC_FB 0x1
 #define LOC_AGP 0x2
-static void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 fb_loc, CARD32 agp_loc, CARD32 agp_loc_hi)
+static void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, uint32_t fb_loc, uint32_t agp_loc, uint32_t agp_loc_hi)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
@@ -669,6 +682,11 @@ static void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 
 	if (mask & LOC_AGP)
 	    OUTMC(pScrn, RV515_MC_AGP_LOCATION, agp_loc);
 	(void)INMC(pScrn, RV515_MC_AGP_LOCATION);
+    } else if (info->ChipFamily == CHIP_FAMILY_RS600) {
+	if (mask & LOC_FB)
+	    OUTMC(pScrn, RS600_MC_FB_LOCATION, fb_loc);
+	/*	if (mask & LOC_AGP)
+		OUTMC(pScrn, RS600_MC_AGP_LOCATION, agp_loc);*/
     } else if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
 	       (info->ChipFamily == CHIP_FAMILY_RS740)) {
 	if (mask & LOC_FB)
@@ -689,7 +707,7 @@ static void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 
     }
 }
 
-static void radeon_read_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 *fb_loc, CARD32 *agp_loc, CARD32 *agp_loc_hi)
+static void radeon_read_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, uint32_t *fb_loc, uint32_t *agp_loc, uint32_t *agp_loc_hi)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
@@ -706,6 +724,13 @@ static void radeon_read_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, CARD32 *
 	    *fb_loc = INMC(pScrn, RV515_MC_FB_LOCATION);
 	if (mask & LOC_AGP) {
 	    *agp_loc = INMC(pScrn, RV515_MC_AGP_LOCATION);
+	    *agp_loc_hi = 0;
+	}
+    } else if (info->ChipFamily == CHIP_FAMILY_RS600) {
+	if (mask & LOC_FB)
+	    *fb_loc = INMC(pScrn, RS600_MC_FB_LOCATION);
+	if (mask & LOC_AGP) {
+	    *agp_loc = 0;//INMC(pScrn, RS600_MC_AGP_LOCATION);
 	    *agp_loc_hi = 0;
 	}
     } else if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
@@ -748,7 +773,7 @@ void RADEONWaitForVerticalSync(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32         crtc_gen_cntl;
+    uint32_t       crtc_gen_cntl;
     struct timeval timeout;
 
     crtc_gen_cntl = INREG(RADEON_CRTC_GEN_CNTL);
@@ -771,7 +796,7 @@ void RADEONWaitForVerticalSync2(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32         crtc2_gen_cntl;
+    uint32_t       crtc2_gen_cntl;
     struct timeval timeout;
  
     crtc2_gen_cntl = INREG(RADEON_CRTC2_GEN_CNTL);
@@ -928,12 +953,12 @@ static Bool RADEONProbePLLParameters(ScrnInfoPtr pScrn)
        xtal = 2700;
     } else {
        if (prev_xtal == 0) {
-           prev_xtal = xtal;
-           tries = 0;
-           goto again;
+	   prev_xtal = xtal;
+	   tries = 0;
+	   goto again;
        } else if (prev_xtal != xtal) {
-           prev_xtal = 0;
-           goto again;
+	   prev_xtal = 0;
+	   goto again;
        }
     }
 
@@ -942,16 +967,18 @@ static Bool RADEONProbePLLParameters(ScrnInfoPtr pScrn)
 
     /* Some sanity check based on the BIOS code .... */
     if (ref_div < 2) {
-       CARD32 tmp;
+       uint32_t tmp;
        tmp = INPLL(pScrn, RADEON_PPLL_REF_DIV);
-       if (IS_R300_VARIANT || (info->ChipFamily == CHIP_FAMILY_RS300)
-			   || (info->ChipFamily == CHIP_FAMILY_RS400))
-           ref_div = (tmp & R300_PPLL_REF_DIV_ACC_MASK) >>
-                   R300_PPLL_REF_DIV_ACC_SHIFT;
+       if (IS_R300_VARIANT
+	   || (info->ChipFamily == CHIP_FAMILY_RS300)
+	   || (info->ChipFamily == CHIP_FAMILY_RS400)
+	   || (info->ChipFamily == CHIP_FAMILY_RS480))
+	   ref_div = (tmp & R300_PPLL_REF_DIV_ACC_MASK) >>
+	       R300_PPLL_REF_DIV_ACC_SHIFT;
        else
-           ref_div = tmp & RADEON_PPLL_REF_DIV_MASK;
+	   ref_div = tmp & RADEON_PPLL_REF_DIV_MASK;
        if (ref_div < 2)
-           ref_div = 12;
+	   ref_div = 12;
     }
 
     /* Calculate "base" xclk straight from MPLL, though that isn't
@@ -1021,11 +1048,12 @@ static void RADEONGetClockInfo(ScrnInfoPtr pScrn)
 	       We'll probably need a new routine to calculate the best ref_div from BIOS 
 	       provided min_input_pll and max_input_pll 
 	    */
-	    CARD32 tmp;
+	    uint32_t tmp;
 	    tmp = INPLL(pScrn, RADEON_PPLL_REF_DIV);
 	    if (IS_R300_VARIANT ||
 		(info->ChipFamily == CHIP_FAMILY_RS300) ||
-		(info->ChipFamily == CHIP_FAMILY_RS400)) {
+		(info->ChipFamily == CHIP_FAMILY_RS400) ||
+		(info->ChipFamily == CHIP_FAMILY_RS480)) {
 		pll->reference_div = (tmp & R300_PPLL_REF_DIV_ACC_MASK) >> R300_PPLL_REF_DIV_ACC_SHIFT;
 	    } else {
 		pll->reference_div = tmp & RADEON_PPLL_REF_DIV_MASK;
@@ -1216,8 +1244,8 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 mem_size;
-    CARD32 aper_size;
+    uint32_t       mem_size;
+    uint32_t       aper_size;
 
     radeon_read_mc_fb_agp_location(pScrn, LOC_FB | LOC_AGP, &info->mc_fb_location,
 				   &info->mc_agp_location, &info->mc_agp_location_hi);
@@ -1249,7 +1277,8 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     }
 #endif
 
-    if ((info->ChipFamily != CHIP_FAMILY_RS690) &&
+    if ((info->ChipFamily != CHIP_FAMILY_RS600) &&
+	(info->ChipFamily != CHIP_FAMILY_RS690) &&
 	(info->ChipFamily != CHIP_FAMILY_RS740)) {
 	if (info->IsIGP)
 	    info->mc_fb_location = INREG(RADEON_NB_TOM);
@@ -1262,7 +1291,7 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
 	else
 #endif
 	{
-	    CARD32 aper0_base;
+	    uint32_t aper0_base;
 
 	    if (info->ChipFamily >= CHIP_FAMILY_R600) {
 		aper0_base = INREG(R600_CONFIG_F0_BASE);
@@ -1329,7 +1358,7 @@ static void RADEONGetVRamType(ScrnInfoPtr pScrn)
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 tmp;
+    uint32_t tmp;
  
     if (info->IsIGP || (info->ChipFamily >= CHIP_FAMILY_R300) ||
 	(INREG(RADEON_MEM_SDRAM_MODE_REG) & (1<<30))) 
@@ -1370,11 +1399,11 @@ static void RADEONGetVRamType(ScrnInfoPtr pScrn)
  * accessible to the CPU can vary. This function is our best shot at figuring
  * it out. Returns a value in KB.
  */
-static CARD32 RADEONGetAccessibleVRAM(ScrnInfoPtr pScrn)
+static uint32_t RADEONGetAccessibleVRAM(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32	   aper_size;
+    uint32_t	   aper_size;
     unsigned char  byte;
 
     if (info->ChipFamily >= CHIP_FAMILY_R600)
@@ -1447,10 +1476,10 @@ static Bool RADEONPreInitVRAM(ScrnInfoPtr pScrn)
     GDevPtr        dev    = pEnt->device;
     unsigned char *RADEONMMIO = info->MMIO;
     MessageType    from = X_PROBED;
-    CARD32         accessible, bar_size;
+    uint32_t         accessible, bar_size;
 
     if ((!IS_AVIVO_VARIANT) && info->IsIGP) {
-	CARD32 tom = INREG(RADEON_NB_TOM);
+	uint32_t tom = INREG(RADEON_NB_TOM);
 
 	pScrn->videoRam = (((tom >> 16) -
 			    (tom & 0xffff) + 1) << 6);
@@ -1812,6 +1841,8 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	(info->ChipFamily == CHIP_FAMILY_RS200) ||
 	(info->ChipFamily == CHIP_FAMILY_RS300) ||
 	(info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480) ||
+	(info->ChipFamily == CHIP_FAMILY_RS600) ||
 	(info->ChipFamily == CHIP_FAMILY_RS690) ||
 	(info->ChipFamily == CHIP_FAMILY_RS740))
 	info->has_tcl = FALSE;
@@ -1947,7 +1978,7 @@ static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 #if !defined(__powerpc__) && !defined(__sparc__)
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 fp2_gen_ctl_save   = 0;
+    uint32_t       fp2_gen_ctl_save   = 0;
 
     if (xf86LoadSubModule(pScrn, "int10")) {
 	/* The VGA BIOS on the RV100/QY cannot be read when the digital output
@@ -2004,13 +2035,14 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 	info->Chipset == PCI_CHIP_RC410_5A61 ||
 	info->Chipset == PCI_CHIP_RC410_5A62 ||
 	info->Chipset == PCI_CHIP_RS485_5975 ||
+	info->ChipFamily == CHIP_FAMILY_RS600 ||
 	info->ChipFamily >= CHIP_FAMILY_R600) {
-    	if (xf86ReturnOptValBool(info->Options, OPTION_DRI, FALSE)) {
+	if (xf86ReturnOptValBool(info->Options, OPTION_DRI, FALSE)) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		"Direct rendering for RN50/RC410/RS485/R600 forced on -- "
+		"Direct rendering for RN50/RC410/RS485/RS600/R600 forced on -- "
 		"This is NOT officially supported at the hardware level "
 		"and may cause instability or lockups\n");
-    	} else {
+	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		"Direct rendering not officially supported on RN50/RC410/R600\n");
 	    return FALSE;
@@ -2251,9 +2283,9 @@ static void RADEONPreInitColorTiling(ScrnInfoPtr pScrn)
 static Bool RADEONPreInitXv(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
-    CARD16 mm_table;
-    CARD16 bios_header;
-    CARD16 pll_info_block;
+    uint16_t mm_table;
+    uint16_t bios_header;
+    uint16_t pll_info_block;
 #ifdef XvExtension
     char* microc_path = NULL;
     char* microc_type = NULL;
@@ -2879,7 +2911,7 @@ static void RADEONLoadPalette(ScrnInfoPtr pScrn, int numColors,
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int            i;
     int            index, j;
-    CARD16 lut_r[256], lut_g[256], lut_b[256];
+    uint16_t       lut_r[256], lut_g[256], lut_b[256];
     int c;
 
 #ifdef XF86DRI
@@ -3552,7 +3584,7 @@ void RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     int timeout;
-    CARD32 mc_fb_loc, mc_agp_loc, mc_agp_loc_hi;
+    uint32_t mc_fb_loc, mc_agp_loc, mc_agp_loc_hi;
 
     radeon_read_mc_fb_agp_location(pScrn, LOC_FB | LOC_AGP, &mc_fb_loc,
 				   &mc_agp_loc, &mc_agp_loc_hi);
@@ -3572,7 +3604,7 @@ void RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
 
 	if (mc_fb_loc != restore->mc_fb_location ||
 	    mc_agp_loc != restore->mc_agp_location) {
-	    CARD32 tmp;
+	    uint32_t tmp;
 
 	    RADEONWaitForIdleMMIO(pScrn);
 
@@ -3628,8 +3660,8 @@ void RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
 	 */
 	if (mc_fb_loc != restore->mc_fb_location ||
 	    mc_agp_loc != restore->mc_agp_location) {
-	    CARD32 crtc_ext_cntl, crtc_gen_cntl, crtc2_gen_cntl=0, ov0_scale_cntl;
-	    CARD32 old_mc_status, status_idle;
+	    uint32_t crtc_ext_cntl, crtc_gen_cntl, crtc2_gen_cntl=0, ov0_scale_cntl;
+	    uint32_t old_mc_status, status_idle;
 
 	    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 			   "  Map Changed ! Applying ...\n");
@@ -3767,7 +3799,7 @@ void RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
 static void RADEONAdjustMemMapRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
-    CARD32 fb, agp, agp_hi;
+    uint32_t fb, agp, agp_hi;
     int changed = 0;
 
     if (info->IsSecondary)
@@ -4313,7 +4345,8 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
 	    j++;
 	}
 
-	if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
+	if ((info->ChipFamily == CHIP_FAMILY_RS600) ||
+	    (info->ChipFamily == CHIP_FAMILY_RS690) ||
 	    (info->ChipFamily == CHIP_FAMILY_RS740)) {
 	    j = 0;
 	    /* save DDIA regs */
@@ -4618,7 +4651,8 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 	}
 
 	/* DDIA regs */
-	if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
+	if ((info->ChipFamily == CHIP_FAMILY_RS600) ||
+	    (info->ChipFamily == CHIP_FAMILY_RS690) ||
 	    (info->ChipFamily == CHIP_FAMILY_RS740)) {
 	    j = 0;
 	    for (i = 0x7200; i <= 0x7290; i += 4) {
@@ -4739,6 +4773,9 @@ static void RADEONSave(ScrnInfoPtr pScrn)
 	 * setup in the card at all !!
 	 */
 	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_MODE); /* Save mode only */
+# elif defined(__linux__)
+	/* Save only mode * & fonts */	
+	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_MODE | VGA_SR_FONTS );
 # else
 	/* Save mode * & fonts & cmap */
 	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_ALL);
@@ -4860,7 +4897,9 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
 	* write VGA fonts, will find a better solution in the future
 	*/
        vgaHWRestore(pScrn, &hwp->SavedReg, VGA_SR_MODE );
-# else
+# elif defined(__linux__)
+       vgaHWRestore(pScrn, &hwp->SavedReg, VGA_SR_MODE | VGA_SR_FONTS );
+# else 
        vgaHWRestore(pScrn, &hwp->SavedReg, VGA_SR_ALL );
 # endif
        vgaHWLock(hwp);
@@ -5439,7 +5478,7 @@ void RADEONFreeScreen(int scrnIndex, int flags)
 static void RADEONForceSomeClocks(ScrnInfoPtr pScrn)
 {
     /* It appears from r300 and rv100 may need some clocks forced-on */
-     CARD32 tmp;
+     uint32_t tmp;
 
      tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
      tmp |= RADEON_SCLK_FORCE_CP | RADEON_SCLK_FORCE_VIP;
@@ -5451,7 +5490,7 @@ static void RADEONSetDynamicClock(ScrnInfoPtr pScrn, int mode)
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
-    CARD32 tmp;
+    uint32_t tmp;
     switch(mode) {
         case 0: /* Turn everything OFF (ForceON to everything)*/
             if ( !pRADEONEnt->HasCRTC2 ) {
