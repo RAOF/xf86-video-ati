@@ -1,9 +1,9 @@
-xserver-xorg-video-ati (1:6.8.1~git20080521.04500c84-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.8.1~git20080521.04500c84-1) experimental; urgency=low
 
   * New upstream snapshot, up to commit 04500c84.
     + Fix lockup on startup on IGP320M, closes: #480312.
 
- -- Brice Goglin <bgoglin@debian.org>  Wed, 21 May 2008 07:49:23 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 21 May 2008 07:54:45 +0200
 
 xserver-xorg-video-ati (1:6.8.1~git20080512.94bf8f01-1) experimental; urgency=low
 
