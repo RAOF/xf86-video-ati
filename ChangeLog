@@ -1,3 +1,136 @@
+commit 04500c8419b1aeaeac7968492b82e1d7cad1d05b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 20 20:34:31 2008 -0700
+
+    Strip ^M's from src/AtomBios/includes/ObjectID.h
+
+commit 521a0488d1c414209c3534dc242000faa332a441
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 20 20:33:37 2008 -0700
+
+    On non-gcc compilers, use C99's __func__ instead of gcc's __FUNCTION__
+
+commit b7c80d0c86646105d2bce5d4d59ba6c45aa7cafc
+Author: Tobias Diedrich <ranma+freedesktop@tdiedrich.de>
+Date:   Tue May 20 19:16:54 2008 -0400
+
+    R200/R300: fix gamma setup for overlay
+    
+    More pending.  See bug 16001
+
+commit 69423482e2e94637142a9ba675589a1449a346a8
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 20 18:57:13 2008 -0400
+
+    RADEON: cleanup connection detection and remove duplicate code
+
+commit 55e4469f59c82bb5762673de5f3f27d18b0bd9a3
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 20 17:46:58 2008 -0400
+
+    RADEON: enable cloning on multi-crtc cards
+
+commit 12f185634071980041aaac6265d89708b181b215
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 20 16:05:41 2008 -0400
+
+    ATOM: Ignore invalid connector entries
+
+commit 19e97f74e39fc2b35727708ac429de33d0b70162
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue May 20 11:16:15 2008 +0200
+
+    Change RMX code to follow the programming algorithm suggested by ATI.
+    
+    ATI provides the following algorithm to calculate the RMX scaling ratios
+    in its programming specs:
+    when RMX_AUTO_RATIO_HORZ_INC set to 1,Horizontal auto ratio result trucated,
+    and then incremented by 1.
+    Horz_Ratio = ( ((Active display width in characters (including overscan) + 1)
+    / (Panel width in characters)) x 4096 + 1 )
+    else
+    Horz_Ratio = ( ((Active display width in characters (including overscan))
+    / (Panel width in characters)) x 4096 + 1 )
+    
+    when RMX_AUTO_RATIO_VERT_INC set to 1, Vertical auto ratio result trucated,
+    and then incremented by 1.
+    Vert_Ration = ( ((Active display width in characters (including overscan) + 1)
+    / (Panel width in characters)) x 4096 + 1)
+    else
+    Vert_Ration = ( ((Active display width in characters (including overscan))
+    / (Panel width in characters)) x 4096 + 1)
+    
+    This patch implements this behavor. Additionally it avoids the use of floats.
+
+commit a4f3d0088ba763ed8eab1d331959b5ecde8262e8
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 20 11:42:53 2008 -0400
+
+    R3/4/5xx: fixup logic from last commit
+    
+    Spotted by otaylor and MrCooper
+
+commit 130e55738047f2a073bcc47e3e1400f7b694a81b
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 20 11:32:42 2008 -0400
+
+    R3/4/5xx: fix EXA rotation
+    
+    xrandr uses PictOpSrc for rotation which we were falling back on since
+    render semanties require alpha=0 for REPEAT_NONE when there is no alpha
+    channel and there is a transform. If the dst has no alpha channel we
+    should be ok I think.
+    
+    Otayler and I discussed this on IRC.  the more general fix would be
+    to clip the dst to the src and mask for bounded ops like in/add/over
+    in the pixel exact transform case.
+
+commit cc9f510770700228e5d597c872e926a4e99bd950
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Wed May 14 16:49:01 2008 -0400
+
+    RADEON: missing stdint.h includes
+
+commit 71fa57f871dba03260dba2180ce1dab44048ac1a
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Wed May 14 13:36:38 2008 -0400
+
+    Add RS600 support
+
+commit 582c1a1b2c7b1032e9f9f54ca36100c57f580c5c
+Author: Alex Deucher <alex@cube.(none)>
+Date:   Tue May 13 20:50:25 2008 -0400
+
+    RS4xx: Split out RS400 and RS480 as separate families
+    
+    RS400 (intel based IGP) and RS480 (AMD based IGP) have different
+    MC setups and need to be handled differently
+
+commit 708e7c98f636738fbcc47a597bc94b309a4dc1c4
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue May 13 11:00:38 2008 +0200
+
+    Reinstate CARD* types that are part of external interfaces.
+    
+    The compiler pointed this out...
+
+commit 908b7b940e3ef296836bc94680ebb8ab67650e31
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon May 12 12:06:33 2008 -0400
+
+    Replace CARD{8,16,32} with uint{8,16,32}_t
+    
+    As has been done with xf86-video-intel, replace all CARD* datatypes with
+    uint*_t datatypes available from stdint.h.
+
+commit 87e66ce76430890ab4939ffcd42f72b9288eb598
+Author: Avi Rozen <avi.rozen@gmail.com>
+Date:   Mon May 12 08:33:38 2008 -0400
+
+    RADEON: fix lockup on start
+    
+    see debian bug 480312
+
 commit 94bf8f01bd43cb103fffecfe04d04a214f892baf
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon May 12 20:02:51 2008 +1000
