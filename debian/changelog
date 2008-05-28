@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.8.1~git20080528.faea0088-1) experimental; urgency=low
+
+  * New upstream snapshot, up to commit faea0088.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 28 May 2008 11:54:21 +0200
+
 xserver-xorg-video-ati (1:6.8.1~git20080521.04500c84-1) experimental; urgency=low
 
   * New upstream snapshot, up to commit 04500c84.

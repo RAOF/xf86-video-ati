@@ -1,3 +1,45 @@
+commit faea008806802ec0e045754ec1eca492ebae320e
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 27 18:36:01 2008 -0400
+
+    R3/4/5xx: use get_param to get the num_gb_pipes from the drm
+
+commit 965a5dbcd9dc4bf1cdd7f2bbdec15e9733b2e090
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue May 27 16:48:41 2008 -0400
+
+    RADEON: improve support for secondary cards
+    
+    this should fix bugs 16115, 16035
+
+commit 5f951a5573f0c7572230c9aa4d3f75d67f91ed71
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed May 21 00:35:14 2008 -0400
+
+    ATOM: remove duplicate code
+
+commit edce33e87fb79a540d8c285f205d4c3f2c2bc9f4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 28 06:43:40 2008 +1000
+
+    radeon: fix surface access on avivo chips.
+    
+    This should fix VT switch on vesafb
+
+commit 307bd65a25ee425d8359dd30572b002ce2338f91
+Author: Michael Babej <mbabej@redhat.com>
+Date:   Tue May 27 19:13:49 2008 +1000
+
+    r600: fix vt switch issue
+    
+    RH BZ 441492
+
+commit bf48c9eb8ec592515be9d1732d60283af715674d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat May 24 11:51:20 2008 +1000
+
+    atombios: for LVDS set use ref div as per legacy
+
 commit 04500c8419b1aeaeac7968492b82e1d7cad1d05b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue May 20 20:34:31 2008 -0700
