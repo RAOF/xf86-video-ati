@@ -172,17 +172,17 @@ void RADEONEngineFlush(ScrnInfoPtr pScrn)
 			   (unsigned int)INREG(RADEON_RB3D_DSTCACHE_CTLSTAT));
 	}
     } else {
-	OUTREGP(R300_RB2D_DSTCACHE_CTLSTAT,
+	OUTREGP(R300_DSTCACHE_CTLSTAT,
 		R300_RB2D_DC_FLUSH_ALL,
 		~R300_RB2D_DC_FLUSH_ALL);
 	for (i = 0; i < RADEON_TIMEOUT; i++) {
-	    if (!(INREG(R300_RB2D_DSTCACHE_CTLSTAT) & R300_RB2D_DC_BUSY))
+	    if (!(INREG(R300_DSTCACHE_CTLSTAT) & R300_RB2D_DC_BUSY))
 		break;
 	}
 	if (i == RADEON_TIMEOUT) {
 	    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 			   "DC flush timeout: %x\n",
-			   (unsigned int)INREG(R300_RB2D_DSTCACHE_CTLSTAT));
+			   (unsigned int)INREG(R300_DSTCACHE_CTLSTAT));
 	}
     }
 }
@@ -371,7 +371,7 @@ void RADEONEngineInit(ScrnInfoPtr pScrn)
 		   info->CurrentLayout.bitsPerPixel);
 
 #ifdef XF86DRI
-    if (IS_R300_3D | IS_R500_3D) {
+    if (info->directRenderingEnabled && (IS_R300_3D | IS_R500_3D)) {
 	drmRadeonGetParam np;
 	int num_pipes;
 

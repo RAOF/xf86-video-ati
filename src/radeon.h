@@ -173,7 +173,8 @@ typedef enum {
     OPTION_FORCE_TVOUT,
     OPTION_TVSTD,
     OPTION_IGNORE_LID_STATUS,
-    OPTION_DEFAULT_TVDAC_ADJ
+    OPTION_DEFAULT_TVDAC_ADJ,
+    OPTION_INT10
 } RADEONOpts;
 
 
@@ -880,6 +881,7 @@ extern void RADEONWaitForIdleMMIO(ScrnInfoPtr pScrn);
 
 /* radeon_crtc.c */
 extern void radeon_crtc_load_lut(xf86CrtcPtr crtc);
+extern void radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post);
 extern Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask);
 extern void RADEONBlank(ScrnInfoPtr pScrn);
 extern void RADEONComputePLL(RADEONPLLPtr pll, unsigned long freq,

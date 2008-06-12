@@ -81,12 +81,14 @@ radeon_read_bios(ScrnInfoPtr pScrn)
     if (info->VBIOS[0] != 0x55 || info->VBIOS[1] != 0xaa) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Video BIOS not detected in PCI space!\n");
-	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		   "Attempting to read Video BIOS from "
-		   "legacy ISA space!\n");
-	info->BIOSAddr = 0x000c0000;
-	xf86ReadDomainMemory(info->PciTag, info->BIOSAddr,
-			     RADEON_VBIOS_SIZE, info->VBIOS);
+	if (xf86IsEntityPrimary(info->pEnt->index)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+		       "Attempting to read Video BIOS from "
+		       "legacy ISA space!\n");
+	    info->BIOSAddr = 0x000c0000;
+	    xf86ReadDomainMemory(info->PciTag, info->BIOSAddr,
+				 RADEON_VBIOS_SIZE, info->VBIOS);
+	}
     }
 #endif
     if (info->VBIOS[0] != 0x55 || info->VBIOS[1] != 0xaa)
@@ -376,7 +378,9 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
                         GET_REF_CLOCK, &atomBiosArg);
 
 	info->MasterDataStart = RADEON_BIOS16 (info->ROMHeaderStart + 32);
-    } else {
+    }
+#if 0
+    else {
 	/* non-primary card may need posting */
 	if (!pInt10) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Attempting to POST via BIOS tables\n");
@@ -384,7 +388,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 	    RADEONPostCardFromBIOSTables(pScrn);
 	}
     }
-
+#endif
     return TRUE;
 }
 

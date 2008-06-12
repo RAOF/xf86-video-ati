@@ -191,6 +191,7 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_TVSTD,          "TVStandard",         OPTV_STRING,  {0}, FALSE },
     { OPTION_IGNORE_LID_STATUS, "IgnoreLidStatus", OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_DEFAULT_TVDAC_ADJ, "DefaultTVDACAdj", OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_INT10,             "Int10",           OPTV_BOOLEAN, {0}, FALSE },
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -1359,16 +1360,63 @@ static void RADEONGetVRamType(ScrnInfoPtr pScrn)
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     uint32_t tmp;
- 
-    if (info->IsIGP || (info->ChipFamily >= CHIP_FAMILY_R300) ||
-	(INREG(RADEON_MEM_SDRAM_MODE_REG) & (1<<30))) 
+
+    if (info->IsIGP || (info->ChipFamily >= CHIP_FAMILY_R300))
+	info->IsDDR = TRUE;
+    else if (INREG(RADEON_MEM_SDRAM_MODE_REG) & RADEON_MEM_CFG_TYPE_DDR)
 	info->IsDDR = TRUE;
     else
 	info->IsDDR = FALSE;
 
-    tmp = INREG(RADEON_MEM_CNTL);
-    if (IS_R300_VARIANT) {
-	tmp &=  R300_MEM_NUM_CHANNELS_MASK;
+    if ((info->ChipFamily >= CHIP_FAMILY_R600) &&
+	(info->ChipFamily <= CHIP_FAMILY_RV635)) {
+	int chansize;
+	/* r6xx */
+	tmp = INREG(R600_RAMCFG);
+	if (tmp & R600_CHANSIZE_OVERRIDE)
+	    chansize = 16;
+	else if (tmp & R600_CHANSIZE)
+	    chansize = 64;
+	else
+	    chansize = 32;
+	if (info->ChipFamily == CHIP_FAMILY_R600)
+	    info->RamWidth = 8 * chansize;
+	else if (info->ChipFamily == CHIP_FAMILY_RV670)
+	    info->RamWidth = 4 * chansize;
+	else if ((info->ChipFamily == CHIP_FAMILY_RV610) ||
+		 (info->ChipFamily == CHIP_FAMILY_RV620))
+	    info->RamWidth = chansize;
+	else if ((info->ChipFamily == CHIP_FAMILY_RV630) ||
+		 (info->ChipFamily == CHIP_FAMILY_RV635))
+	    info->RamWidth = 2 * chansize;
+    } else if (info->ChipFamily == CHIP_FAMILY_RV515) {
+	/* rv515/rv550 */
+	tmp = INMC(pScrn, RV515_MC_CNTL);
+	tmp &= RV515_MEM_NUM_CHANNELS_MASK;
+	switch (tmp) {
+	case 0: info->RamWidth = 64; break;
+	case 1: info->RamWidth = 128; break;
+	default: info->RamWidth = 128; break;
+	}
+    } else if ((info->ChipFamily >= CHIP_FAMILY_R520) &&
+	       (info->ChipFamily <= CHIP_FAMILY_RV570)){
+	/* r520/rv530/rv560/rv570/r580 */
+	tmp = INMC(pScrn, R520_MC_CNTL0);
+	switch ((tmp & R520_MEM_NUM_CHANNELS_MASK) >> R520_MEM_NUM_CHANNELS_SHIFT) {
+	case 0: info->RamWidth = 32; break;
+	case 1: info->RamWidth = 64; break;
+	case 2: info->RamWidth = 128; break;
+	case 3: info->RamWidth = 256; break;
+	default: info->RamWidth = 64; break;
+	}
+	if (tmp & R520_MC_CHANNEL_SIZE) {
+	    info->RamWidth *= 2;
+	}
+    } else if ((info->ChipFamily >= CHIP_FAMILY_R300) &&
+	       (info->ChipFamily <= CHIP_FAMILY_RV410)) {
+	/* r3xx, r4xx */
+	tmp = INREG(RADEON_MEM_CNTL);
+	tmp &= R300_MEM_NUM_CHANNELS_MASK;
 	switch (tmp) {
 	case 0: info->RamWidth = 64; break;
 	case 1: info->RamWidth = 128; break;
@@ -1378,15 +1426,25 @@ static void RADEONGetVRamType(ScrnInfoPtr pScrn)
     } else if ((info->ChipFamily == CHIP_FAMILY_RV100) ||
 	       (info->ChipFamily == CHIP_FAMILY_RS100) ||
 	       (info->ChipFamily == CHIP_FAMILY_RS200)){
-	if (tmp & RV100_HALF_MODE) info->RamWidth = 32;
-	else info->RamWidth = 64;
-       if (!pRADEONEnt->HasCRTC2) {
-           info->RamWidth /= 4;
-           info->IsDDR = TRUE;
-       }
+	tmp = INREG(RADEON_MEM_CNTL);
+	if (tmp & RV100_HALF_MODE)
+	    info->RamWidth = 32;
+	else
+	    info->RamWidth = 64;
+
+	if (!pRADEONEnt->HasCRTC2) {
+	    info->RamWidth /= 4;
+	    info->IsDDR = TRUE;
+	}
+    } else if (info->ChipFamily <= CHIP_FAMILY_RV280) {
+	tmp = INREG(RADEON_MEM_CNTL);
+	if (tmp & RADEON_MEM_NUM_CHANNELS_MASK)
+	    info->RamWidth = 128;
+	else
+	    info->RamWidth = 64;
     } else {
-	if (tmp & RADEON_MEM_NUM_CHANNELS_MASK) info->RamWidth = 128;
-	else info->RamWidth = 64;
+	/* newer IGPs */
+	info->RamWidth = 128;
     }
 
     /* This may not be correct, as some cards can have half of channel disabled 
@@ -1988,10 +2046,11 @@ static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
     /* don't need int10 on atom cards.
      * in theory all radeons, but the older stuff
      * isn't 100% yet
+     * secondary atom cards tend to hang when initializing int10,
+     * however, on some stom cards, you can't read the bios without
+     * intitializing int10.
      */
-    if ((info->ChipFamily == CHIP_FAMILY_R420)  ||
-	(info->ChipFamily == CHIP_FAMILY_RV410) ||
-	(info->ChipFamily >= CHIP_FAMILY_RV515))
+    if (!xf86ReturnOptValBool(info->Options, OPTION_INT10, TRUE))
 	return TRUE;
 
     if (xf86LoadSubModule(pScrn, "int10")) {
@@ -2483,9 +2542,17 @@ static Bool RADEONPreInitXv(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-static void RADEONPreInitBIOS(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
+static Bool
+RADEONPreInitBIOS(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 {
-    RADEONGetBIOSInfo(pScrn, pInt10);
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+
+    if (!RADEONGetBIOSInfo(pScrn, pInt10)) {
+	/* Avivo chips require bios for atom */
+	if (IS_AVIVO_VARIANT)
+	    return FALSE;
+    }
+    return TRUE;
 }
 
 static void RADEONFixZaphodOutputs(ScrnInfoPtr pScrn)
@@ -2767,7 +2834,8 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 
     RADEONPostInt10Check(pScrn, int10_save);
 
-    RADEONPreInitBIOS(pScrn, pInt10);
+    if (!RADEONPreInitBIOS(pScrn, pInt10))
+	goto fail;
 
 #ifdef XF86DRI
     /* PreInit DRI first of all since we need that for getting a proper
@@ -5253,6 +5321,8 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     uint32_t mem_size;
+    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int i;
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONEnterVT\n");
@@ -5299,6 +5369,9 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
 
     if (IS_R300_VARIANT || IS_RV100_VARIANT)
 	RADEONForceSomeClocks(pScrn);
+
+    for (i = 0; i < config->num_crtc; i++)
+	radeon_crtc_modeset_ioctl(config->crtc[i], TRUE);
 
     pScrn->vtSema = TRUE;
 
@@ -5348,10 +5421,8 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 {
     ScrnInfoPtr    pScrn = xf86Screens[scrnIndex];
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
-#ifndef HAVE_FREE_SHADOW
-    xf86CrtcConfigPtr   config = XF86_CRTC_CONFIG_PTR(pScrn);
-    int o;
-#endif
+    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int i;
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONLeaveVT\n");
@@ -5374,7 +5445,9 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 	    RADEONSAREAPrivPtr pSAREAPriv =
 		(RADEONSAREAPrivPtr)DRIGetSAREAPrivate(pScrn->pScreen);
 	    drmTextureRegionPtr list = pSAREAPriv->texList[0];
-	    int age = ++pSAREAPriv->texAge[0], i = 0;
+	    int age = ++pSAREAPriv->texAge[0];
+
+	    i = 0;
 
 	    do {
 		list[i].age = age;
@@ -5385,8 +5458,8 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 #endif
 
 #ifndef HAVE_FREE_SHADOW
-    for (o = 0; o < config->num_crtc; o++) {
-	xf86CrtcPtr crtc = config->crtc[o];
+    for (i = 0; i < config->num_crtc; i++) {
+	xf86CrtcPtr crtc = config->crtc[i];
 
 	if (crtc->rotatedPixmap || crtc->rotatedData) {
 	    crtc->funcs->shadow_destroy(crtc, crtc->rotatedPixmap,
@@ -5402,6 +5475,9 @@ void RADEONLeaveVT(int scrnIndex, int flags)
     xf86_hide_cursors (pScrn);
 
     RADEONRestore(pScrn);
+
+    for (i = 0; i < config->num_crtc; i++)
+	radeon_crtc_modeset_ioctl(config->crtc[i], FALSE);
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Ok, leaving now...\n");

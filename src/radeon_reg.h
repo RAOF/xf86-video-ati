@@ -1069,6 +1069,7 @@
 #define RADEON_MEM_SDRAM_MODE_REG           0x0158
 #       define RADEON_SDRAM_MODE_MASK       0xffff0000
 #       define RADEON_B3MEM_RESET_MASK      0x6fffffff
+#       define RADEON_MEM_CFG_TYPE_DDR      (1 << 30)
 #define RADEON_MEM_STR_CNTL                 0x0150
 #       define RADEON_MEM_PWRUP_COMPL_A     (1 <<  0)
 #       define RADEON_MEM_PWRUP_COMPL_B     (1 <<  1)
@@ -3415,6 +3416,7 @@
 #define RS690_MC_FB_LOCATION			0x100
 #define RS690_MC_AGP_LOCATION			0x101
 #define RS690_MC_AGP_BASE			0x102
+#define RS690_MC_AGP_BASE_2                     0x103
 #define RS690_MC_STATUS                         0x90
 #define RS690_MC_STATUS_IDLE                    (1 << 0)
 
@@ -3435,10 +3437,24 @@
 #define RV515_MC_STATUS_IDLE (1<<4)
 #define AVIVO_MC_DATA						0x0074
 
-#define RV515_MC_FB_LOCATION 0x1
-#define RV515_MC_AGP_LOCATION 0x2
-#define R520_MC_FB_LOCATION 0x4
-#define R520_MC_AGP_LOCATION 0x5
+#define RV515_MC_FB_LOCATION   0x1
+#define RV515_MC_AGP_LOCATION  0x2
+#define RV515_MC_AGP_BASE      0x3
+#define RV515_MC_AGP_BASE_2    0x4
+#define RV515_MC_CNTL          0x5
+#	define RV515_MEM_NUM_CHANNELS_MASK  0x3
+#define R520_MC_FB_LOCATION    0x4
+#define R520_MC_AGP_LOCATION   0x5
+#define R520_MC_AGP_BASE       0x6
+#define R520_MC_AGP_BASE_2     0x7
+#define R520_MC_CNTL0          0x8
+#	define R520_MEM_NUM_CHANNELS_MASK  (0x3 << 24)
+#	define R520_MEM_NUM_CHANNELS_SHIFT  24
+#	define R520_MC_CHANNEL_SIZE  (1 << 23)
+
+#define R600_RAMCFG				       0x2408
+#       define R600_CHANSIZE                           (1 << 7)
+#       define R600_CHANSIZE_OVERRIDE                  (1 << 10)
 
 #define AVIVO_HDP_FB_LOCATION 0x134
 
@@ -4670,9 +4686,11 @@
 #define R300_DST_PIPE_CONFIG		                0x170c
 #       define R300_PIPE_AUTO_CONFIG                    (1 << 31)
 #define R300_RB2D_DSTCACHE_MODE		                0x3428
+#define R300_RB2D_DSTCACHE_MODE		                0x3428
 #       define R300_DC_AUTOFLUSH_ENABLE                 (1 << 8)
 #       define R300_DC_DC_DISABLE_IGNORE_PE             (1 << 17)
-#define R300_RB2D_DSTCACHE_CTLSTAT		        0x342c
+#define R300_RB2D_DSTCACHE_CTLSTAT		        0x342c /* use DSTCACHE_CTLSTAT instead */
+#define R300_DSTCACHE_CTLSTAT		                0x1714
 #       define R300_DC_FLUSH_2D                         (1 << 0)
 #       define R300_DC_FREE_2D                          (1 << 2)
 #       define R300_RB2D_DC_FLUSH_ALL                   (R300_DC_FLUSH_2D | R300_DC_FREE_2D)
