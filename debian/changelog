@@ -1,8 +1,8 @@
-xserver-xorg-video-ati (1:6.8.191-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.8.191-1) unstable; urgency=low
 
   * New upstream release candidate.
 
- -- Brice Goglin <bgoglin@debian.org>  Fri, 13 Jun 2008 01:00:11 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Fri, 13 Jun 2008 01:38:55 +0200
 
 xserver-xorg-video-ati (1:6.8.1~git20080528.faea0088-1) experimental; urgency=low
 
