@@ -1,3 +1,132 @@
+commit 88ce87d79069662de28ecb3c10c140919927d584
+Author: Alex Deucher <alex@botchco.com>
+Date:   Thu Jun 12 15:10:47 2008 -0400
+
+    Bump for 6.9.0rc1 release
+
+commit ada41723fdc8cbeeda12bb4ae2d16e8d1ba215de
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jun 11 14:29:36 2008 -0400
+
+    R3xx: use DSTCACHE_CTLSTAT rather than RB2D_DSTCACHE_CTLSTAT
+    
+    According to the hw guys, you should use DSTCACHE_CTLSTAT to
+    flush the 2D dst cache rather than RB2D_DSTCACHE_CTLSTAT.
+
+commit 3d70c398afa0831387af81559453b77c218a54f9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jun 12 06:18:26 2008 +1000
+
+    atom: fix another endian define
+
+commit f1794e4c34d801371461afed37e7bb7d1fc79305
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jun 12 06:10:30 2008 +1000
+
+    atom: fixup includes in cd operations to get correct endian bits in atombios.h
+
+commit f29976d12cc2020cd80c90fa3fd4b25c031559ba
+Author: Dave Airlie <airlied@ppcg5.localdomain>
+Date:   Wed Jun 11 19:33:02 2008 +1000
+
+    radeon: add lots of endian bits into the atombios parser
+
+commit 09eb220971b5d2bfd7d1ff6f552060967a133152
+Author: Dave Airlie <airlied@ppcg5.localdomain>
+Date:   Wed Jun 11 19:21:22 2008 +1000
+
+    atombios: fixup atombios bitfields for endianness
+    
+    reverse the bits for big endian
+
+commit b80a3e85bf9dbfc8d96a745876d75d38bea97c1a
+Author: Alex Deucher <alex@botchco.com>
+Date:   Mon Jun 9 20:29:47 2008 -0400
+
+    R5xx: fix RADEONSetAgpBase() for R5xx chips
+    
+    Is there any reason to still do this in the ddx?
+    Maybe real old drms?
+
+commit ab7936708dfbee4d3676262f8010e001b73a4a38
+Author: Alex Deucher <alex@botchco.com>
+Date:   Mon Jun 9 17:05:04 2008 -0400
+
+    RS4xx: RC410 chips are actually RS400 based
+
+commit a54ca3c699c103e2e3df87101dca929a3eee4377
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jun 5 18:31:53 2008 +1000
+
+    radeon: fix typo in memory calcs
+    
+    noticed by ghepeu on irc.
+
+commit 6e4e6d2a8f29f92efc219dca24ea31d1f37d5a0f
+Author: Alex Deucher <alex@botchco.com>
+Date:   Tue Jun 3 20:32:20 2008 -0400
+
+    RADEON: minor cleanups
+
+commit 9d3afbf5fa4110928a9f965df2733c79db92ea99
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Jun 3 11:40:49 2008 +0200
+
+    Call DRM_IOCTL_MODESET_CTL ioctl to avoid problems with DRM post vblank-rework.
+
+commit effa245914823371e052cd9aa1143a02350891e7
+Author: Alex Deucher <alex@botchco.com>
+Date:   Sun Jun 1 20:47:50 2008 -0400
+
+    ATOM: disable TV-out for now
+    
+    It only sort of works in NTSC mode and isn't handled correctly
+    in all cases yet.  Until we sort out the remaining details leave it
+    disabled.
+    See bugs: 16186, 16178, 16185
+
+commit 8504c6b0e40477ee544ad7f5366d569bdc53d6f0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri May 30 11:19:03 2008 -0400
+
+    RADEON: update RADEONGetVRAMType() for newer chips
+
+commit 7cb695a329a9b543ad61af08c2d7d6eaf56de35e
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri May 30 10:10:56 2008 -0400
+
+    RADEON: add Int10 option
+    
+    On some radeons you can't read the bios without initializing int10.
+    On ATOM-based secondary cards, intitializing int10 tends to hang the card.
+
+commit 714b2c63ec1c4a1410a6d521c03e9d1f90937c01
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu May 29 02:31:00 2008 -0400
+
+    RADEON: don't enable legacy bios table based init yet
+    
+    Needs more work and we need to figure out how best to decide
+    when to use it.
+
+commit e20b08525a64888287ec4a369d8f7dbde95c655d
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed May 28 14:43:47 2008 -0400
+
+    ATOM: fail of we are not able to get a bios image
+
+commit d4fa17b426b0cafac3184b2ea9b675e2ff154ee9
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed May 28 09:50:02 2008 -0400
+
+    R1xx: Gamma fixes for overlay
+
+commit c7e6a50f60a04bbbf1c1ddbf4738a5f75c94f950
+Author: Alex Deucher <alex@botchco.com>
+Date:   Wed May 28 09:05:19 2008 -0400
+
+    RADEON: only attempt to read vbios from legacy ISA space if it's primary
+
 commit faea008806802ec0e045754ec1eca492ebae320e
 Author: Alex Deucher <alex@botch2.com>
 Date:   Tue May 27 18:36:01 2008 -0400

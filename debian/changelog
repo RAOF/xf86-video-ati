@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.8.191-1) UNRELEASED; urgency=low
+
+  * New upstream release candidate.
+
+ -- Brice Goglin <bgoglin@debian.org>  Fri, 13 Jun 2008 01:00:11 +0200
+
 xserver-xorg-video-ati (1:6.8.1~git20080528.faea0088-1) experimental; urgency=low
 
   * New upstream snapshot, up to commit faea0088.
