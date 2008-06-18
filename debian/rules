@@ -75,11 +75,13 @@ binary-arch: build install serverabi
 	dh_install --sourcedir=debian/tmp --list-missing --exclude=.la --exclude=usr/share/man/man4
 	dh_installman
 	dh_link
-	dh_strip --dbg-package=xserver-xorg-video-ati-dbg
+	dh_strip -pxserver-xorg-video-ati --dbg-package=xserver-xorg-video-ati-dbg
+	dh_strip -pxserver-xorg-video-radeon --dbg-package=xserver-xorg-video-radeon-dbg
 	dh_compress
 	dh_fixperms
 	dh_installdeb
 	dh_shlibdeps -- --warnings=6
+	cp -f debian/xserver-xorg-video-ati.substvars debian/xserver-xorg-video-radeon.substvars # xsfbs serverabi hack
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

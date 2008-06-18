@@ -1,3 +1,13 @@
+xserver-xorg-video-ati (1:6.8.191-2) UNRELEASED; urgency=low
+
+  * Split the package into into the -ati package containing the ati driver
+    wrapper, and xserver-xorg-video-radeon containing the actual radeon
+    sub-driver.
+    xserver-xorg-video-ati now depends on -r128, -mach64 and -radeon
+    while -ati-dbg depends on their corresponding -dbg packages.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 18 Jun 2008 16:29:14 +0200
+
 xserver-xorg-video-ati (1:6.8.191-1) unstable; urgency=low
 
   * New upstream release candidate.

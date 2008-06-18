@@ -12,7 +12,7 @@ Index: xserver-xorg-video-ati/src/Makefile.am
  	radeon_atombios.h
 +
 +pcidatadir = $(datadir)/xserver-xorg/pci
-+pcidata_DATA = ati.ids
++pcidata_DATA = radeon.ids
 +
-+ati.ids: ati_pciids_gen.h
-+	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/ati_pciids_gen.h | sed -e 's/0x/1002/' > ati.ids
++radeon.ids: ati_pciids_gen.h
++	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/ati_pciids_gen.h | sed -e 's/0x/1002/' > radeon.ids

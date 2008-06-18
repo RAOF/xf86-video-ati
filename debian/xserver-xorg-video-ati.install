@@ -1,3 +1,1 @@
-usr/lib/xorg/modules/drivers/*.so
-usr/lib/xorg/modules/multimedia/*.so
-usr/share/xserver-xorg/pci/*
+usr/lib/xorg/modules/drivers/ati_drv.so

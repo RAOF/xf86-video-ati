@@ -433,7 +433,7 @@ EXTRA_DIST = \
 	radeon_atombios.h
 
 pcidatadir = $(datadir)/xserver-xorg/pci
-pcidata_DATA = ati.ids
+pcidata_DATA = radeon.ids
 all: all-am
 
 .SUFFIXES:
@@ -1000,8 +1000,8 @@ uninstall-am: uninstall-ati_drv_laLTLIBRARIES uninstall-pcidataDATA \
 	uninstall-theatre_drv_laLTLIBRARIES
 
 
-ati.ids: ati_pciids_gen.h
-	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/ati_pciids_gen.h | sed -e 's/0x/1002/' > ati.ids
+radeon.ids: ati_pciids_gen.h
+	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/ati_pciids_gen.h | sed -e 's/0x/1002/' > radeon.ids
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
