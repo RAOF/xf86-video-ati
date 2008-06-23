@@ -15,7 +15,7 @@ Description: X.Org X server -- ATI display driver wrapper
  This driver for the X.Org X server (see xserver-xorg for a further description)
  provides support for the ATI Mach64, Rage128, Radeon and FireGL series.
  It provides the 'ati' driver wrapper which loads one of the 'mach64', 'r128'
- or 'ati' sub-drivers depending on the hardware. These sub-drivers are brought
+ or 'radeon' sub-drivers depending on the hardware. These sub-drivers are brought
  through package dependencies.
  .
  More information about X.Org can be found at:
@@ -33,7 +33,7 @@ Description: X.Org X server -- ATI display driver wrapper (debugging symbols)
  This driver for the X.Org X server (see xserver-xorg for a further description)
  provides support for the ATI Mach64, Rage128, Radeon and FireGL series.
  It provides the 'ati' driver wrapper which loads one of the 'mach64', 'r128'
- or 'ati' sub-drivers depending on the hardware.
+ or 'radeon' sub-drivers depending on the hardware.
  .
  This package provides debugging symbols for the Xorg X server ATI display
  driver wrapper and brings debugging symbols for these sub-drivers through

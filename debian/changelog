@@ -1,3 +1,10 @@
+xserver-xorg-video-ati (1:6.8.191-4) UNRELEASED; urgency=low
+
+  * Fix typo in long description, thanks Anders Semb Hermansen,
+    closes: #487628.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 23 Jun 2008 14:14:34 +0200
+
 xserver-xorg-video-ati (1:6.8.191-3) unstable; urgency=low
 
   * xserver-xorg-video-radeon replaces earlier -ati packages, closes: #487527.
