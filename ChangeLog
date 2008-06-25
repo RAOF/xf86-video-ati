@@ -1,3 +1,132 @@
+commit 67a6ac0001bc9d062aa426384a11a41fa7a1c09a
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jun 24 21:06:37 2008 -0400
+
+    bump for rc release
+
+commit bd68507d2d66e03d8bcde5f6e7ea9b2dbfe8b8a0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jun 24 20:59:58 2008 -0400
+
+    RADEON: warning fix
+
+commit 8e534d69c9b19fc085f7c5ca9e18f5ea04f6fc12
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jun 24 20:08:35 2008 -0400
+
+    RADEON: cleanups
+    
+    - fix some warnings
+    - RS400 and RS480 are separate families now (update default tmds and dac2
+    tables)
+
+commit e78e8a21b4040cd7f1983c241c860d9209398396
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jun 24 19:53:28 2008 -0400
+
+    IGP: attempt to fix VGA on IGP chips
+    
+    VGA has never worked on some IGP chips.  While the chip only has
+    one DAC, it appears to use a mix of Primary DAC and TVDAC controls.
+    
+    See bug 15708
+
+commit faa4b4b8dbe9b8a452cfa60d53874350bb04e0cb
+Author: Jiří Paleček <jpalecek@web.de>
+Date:   Tue Jun 24 19:20:50 2008 -0400
+
+    RADEON: remove extraneous line from new pll code
+
+commit 72feaa37ea07620f5f2ead438dbc72a1c8883cd3
+Author: Jiří Paleček <jpalecek@web.de>
+Date:   Mon Jun 23 15:53:58 2008 -0400
+
+    RADEON: PLL tweaks
+    
+    Patch from Jiří Paleček (see debian bug 465864) with some tweaks
+    by me.
+    
+    - abort rather than programming bad dividers if no pll dividers can be found
+    - improve the pll selection algorithm
+    - in general, prefer lower ref dividers
+    
+    I've tested this patch on a wide variety of chips (r1xx-r6xx) and clocks.
+
+commit 9c2f909ea437a63a408d2398ecabe0b378dbb982
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Jun 23 10:38:15 2008 -0400
+
+    RADEON: adjust randr crtc/output prepare/commit ordering
+    
+    This fixes some occasional mode change problems with multiple heads active.
+    It seems radeons generally like to turn on the whole output/crtc setup
+    in one shot.
+
+commit aea9bf75cf0774afd3e65fcf3fd3851f5fb21ca3
+Author: Alex Deucher <alex@botch2.com>
+Date:   Sat Jun 21 10:57:05 2008 -0400
+
+    0x1002 0x5657 is actually RV410
+    
+    See bug 14289
+    
+    	com_bios_scratch.diff
+
+commit 38ce8a984f96056b7345bcc06505ba27e0e6d5b4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 20 14:16:22 2008 +1000
+
+    legacy: use entity MMIO for dpms as this can crossover between zaphod infos
+
+commit 1a7d9bc53512b0a5240176c949e6abf1ae2fb1fd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 20 14:14:21 2008 +1000
+
+    atombios: use MMIO from the entity not the info
+
+commit ef624b88903b1a87ef5b6388e18291f75776b93d
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Jun 19 18:20:52 2008 -0400
+
+    RADEON: fix read past the end of an array
+
+commit cfe814a481d8cf2005d738a0ca9782f1ed4177f5
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jun 20 07:51:27 2008 +1000
+
+    r600: don't add fb offset here to make shadowfb work.
+    
+    discovered on irc with wpwrak.
+
+commit 5b323a2cbbc412b6dd4e782438b64ee996558d05
+Merge: dd18caa... eed2415...
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Jun 20 07:49:16 2008 +1000
+
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit eed241553748125e902c44dcc8cf8e0605be071b
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Jun 17 17:42:31 2008 -0400
+
+    radeon: X_ERROR -> X_WARNING for num gb pipes
+    
+    This just means your drm is old, not fatal or anything
+
+commit dd18caa4b2efc430eaae0c4362b65641f9bef440
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Jun 14 18:37:56 2008 +1000
+
+    Revert "ATOM: disable TV-out for now"
+    
+    This reverts commit effa245914823371e052cd9aa1143a02350891e7.
+
+commit b416e97a1f16ef700ba1aaca317dee82b7a3cf64
+Author: Alex Deucher <alex@botch2.com>
+Date:   Fri Jun 13 02:21:31 2008 -0400
+
+    RADEON: man page updates
+
 commit 88ce87d79069662de28ecb3c10c140919927d584
 Author: Alex Deucher <alex@botchco.com>
 Date:   Thu Jun 12 15:10:47 2008 -0400
