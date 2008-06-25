@@ -1,11 +1,11 @@
-xserver-xorg-video-ati (1:6.8.192-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.8.192-1) unstable; urgency=low
 
   * New upstream release.
     + Add some PLL tweaks, closes: #465864.
   * Fix typo in long description, thanks Anders Semb Hermansen,
     closes: #487628.
 
- -- Brice Goglin <bgoglin@debian.org>  Wed, 25 Jun 2008 07:20:19 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 25 Jun 2008 07:26:16 +0200
 
 xserver-xorg-video-ati (1:6.8.191-3) unstable; urgency=low
 
