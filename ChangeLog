@@ -1,3 +1,65 @@
+commit c83fbdfa076c107012b7dfbbfbbb2feede00542b
+Author: Alex Deucher <alex@botchco.com>
+Date:   Thu Jun 26 19:48:45 2008 -0400
+
+    Bump for 6.9.0 release
+
+commit 32e1d1daf4f68ea37624afaa2bc1ea7742e1163b
+Author: Brad Smith <brad@comstyle.com>
+Date:   Thu Jun 26 10:22:03 2008 -0400
+
+    RADEON: sys/endian.h needs sys/types.h on BSDs
+    
+    See bug 16512
+
+commit dca522355a9039eca6efaba3b36397b246800f94
+Author: Brad Smith <brad@comstyle.com>
+Date:   Thu Jun 26 10:13:59 2008 -0400
+
+    RADEON: fix copy/paste error in accel code
+
+commit f4292e110105910d0c19bf2db28e2682b27af2c7
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 20 15:31:43 2008 +1000
+
+    Revert "Revert "ATOM: disable TV-out for now""
+    
+    Oops I really didn't mean to do this, I was testing something and it slipped
+    past.
+    
+    This reverts commit dd18caa4b2efc430eaae0c4362b65641f9bef440.
+
+commit bb1cfcbfbc1ace1f257fc3bf6401501f1a6da827
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jun 25 15:50:16 2008 -0400
+
+    RADEON: adjustments to Jerome's last commit
+    
+    - Flush caches and wait for idle after drawing
+    - Make sure 3D is idle too (after composite or textured video)
+
+commit 07be302f6dba61dd15918963fae66502230c74b7
+Merge: 8c9b8de... 5245974...
+Author: Jerome Glisse <glisse@freedesktop.org>
+Date:   Wed Jun 25 10:30:45 2008 +0200
+
+    Merge branch 'master' of git://anongit.freedesktop.org/xorg/driver/xf86-video-ati
+
+commit 8c9b8de0373797cba6f0a27e6b6f461e1070fef9
+Author: Jerome Glisse <glisse@freedesktop.org>
+Date:   Wed Jun 25 10:28:26 2008 +0200
+
+    radeon: flush & wait for 2d & dma idle after 2d blit
+    
+    This should help to avoid 2d & 3d engine to step on each
+    other dma transaction.
+
+commit 52459745ec05de88adbc087e9566fe6d97ef424b
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jun 25 17:09:11 2008 +1000
+
+    ati: hopefully fix byteswap mess for those other OSes.
+
 commit 67a6ac0001bc9d062aa426384a11a41fa7a1c09a
 Author: Alex Deucher <alex@botch2.com>
 Date:   Tue Jun 24 21:06:37 2008 -0400

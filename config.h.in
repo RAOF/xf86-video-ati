@@ -8,6 +8,9 @@
 /* Use linux pragma pack */
 #undef FGL_LINUX
 
+/* Define to 1 if you have the <byteswap.h> header file. */
+#undef HAVE_BYTESWAP_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -86,6 +89,9 @@
 /* Build support for Exa */
 #undef USE_EXA
 
+/* Define to use byteswap macros from <sys/endian.h> */
+#undef USE_SYS_ENDIAN_H
+
 /* Build support for XAA */
 #undef USE_XAA
 
@@ -100,3 +106,12 @@
 
 /* X server has built-in mode code */
 #undef XMODES
+
+/* Define to 16-bit byteswap macro */
+#undef bswap_16
+
+/* Define to 32-bit byteswap macro */
+#undef bswap_32
+
+/* Define to 64-bit byteswap macro */
+#undef bswap_64
