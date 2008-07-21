@@ -4239,6 +4239,7 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
     state->grph1.desktop_height = INREG(AVIVO_D1MODE_DESKTOP_HEIGHT);
     state->grph1.viewport_start = INREG(AVIVO_D1MODE_VIEWPORT_START);
     state->grph1.viewport_size = INREG(AVIVO_D1MODE_VIEWPORT_SIZE);
+    state->grph1.mode_data_format = INREG(AVIVO_D1MODE_DATA_FORMAT);
 
     state->crtc2.pll_source = INREG(AVIVO_PCLK_CRTC2_CNTL);
 
@@ -4279,6 +4280,7 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
     state->grph2.desktop_height = INREG(AVIVO_D2MODE_DESKTOP_HEIGHT);
     state->grph2.viewport_start = INREG(AVIVO_D2MODE_VIEWPORT_START);
     state->grph2.viewport_size = INREG(AVIVO_D2MODE_VIEWPORT_SIZE);
+    state->grph2.mode_data_format = INREG(AVIVO_D2MODE_DATA_FORMAT);
 
     if (IS_DCE3_VARIANT) {
 	/* save DVOA regs */
@@ -4536,12 +4538,14 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
     OUTREG(AVIVO_D1MODE_DESKTOP_HEIGHT, state->grph1.desktop_height);
     OUTREG(AVIVO_D1MODE_VIEWPORT_START, state->grph1.viewport_start);
     OUTREG(AVIVO_D1MODE_VIEWPORT_SIZE, state->grph1.viewport_size);
+    OUTREG(AVIVO_D1MODE_DATA_FORMAT, state->grph1.mode_data_format);
     OUTREG(AVIVO_D1SCL_UPDATE, 0);
 
     OUTREG(AVIVO_D2SCL_UPDATE, AVIVO_D1SCL_UPDATE_LOCK);
     OUTREG(AVIVO_D2MODE_DESKTOP_HEIGHT, state->grph2.desktop_height);
     OUTREG(AVIVO_D2MODE_VIEWPORT_START, state->grph2.viewport_start);
     OUTREG(AVIVO_D2MODE_VIEWPORT_SIZE, state->grph2.viewport_size);
+    OUTREG(AVIVO_D2MODE_DATA_FORMAT, state->grph2.mode_data_format);
     OUTREG(AVIVO_D2SCL_UPDATE, 0);
 
     /* Set the PLL */
