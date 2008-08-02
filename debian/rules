@@ -31,8 +31,8 @@ endif
 # kbd_drv.a isn't phenomenally useful; kbd_drv.so more so
 confflags += --disable-static
 
-build: patch build-stamp
-build-stamp:
+build: build-stamp
+build-stamp: $(STAMP_DIR)/patch
 	dh_testdir
 
 	test -d obj-$(DEB_BUILD_GNU_TYPE) || mkdir obj-$(DEB_BUILD_GNU_TYPE)
