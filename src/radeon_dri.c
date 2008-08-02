@@ -1103,7 +1103,7 @@ static int RADEONDRIKernelInit(RADEONInfoPtr info, ScreenPtr pScreen)
 
     drmInfo.sarea_priv_offset   = sizeof(XF86DRISAREARec);
     drmInfo.is_pci              = (info->cardType!=CARD_AGP);
-    drmInfo.cp_mode             = info->CPMode;
+    drmInfo.cp_mode             = RADEON_CSQ_PRIBM_INDBM;
     drmInfo.gart_size           = info->gartSize*1024*1024;
     drmInfo.ring_size           = info->ringSize*1024*1024;
     drmInfo.usec_timeout        = info->CPusecTimeout;
@@ -1211,6 +1211,12 @@ static void RADEONDRIIrqInit(RADEONInfoPtr info, ScreenPtr pScreen)
 	} else {
 	    unsigned char *RADEONMMIO = info->MMIO;
 	    info->ModeReg->gen_int_cntl = INREG( RADEON_GEN_INT_CNTL );
+
+	    /* Let the DRM know it can safely disable the vblank interrupts */
+	    radeon_crtc_modeset_ioctl(XF86_CRTC_CONFIG_PTR(pScrn)->crtc[0],
+				      FALSE);
+	    radeon_crtc_modeset_ioctl(XF86_CRTC_CONFIG_PTR(pScrn)->crtc[0],
+				      TRUE);
 	}
     }
 
@@ -1453,10 +1459,9 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
 		PCI_DEV_DEV(info->PciInfo),
 		PCI_DEV_FUNC(info->PciInfo));
     }
-    pDRIInfo->ddxDriverMajorVersion      = info->allowColorTiling ?
-    				RADEON_VERSION_MAJOR_TILED : RADEON_VERSION_MAJOR;
-    pDRIInfo->ddxDriverMinorVersion      = RADEON_VERSION_MINOR;
-    pDRIInfo->ddxDriverPatchVersion      = RADEON_VERSION_PATCH;
+    pDRIInfo->ddxDriverMajorVersion      = info->allowColorTiling ? 5 : 4;
+    pDRIInfo->ddxDriverMinorVersion      = 3;
+    pDRIInfo->ddxDriverPatchVersion      = 0;
     pDRIInfo->frameBufferPhysicalAddress = (void *)info->LinearAddr + info->frontOffset;
     pDRIInfo->frameBufferSize            = info->FbMapSize - info->FbSecureSize;
     pDRIInfo->frameBufferStride          = (pScrn->displayWidth *

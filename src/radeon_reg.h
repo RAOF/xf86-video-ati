@@ -3189,6 +3189,7 @@
 #define RADEON_CP_VC_CNTL_PRIM_TYPE_RECT_LIST       0x00000008
 #define RADEON_CP_VC_CNTL_PRIM_TYPE_3VRT_POINT_LIST 0x00000009
 #define RADEON_CP_VC_CNTL_PRIM_TYPE_3VRT_LINE_LIST  0x0000000a
+#define RADEON_CP_VC_CNTL_PRIM_TYPE_QUAD_LIST       0x0000000d
 #define RADEON_CP_VC_CNTL_PRIM_WALK_IND             0x00000010
 #define RADEON_CP_VC_CNTL_PRIM_WALK_LIST            0x00000020
 #define RADEON_CP_VC_CNTL_PRIM_WALK_RING            0x00000030
@@ -3422,6 +3423,7 @@
 #define RS690_MC_AGP_LOCATION			0x101
 #define RS690_MC_AGP_BASE			0x102
 #define RS690_MC_AGP_BASE_2                     0x103
+#define RS690_MC_INIT_MISC_LAT_TIMER            0x104
 #define RS690_MC_STATUS                         0x90
 #define RS690_MC_STATUS_IDLE                    (1 << 0)
 
@@ -3440,6 +3442,7 @@
 #       define R520_MC_STATUS_IDLE              (1 << 1)
 #define RV515_MC_STATUS                         0x08
 #       define RV515_MC_STATUS_IDLE             (1 << 4)
+#define RV515_MC_INIT_MISC_LAT_TIMER            0x09
 #define AVIVO_MC_DATA				0x0074
 
 #define RV515_MC_FB_LOCATION   0x1
@@ -3601,6 +3604,17 @@
 #define AVIVO_DC_LUTA_WHITE_OFFSET_BLUE         0x64d0
 #define AVIVO_DC_LUTA_WHITE_OFFSET_GREEN        0x64d4
 #define AVIVO_DC_LUTA_WHITE_OFFSET_RED          0x64d8
+
+#define AVIVO_DC_LB_MEMORY_SPLIT                0x6520
+#       define AVIVO_DC_LB_MEMORY_SPLIT_MASK    0x3
+#       define AVIVO_DC_LB_MEMORY_SPLIT_SHIFT   0
+#       define AVIVO_DC_LB_MEMORY_SPLIT_D1HALF_D2HALF  0
+#       define AVIVO_DC_LB_MEMORY_SPLIT_D1_3Q_D2_1Q    1
+#       define AVIVO_DC_LB_MEMORY_SPLIT_D1_ONLY        2
+#       define AVIVO_DC_LB_MEMORY_SPLIT_D1_1Q_D2_3Q    3
+#       define AVIVO_DC_LB_MEMORY_SPLIT_SHIFT_MODE (1 << 2)
+#       define AVIVO_DC_LB_DISP1_END_ADR_SHIFT  4
+#       define AVIVO_DC_LB_DISP1_END_ADR_MASK   0x7ff
 
 #define AVIVO_D1MODE_DATA_FORMAT                0x6528
 #       define AVIVO_D1MODE_INTERLEAVE_EN       (1 << 0)
@@ -3925,6 +3939,8 @@
 #define R600_MC_VM_SYSTEM_APERTURE_LOW_ADDR                        0x2190
 #define R600_MC_VM_SYSTEM_APERTURE_HIGH_ADDR                       0x2194
 #define R600_MC_VM_SYSTEM_APERTURE_DEFAULT_ADDR                    0x2198
+
+#define R700_MC_VM_FB_LOCATION                                     0x2024
 
 #define R600_HDP_NONSURFACE_BASE                                0x2c04
 

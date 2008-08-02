@@ -669,7 +669,14 @@ static void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, uint32_
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+    if (info->ChipFamily >= CHIP_FAMILY_RV770) {
+	if (mask & LOC_FB)
+	    OUTREG(R700_MC_VM_FB_LOCATION, fb_loc);
+	if (mask & LOC_AGP) {
+	    OUTREG(R600_MC_VM_AGP_BOT, agp_loc);
+	    OUTREG(R600_MC_VM_AGP_TOP, agp_loc_hi);
+	}
+    } else if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	if (mask & LOC_FB)
 	    OUTREG(R600_MC_VM_FB_LOCATION, fb_loc);
 	if (mask & LOC_AGP) {
@@ -712,7 +719,14 @@ static void radeon_read_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, uint32_t
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+    if (info->ChipFamily >= CHIP_FAMILY_RV770) {
+	if (mask & LOC_FB)
+	    *fb_loc = INREG(R700_MC_VM_FB_LOCATION);
+	if (mask & LOC_AGP) {
+	    *agp_loc = INREG(R600_MC_VM_AGP_BOT);
+	    *agp_loc_hi = INREG(R600_MC_VM_AGP_TOP);
+	}
+    } else if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	if (mask & LOC_FB)
 	    *fb_loc = INREG(R600_MC_VM_FB_LOCATION);
 	if (mask & LOC_AGP) {
@@ -2032,7 +2046,10 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 
 static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 {
+#if (!defined(__powerpc__) && !defined(__sparc__)) || \
+    (defined(XSERVER_LIBPCIACCESS) && HAVE_PCI_DEVICE_ENABLE)
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+#endif
 #if !defined(__powerpc__) && !defined(__sparc__)
     unsigned char *RADEONMMIO = info->MMIO;
     uint32_t       fp2_gen_ctl_save   = 0;
@@ -2109,19 +2126,16 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 
     if (info->Chipset == PCI_CHIP_RN50_515E ||
 	info->Chipset == PCI_CHIP_RN50_5969 ||
-	info->Chipset == PCI_CHIP_RC410_5A61 ||
-	info->Chipset == PCI_CHIP_RC410_5A62 ||
-	info->Chipset == PCI_CHIP_RS485_5975 ||
 	info->ChipFamily == CHIP_FAMILY_RS600 ||
 	info->ChipFamily >= CHIP_FAMILY_R600) {
 	if (xf86ReturnOptValBool(info->Options, OPTION_DRI, FALSE)) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		"Direct rendering for RN50/RC410/RS485/RS600/R600 forced on -- "
+		"Direct rendering for RN50/RS600/R600 forced on -- "
 		"This is NOT officially supported at the hardware level "
 		"and may cause instability or lockups\n");
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		"Direct rendering not officially supported on RN50/RC410/R600\n");
+		"Direct rendering not officially supported on RN50/RS600/R600\n");
 	    return FALSE;
 	}
     }
@@ -2170,14 +2184,11 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 	"Direct rendering experimental on RS400/Xpress 200 enabled\n");
     }
 
-    if (xf86ReturnOptValBool(info->Options, OPTION_CP_PIO, FALSE)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forcing CP into PIO mode\n");
-	info->CPMode = RADEON_DEFAULT_CP_PIO_MODE;
-    } else {
-	info->CPMode = RADEON_DEFAULT_CP_BM_MODE;
-    }
+    if (info->ChipFamily >= CHIP_FAMILY_R300)
+	info->gartSize      = R300_DEFAULT_GART_SIZE;
+    else
+	info->gartSize      = RADEON_DEFAULT_GART_SIZE;
 
-    info->gartSize      = RADEON_DEFAULT_GART_SIZE;
     info->ringSize      = RADEON_DEFAULT_RING_SIZE;
     info->bufSize       = RADEON_DEFAULT_BUFFER_SIZE;
     info->gartTexSize   = RADEON_DEFAULT_GART_TEX_SIZE;
@@ -4181,6 +4192,7 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
 
     state->crtc_master_en = INREG(AVIVO_DC_CRTC_MASTER_EN);
     state->crtc_tv_control = INREG(AVIVO_DC_CRTC_TV_CONTROL);
+    state->dc_lb_memory_split = INREG(AVIVO_DC_LB_MEMORY_SPLIT);
 
     state->pll1.ref_div_src = INREG(AVIVO_EXT1_PPLL_REF_DIV_SRC);
     state->pll1.ref_div = INREG(AVIVO_EXT1_PPLL_REF_DIV);
@@ -4811,6 +4823,7 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 
     /* Where should that go ? */
     OUTREG(AVIVO_DC_CRTC_TV_CONTROL, state->crtc_tv_control);
+    OUTREG(AVIVO_DC_LB_MEMORY_SPLIT, state->dc_lb_memory_split);
 
     /* Need fixing too ? */
     OUTREG(AVIVO_D1CRTC_BLANK_CONTROL, state->crtc1.blank_control);
