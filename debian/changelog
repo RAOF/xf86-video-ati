@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.9.0+git20080802.1f3eee36-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.9.0+git20080802.1f3eee36-1) experimental; urgency=low
 
   * Pull upstream snapshot, up to commit 1f3eee36.
   * Don't handle the nostrip build option in debian/rules, dh_strip does that;
@@ -6,7 +6,7 @@ xserver-xorg-video-ati (1:6.9.0+git20080802.1f3eee36-1) UNRELEASED; urgency=low
   * Run autoreconf at build-time; build-depend on automake, libtool and
     xutils-dev.
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 22:52:32 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 22:56:07 +0200
 
 xserver-xorg-video-ati (1:6.9.0-2) experimental; urgency=low
 
