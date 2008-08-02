@@ -2,8 +2,10 @@ xserver-xorg-video-ati (1:6.9.0-3) UNRELEASED; urgency=low
 
   * Don't handle the nostrip build option in debian/rules, dh_strip does that;
     allow the parallel=n option.
+  * Run autoreconf at build-time; build-depend on automake, libtool and
+    xutils-dev.
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 21:38:07 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 21:42:40 +0200
 
 xserver-xorg-video-ati (1:6.9.0-2) experimental; urgency=low
 
