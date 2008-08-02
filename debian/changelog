@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.9.0-1+lenny2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.9.0-1+lenny2) unstable; urgency=low
 
   * Cherry-pick patches from the upstream git repository:
     + IGP VGA fixes.
@@ -20,7 +20,7 @@ xserver-xorg-video-ati (1:6.9.0-1+lenny2) UNRELEASED; urgency=low
     + R300: NUM_FPU adjustments for VAP_CNTL.
   * Fix debian/rules build/patch dependencies.
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 18:54:00 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 18:54:49 +0200
 
 xserver-xorg-video-ati (1:6.9.0-1+lenny1) unstable; urgency=low
 
