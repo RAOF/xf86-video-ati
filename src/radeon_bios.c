@@ -273,6 +273,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     RADEONInfoPtr info     = RADEONPTR(pScrn);
     int tmp;
     unsigned short dptr;
+    Bool unposted = FALSE;
 
 #ifdef XSERVER_LIBPCIACCESS
     int size = info->PciInfo->rom_size > RADEON_VBIOS_SIZE ? info->PciInfo->rom_size : RADEON_VBIOS_SIZE;
@@ -291,6 +292,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 			 RADEON_VBIOS_SIZE);
 	} else if (!radeon_read_bios(pScrn)) {
 	    (void)radeon_read_unposted_bios(pScrn);
+	    unposted = TRUE;
 	}
     }
 
@@ -326,7 +328,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 	info->VBIOS = NULL;
 	return FALSE;
     }
- 
+
     tmp = info->ROMHeaderStart + 4;
     if ((RADEON_BIOS8(tmp)   == 'A' &&
 	 RADEON_BIOS8(tmp+1) == 'T' &&
@@ -344,51 +346,76 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 	       info->IsAtomBios ? "ATOM":"Legacy");
 
     if (info->IsAtomBios) {
-        AtomBiosArgRec atomBiosArg;
+	AtomBiosArgRec atomBiosArg;
 
-        if (RHDAtomBiosFunc(pScrn->scrnIndex, NULL, ATOMBIOS_INIT, &atomBiosArg)
-            == ATOM_SUCCESS) {
-            info->atomBIOS = atomBiosArg.atomhandle;
-        }
+	if (RHDAtomBiosFunc(pScrn->scrnIndex, NULL, ATOMBIOS_INIT, &atomBiosArg)
+	    == ATOM_SUCCESS) {
+	    info->atomBIOS = atomBiosArg.atomhandle;
+	}
 
-        atomBiosArg.fb.start = info->FbFreeStart;
-        atomBiosArg.fb.size = info->FbFreeSize;
-        if (RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS, ATOMBIOS_ALLOCATE_FB_SCRATCH,
+	atomBiosArg.fb.start = info->FbFreeStart;
+	atomBiosArg.fb.size = info->FbFreeSize;
+	if (RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS, ATOMBIOS_ALLOCATE_FB_SCRATCH,
 			    &atomBiosArg) == ATOM_SUCCESS) {
 
 	    info->FbFreeStart = atomBiosArg.fb.start;
 	    info->FbFreeSize = atomBiosArg.fb.size;
-        }
+	}
 
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS, GET_DEFAULT_ENGINE_CLOCK,
-                        &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS, GET_DEFAULT_MEMORY_CLOCK,
-                        &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
-                        GET_MAX_PIXEL_CLOCK_PLL_OUTPUT, &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
-                        GET_MIN_PIXEL_CLOCK_PLL_OUTPUT, &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
-                        GET_MAX_PIXEL_CLOCK_PLL_INPUT, &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS, GET_DEFAULT_ENGINE_CLOCK,
+			&atomBiosArg);
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS, GET_DEFAULT_MEMORY_CLOCK,
+			&atomBiosArg);
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+			GET_MAX_PIXEL_CLOCK_PLL_OUTPUT, &atomBiosArg);
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+			GET_MIN_PIXEL_CLOCK_PLL_OUTPUT, &atomBiosArg);
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+			GET_MAX_PIXEL_CLOCK_PLL_INPUT, &atomBiosArg);
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
 			GET_MIN_PIXEL_CLOCK_PLL_INPUT, &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
 			GET_MAX_PIXEL_CLK, &atomBiosArg);
-        RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
-                        GET_REF_CLOCK, &atomBiosArg);
+	RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+			GET_REF_CLOCK, &atomBiosArg);
 
 	info->MasterDataStart = RADEON_BIOS16 (info->ROMHeaderStart + 32);
     }
+
+    /* We are a bit too quick at using this "unposted" to re-post the
+     * card. This causes some problems with VT switch on some machines,
+     * so let's work around this for now by only POSTing if none of the
+     * CRTCs are enabled
+     */
+    if (unposted && info->VBIOS) {	
+	    unsigned char *RADEONMMIO = info->MMIO;
+	    uint32_t reg;
+
+	    if (IS_AVIVO_VARIANT) {
+		    reg = INREG(AVIVO_D1CRTC_CONTROL) | INREG(AVIVO_D2CRTC_CONTROL);
+		    if (reg & AVIVO_CRTC_EN)
+			    unposted = FALSE;
+	    } else {
+		    reg = INREG(RADEON_CRTC_GEN_CNTL) | INREG(RADEON_CRTC2_GEN_CNTL);
+		    if (reg & RADEON_CRTC_EN)
+			    unposted = FALSE;
+	    }
+    }
+
+    if (unposted && info->VBIOS) {
+	if (info->IsAtomBios) {
+	    if (!rhdAtomASICInit(info->atomBIOS))
+		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+			   "%s: AsicInit failed.\n",__func__);
+	} else {
 #if 0
-    else {
-	/* non-primary card may need posting */
-	if (!pInt10) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Attempting to POST via BIOS tables\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Attempting to POST via legacy BIOS tables\n");
 	    RADEONGetBIOSInitTableOffsets(pScrn);
 	    RADEONPostCardFromBIOSTables(pScrn);
+#endif
 	}
     }
-#endif
+
     return TRUE;
 }
 
@@ -451,6 +478,16 @@ static void RADEONApplyLegacyQuirks(ScrnInfoPtr pScrn, int index)
 	PCI_SUB_DEVICE_ID(info->PciInfo) == 0x013a) {
 	if (info->BiosConnector[index].ConnectorType == CONNECTOR_DVI_I) {
 	    info->BiosConnector[index].ConnectorType = CONNECTOR_VGA;
+	}
+    }
+
+    /* X300 card with extra non-existent DVI port */
+    if (info->Chipset == PCI_CHIP_RV370_5B60 &&
+	PCI_SUB_VENDOR_ID(info->PciInfo) == 0x17af &&
+	PCI_SUB_DEVICE_ID(info->PciInfo) == 0x201e &&
+	index == 2) {
+	if (info->BiosConnector[index].ConnectorType == CONNECTOR_DVI_I) {
+	    info->BiosConnector[index].valid = FALSE;
 	}
     }
 
@@ -529,7 +566,9 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 		info->BiosConnector[i].DACType = DAC_PRIMARY;
 
 	    /* For RS300/RS350/RS400 chips, there is no primary DAC. Force VGA port to use TVDAC*/
-	    if (info->IsIGP)
+	    if ((info->ChipFamily == CHIP_FAMILY_RS300) ||
+		(info->ChipFamily == CHIP_FAMILY_RS400) ||
+		(info->ChipFamily == CHIP_FAMILY_RS480))
 		info->BiosConnector[i].DACType = DAC_TVDAC;
 
 	    if ((tmp >> 4) & 0x1)

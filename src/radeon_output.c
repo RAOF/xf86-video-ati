@@ -537,7 +537,7 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 		if (IS_AVIVO_VARIANT) {
 		    /* set to the panel's native mode */
 		    adjusted_mode->HDisplay = radeon_output->PanelXRes;
-		    adjusted_mode->HDisplay = radeon_output->PanelYRes;
+		    adjusted_mode->VDisplay = radeon_output->PanelYRes;
 		    adjusted_mode->HTotal = radeon_output->PanelXRes + radeon_output->HBlank;
 		    adjusted_mode->HSyncStart = radeon_output->PanelXRes + radeon_output->HOverPlus;
 		    adjusted_mode->HSyncEnd = adjusted_mode->HSyncStart + radeon_output->HSyncWidth;
@@ -578,6 +578,13 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 		adjusted_mode->Flags = radeon_output->Flags;
 	    }
 	}
+    }
+
+    if (IS_AVIVO_VARIANT) {
+	/* hw bug */
+	if ((mode->Flags & V_INTERLACE)
+	    && (mode->CrtcVSyncStart < (mode->CrtcVDisplay + 2)))
+	    adjusted_mode->CrtcVSyncStart = adjusted_mode->CrtcVDisplay + 2;
     }
 
     return TRUE;
@@ -2301,7 +2308,7 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 	info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_DVI_DDC);
 	info->BiosConnector[0].DACType = DAC_NONE;
 	info->BiosConnector[0].TMDSType = TMDS_NONE;
-	info->BiosConnector[0].ConnectorType = CONNECTOR_VGA;
+	info->BiosConnector[0].ConnectorType = CONNECTOR_LVDS;
 	info->BiosConnector[0].valid = TRUE;
 
 	info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);

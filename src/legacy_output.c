@@ -48,6 +48,8 @@
 #include "radeon_tv.h"
 #include "radeon_atombios.h"
 
+#include "ati_pciids_gen.h"
+
 static RADEONMonitorType radeon_detect_tv(ScrnInfoPtr pScrn);
 static RADEONMonitorType radeon_detect_primary_dac(ScrnInfoPtr pScrn, Bool color);
 static RADEONMonitorType radeon_detect_tv_dac(ScrnInfoPtr pScrn, Bool color);
@@ -727,14 +729,6 @@ RADEONEnableDisplay(xf86OutputPtr output, BOOL bEnable)
 		    save->crtc2_gen_cntl |= RADEON_CRTC2_CRT2_ON;
 		}
 		tv_dac_change = 1;
-		/* IGP chips seem to use a mix of Primary and TVDAC controls */
-		if (info->IsIGP) {
-		    tmp = INREG(RADEON_CRTC_EXT_CNTL);
-		    tmp |= RADEON_CRTC_CRT_ON;
-		    OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
-		    save->crtc_ext_cntl |= RADEON_CRTC_CRT_ON;
-		    RADEONDacPowerSet(pScrn, bEnable, TRUE);
-		}
 	    }
 	} else if (radeon_output->MonType == MT_DFP) {
 	    if (radeon_output->TMDSType == TMDS_INT) {
@@ -814,14 +808,6 @@ RADEONEnableDisplay(xf86OutputPtr output, BOOL bEnable)
 			OUTREG(RADEON_CRTC2_GEN_CNTL, tmp);
 			save->crtc2_gen_cntl &= ~RADEON_CRTC2_CRT2_ON;
 		    }
-		}
-		/* IGP chips seem to use a mix of Primary and TVDAC controls */
-		if (info->IsIGP) {
-		    tmp = INREG(RADEON_CRTC_EXT_CNTL);
-		    tmp &= ~RADEON_CRTC_CRT_ON;
-		    OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
-		    save->crtc_ext_cntl &= ~RADEON_CRTC_CRT_ON;
-		    RADEONDacPowerSet(pScrn, bEnable, TRUE);
 		}
 	    }
 	} else if (radeon_output->MonType == MT_DFP) {
@@ -1033,9 +1019,14 @@ RADEONInitFP2Registers(xf86OutputPtr output, RADEONSavePtr save,
 			    RADEON_FP2_DVO_RATE_SEL_SDR);
 
 
-    /* XXX: these may be oem specific */
+    /* XXX: these are oem specific */
     if (IS_R300_VARIANT) {
-	save->fp2_gen_cntl |= RADEON_FP2_PAD_FLOP_EN | R300_FP2_DVO_CLOCK_MODE_SINGLE;
+	if ((info->Chipset == PCI_CHIP_RV350_NP) &&
+	    (PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1028) &&
+	    (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x2001))
+	    save->fp2_gen_cntl |= R300_FP2_DVO_CLOCK_MODE_SINGLE; /* Dell Inspiron 8600 */
+	else
+	    save->fp2_gen_cntl |= RADEON_FP2_PAD_FLOP_EN | R300_FP2_DVO_CLOCK_MODE_SINGLE;
 #if 0
 	if (mode->Clock > 165000)
 	    save->fp2_gen_cntl |= R300_FP2_DVO_DUAL_CHANNEL_EN;
@@ -1383,7 +1374,6 @@ RADEONInitOutputRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
 {
     Bool IsPrimary = crtc_num == 0 ? TRUE : FALSE;
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
-    RADEONInfoPtr info = RADEONPTR(pScrn);
 
     if (crtc_num == 0)
 	RADEONInitRMXRegisters(output, save, mode);
@@ -1393,9 +1383,6 @@ RADEONInitOutputRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
 	    RADEONInitDACRegisters(output, save, mode, IsPrimary);
 	} else {
 	    RADEONInitDAC2Registers(output, save, mode, IsPrimary);
-	    /* IGP chips seem to use a mix of primary and TVDAC controls */
-	    if (info->IsIGP)
-		RADEONInitDACRegisters(output, save, mode, IsPrimary);
 	}
     } else if (radeon_output->MonType == MT_LCD) {
 	RADEONInitLVDSRegisters(output, save, mode, IsPrimary);

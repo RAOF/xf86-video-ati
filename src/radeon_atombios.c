@@ -501,11 +501,11 @@ rhdAtomASICInit(atomBiosHandlePtr handle)
     RHDAtomBiosFunc(handle->scrnIndex, handle,
 		    GET_DEFAULT_ENGINE_CLOCK,
 		    &data);
-    asicInit.sASICInitClocks.ulDefaultEngineClock = data.val / 10;/*in 10 Khz*/
+    asicInit.sASICInitClocks.ulDefaultEngineClock = cpu_to_le32(data.val / 10);/*in 10 Khz*/
     RHDAtomBiosFunc(handle->scrnIndex, handle,
 		    GET_DEFAULT_MEMORY_CLOCK,
 		    &data);
-    asicInit.sASICInitClocks.ulDefaultMemoryClock = data.val / 10;/*in 10 Khz*/
+    asicInit.sASICInitClocks.ulDefaultMemoryClock = cpu_to_le32(data.val / 10);/*in 10 Khz*/
     data.exec.dataSpace = NULL;
     data.exec.index = 0x0;
     data.exec.pspace = &asicInit;
@@ -609,17 +609,6 @@ rhdAtomInit(atomBiosHandlePtr unused1, AtomBiosRequestID unused2,
 #endif
     handle->BIOSImageSize = BIOSImageSize;
 
-# if ATOM_BIOS_PARSER
-    /* Try to find out if BIOS has been posted (either by system or int10 */
-    if (!rhdAtomGetFbBaseAndSize(handle, NULL, NULL)) {
-	/* run AsicInit */
-	if (!rhdAtomASICInit(handle))
-	    xf86DrvMsg(scrnIndex, X_WARNING,
-		       "%s: AsicInit failed. Won't be able to obtain in VRAM "
-		       "FB scratch space\n",__func__);
-    }
-# endif
-
     data->atomhandle = handle;
     return ATOM_SUCCESS;
 
@@ -654,12 +643,18 @@ rhdAtomVramInfoQuery(atomBiosHandlePtr handle, AtomBiosRequestID func,
 
     switch (func) {
 	case GET_FW_FB_START:
-	    *val = le32_to_cpu(atomDataPtr->VRAM_UsageByFirmware
-			       ->asFirmwareVramReserveInfo[0].ulStartAddrUsedByFirmware);
+	    if (atomDataPtr->VRAM_UsageByFirmware)
+		*val = le32_to_cpu(atomDataPtr->VRAM_UsageByFirmware
+				   ->asFirmwareVramReserveInfo[0].ulStartAddrUsedByFirmware);
+	    else
+		return ATOM_NOT_IMPLEMENTED;
 	    break;
 	case GET_FW_FB_SIZE:
-	    *val =  le16_to_cpu(atomDataPtr->VRAM_UsageByFirmware
-				->asFirmwareVramReserveInfo[0].usFirmwareUseInKb);
+	    if (atomDataPtr->VRAM_UsageByFirmware)
+		*val =  le16_to_cpu(atomDataPtr->VRAM_UsageByFirmware
+				    ->asFirmwareVramReserveInfo[0].usFirmwareUseInKb);
+	    else
+		return ATOM_NOT_IMPLEMENTED;
 	    break;
 	default:
 	    return ATOM_NOT_IMPLEMENTED;
@@ -1751,6 +1746,15 @@ static void RADEONApplyATOMQuirks(ScrnInfoPtr pScrn, int index)
 	}
     }
 
+    /* Falcon NW laptop lists vga ddc line for LVDS */
+    if ((info->Chipset == PCI_CHIP_RV410_5653) &&
+	(PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1462) &&
+	(PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0291)) {
+	if (info->BiosConnector[index].ConnectorType == CONNECTOR_LVDS) {
+	    info->BiosConnector[index].ddc_i2c.valid = FALSE;
+	}
+    }
+
 }
 
 Bool
@@ -2027,9 +2031,12 @@ RHDAtomBiosFunc(int scrnIndex, atomBiosHandlePtr handle,
 VOID*
 CailAllocateMemory(VOID *CAIL,UINT16 size)
 {
+    void *ret;
     CAILFUNC(CAIL);
 
-    return malloc(size);
+    ret = malloc(size);
+    memset(ret, 0, size);
+    return ret;
 }
 
 VOID
@@ -2253,6 +2260,17 @@ atombios_get_command_table_version(atomBiosHandlePtr atomBIOS, int index, int *m
 
     *major = table_hdr->CommonHeader.ucTableFormatRevision;
     *minor = table_hdr->CommonHeader.ucTableContentRevision;
+}
+
+
+UINT16 ATOM_BSWAP16(UINT16 x)
+{
+    return bswap_16(x);
+}
+
+UINT32 ATOM_BSWAP32(UINT32 x)
+{
+    return bswap_32(x);
 }
 
 

@@ -209,21 +209,23 @@ radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
     if (xorigin >= CURSOR_WIDTH)  xorigin = CURSOR_WIDTH - 1;
     if (yorigin >= CURSOR_HEIGHT) yorigin = CURSOR_HEIGHT - 1;
 
-    if (mode->Flags & V_INTERLACE)
-	y /= 2;
-    else if (mode->Flags & V_DBLSCAN)
-	y *= 2;
-
     if (IS_AVIVO_VARIANT) {
 	/* avivo cursor spans the full fb width */
-	x += crtc->x;
-	y += crtc->y;
+	if (crtc->rotatedData == NULL) {
+	    x += crtc->x;
+	    y += crtc->y;
+	}
 	avivo_lock_cursor(crtc, TRUE);
 	OUTREG(AVIVO_D1CUR_POSITION + radeon_crtc->crtc_offset, ((xorigin ? 0 : x) << 16)
 	       | (yorigin ? 0 : y));
 	OUTREG(AVIVO_D1CUR_HOT_SPOT + radeon_crtc->crtc_offset, (xorigin << 16) | yorigin);
 	avivo_lock_cursor(crtc, FALSE);
     } else {
+	if (mode->Flags & V_INTERLACE)
+	    y /= 2;
+	else if (mode->Flags & V_DBLSCAN)
+	    y *= 2;
+
 	if (crtc_id == 0) {
 	    OUTREG(RADEON_CUR_HORZ_VERT_OFF,  (RADEON_CUR_LOCK
 					       | (xorigin << 16)

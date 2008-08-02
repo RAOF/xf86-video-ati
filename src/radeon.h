@@ -98,6 +98,36 @@
 #define MIN(a,b) ((a)>(b)?(b):(a))
 #endif
 
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#elif defined(USE_SYS_ENDIAN_H)
+#include <sys/endian.h>
+#else
+#define bswap_16(value)  \
+        ((((value) & 0xff) << 8) | ((value) >> 8))
+
+#define bswap_32(value) \
+        (((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
+        (uint32_t)bswap_16((uint16_t)((value) >> 16)))
+ 
+#define bswap_64(value) \
+        (((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) \
+            << 32) | \
+        (uint64_t)bswap_32((uint32_t)((value) >> 32)))
+#endif
+
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+#define le32_to_cpu(x) bswap_32(x)
+#define le16_to_cpu(x) bswap_16(x)
+#define cpu_to_le32(x) bswap_32(x)
+#define cpu_to_le16(x) bswap_16(x)
+#else
+#define le32_to_cpu(x) (x)
+#define le16_to_cpu(x) (x)
+#define cpu_to_le32(x) (x)
+#define cpu_to_le16(x) (x)
+#endif
+
 /* Provide substitutes for gcc's __FUNCTION__ on other compilers */
 #if !defined(__GNUC__) && !defined(__FUNCTION__)
 # define __FUNCTION__ __func__		/* C99 */
@@ -787,7 +817,6 @@ do {									\
 extern void legacy_crtc_dpms(xf86CrtcPtr crtc, int mode);
 extern void legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 				 DisplayModePtr adjusted_mode, int x, int y);
-extern void RADEONInitDispBandwidth(ScrnInfoPtr pScrn);
 extern void RADEONRestoreCommonRegisters(ScrnInfoPtr pScrn,
 					 RADEONSavePtr restore);
 extern void RADEONRestoreCrtcRegisters(ScrnInfoPtr pScrn,
@@ -894,6 +923,7 @@ extern DisplayModePtr RADEONCrtcFindClosestMode(xf86CrtcPtr crtc,
 						DisplayModePtr pMode);
 extern void RADEONUnblank(ScrnInfoPtr pScrn);
 extern Bool RADEONSetTiling(ScrnInfoPtr pScrn);
+extern void RADEONInitDispBandwidth(ScrnInfoPtr pScrn);
 
 /* radeon_cursor.c */
 extern Bool RADEONCursorInit(ScreenPtr pScreen);

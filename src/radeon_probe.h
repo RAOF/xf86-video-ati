@@ -310,8 +310,10 @@ struct avivo_grph_state {
     uint32_t x_end;
     uint32_t y_end;
 
+    uint32_t desktop_height;
     uint32_t viewport_start;
     uint32_t viewport_size;
+    uint32_t mode_data_format;
 };
 
 struct avivo_state
