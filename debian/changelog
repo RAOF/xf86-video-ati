@@ -1,3 +1,26 @@
+xserver-xorg-video-ati (1:6.9.0-1+lenny2) UNRELEASED; urgency=low
+
+  * Cherry-pick patches from the upstream git repository:
+    + IGP VGA fixes.
+    + Add PCI ids for FireMV 2400 and HD3850.
+    + Clamp tex coords (r100/r200) for textured video (closes: #489779).
+    + Atombios: add support for other endians.
+    + Add quirk for Falcon NW laptop.
+    + Fix cursor with multi-head and rotation.
+    + Make sure cursor offsets are properly aligned when using EXA.
+    + Atombios: fix typo in mode conversion for panel.
+    + ATOM: fix for r4xx cards with no VRAM_Usage tables (closes: #467263)
+    + Fix console switch on R500.
+    + Add oem quirk for external tmds setup on Dell Inspiron 8600.
+    + Clean up legacy display watermark setup.
+    + Clear display priority bits before resetting them.
+    + Interlaced mode fixups for AVIVO chips.
+    + Add quirk for oem x300 card (closes: #492457).
+    + Fix error in driver connector table for powerbook w/ vga.
+    + R300: NUM_FPU adjustments for VAP_CNTL.
+
+ -- Brice Goglin <bgoglin@debian.org>  Sat, 02 Aug 2008 18:25:52 +0200
+
 xserver-xorg-video-ati (1:6.9.0-1+lenny1) unstable; urgency=low
 
   * Do not export MACH64, MACH32 and R128 pci ids in radeon.ids,

@@ -1,3 +1,186 @@
+commit 6c23ba42869a36d4a9c82ea8ba36e1098c461756
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jul 11 19:05:00 2008 -0400
+
+    R300: NUM_FPU adjustments for VAP_CNTL
+    (cherry picked from commit ab14f725676e4d4e45278c64b03fe2d328a3e439)
+
+commit 42aa10126169368845948e8669d74e08550568bc
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jul 28 17:12:41 2008 -0400
+
+    Fix error in driver connector table for powerbook w/ vga
+    (cherry picked from commit 0a505297f09aefb1b4432176a263bfdf6f256f77)
+
+commit 674f167876a99ca2171f51a6d42f4d994dd73820
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jul 28 11:09:10 2008 -0400
+
+    Add quirk for oem x300 card
+    
+    - debian bug 492457
+    (cherry picked from commit d5799ac53c3e1b2ca1da97780b171a44060c3aad)
+
+commit efbc15c5f470f941727b1a0acdc2c9b1719df245
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jul 21 13:47:09 2008 -0400
+
+    Interlaced mode fixups for AVIVO chips
+    (cherry picked from commit b0378bb145c8a915c943bef7d17f2cdecfccc891)
+
+commit cc94ae803a9d8a30d4eae8615d788033c8a23bb8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jul 21 10:36:48 2008 -0400
+
+    Clear display priority bits before resetting them
+    (cherry picked from commit c18fad622a3c4f9572051120d83af68b625b5686)
+
+commit b92f15495e40f86abd295393745af94c377a32c9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jul 21 10:30:41 2008 -0400
+
+    Clean up legacy display watermark setup
+    
+    - makes crtc1 and crtc2 watermark setup independant.
+    - fixes the case where only crtc2 is active
+    (cherry picked from commit dc231ff8e063313d2bcf5acccad67a9f8a7e3314)
+
+commit e96ae005ee43fd51b93fbfb981301a8c4fce0e56
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Jul 19 11:34:16 2008 -0400
+
+    Add oem quirk for external tmds setup on Dell Inspiron 8600
+    
+    Noticed by fnord42 on IRC.
+    (cherry picked from commit ecb6347a3d7071890600c98c2addef3a8ca260ee)
+
+commit c4619531386d7e2959676b9fda565b755c113cd3
+Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date:   Thu Jul 17 14:37:05 2008 +1000
+
+    Fix console switch on R500
+    
+    This patch fixes the console switch for me on R5xx.
+    
+    There are two aspects to it:
+    
+     - Fix the ordering of avivo_restore() to better match what's
+    happening in the driver & ATOM, properly locking/unlocking and
+    only enabling the CRTCs after everything has been properly
+    programmed.
+    
+     - Don't ASIC_INIT if the card has any CRTC enabled. This is the
+    best I came up with for avoiding spurrious ASIC_INIT on cards that
+    -are- POSTed but don't have the BIOS coming from c0000 on x86. The
+    problem with spurrious ASIC_INIT is that we do it before we do
+    RADEONSave(), so that screws up the console switch.
+    
+    Note that I think we also should save/restore the palette, I don't think
+    we do. right now, it's a minor issue for me because I fixed offb to be
+    able to set it on AVIVO's but it might still have to be done in the long
+    run.
+    
+    Tested with a VGA analog setup on DACA and a DVI setup on TMDS 0. I
+    haven't tested any other combo but that should get us going.
+    
+    Cheers,
+    Ben.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+    (cherry picked from commit df53d12a06fad41f00cff849458cb358ab5e2098)
+
+commit 42f9bfd17c116d365eb022a1776521d60676debb
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jul 15 17:50:32 2008 -0400
+
+    ATOM: fix for r4xx cards with no VRAM_Usage tables
+    
+    fixes bug 15954
+    (cherry picked from commit e8c07270e1fc2ee455320370692aaf90abac2773)
+
+commit b54cd719990c1dcc08e53e5cd399ffb010193855
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Jul 12 18:47:07 2008 +1000
+
+    atombios: fix typo in mode conversion for panel
+    (cherry picked from commit a6db4dc65aec560f3b1f37ff73ec6b0bd8207295)
+
+commit dd60db34068144236d7083b917180a8a08a26c39
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Jul 12 10:46:36 2008 +1000
+
+    pciid: add radeon HD3850.
+    
+    pci id from legume on #radeon
+    (cherry picked from commit a9746114369d516072d841ec356ec3ba3d0be71a)
+
+commit 09edc173cd2e93aa08947fac8693c75bf5edeac8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jul 11 15:31:57 2008 -0400
+
+    Make sure cursor offsets are properly aligned when using EXA
+    (cherry picked from commit 810c28cc2660b73e03e4d27be97988fc5321a06f)
+
+commit 68f494379edf1fe4b21007f6a27e9f39d2ed10d6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jul 11 14:30:17 2008 -0400
+
+    Fix cursor with multi-head and rotation
+    (cherry picked from commit 7e67d0163579a44f104e8f354a929ac9b33e4c21)
+
+commit 1b90deaa812e89e4fe51d4a142bae98450066e54
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jul 8 09:57:04 2008 -0400
+
+    Add quirk for Falcon NW laptop
+    (cherry picked from commit 9086d008fb8c3cde0633b90ce19ffbf4eded388d)
+
+commit fbac1ce622b29556b2ee537ba799d23ada7b0218
+Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date:   Tue Jul 8 21:58:43 2008 +1000
+
+    atombios: add support for other endians.
+    
+    This is a cleaned up (in as much as atombios can be..) of benh's patch.
+    
+    airlied - removed benh's debugging for now, it might need to be put back later..
+    (cherry picked from commit 61f82ace0210251beb0bcc492218a75a193e1deb)
+
+commit 354676aab4cef49ca03f73baa30ecde9819db7e6
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Mon Jul 7 14:39:47 2008 -0400
+
+    clamp tex coords (r100/r200) for textured video
+    
+    fixes bug 14904
+    (cherry picked from commit 7ae4cec8cc8c90aee5dc4fa7abcce22321d4f4eb)
+
+commit 8fc6da851c166fab36126fa60f2d24ac507e4353
+Author: Wolke Liu <wolke.lui@amd.com>
+Date:   Tue Jul 1 10:45:39 2008 -0400
+
+    Add pci id for FireMV 2400
+    (cherry picked from commit c037b4ce8769ad840a257e22b1e4ad58b8ed96fa)
+
+commit dc431323333e7c24d3f02e32fcee7495248f543f
+Author: Alex Deucher <alex@botchco.com>
+Date:   Fri Jun 27 20:36:54 2008 -0400
+
+    RADEON: IGP VGA fixes take 2
+    
+    It seems only RS300/350/400/480 are missing the primary dac
+    See bug 15708
+    (cherry picked from commit cfaa23d925e3c062cf87ea844566ac11ea02d69e)
+
+commit 6d1534fcfe11954125697208fbdc6b87dd78a341
+Author: Alex Deucher <alex@botchco.com>
+Date:   Fri Jun 27 20:29:04 2008 -0400
+
+    Revert "IGP: attempt to fix VGA on IGP chips"
+    
+    This reverts commit e78e8a21b4040cd7f1983c241c860d9209398396.
+    (cherry picked from commit 31c27ffcb3c4c5334cf726ecd4e293a678b2a1ea)
+
 commit c83fbdfa076c107012b7dfbbfbbb2feede00542b
 Author: Alex Deucher <alex@botchco.com>
 Date:   Thu Jun 26 19:48:45 2008 -0400
