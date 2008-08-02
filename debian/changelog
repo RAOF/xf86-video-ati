@@ -4,6 +4,13 @@ xserver-xorg-video-ati (1:6.9.0-2) experimental; urgency=low
 
  -- Julien Cristau <jcristau@debian.org>  Mon, 14 Jul 2008 01:35:34 +0200
 
+xserver-xorg-video-ati (1:6.9.0-1+lenny1) unstable; urgency=low
+
+  * Do not export MACH64, MACH32 and R128 pci ids in radeon.ids,
+    closes: #490990.
+
+ -- Brice Goglin <bgoglin@debian.org>  Tue, 15 Jul 2008 23:10:04 +0200
+
 xserver-xorg-video-ati (1:6.9.0-1) unstable; urgency=low
 
   * New upstream release.

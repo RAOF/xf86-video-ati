@@ -1001,7 +1001,10 @@ uninstall-am: uninstall-ati_drv_laLTLIBRARIES uninstall-pcidataDATA \
 
 
 radeon.ids: ati_pciids_gen.h
-	awk '/^#define.*PCI_CHIP/ {print $$3}' ${srcdir}/ati_pciids_gen.h | sed -e 's/0x/1002/' > radeon.ids
+	cat ${srcdir}/ati_pciids_gen.h \
+		| grep -v PCI_CHIP_MACH32 | grep -v PCI_CHIP_MACH64 | grep -v PCI_CHIP_RAGE128 \
+		| awk '/^#define.*PCI_CHIP/ {print $$3}' \
+		| sed -e 's/0x/1002/' > radeon.ids
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
