@@ -1,3 +1,438 @@
+commit a3cc1d7a421456186024c5c069e403d374a0f0b9
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Aug 26 08:03:20 2008 +1000
+
+    radeon: fix powerpc build
+
+commit 6cebfe257f7ddad855ee743e4eb899bd6fac7f46
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jul 11 19:32:06 2008 -0400
+
+    Switch EXA path back to static cursor allocation
+    
+    pre-AVIVO cards have address limits for the cursor offset
+
+commit 4dff54a3c8d7c9f2d6ec50354ff0b92f1b7fcbdf
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jul 11 17:28:03 2008 -0400
+
+    Switch cursors over to generic allocator
+
+commit 5b1978a4796bcc31ac2f01d303dc8f8f44323025
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Aug 25 10:05:28 2008 -0400
+
+    Bicubic fixes from the last cherry-pick
+
+commit 7daba77ded1c718e93ae8c372a39a6e85228d513
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jul 11 02:02:38 2008 -0400
+
+    Convert randr, Xv to a common allocator
+
+commit 610fe1a937da78f4ac813ac919c158dde8f42442
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jul 10 22:47:35 2008 -0400
+
+    Switch to using radeon_drm.h from the drm
+    
+    modelled after Matthias' similar rhd change
+
+commit a6561f2ec673b38907f7181235386f32e60c32ba
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jul 10 22:31:13 2008 -0400
+
+    Move DRI to a separate struct
+    
+    based on Matthias' similar work in rhd
+
+commit 75ef8dc214715d3c5c50996b293933842903ba65
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Jul 10 21:49:55 2008 -0400
+
+    Cleanups from rhd port
+    
+    - remove unused vars
+    - remove static exa render vars
+
+commit 71ad140fa11f3a504c38d6bddf40e3a3c0a20e60
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jul 10 21:24:16 2008 -0400
+
+    Move accel state to a separate struct
+
+commit 5b2e095c31b88d8495a4f86e6cb46b49fa4acd65
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jul 10 20:07:44 2008 -0400
+
+    Move CP into a separate struct
+
+commit 2145309230e36aee7758bd244deb1e72ada0c065
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Aug 25 08:47:59 2008 -0400
+
+    match textured video macro names with other accel code
+    
+    OUT_VIDEO_REG() -> OUT_ACCEL_REG()
+    etc.
+
+commit 01daef0f095fbbaee701d5fe97f3dd7838b5f915
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Aug 25 08:26:16 2008 -0400
+
+    Additional cleanups and re-arragement following bicubic merge
+
+commit 0a51d08c24af040fe48690662b1a912acad51700
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Aug 25 06:43:14 2008 -0400
+
+    Whitespace cleanup from bucubic merge
+
+commit c0170fef510b53a6ca2c6ea7a99119235229c929
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Thu Aug 7 06:53:39 2008 -0700
+
+    Add needed FP registers, etc. for r3xx bicubic Xv.
+
+commit d9c38326cf70f57ab777ffdf9520b8cdea9d9cb6
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Tue Aug 5 18:45:38 2008 +0200
+
+    Fix typos.
+
+commit d38ceba62aa5cee76baa342ce7719a983a79f09e
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Tue Aug 5 16:21:57 2008 +0200
+
+    Fix bicubic fp calculation.
+
+commit 6f9c7fde75edc0399559f975db9a6c4dc22714ae
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Tue Aug 5 15:38:42 2008 +0200
+
+    Fixed bicubic fragment program comments.
+
+commit 48b09ca40ccb28b5584069316fd38786a78c1dd3
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sat Aug 2 02:36:21 2008 -0700
+
+    Switch from 32-bit floats to 16-bit half-floats.
+    Massive bandwidth savings, or so I'm told. Yay?
+
+commit ebbb7fb634fcadf28ff99c1df2c3db89fd56932d
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sat Aug 2 01:45:43 2008 -0700
+
+    Change floats to uint32_t hex.
+    Useful for moving to 16-bit half-floats.
+
+commit 3b46162d8a90be3524cb513d42b9ad3d0bea45f5
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Fri Aug 1 15:24:01 2008 +0200
+
+    Move some ALU instructions after the TEX instructions, so we can do something usefull while we are waiting for the texture values.
+
+commit 2ecdec4bafc97212dde4d6908ee4ccf618adc0e1
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Fri Aug 1 04:03:12 2008 +0200
+
+    Another uneeded SEM_AQUIRE.
+
+commit e93b5d1b80d6203f63543b7b678e2f1d9221b5b3
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Fri Aug 1 03:00:26 2008 +0200
+
+    Smarter usage of the texture semaphore.
+
+commit 286f7aa18f19bd21b263701adab38b736dbeda0f
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Thu Jul 31 17:01:44 2008 -0700
+
+    Enable bicubic filtering for all r5xx HW.
+
+commit 242aa4f630b4c60aefa3c12dc459a4d4d0b334a0
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Fri Aug 1 01:11:28 2008 +0200
+
+    Remove one constant.
+
+commit 413eacb0538977b0b3c92df074d40510f4539abc
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Fri Aug 1 00:52:09 2008 +0200
+
+    Heavy optimizations.
+
+commit a0c4a949cb49e5ac1e857aef08a8742b9f7b49da
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Thu Jul 31 21:19:18 2008 +0200
+
+    Remove uneeded negations.
+
+commit abb2b2e757d92591ab9277824b9d9746ba98f875
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Thu Jul 31 20:31:03 2008 +0200
+
+    Implement LPR in one instruction.
+
+commit c370b74bec13194573348583c38adf710b880e79
+Author: Dennis Kasprzyk <onestone@opencompositing.org>
+Date:   Thu Jul 31 19:50:49 2008 +0200
+
+    Set helper texture filter correctly.
+
+commit 5e85d5a5d0c50b29086ec0c219c8b52d25dbc2e9
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Wed Jul 30 19:45:15 2008 -0700
+
+    Update bicubic tables.
+    Now including the 2048x1 texture as well.
+
+commit 17e5e9573e59c3d82d51c261b9c5005f6aec7d43
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Wed Jul 30 11:57:25 2008 -0700
+
+    Force R580-only for bicubic.
+    Initial reading of docs suggest RV560 and RV570 can't handle it,
+    but they're welcome to test.
+
+commit 83b52473d0e7102265918b07be053fcda17a14b4
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Wed Jul 30 01:03:57 2008 -0700
+
+    Bump bicubic cutoff to R580.
+    RV530 chipsets can't handle fullscreen bicubic...
+
+commit 69a4998d1286bcdd7bfe874cd5628bc1cc232bae
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Wed Jul 30 01:03:46 2008 -0700
+
+    Oops, made a mistake with vertices.
+
+commit a4ec30a677906ec2ff9824c7ddca586655f6d1a8
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Wed Jul 30 00:54:32 2008 -0700
+
+    Merge upstream changes to vertices, and also add Xv attributes for textured video, including bicubic filtering.
+
+commit f3b81c7582aed307fa44e134ee161cd8a3158657
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Mon Jul 28 19:50:10 2008 -0700
+
+    Fix constants.
+
+commit 7dbb7023ba023ec1a38be63af9c9f49e40222b7b
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Mon Jul 28 17:30:41 2008 -0700
+
+    Finally got the fragment program fully working for bicubic filtering on r5xx.
+
+commit 0e4dd73b9ebc6f608eeff945b4d463a00c02e07c
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Mon Jul 28 12:16:50 2008 -0700
+
+    More bicubic FP buggies.
+
+commit a87647e0c27e0950f4d0d8203a1242a994ad3419
+Author: Dennis Kasprzyk <onestone@compiz-fusion.org>
+Date:   Sun Jul 27 10:43:01 2008 -0700
+
+    Fix texture size, texture filter, vertex offsets, etc.
+
+commit 232aa3e943fef4c4037b255c3b64a0aaff90ab5c
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sat Jul 26 10:56:56 2008 -0700
+
+    Make vertices emit properly.
+    *bangs head against wall*
+
+commit 8c84f67b93d926095633830aa8d95930a48b1c7b
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sun Jul 20 14:25:44 2008 -0700
+
+    Try to get tex coords from the VAP to RS properly when bicubic filtering is enabled.
+    I'm soo bad at this... :c
+
+commit a4a7d5f5967c51c394229de5eccaec44cfec8f50
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sat Jul 19 13:02:02 2008 -0700
+
+    Upload pixel shader to card for r5xx. This was ridiculous. Also it doesn't work yet...
+
+commit 20c1db2d7c110ab5c1117a57b169baa1ab070518
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Fri Jul 18 13:48:08 2008 -0700
+
+    Upload bicubic filter to card. This was a LOT easier than I had feared, to be honest.
+
+commit a760e628134c6d7d42ec3c98118b6e5f6fcd3e7f
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Fri Jul 18 12:21:20 2008 -0700
+
+    Allocate memory for the bicubic filter texture.
+
+commit b6c9e2bb5365de82315c6814f915e57b0c4fa444
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Fri Jul 18 11:24:14 2008 -0700
+
+    Fixed typos in the bicubic texture tables. Whoops, looks like I'm still asleep.
+
+commit ca51f4f37e1dbf53bf7ffc0e8f612e9609e11209
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Fri Jul 18 11:06:34 2008 -0700
+
+    Add bicubic texture table, as well as the script used to (re)generate it. To regenerate, just run "python bicubic_table.py > bicubic_table.h".
+
+commit 1cf7a5494fa94e8d9f30f9b2905dfbe6d4faa445
+Author: Bryce Harrington <bryce@bryceharrington.org>
+Date:   Wed Aug 20 09:46:59 2008 -0400
+
+    radeon: Fix pasto in connector table setup for vga powerbooks
+    
+    fixes bug 17214
+
+commit a55e85f742d1334bf88e4681e553f025d2de38df
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Thu Aug 14 15:21:51 2008 -0400
+
+    Make sure video offerlay offsets don't exceed the hardware limit of 128 MB.
+    
+        Always set the overlay base address such that the buffer offsets are as small
+        as possible. This could still break in theory if the buffers were more than
+        128 MB apart, but in reality this can't happen ATM because we always allocate
+        a single memory area for all buffers.
+    
+        Fixes http://bugs.freedesktop.org/show_bug.cgi?id=16845 .
+
+commit 92ee21df344a989778e37369c7beb3904a00ead6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Aug 14 14:49:45 2008 -0400
+
+    PLL adjustments
+    
+    Seems higher dotclocks prefer a higher FB div.
+    Someone with a lot of should try and find out where
+    the div sweet spots are for various dotclock ranges.
+    fixes bug 17125
+
+commit 0d5e0347af4322713075193154b8a348de4a0b52
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Aug 13 14:17:34 2008 -0400
+
+    Remove reset of 3D scissor registers when using the CP in the ddx
+    
+    They should only affect 3D and init3d() should take care of that case
+    noticed by libv on IRC.
+
+commit 7e456e9c427d48151b166bcac08c3e8a8b180f01
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Aug 12 08:18:30 2008 +1000
+
+    radeon: add 0x9441 for hd 4870 x2
+    
+    thanks to Michael Larabel for testing
+
+commit 4dbdeea7c9316575fba26b41fd347452e42cdcf2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Aug 8 17:39:48 2008 -0400
+
+    Further cleanup and unification of i2c code
+    
+    - unify the ddc and i2c code
+    - add gpio mask support for legacy chips
+    - remove the magic gpio dance for ancient monitors
+      (if you have an ancient monitor that ddc stops
+       working on let me know).  This should speed up DDC
+      on legacy chips.
+    
+    -- radeon sw gpio i2c --
+    4 sets of gpio registers for clk and data and corresponding bit masks
+    mask - locks the gpio for use by sw
+    get  - reads the value off the gpio pad
+    put  - sets the gpio direction to output
+    a    - "other stuff" On legacy chips you clear them if you want
+           to use a gpio for i2c.  In some cases they are used for the
+           output value when the gpio in the output state.
+
+commit 268c848130ec1770bb645a74197b6aca7fc95abc
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Aug 8 15:50:07 2008 -0400
+
+    Fix VT switching on M6 chips
+    
+    Some M6 chips have a faulty MEM_SIZE register that in
+    some cases reports 0 on 8 MB cards.  On EnterVT we check
+    the MEM_SIZE reg as a check to see if the card is posted or
+    not.  Since this reg returns 0, the driver attempts to post
+    the card which can lead to a hang.  Switch this to check if
+    either crtc is active as is done in the bios init code.
+    fixes bug 13994
+
+commit 33f88f7fc90d9d93fdcbba9ad59dd70a6596bc3f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Aug 7 17:57:07 2008 -0400
+
+    RS4xx DDC fixes take 3
+
+commit df0d1ef53100f0a19c5b5fdc349f5186c8d9bd87
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Aug 6 19:13:56 2008 -0400
+
+    RS4xx: Fix up ddc gpio
+    
+    - I mixed up the regs previously
+
+commit 18429390440a829fb24ed3afd99ccf8278138496
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Aug 6 00:35:15 2008 -0400
+
+    Remove un-needed dac check for single crtc cards
+    
+    Connector tables should be setup properly already and this
+    check breaks systems with 2 DACs and 1 crtc like the es1000.
+
+commit 001c535687d8588873037ee5363d0a709f44b418
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Aug 5 17:14:48 2008 -0400
+
+    IGP: fix typo in IGP quirk handling
+
+commit eb65ddf70d182b6457e1ef5ebb820456039e8f6d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Aug 5 15:01:33 2008 -0400
+
+    IGP: attempt to get external TMDS working
+    
+    RS4xx chips have a tmds init table in the mobile info table
+
+commit 8b8990917809b9a35c6e9c1b9e3b12ff81c6dbb3
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Aug 5 12:16:06 2008 -0400
+
+    IGP: Updated quirk handling
+    
+    - Hopefully finally fix DDC on RS4xx chips
+    - RS3xx/RS4xx do not have internal TMDS
+    - general quirk handling cleanup
+    - we don't currently support mm gpio for external TMDS
+      so return false.
+
+commit cb0deba5412a575d36f2f99377120b123506c946
+Author: Calvin Fong <hoiwai930@gmail.com>
+Date:   Mon Aug 4 02:04:15 2008 -0400
+
+    IGP: add support for NTSC tv-out on legacy IGP chips
+    
+    Patch from Calvin with some cleanups from me.
+    No support for PAL yet.
+
+commit 942b18aca91819fa65d853cd15ffd1cd720cbd68
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Aug 4 14:38:21 2008 +1000
+
+    radeon: make r600 use i2c table lookup for ddc.
+    
+    This may fix DDC on rv770 cards.
+
 commit 1f3eee3682f3598a303c9c3accfbe01b245cacf9
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Tue Jul 29 20:29:32 2008 -0400
