@@ -1,3 +1,14 @@
+xserver-xorg-video-ati (1:6.9.0-1+lenny3) unstable; urgency=low
+
+  * Cherry-pick patches from the upstream git repository:
+    + Fix VT switching on M6 chips, closes: #435040.
+    + Remove un-needed dac check for single crtc cards.
+    + Make sure video offerlay offsets don't exceed the hardware limit
+      of 128 MB.
+    + Fix pasto in connector table setup for vga powerbooks
+
+ -- Brice Goglin <bgoglin@debian.org>  Tue, 26 Aug 2008 20:49:34 +0200
+
 xserver-xorg-video-ati (1:6.9.0-1+lenny2) unstable; urgency=low
 
   * Cherry-pick patches from the upstream git repository:
