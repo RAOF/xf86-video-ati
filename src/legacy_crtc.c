@@ -48,8 +48,7 @@
 
 #ifdef XF86DRI
 #define _XF86DRI_SERVER_
-#include "radeon_dri.h"
-#include "radeon_sarea.h"
+#include "radeon_drm.h"
 #include "sarea.h"
 #ifdef DRM_IOCTL_MODESET_CTL
 #include <sys/ioctl.h>
@@ -631,7 +630,7 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     modeset.crtc = radeon_crtc->crtc_id;
     modeset.cmd = post ? _DRM_POST_MODESET : _DRM_PRE_MODESET;
 
-    ioctl(info->drmFD, DRM_IOCTL_MODESET_CTL, &modeset);
+    ioctl(info->dri->drmFD, DRM_IOCTL_MODESET_CTL, &modeset);
 #endif
 }
 
@@ -755,13 +754,13 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     int    Base;
 #ifdef XF86DRI
-    RADEONSAREAPrivPtr pSAREAPriv;
+    drm_radeon_sarea_t *pSAREAPriv;
     XF86DRISAREAPtr pSAREA;
 #endif
 
     save->crtc_offset      = pScrn->fbOffset;
 #ifdef XF86DRI
-    if (info->allowPageFlip)
+    if (info->dri && info->dri->allowPageFlip)
 	save->crtc_offset_cntl = RADEON_CRTC_OFFSET_FLIP_CNTL;
     else
 #endif
@@ -854,7 +853,7 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
 	pSAREA->frame.height = pScrn->frameY1 - y + 1;
 
 	if (pSAREAPriv->pfCurrentPage == 1) {
-	    Base += info->backOffset - info->frontOffset;
+	    Base += info->dri->backOffset - info->dri->frontOffset;
 	}
     }
 #endif
@@ -973,7 +972,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     int    Base;
 #ifdef XF86DRI
-    RADEONSAREAPrivPtr pSAREAPriv;
+    drm_radeon_sarea_t *pSAREAPriv;
     XF86DRISAREAPtr pSAREA;
 #endif
 
@@ -981,7 +980,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
      */
     save->crtc2_offset      = pScrn->fbOffset;
 #ifdef XF86DRI
-    if (info->allowPageFlip)
+    if (info->dri && info->dri->allowPageFlip)
 	save->crtc2_offset_cntl = RADEON_CRTC_OFFSET_FLIP_CNTL;
     else
 #endif
@@ -1068,7 +1067,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
 	pSAREAPriv->crtc2_base = Base;
 
 	if (pSAREAPriv->pfCurrentPage == 1) {
-	    Base += info->backOffset - info->frontOffset;
+	    Base += info->dri->backOffset - info->dri->frontOffset;
 	}
     }
 #endif
@@ -1460,7 +1459,7 @@ RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
     } else {
 #ifdef XF86DRI
 	if (info->directRenderingEnabled)
-	    sclk_eff = info->sclk - (info->agpMode * 50.0 / 3.0);
+	    sclk_eff = info->sclk - (info->dri->agpMode * 50.0 / 3.0);
 	else
 #endif
 	    sclk_eff = info->sclk;
@@ -1705,9 +1704,14 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     RADEONInfoPtr info = RADEONPTR(pScrn);
     int i = 0;
     double dot_clock = 0;
-    int pll_flags = RADEON_PLL_LEGACY | RADEON_PLL_PREFER_LOW_REF_DIV;
+    int pll_flags = RADEON_PLL_LEGACY;
     Bool update_tv_routing = FALSE;
     Bool tilingChanged = FALSE;
+
+    if (adjusted_mode->Clock > 120000) /* range limits??? */
+	pll_flags |= RADEON_PLL_PREFER_HIGH_FB_DIV;
+    else
+	pll_flags |= RADEON_PLL_PREFER_LOW_REF_DIV;
 
     if (info->allowColorTiling) {
 	radeon_crtc->can_tile = (adjusted_mode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;

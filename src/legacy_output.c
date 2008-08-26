@@ -279,16 +279,12 @@ static void
 RADEONRestoreDVOChip(ScrnInfoPtr pScrn, xf86OutputPtr output)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
-    unsigned char *RADEONMMIO = info->MMIO;
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
     if (!radeon_output->DVOChip)
 	return;
 
-    OUTREG(radeon_output->dvo_i2c.mask_clk_reg,
-	   INREG(radeon_output->dvo_i2c.mask_clk_reg) &
-	   (uint32_t)~(RADEON_GPIO_A_0 | RADEON_GPIO_A_1));
-
+    RADEONI2CDoLock(output, TRUE);
     if (!RADEONInitExtTMDSInfoFromBIOS(output)) {
 	if (radeon_output->DVOChip) {
 	    switch(info->ext_tmds_chip) {
@@ -318,6 +314,7 @@ RADEONRestoreDVOChip(ScrnInfoPtr pScrn, xf86OutputPtr output)
 	    }
 	}
     }
+    RADEONI2CDoLock(output, FALSE);
 }
 
 #if 0
@@ -1443,8 +1440,8 @@ legacy_output_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 		}
 		OUTREG(RADEON_FP2_GEN_CNTL, fp2_gen_cntl);
 	    } else {
-		RADEONRestoreDVOChip(pScrn, output);
 		RADEONRestoreFP2Registers(pScrn, info->ModeReg);
+		RADEONRestoreDVOChip(pScrn, output);
 	    }
 	}
 	break;

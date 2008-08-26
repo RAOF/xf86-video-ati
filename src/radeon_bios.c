@@ -433,7 +433,7 @@ static Bool RADEONGetATOMConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
     RADEONInfoPtr info = RADEONPTR (pScrn);
 
     if (!info->VBIOS) return FALSE;
-    
+
     if (RADEONGetATOMConnectorInfoFromBIOSObject(pScrn))
 	return TRUE;
 
@@ -447,28 +447,41 @@ static void RADEONApplyLegacyQuirks(ScrnInfoPtr pScrn, int index)
 {
     RADEONInfoPtr info = RADEONPTR (pScrn);
 
-    /* on XPRESS chips, CRT2_DDC and MONID_DCC both use the 
-     * MONID gpio, but use different pins.
-     * CRT2_DDC uses the standard pinout, MONID_DDC uses
-     * something else.
+    /* For RS300/RS350/RS400 chips, there is no primary DAC. Force VGA port to use TVDAC
+     * Also there is no internal TMDS
      */
-    if ((info->ChipFamily == CHIP_FAMILY_RS400 ||
-	 info->ChipFamily == CHIP_FAMILY_RS480) &&
-	info->BiosConnector[index].ConnectorType == CONNECTOR_VGA &&
-	info->BiosConnector[index].ddc_i2c.mask_clk_reg == RADEON_GPIO_CRT2_DDC) {
-	info->BiosConnector[index].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_MONID);
+    if ((info->ChipFamily == CHIP_FAMILY_RS300) ||
+	(info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480)) {
+	info->BiosConnector[index].DACType = DAC_TVDAC;
+	info->BiosConnector[index].TMDSType = TMDS_EXT;
     }
 
-    /* XPRESS desktop chips seem to have a proprietary connector listed for
-     * DVI-D, try and do the right thing here.
-     */
-    if ((!info->IsMobility) &&
-	(info->BiosConnector[index].ConnectorType == CONNECTOR_LVDS)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		   "Proprietary connector found, assuming DVI-D\n");
-	info->BiosConnector[index].DACType = DAC_NONE;
-	info->BiosConnector[index].TMDSType = TMDS_EXT;
-	info->BiosConnector[index].ConnectorType = CONNECTOR_DVI_D;
+    /* XPRESS DDC quirks */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400 ||
+	 info->ChipFamily == CHIP_FAMILY_RS480) &&
+	info->BiosConnector[index].ddc_i2c.mask_clk_reg == RADEON_GPIO_CRT2_DDC) {
+	info->BiosConnector[index].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_MONID);
+    } else if ((info->ChipFamily == CHIP_FAMILY_RS400 ||
+		info->ChipFamily == CHIP_FAMILY_RS480) &&
+	       info->BiosConnector[index].ddc_i2c.mask_clk_reg == RADEON_GPIO_MONID) {
+	info->BiosConnector[index].ddc_i2c.valid = TRUE;
+	info->BiosConnector[index].ddc_i2c.mask_clk_mask = (0x20 << 8);
+	info->BiosConnector[index].ddc_i2c.mask_data_mask = 0x80;
+	info->BiosConnector[index].ddc_i2c.a_clk_mask = (0x20 << 8);
+	info->BiosConnector[index].ddc_i2c.a_data_mask = 0x80;
+	info->BiosConnector[index].ddc_i2c.put_clk_mask = (0x20 << 8);
+	info->BiosConnector[index].ddc_i2c.put_data_mask = 0x80;
+	info->BiosConnector[index].ddc_i2c.get_clk_mask = (0x20 << 8);
+	info->BiosConnector[index].ddc_i2c.get_data_mask = 0x80;
+	info->BiosConnector[index].ddc_i2c.mask_clk_reg = RADEON_GPIOPAD_MASK;
+	info->BiosConnector[index].ddc_i2c.mask_data_reg = RADEON_GPIOPAD_MASK;
+	info->BiosConnector[index].ddc_i2c.a_clk_reg = RADEON_GPIOPAD_A;
+	info->BiosConnector[index].ddc_i2c.a_data_reg = RADEON_GPIOPAD_A;
+	info->BiosConnector[index].ddc_i2c.put_clk_reg = RADEON_GPIOPAD_EN;
+	info->BiosConnector[index].ddc_i2c.put_data_reg = RADEON_GPIOPAD_EN;
+	info->BiosConnector[index].ddc_i2c.get_clk_reg = RADEON_LCD_GPIO_Y_REG;
+	info->BiosConnector[index].ddc_i2c.get_data_reg = RADEON_LCD_GPIO_Y_REG;
     }
 
     /* Certain IBM chipset RN50s have a BIOS reporting two VGAs,
@@ -525,7 +538,7 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 	    ConnectorType = (tmp >> 12) & 0xf;
 	    switch (ConnectorType) {
 	    case CONNECTOR_PROPRIETARY_LEGACY:
-		info->BiosConnector[i].ConnectorType = CONNECTOR_LVDS;
+		info->BiosConnector[i].ConnectorType = CONNECTOR_DVI_D;
 		break;
 	    case CONNECTOR_CRT_LEGACY:
 		info->BiosConnector[i].ConnectorType = CONNECTOR_VGA;
@@ -574,12 +587,6 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 	    else
 		info->BiosConnector[i].DACType = DAC_PRIMARY;
 
-	    /* For RS300/RS350/RS400 chips, there is no primary DAC. Force VGA port to use TVDAC*/
-	    if ((info->ChipFamily == CHIP_FAMILY_RS300) ||
-		(info->ChipFamily == CHIP_FAMILY_RS400) ||
-		(info->ChipFamily == CHIP_FAMILY_RS480))
-		info->BiosConnector[i].DACType = DAC_TVDAC;
-
 	    if ((tmp >> 4) & 0x1)
 		info->BiosConnector[i].TMDSType = TMDS_EXT;
 	    else
@@ -608,7 +615,10 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
     }
 
     /* check LVDS table */
-    if (info->IsMobility) {
+    /* RS4xx can be mobile or desktop so check the connectors */
+    if (info->IsMobility ||
+	info->ChipFamily == CHIP_FAMILY_RS400 ||
+	info->ChipFamily == CHIP_FAMILY_RS480) {
 	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x40);
 	if (offset) {
 	    info->BiosConnector[4].valid = TRUE;
@@ -639,10 +649,10 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 			    break;
 			case DDC_LCD:
 			    info->BiosConnector[4].ddc_i2c = legacy_setup_i2c_bus(RADEON_LCD_GPIO_MASK);
-			    info->BiosConnector[4].ddc_i2c.mask_clk_mask =
-				RADEON_BIOS32(tmp0 + 0x03) | RADEON_BIOS32(tmp0 + 0x07);
-			    info->BiosConnector[4].ddc_i2c.mask_data_mask =
-				RADEON_BIOS32(tmp0 + 0x03) | RADEON_BIOS32(tmp0 + 0x07);
+			    info->BiosConnector[4].ddc_i2c.mask_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
+			    info->BiosConnector[4].ddc_i2c.mask_data_mask = RADEON_BIOS32(tmp0 + 0x07);
+			    info->BiosConnector[4].ddc_i2c.a_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
+			    info->BiosConnector[4].ddc_i2c.a_data_mask = RADEON_BIOS32(tmp0 + 0x07);
 			    info->BiosConnector[4].ddc_i2c.put_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
 			    info->BiosConnector[4].ddc_i2c.put_data_mask = RADEON_BIOS32(tmp0 + 0x07);
 			    info->BiosConnector[4].ddc_i2c.get_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
@@ -650,10 +660,10 @@ static Bool RADEONGetLegacyConnectorInfoFromBIOS (ScrnInfoPtr pScrn)
 			    break;
 			case DDC_GPIO:
 			    info->BiosConnector[4].ddc_i2c = legacy_setup_i2c_bus(RADEON_MDGPIO_EN_REG);
-			    info->BiosConnector[4].ddc_i2c.mask_clk_mask =
-				RADEON_BIOS32(tmp0 + 0x03) | RADEON_BIOS32(tmp0 + 0x07);
-			    info->BiosConnector[4].ddc_i2c.mask_data_mask =
-				RADEON_BIOS32(tmp0 + 0x03) | RADEON_BIOS32(tmp0 + 0x07);
+			    info->BiosConnector[4].ddc_i2c.mask_clk_mask =  RADEON_BIOS32(tmp0 + 0x03);
+			    info->BiosConnector[4].ddc_i2c.mask_data_mask = RADEON_BIOS32(tmp0 + 0x07);
+			    info->BiosConnector[4].ddc_i2c.a_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
+			    info->BiosConnector[4].ddc_i2c.a_data_mask = RADEON_BIOS32(tmp0 + 0x07);
 			    info->BiosConnector[4].ddc_i2c.put_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
 			    info->BiosConnector[4].ddc_i2c.put_data_mask = RADEON_BIOS32(tmp0 + 0x07);
 			    info->BiosConnector[4].ddc_i2c.get_clk_mask = RADEON_BIOS32(tmp0 + 0x03);
@@ -1166,6 +1176,50 @@ Bool RADEONGetTMDSInfoFromBIOS (xf86OutputPtr output)
     return FALSE;
 }
 
+static RADEONI2CBusRec
+RADEONLookupI2CBlock(ScrnInfoPtr pScrn, int id)
+{
+    RADEONInfoPtr info = RADEONPTR (pScrn);
+    int offset, blocks, i;
+    RADEONI2CBusRec i2c;
+
+    memset(&i2c, 0, sizeof(RADEONI2CBusRec));
+    i2c.valid = FALSE;
+
+    offset = RADEON_BIOS16(info->ROMHeaderStart + 0x70);
+    if (offset) {
+	blocks = RADEON_BIOS8(offset + 2);
+	for (i = 0; i < blocks; i++) {
+	    int i2c_id = RADEON_BIOS8(offset + 3 + (i * 5) + 0);
+	    if (id == i2c_id) {
+		int reg = RADEON_BIOS16(offset + 3 + (i * 5) + 1) * 4;
+		int clock_shift = RADEON_BIOS8(offset + 3 + (i * 5) + 3);
+		int data_shift = RADEON_BIOS8(offset + 3 + (i * 5) + 4);
+
+		i2c.mask_clk_mask = (1 << clock_shift);
+		i2c.mask_data_mask = (1 << data_shift);
+		i2c.a_clk_mask = (1 << clock_shift);
+		i2c.a_data_mask = (1 << data_shift);
+		i2c.put_clk_mask = (1 << clock_shift);
+		i2c.put_data_mask = (1 << data_shift);
+		i2c.get_clk_mask = (1 << clock_shift);
+		i2c.get_data_mask = (1 << data_shift);
+		i2c.mask_clk_reg = reg;
+		i2c.mask_data_reg = reg;
+		i2c.a_clk_reg = reg;
+		i2c.a_data_reg = reg;
+		i2c.put_clk_reg = reg;
+		i2c.put_data_reg = reg;
+		i2c.get_clk_reg = reg;
+		i2c.get_data_reg = reg;
+		i2c.valid = TRUE;
+		break;
+	    }
+	}
+    }
+    return i2c;
+}
+
 Bool RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output)
 {
     ScrnInfoPtr pScrn = output->scrn;
@@ -1177,6 +1231,52 @@ Bool RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output)
 
     if (info->IsAtomBios) {
 	return FALSE;
+    } else if (info->IsIGP) {
+	/* RS4xx TMDS stuff is in the mobile table */
+	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x42);
+	if (offset) {
+	    int rev = RADEON_BIOS8(offset);
+	    if (rev >= 6) {
+		offset = RADEON_BIOS16(offset + 0x17);
+		if (offset) {
+		    offset = RADEON_BIOS16(offset + 2);
+		    rev = RADEON_BIOS8(offset);
+		    if (offset && (rev > 1)) {
+			int blocks = RADEON_BIOS8(offset + 3);
+			int index = offset + 4;
+			radeon_output->dvo_i2c.valid = FALSE;
+			while (blocks > 0) {
+			    int id = RADEON_BIOS16(index);
+			    index += 2;
+			    switch (id >> 13) {
+			    case 0:
+				index += 6;
+				break;
+			    case 2:
+				index += 10;
+				break;
+			    case 3:
+				index += 2;
+				break;
+			    case 4:
+				index += 2;
+				break;
+			    case 6:
+				radeon_output->dvo_i2c_slave_addr =
+				    RADEON_BIOS16(index) & 0xff;
+				index += 2;
+				radeon_output->dvo_i2c =
+				    RADEONLookupI2CBlock(pScrn, RADEON_BIOS8(index));
+				return TRUE;
+			    default:
+				break;
+			    }
+			    blocks--;
+			}
+		    }
+		}
+	    }
+	}
     } else {
 	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x58);
 	if (offset) {
@@ -1196,10 +1296,11 @@ Bool RADEONGetExtTMDSInfoFromBIOS (xf86OutputPtr output)
 		radeon_output->dvo_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);
 	    else if (gpio_reg == 4)
 		radeon_output->dvo_i2c = legacy_setup_i2c_bus(RADEON_GPIO_CRT2_DDC);
-	    else if (gpio_reg == 5)
+	    else if (gpio_reg == 5) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "unsupported MM gpio_reg\n");
-	    else {
+		return FALSE;
+	    } else {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "Unknown gpio reg: %d\n", gpio_reg);
 		return FALSE;
@@ -1227,12 +1328,82 @@ Bool RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output)
     unsigned char *RADEONMMIO = info->MMIO;
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
     int offset, index, id;
-    uint32_t val, reg, andmask, ormask;
+    uint32_t val, reg, and_mask, or_mask;
 
     if (!info->VBIOS) return FALSE;
 
     if (info->IsAtomBios) {
 	return FALSE;
+    } else if (info->IsIGP) {
+	/* RS4xx TMDS stuff is in the mobile table */
+	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x42);
+	if (offset) {
+	    int rev = RADEON_BIOS8(offset);
+	    if (rev >= 6) {
+		offset = RADEON_BIOS16(offset + 0x17);
+		if (offset) {
+		    offset = RADEON_BIOS16(offset + 2);
+		    rev = RADEON_BIOS8(offset);
+		    if (offset && (rev > 1)) {
+			int blocks = RADEON_BIOS8(offset + 3);
+			index = offset + 4;
+			while (blocks > 0) {
+			    id = RADEON_BIOS16(index);
+			    index += 2;
+			    switch (id >> 13) {
+			    case 0:
+				reg = (id & 0x1fff) * 4;
+				val = RADEON_BIOS32(index);
+				index += 4;
+				ErrorF("MMIO: 0x%x 0x%x\n",
+				       (unsigned)reg, (unsigned)val);
+				OUTREG(reg, val);
+				break;
+			    case 2:
+				reg = (id & 0x1fff) * 4;
+				and_mask = RADEON_BIOS32(index);
+				index += 4;
+				or_mask = RADEON_BIOS32(index);
+				index += 4;
+				ErrorF("MMIO mask: 0x%x 0x%x 0x%x\n",
+				       (unsigned)reg, (unsigned)and_mask, (unsigned)or_mask);
+				val = INREG(reg);
+				val = (val & and_mask) | or_mask;
+				OUTREG(reg, val);
+				break;
+			    case 3:
+				val = RADEON_BIOS16(index);
+				index += 2;
+				ErrorF("delay: %u\n", (unsigned)val);
+				usleep(val);
+				break;
+			    case 4:
+				val = RADEON_BIOS16(index);
+				index += 2;
+				ErrorF("delay: %u\n", (unsigned)val * 1000);
+				usleep(val * 1000);
+				break;
+			    case 6:
+				index++;
+				reg = RADEON_BIOS8(index);
+				index++;
+				val = RADEON_BIOS8(index);
+				index++;
+				ErrorF("i2c write: 0x%x, 0x%x\n", (unsigned)reg,
+				       (unsigned)val);
+				RADEONDVOWriteByte(radeon_output->DVOChip, reg, val);
+				break;
+			    default:
+				ErrorF("unknown id %d\n", id>>13);
+				return FALSE;
+			    }
+			    blocks--;
+			}
+			return TRUE;
+		    }
+		}
+	    }
+	}
     } else {
 	offset = RADEON_BIOS16(info->ROMHeaderStart + 0x58);
 	if (offset) {
@@ -1242,24 +1413,24 @@ Bool RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output)
 		index += 2;
 		switch(id >> 13) {
 		case 0:
-		    reg = id & 0x1fff;
+		    reg = (id & 0x1fff) * 4;
 		    val = RADEON_BIOS32(index);
 		    index += 4;
-		    ErrorF("WRITE INDEXED: 0x%x 0x%x\n",
+		    ErrorF("MMIO: 0x%x 0x%x\n",
 			   (unsigned)reg, (unsigned)val);
-		    /*OUTREG(reg, val);*/
+		    OUTREG(reg, val);
 		    break;
 		case 2:
-		    reg = id & 0x1fff;
-		    andmask = RADEON_BIOS32(index);
+		    reg = (id & 0x1fff) * 4;
+		    and_mask = RADEON_BIOS32(index);
 		    index += 4;
-		    ormask = RADEON_BIOS32(index);
+		    or_mask = RADEON_BIOS32(index);
 		    index += 4;
 		    val = INREG(reg);
-		    val = (val & andmask) | ormask;
-		    ErrorF("MASK DIRECT: 0x%x 0x%x 0x%x\n",
-			   (unsigned)reg, (unsigned)andmask, (unsigned)ormask);
-		    /*OUTREG(reg, val);*/
+		    val = (val & and_mask) | or_mask;
+		    ErrorF("MMIO mask: 0x%x 0x%x 0x%x\n",
+			   (unsigned)reg, (unsigned)and_mask, (unsigned)or_mask);
+		    OUTREG(reg, val);
 		    break;
 		case 4:
 		    val = RADEON_BIOS16(index);
@@ -1269,15 +1440,15 @@ Bool RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output)
 		    break;
 		case 5:
 		    reg = id & 0x1fff;
-		    andmask = RADEON_BIOS32(index);
+		    and_mask = RADEON_BIOS32(index);
 		    index += 4;
-		    ormask = RADEON_BIOS32(index);
+		    or_mask = RADEON_BIOS32(index);
 		    index += 4;
-		    ErrorF("MASK PLL: 0x%x 0x%x 0x%x\n",
-			   (unsigned)reg, (unsigned)andmask, (unsigned)ormask);
-		    /*val = INPLL(pScrn, reg);
-		    val = (val & andmask) | ormask;
-		    OUTPLL(pScrn, reg, val);*/
+		    ErrorF("PLL mask: 0x%x 0x%x 0x%x\n",
+			   (unsigned)reg, (unsigned)and_mask, (unsigned)or_mask);
+		    val = INPLL(pScrn, reg);
+		    val = (val & and_mask) | or_mask;
+		    OUTPLL(pScrn, reg, val);
 		    break;
 		case 6:
 		    reg = id & 0x1fff;

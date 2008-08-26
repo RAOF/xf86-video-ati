@@ -4258,7 +4258,7 @@
 #define R300_PVS_SRC_ADDR_SEL(x)                        (x << 29)
 #define R300_PVS_SRC_ADDR_MODE_1                        (1 << 31)
 
-#define R300_VAP_PVS_FLOW_CNTL_OPC		        0x22DC
+#define R300_VAP_PVS_FLOW_CNTL_OPC		        0x22dc
 #define R300_VAP_OUT_VTX_FMT_0			        0x2090
 #       define R300_VTX_POS_PRESENT                     (1 << 0)
 #       define R300_VTX_COLOR_0_PRESENT                 (1 << 1)
@@ -4346,6 +4346,7 @@
 
 #define R300_TX_INVALTAGS				0x4100
 #define R300_TX_FILTER0_0				0x4400
+#define R300_TX_FILTER0_1				0x4404
 #       define R300_TX_CLAMP_S(x)                       (x << 0)
 #       define R300_TX_CLAMP_T(x)                       (x << 3)
 #       define R300_TX_CLAMP_R(x)                       (x << 6)
@@ -4363,7 +4364,9 @@
 #       define R300_TX_MIN_FILTER_LINEAR                (2 << 11)
 #       define R300_TX_ID_SHIFT                         28
 #define R300_TX_FILTER1_0				0x4440
+#define R300_TX_FILTER1_1				0x4444
 #define R300_TX_FORMAT0_0				0x4480
+#define R300_TX_FORMAT0_1				0x4484
 #       define R300_TXWIDTH_SHIFT                       0
 #       define R300_TXHEIGHT_SHIFT                      11
 #       define R300_NUM_LEVELS_SHIFT                    26
@@ -4371,6 +4374,7 @@
 #       define R300_TXPROJECTED                         (1 << 30)
 #       define R300_TXPITCH_EN                          (1 << 31)
 #define R300_TX_FORMAT1_0				0x44c0
+#define R300_TX_FORMAT1_1				0x44c4
 #	define R300_TX_FORMAT_X8		    0x0
 #	define R300_TX_FORMAT_X16		    0x1
 #	define R300_TX_FORMAT_Y4X4		    0x2
@@ -4444,10 +4448,12 @@
 #       define R300_TX_FORMAT_SWAP_YUV                 (1 << 24)
 
 #define R300_TX_FORMAT2_0				0x4500
+#define R300_TX_FORMAT2_1				0x4504
 #       define R500_TXWIDTH_11                          (1 << 15)
 #       define R500_TXHEIGHT_11                         (1 << 16)
 
 #define R300_TX_OFFSET_0				0x4540
+#define R300_TX_OFFSET_1				0x4544
 #       define R300_ENDIAN_SWAP_16_BIT                  (1 << 0)
 #       define R300_ENDIAN_SWAP_32_BIT                  (2 << 0)
 #       define R300_ENDIAN_SWAP_HALF_DWORD              (3 << 0)
@@ -4524,6 +4530,7 @@
 #define R300_US_TEX_INST_0				0x4620
 #define R300_US_TEX_INST_1				0x4624
 #define R300_US_TEX_INST_2				0x4628
+#define R300_US_TEX_INST(x)			        (R300_US_TEX_INST_0 + (x)*4)
 #       define R300_TEX_SRC_ADDR(x)                     (x << 0)
 #       define R300_TEX_DST_ADDR(x)                     (x << 6)
 #       define R300_TEX_ID(x)                           (x << 11)
@@ -4536,11 +4543,13 @@
 #define R300_US_ALU_RGB_ADDR_0			        0x46c0
 #define R300_US_ALU_RGB_ADDR_1			        0x46c4
 #define R300_US_ALU_RGB_ADDR_2			        0x46c8
+#define R300_US_ALU_RGB_ADDR(x)			        (R300_US_ALU_RGB_ADDR_0 + (x)*4)
 /* for ADDR0-2, values 0-31 specify a location in the pixel stack,
    values 32-63 specify a constant */
 #       define R300_ALU_RGB_ADDR0(x)                    (x << 0)
 #       define R300_ALU_RGB_ADDR1(x)                    (x << 6)
 #       define R300_ALU_RGB_ADDR2(x)                    (x << 12)
+#       define R300_ALU_RGB_CONST(x)                    ((x) | (1 << 5))
 /* ADDRD - where on the pixel stack the result of this instruction
    will be written */
 #       define R300_ALU_RGB_ADDRD(x)                    (x << 18)
@@ -4550,6 +4559,7 @@
 #       define R300_ALU_RGB_MASK_R                      1
 #       define R300_ALU_RGB_MASK_G                      2
 #       define R300_ALU_RGB_MASK_B                      4
+#       define R300_ALU_RGB_MASK_RGB                    7
 #       define R300_ALU_RGB_TARGET_A                    (0 << 29)
 #       define R300_ALU_RGB_TARGET_B                    (1 << 29)
 #       define R300_ALU_RGB_TARGET_C                    (2 << 29)
@@ -4557,6 +4567,7 @@
 #define R300_US_ALU_RGB_INST_0			        0x48c0
 #define R300_US_ALU_RGB_INST_1			        0x48c4
 #define R300_US_ALU_RGB_INST_2			        0x48c8
+#define R300_US_ALU_RGB_INST(x)			        (R300_US_ALU_RGB_INST_0 + (x)*4)
 #       define R300_ALU_RGB_SEL_A(x)                    (x << 0)
 #       define R300_ALU_RGB_SRC0_RGB                    0
 #       define R300_ALU_RGB_SRC0_RRR                    1
@@ -4628,11 +4639,13 @@
 #define R300_US_ALU_ALPHA_ADDR_0		        0x47c0
 #define R300_US_ALU_ALPHA_ADDR_1		        0x47c4
 #define R300_US_ALU_ALPHA_ADDR_2		        0x47c8
+#define R300_US_ALU_ALPHA_ADDR(x)		        (R300_US_ALU_ALPHA_ADDR_0 + (x)*4)
 /* for ADDR0-2, values 0-31 specify a location in the pixel stack,
    values 32-63 specify a constant */
 #       define R300_ALU_ALPHA_ADDR0(x)                  (x << 0)
 #       define R300_ALU_ALPHA_ADDR1(x)                  (x << 6)
 #       define R300_ALU_ALPHA_ADDR2(x)                  (x << 12)
+#       define R300_ALU_ALPHA_CONST(x)                  ((x) | (1 << 5))
 /* ADDRD - where on the pixel stack the result of this instruction
    will be written */
 #       define R300_ALU_ALPHA_ADDRD(x)                  (x << 18)
@@ -4648,6 +4661,7 @@
 #define R300_US_ALU_ALPHA_INST_0		        0x49c0
 #define R300_US_ALU_ALPHA_INST_1		        0x49c4
 #define R300_US_ALU_ALPHA_INST_2		        0x49c8
+#define R300_US_ALU_ALPHA_INST(x)		        (R300_US_ALU_ALPHA_INST_0 + (x)*4)
 #       define R300_ALU_ALPHA_SEL_A(x)                  (x << 0)
 #       define R300_ALU_ALPHA_SRC0_R                    0
 #       define R300_ALU_ALPHA_SRC0_G                    1
@@ -4703,6 +4717,15 @@
 #       define R300_ALU_ALPHA_OMOD_DIV_4                5
 #       define R300_ALU_ALPHA_OMOD_DIV_8                6
 #       define R300_ALU_ALPHA_CLAMP                     (1 << 30)
+
+#define R300_US_ALU_CONST_R_0                           0x4c00
+#define R300_US_ALU_CONST_R(x)                          (R300_US_ALU_CONST_R_0 + (x)*16)
+#define R300_US_ALU_CONST_G_0                           0x4c04
+#define R300_US_ALU_CONST_G(x)                          (R300_US_ALU_CONST_G_0 + (x)*16)
+#define R300_US_ALU_CONST_B_0                           0x4c08
+#define R300_US_ALU_CONST_B(x)                          (R300_US_ALU_CONST_B_0 + (x)*16)
+#define R300_US_ALU_CONST_A_0                           0x4c0c
+#define R300_US_ALU_CONST_A(x)                          (R300_US_ALU_CONST_A_0 + (x)*16)
 
 #define R300_FG_DEPTH_SRC				0x4bd8
 #define R300_FG_FOG_BLEND				0x4bc0
@@ -4783,10 +4806,11 @@
 
 /* R500 US has to be loaded through an index/data pair */
 #define R500_GA_US_VECTOR_INDEX				0x4250
-#   define R500_US_VECTOR_INDEX(x)			(x << 0)
 #   define R500_US_VECTOR_TYPE_INST			(0 << 16)
 #   define R500_US_VECTOR_TYPE_CONST			(1 << 16)
 #   define R500_US_VECTOR_CLAMP				(1 << 17)
+#   define R500_US_VECTOR_INST_INDEX(x)			((x) | R500_US_VECTOR_TYPE_INST)
+#   define R500_US_VECTOR_CONST_INDEX(x)		((x) | R500_US_VECTOR_TYPE_CONST)
 #define R500_GA_US_VECTOR_DATA				0x4254
 
 /*

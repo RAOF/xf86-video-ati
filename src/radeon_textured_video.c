@@ -81,32 +81,42 @@ static __inline__ uint32_t F_TO_DW(float val)
 }
 
 #define ACCEL_MMIO
-#define VIDEO_PREAMBLE()	unsigned char *RADEONMMIO = info->MMIO
-#define BEGIN_VIDEO(n)		RADEONWaitForFifo(pScrn, (n))
-#define OUT_VIDEO_REG(reg, val)	OUTREG(reg, val)
-#define OUT_VIDEO_REG_F(reg, val) OUTREG(reg, F_TO_DW(val))
-#define FINISH_VIDEO()
+#define ACCEL_PREAMBLE()	unsigned char *RADEONMMIO = info->MMIO
+#define BEGIN_ACCEL(n)		RADEONWaitForFifo(pScrn, (n))
+#define OUT_ACCEL_REG(reg, val)	OUTREG(reg, val)
+#define OUT_ACCEL_REG_F(reg, val) OUTREG(reg, F_TO_DW(val))
+#define FINISH_ACCEL()
 
 #include "radeon_textured_videofuncs.c"
 
 #undef ACCEL_MMIO
-#undef VIDEO_PREAMBLE
-#undef BEGIN_VIDEO
-#undef OUT_VIDEO_REG
-#undef FINISH_VIDEO
+#undef ACCEL_PREAMBLE
+#undef BEGIN_ACCEL
+#undef OUT_ACCEL_REG
+#undef OUT_ACCEL_REG_F
+#undef FINISH_ACCEL
 
 #ifdef XF86DRI
 
 #define ACCEL_CP
-#define VIDEO_PREAMBLE()						\
+#define ACCEL_PREAMBLE()						\
     RING_LOCALS;							\
     RADEONCP_REFRESH(pScrn, info)
-#define BEGIN_VIDEO(n)		BEGIN_RING(2*(n))
-#define OUT_VIDEO_REG(reg, val)	OUT_RING_REG(reg, val)
-#define FINISH_VIDEO()		ADVANCE_RING()
-#define OUT_VIDEO_RING_F(x) OUT_RING(F_TO_DW(x))
+#define BEGIN_ACCEL(n)		BEGIN_RING(2*(n))
+#define OUT_ACCEL_REG(reg, val)	OUT_RING_REG(reg, val)
+#define OUT_ACCEL_REG_F(reg, val)	OUT_ACCEL_REG(reg, F_TO_DW(val))
+#define FINISH_ACCEL()		ADVANCE_RING()
+#define OUT_RING_F(x) OUT_RING(F_TO_DW(x))
 
 #include "radeon_textured_videofuncs.c"
+
+#undef ACCEL_CP
+#undef ACCEL_PREAMBLE
+#undef BEGIN_ACCEL
+#undef OUT_ACCEL_REG
+#undef OUT_ACCEL_REG_F
+#undef FINISH_ACCEL
+#undef OUT_RING_F
 
 #endif /* XF86DRI */
 
@@ -187,16 +197,28 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
        dstPitch = (dstPitch + 15) & ~15;
 
     if (pPriv->video_memory != NULL && size != pPriv->size) {
-	RADEONFreeMemory(pScrn, pPriv->video_memory);
+	radeon_free_memory(pScrn, pPriv->video_memory);
 	pPriv->video_memory = NULL;
     }
 
     if (pPriv->video_memory == NULL) {
-	pPriv->video_offset = RADEONAllocateMemory(pScrn,
-						       &pPriv->video_memory,
-						       size * 2);
+	pPriv->video_offset = radeon_allocate_memory(pScrn,
+						     &pPriv->video_memory,
+						     size * 2, 64);
 	if (pPriv->video_offset == 0)
 	    return BadAlloc;
+    }
+
+    /* Bicubic filter loading */
+    if (!IS_R500_3D)
+	pPriv->bicubic_enabled = FALSE;
+    if (pPriv->bicubic_memory == NULL && pPriv->bicubic_enabled) {
+	pPriv->bicubic_offset = radeon_allocate_memory(pScrn,
+						       &pPriv->bicubic_memory,
+						       sizeof(bicubic_tex_512), 64);
+	pPriv->bicubic_src_offset = pPriv->bicubic_offset + info->fbLocation + pScrn->fbOffset;
+	if (pPriv->bicubic_offset == 0)
+		pPriv->bicubic_enabled = FALSE;
     }
 
     if (pDraw->type == DRAWABLE_WINDOW)
@@ -267,6 +289,10 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
 	break;
     }
 
+    /* Upload bicubic filter tex */
+    if (pPriv->bicubic_enabled)
+	RADEONCopyData(pScrn, (uint8_t *)bicubic_tex_512, (uint8_t *)(info->FB + pPriv->bicubic_offset), 1024, 1024, 1, 512, 2);
+
     /* update cliplist */
     if (!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) {
 	REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
@@ -320,11 +346,15 @@ static XF86VideoFormatRec Formats[NUM_FORMATS] =
     {15, TrueColor}, {16, TrueColor}, {24, TrueColor}
 };
 
-#define NUM_ATTRIBUTES 0
+#define NUM_ATTRIBUTES 1
 
-static XF86AttributeRec Attributes[NUM_ATTRIBUTES] =
+static XF86AttributeRec Attributes[NUM_ATTRIBUTES+1] =
 {
+    {XvSettable | XvGettable, 0, 1, "XV_BICUBIC"},
+    {0, 0, 0, NULL}
 };
+
+static Atom xvBicubic;
 
 #define NUM_IMAGES 4
 
@@ -335,6 +365,44 @@ static XF86ImageRec Images[NUM_IMAGES] =
     XVIMAGE_I420,
     XVIMAGE_UYVY
 };
+
+int
+RADEONGetTexPortAttribute(ScrnInfoPtr  pScrn,
+		       Atom	    attribute,
+		       INT32	    *value,
+		       pointer	    data)
+{
+    RADEONInfoPtr	info = RADEONPTR(pScrn);
+    RADEONPortPrivPtr	pPriv = (RADEONPortPrivPtr)data;
+
+    if (info->accelOn) RADEON_SYNC(info, pScrn);
+
+    if (attribute == xvBicubic)
+	*value = pPriv->bicubic_enabled ? 1 : 0;
+    else
+	return BadMatch;
+
+    return Success;
+}
+
+int
+RADEONSetTexPortAttribute(ScrnInfoPtr  pScrn,
+		       Atom	    attribute,
+		       INT32	    value,
+		       pointer	    data)
+{
+    RADEONInfoPtr	info = RADEONPTR(pScrn);
+    RADEONPortPrivPtr	pPriv = (RADEONPortPrivPtr)data;
+
+    RADEON_SYNC(info, pScrn);
+
+    if (attribute == xvBicubic)
+	pPriv->bicubic_enabled = ClipValue (value, 0, 1);
+    else
+	return BadMatch;
+
+    return Success;
+}
 
 XF86VideoAdaptorPtr
 RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
@@ -350,6 +418,8 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
 		    (sizeof(RADEONPortPrivRec) + sizeof(DevUnion)));
     if (adapt == NULL)
 	return NULL;
+
+    xvBicubic         = MAKE_ATOM("XV_BICUBIC");
 
     adapt->type = XvWindowMask | XvInputMask | XvImageMask;
     adapt->flags = 0;
@@ -367,8 +437,13 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
     pPortPriv =
 	(RADEONPortPrivPtr)(&adapt->pPortPrivates[num_texture_ports]);
 
-    adapt->nAttributes = NUM_ATTRIBUTES;
-    adapt->pAttributes = Attributes;
+    if (IS_R500_3D) {
+	adapt->nAttributes = NUM_ATTRIBUTES;
+	adapt->pAttributes = Attributes;
+    } else {
+	adapt->nAttributes = 0;
+	adapt->pAttributes = NULL;
+    }
     adapt->pImages = Images;
     adapt->nImages = NUM_IMAGES;
     adapt->PutVideo = NULL;
@@ -376,8 +451,8 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
     adapt->GetVideo = NULL;
     adapt->GetStill = NULL;
     adapt->StopVideo = RADEONStopVideo;
-    adapt->SetPortAttribute = RADEONSetPortAttribute;
-    adapt->GetPortAttribute = RADEONGetPortAttribute;
+    adapt->SetPortAttribute = RADEONSetTexPortAttribute;
+    adapt->GetPortAttribute = RADEONGetTexPortAttribute;
     adapt->QueryBestSize = RADEONQueryBestSize;
     adapt->PutImage = RADEONPutImageTextured;
     adapt->ReputImage = NULL;
@@ -390,6 +465,7 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
 	pPriv->videoStatus = 0;
 	pPriv->currentBuffer = 0;
 	pPriv->doubleBuffer = 0;
+	pPriv->bicubic_enabled = (info->ChipFamily >= CHIP_FAMILY_RV515);
 
 	/* gotta uninit this someplace, XXX: shouldn't be necessary for textured */
 	REGION_NULL(pScreen, &pPriv->clip);

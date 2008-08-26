@@ -43,8 +43,7 @@
 
 #ifdef XF86DRI
 #define _XF86DRI_SERVER_
-#include "radeon_dri.h"
-#include "radeon_sarea.h"
+#include "radeon_drm.h"
 #include "sarea.h"
 #endif
 
@@ -225,7 +224,11 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode, int pll_flags)
     if (IS_AVIVO_VARIANT) {
 	uint32_t temp;
 
-	pll_flags |= RADEON_PLL_PREFER_LOW_REF_DIV;
+	if (mode->Clock > 120000) /* range limits??? */
+	    pll_flags |= RADEON_PLL_PREFER_HIGH_FB_DIV;
+	else
+	    pll_flags |= RADEON_PLL_PREFER_LOW_REF_DIV;
+
 
 	RADEONComputePLL(&info->pll, mode->Clock, &temp, &fb_div, &ref_div, &post_div, pll_flags);
 	sclock = temp;
