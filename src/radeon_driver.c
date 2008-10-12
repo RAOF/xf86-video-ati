@@ -498,7 +498,7 @@ static Bool RADEONUnmapMem(ScrnInfoPtr pScrn)
 void RADEONPllErrataAfterIndex(RADEONInfoPtr info)
 {
     unsigned char *RADEONMMIO = info->MMIO;
-	
+
     if (!(info->ChipErrata & CHIP_ERRATA_PLL_DUMMYREADS))
 	return;
 
@@ -3311,7 +3311,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     RADEONInitMemoryMap(pScrn);
 
     /* empty the surfaces */
-    {
+    if (info->ChipFamily < CHIP_FAMILY_R600) {
 	unsigned char *RADEONMMIO = info->MMIO;
 	unsigned int j;
 	for (j = 0; j < 8; j++) {
@@ -3449,13 +3449,13 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 			   "[drm] failed to enable new memory map\n");
 		RADEONDRICloseScreen(pScreen);
-		info->directRenderingEnabled = FALSE;		
+		info->directRenderingEnabled = FALSE;
 	}
     }
 #endif
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Initializing fb layer\n");
-    
+
     if (info->r600_shadow_fb) {
 	info->fb_shadow = xcalloc(1,
 				  pScrn->displayWidth * pScrn->virtualY *
@@ -3509,18 +3509,16 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 	else if (strcmp(s, "BGR") == 0) subPixelOrder = SubPixelHorizontalBGR;
 	else if (strcmp(s, "NONE") == 0) subPixelOrder = SubPixelNone;
 	PictureSetSubpixelOrder (pScreen, subPixelOrder);
-    } 
+    }
 #endif
 
     pScrn->vtSema = TRUE;
 
-    /* xf86CrtcRotate() accesses pScrn->pScreen */
-    pScrn->pScreen = pScreen;
-
-    if (!xf86SetDesiredModes (pScrn))
-	return FALSE;
-
-    RADEONSaveScreen(pScreen, SCREEN_SAVER_ON);
+    /* restore the memory map here otherwise we may get a hang when
+     * initializing the drm below
+     */
+    RADEONInitMemMapRegisters(pScrn, info->ModeReg, info);
+    RADEONRestoreMemMapRegisters(pScrn, info->ModeReg);
 
     /* Backing store setup */
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
@@ -3651,6 +3649,10 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
             return FALSE;
         }
     }
+
+    /* set the modes with desired rotation, etc. */
+    if (!xf86SetDesiredModes (pScrn))
+	return FALSE;
 
     /* Provide SaveScreen & wrap BlockHandler and CloseScreen */
     /* Wrap CloseScreen */
@@ -5519,7 +5521,7 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 	if (info->dri->textureSize) {
 	    drm_radeon_sarea_t *pSAREAPriv =
 		(drm_radeon_sarea_t*)DRIGetSAREAPrivate(pScrn->pScreen);
-	    drmTextureRegionPtr list = pSAREAPriv->tex_list[0];
+	    struct drm_tex_region *list = pSAREAPriv->tex_list[0];
 	    int age = ++pSAREAPriv->tex_age[0];
 
 	    i = 0;

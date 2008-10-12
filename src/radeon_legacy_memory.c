@@ -12,16 +12,14 @@
  * returned.
  */
 uint32_t
-radeon_allocate_memory(ScrnInfoPtr pScrn,
+radeon_legacy_allocate_memory(ScrnInfoPtr pScrn,
 		       void **mem_struct,
 		       int size,
 		       int align)
 {
-    ScreenPtr pScreen;
+    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
     RADEONInfoPtr info = RADEONPTR(pScrn);
     uint32_t offset = 0;
-
-    pScreen = screenInfo.screens[pScrn->scrnIndex];
 
 #ifdef USE_EXA
     if (info->useEXA) {
@@ -31,10 +29,10 @@ radeon_allocate_memory(ScrnInfoPtr pScrn,
 	    if (area->size >= size)
 		return area->offset;
 
-	    exaOffscreenFree(pScrn->pScreen, area);
+	    exaOffscreenFree(pScreen, area);
 	}
 
-	area = exaOffscreenAlloc(pScrn->pScreen, size, align, TRUE,
+	area = exaOffscreenAlloc(pScreen, size, align, TRUE,
 				 NULL, NULL);
 
 	*mem_struct = area;
@@ -92,9 +90,10 @@ radeon_allocate_memory(ScrnInfoPtr pScrn,
 }
 
 void
-radeon_free_memory(ScrnInfoPtr pScrn,
+radeon_legacy_free_memory(ScrnInfoPtr pScrn,
 		   void *mem_struct)
 {
+    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
 #ifdef USE_EXA
@@ -102,7 +101,7 @@ radeon_free_memory(ScrnInfoPtr pScrn,
 	ExaOffscreenArea *area = mem_struct;
 
 	if (area != NULL)
-	    exaOffscreenFree(pScrn->pScreen, area);
+	    exaOffscreenFree(pScreen, area);
 	area = NULL;
     }
 #endif /* USE_EXA */

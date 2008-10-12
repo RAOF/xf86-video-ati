@@ -1386,6 +1386,58 @@ const int object_connector_convert[] =
       CONNECTOR_DISPLAY_PORT,
     };
 
+xf86MonPtr radeon_atom_get_edid(xf86OutputPtr output)
+{
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    RADEONInfoPtr info       = RADEONPTR(output->scrn);
+    READ_EDID_FROM_HW_I2C_DATA_PS_ALLOCATION edid_data;
+    AtomBiosArgRec data;
+    unsigned char *space;
+    int i2c_clock = 50;
+    int engine_clk = info->sclk * 100;
+    int prescale;
+    unsigned char *edid;
+    xf86MonPtr mon = NULL;
+
+    if (!radeon_output->ddc_i2c.hw_capable)
+	return mon;
+
+    if (info->atomBIOS->fbBase)
+	edid = (unsigned char *)info->FB + info->atomBIOS->fbBase;
+    else if (info->atomBIOS->scratchBase)
+	edid = (unsigned char *)info->atomBIOS->scratchBase;
+    else
+	return mon;
+
+    memset(edid, 0, ATOM_EDID_RAW_DATASIZE);
+
+    if (info->ChipFamily == CHIP_FAMILY_R520)
+	prescale = (127 << 8) + (engine_clk * 10) / (4 * 127 * i2c_clock);
+    else if (info->ChipFamily < CHIP_FAMILY_R600)
+	prescale = (((engine_clk * 10)/(4 * 128 * 100) + 1) << 8) + 128;
+    else
+	prescale = (info->pll.reference_freq * 10) / i2c_clock;
+
+    edid_data.usPrescale = prescale;
+    edid_data.usVRAMAddress = 0;
+    edid_data.ucSlaveAddr = 0xa0;
+    edid_data.ucLineNumber = radeon_output->ddc_i2c.hw_line;
+
+    data.exec.index = GetIndexIntoMasterTable(COMMAND, ReadEDIDFromHWAssistedI2C);
+    data.exec.dataSpace = (void *)&space;
+    data.exec.pspace = &edid_data;
+
+    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS)
+	ErrorF("Atom Get EDID success\n");
+    else
+	ErrorF("Atom Get EDID failed\n");
+
+    if (edid[1] == 0xff)
+	mon = xf86InterpretEDID(output->scrn->scrnIndex, edid);
+
+    return mon;
+
+}
 
 static RADEONI2CBusRec
 RADEONLookupGPIOLineForDDC(ScrnInfoPtr pScrn, uint8_t id)
@@ -1425,9 +1477,15 @@ RADEONLookupGPIOLineForDDC(ScrnInfoPtr pScrn, uint8_t id)
     i2c.get_data_mask = (1 <<  gpio.ucDataY_Shift);
     i2c.a_clk_mask = (1 << gpio.ucClkA_Shift);
     i2c.a_data_mask = (1 <<  gpio.ucDataA_Shift);
+    i2c.hw_line = gpio.sucI2cId.sbfAccess.bfI2C_LineMux;
+    i2c.hw_capable = gpio.sucI2cId.sbfAccess.bfHW_Capable;
     i2c.valid = TRUE;
 
 #if 0
+    ErrorF("id: %d\n", id);
+    ErrorF("hw capable: %d\n", gpio.sucI2cId.sbfAccess.bfHW_Capable);
+    ErrorF("hw engine id: %d\n", gpio.sucI2cId.sbfAccess.bfHW_EngineID);
+    ErrorF("line mux %d\n", gpio.sucI2cId.sbfAccess.bfI2C_LineMux);
     ErrorF("mask_clk_reg: 0x%x\n", gpio.usClkMaskRegisterIndex * 4);
     ErrorF("mask_data_reg: 0x%x\n", gpio.usDataMaskRegisterIndex * 4);
     ErrorF("put_clk_reg: 0x%x\n", gpio.usClkEnRegisterIndex * 4);
@@ -1536,15 +1594,23 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn)
 		break;
 	    case ENCODER_OBJECT_ID_INTERNAL_TMDS1:
 	    case ENCODER_OBJECT_ID_INTERNAL_KLDSCP_TMDS1:
-		info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP1_INDEX);
-		info->BiosConnector[i].TMDSType = TMDS_INT;
+		if (info->BiosConnector[i].ConnectorType == CONNECTOR_LVDS)
+		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_LCD1_INDEX);
+		else {
+		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP1_INDEX);
+		    info->BiosConnector[i].TMDSType = TMDS_INT;
+		}
 		break;
 	    case ENCODER_OBJECT_ID_INTERNAL_UNIPHY:
-		if (num == 1)
-		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP1_INDEX);
-		else
-		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP2_INDEX);
-		info->BiosConnector[i].TMDSType = TMDS_UNIPHY;
+		if (info->BiosConnector[i].ConnectorType == CONNECTOR_LVDS)
+		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_LCD1_INDEX);
+		else {
+		    if (num == 1)
+			info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP1_INDEX);
+		    else
+			info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP2_INDEX);
+		    info->BiosConnector[i].TMDSType = TMDS_UNIPHY;
+		}
 		break;
 	    case ENCODER_OBJECT_ID_INTERNAL_TMDS2:
 	    case ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DVO1:
@@ -1553,8 +1619,12 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn)
 		break;
 	    case ENCODER_OBJECT_ID_INTERNAL_LVTM1:
 	    case ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA:
-		info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP3_INDEX);
-		info->BiosConnector[i].TMDSType = TMDS_LVTMA;
+		if (info->BiosConnector[i].ConnectorType == CONNECTOR_LVDS)
+		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_LCD1_INDEX);
+		else {
+		    info->BiosConnector[i].devices |= (1 << ATOM_DEVICE_DFP3_INDEX);
+		    info->BiosConnector[i].TMDSType = TMDS_LVTMA;
+		}
 		break;
 	    case ENCODER_OBJECT_ID_INTERNAL_DAC1:
 	    case ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1:
@@ -1606,6 +1676,71 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn)
 		((char *)Record + Record->ucRecordSize);
 	}
     }
+    return TRUE;
+}
+
+Bool
+RADEONGetATOMLVDSInfo(xf86OutputPtr output)
+{
+    ScrnInfoPtr pScrn = output->scrn;
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    atomDataTablesPtr atomDataPtr;
+    uint8_t crev, frev;
+
+    atomDataPtr = info->atomBIOS->atomDataPtr;
+
+    if (!rhdAtomGetTableRevisionAndSize(
+	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->LVDS_Info.base),
+	    &frev,&crev,NULL)) {
+	return FALSE;
+    }
+
+    switch (crev) {
+    case 1:
+	radeon_output->PanelXRes = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usHActive);
+	radeon_output->PanelYRes = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usVActive);
+	radeon_output->DotClock   = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usPixClk) * 10;
+	radeon_output->HBlank     = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usHBlanking_Time);
+	radeon_output->HOverPlus  = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usHSyncOffset);
+	radeon_output->HSyncWidth = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usHSyncWidth);
+	radeon_output->VBlank     = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usVBlanking_Time);
+	radeon_output->VOverPlus  = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usVSyncOffset);
+	radeon_output->VSyncWidth = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->sLCDTiming.usVSyncWidth);
+	radeon_output->PanelPwrDly = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info->usOffDelayInMs);
+	radeon_output->lvds_misc   =  atomDataPtr->LVDS_Info.LVDS_Info->ucLVDS_Misc;
+	radeon_output->lvds_ss_id  =  atomDataPtr->LVDS_Info.LVDS_Info->ucSS_Id;
+	break;
+    case 2:
+	radeon_output->PanelXRes = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usHActive);
+	radeon_output->PanelYRes = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usVActive);
+	radeon_output->DotClock   = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usPixClk) * 10;
+	radeon_output->HBlank     = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usHBlanking_Time);
+	radeon_output->HOverPlus  = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usHSyncOffset);
+	radeon_output->HSyncWidth = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usHSyncWidth);
+	radeon_output->VBlank     = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usVBlanking_Time);
+	radeon_output->VOverPlus  = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usVSyncOffset);
+	radeon_output->VSyncWidth = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->sLCDTiming.usVSyncWidth);
+	radeon_output->PanelPwrDly = le16_to_cpu(atomDataPtr->LVDS_Info.LVDS_Info_v12->usOffDelayInMs);
+	radeon_output->lvds_misc   =  atomDataPtr->LVDS_Info.LVDS_Info_v12->ucLVDS_Misc;
+	radeon_output->lvds_ss_id  =  atomDataPtr->LVDS_Info.LVDS_Info_v12->ucSS_Id;
+	break;
+    }
+
+    if (radeon_output->PanelPwrDly > 2000 || radeon_output->PanelPwrDly < 0)
+	radeon_output->PanelPwrDly = 2000;
+
+    radeon_output->Flags = 0;
+
+    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+	       "LVDS Info:\n"
+	       "XRes: %d, YRes: %d, DotClock: %d\n"
+	       "HBlank: %d, HOverPlus: %d, HSyncWidth: %d\n"
+	       "VBlank: %d, VOverPlus: %d, VSyncWidth: %d\n",
+	       radeon_output->PanelXRes, radeon_output->PanelYRes, radeon_output->DotClock,
+	       radeon_output->HBlank, radeon_output->HOverPlus, radeon_output->HSyncWidth,
+	       radeon_output->VBlank, radeon_output->VOverPlus, radeon_output->VSyncWidth);
+
     return TRUE;
 }
 
@@ -1731,6 +1866,21 @@ static void RADEONApplyATOMQuirks(ScrnInfoPtr pScrn, int index)
 	(PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0291)) {
 	if (info->BiosConnector[index].ConnectorType == CONNECTOR_LVDS) {
 	    info->BiosConnector[index].ddc_i2c.valid = FALSE;
+	}
+    }
+
+    /* Funky macbooks */
+    if ((info->Chipset == PCI_CHIP_RV530_71C5) &&
+	(PCI_SUB_VENDOR_ID(info->PciInfo) == 0x106b) &&
+	(PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0080)) {
+	if ((index == ATOM_DEVICE_CRT1_INDEX) ||
+	    (index == ATOM_DEVICE_CRT2_INDEX) ||
+	    (index == ATOM_DEVICE_DFP2_INDEX))
+	    info->BiosConnector[index].valid = FALSE;
+
+	if (index == ATOM_DEVICE_DFP1_INDEX) {
+	    info->BiosConnector[index].DACType = DAC_TVDAC;
+	    info->BiosConnector[index].devices |= (1 << ATOM_DEVICE_CRT2_INDEX);
 	}
     }
 

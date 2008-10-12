@@ -623,6 +623,7 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     RADEONInfoPtr info = RADEONPTR(crtc->scrn);
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     struct drm_modeset_ctl modeset;
+    unsigned char *RADEONMMIO = info->MMIO;
 
     if (!info->directRenderingEnabled)
 	return;
@@ -631,6 +632,8 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     modeset.cmd = post ? _DRM_POST_MODESET : _DRM_PRE_MODESET;
 
     ioctl(info->dri->drmFD, DRM_IOCTL_MODESET_CTL, &modeset);
+
+    info->ModeReg->gen_int_cntl = INREG( RADEON_GEN_INT_CNTL );
 #endif
 }
 
@@ -1708,7 +1711,7 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     Bool update_tv_routing = FALSE;
     Bool tilingChanged = FALSE;
 
-    if (adjusted_mode->Clock > 120000) /* range limits??? */
+    if (adjusted_mode->Clock > 200000) /* range limits??? */
 	pll_flags |= RADEON_PLL_PREFER_HIGH_FB_DIV;
     else
 	pll_flags |= RADEON_PLL_PREFER_LOW_REF_DIV;

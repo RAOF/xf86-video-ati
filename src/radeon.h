@@ -1068,15 +1068,15 @@ extern void RADEONUpdateHVPosition(xf86OutputPtr output, DisplayModePtr mode);
 extern void RADEONInitVideo(ScreenPtr pScreen);
 extern void RADEONResetVideo(ScrnInfoPtr pScrn);
 
-/* radeon_memory.c */
+/* radeon_legacy_memory.c */
 extern uint32_t
-radeon_allocate_memory(ScrnInfoPtr pScrn,
-		       void **mem_struct,
-		       int size,
-		       int align);
+radeon_legacy_allocate_memory(ScrnInfoPtr pScrn,
+			      void **mem_struct,
+			      int size,
+			      int align);
 extern void
-radeon_free_memory(ScrnInfoPtr pScrn,
-		   void *mem_struct);
+radeon_legacy_free_memory(ScrnInfoPtr pScrn,
+		          void *mem_struct);
 
 #ifdef XF86DRI
 #  ifdef USE_XAA
@@ -1304,7 +1304,7 @@ static __inline__ void RADEON_MARK_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 static __inline__ void RADEON_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 {
 #ifdef USE_EXA
-    if (info->useEXA)
+    if (info->useEXA && pScrn->pScreen)
 	exaWaitSync(pScrn->pScreen);
 #endif
 #ifdef USE_XAA

@@ -222,9 +222,18 @@ radeon_ddc_connected(xf86OutputPtr output)
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
     if (radeon_output->pI2CBus) {
-	RADEONI2CDoLock(output, TRUE);
-	MonInfo = xf86OutputGetEDID(output, radeon_output->pI2CBus);
-	RADEONI2CDoLock(output, FALSE);
+	/* RV410 RADEON_GPIO_VGA_DDC seems to only work via hw i2c
+	 * We may want to extend this to other cases if the need arises...
+	 */
+	if ((info->ChipFamily == CHIP_FAMILY_RV410) &&
+	    (radeon_output->ddc_i2c.mask_clk_reg == RADEON_GPIO_VGA_DDC) &&
+	    info->IsAtomBios)
+	    MonInfo = radeon_atom_get_edid(output);
+	else {
+	    RADEONI2CDoLock(output, TRUE);
+	    MonInfo = xf86OutputGetEDID(output, radeon_output->pI2CBus);
+	    RADEONI2CDoLock(output, FALSE);
+	}
     }
     if (MonInfo) {
 	if (!xf86ReturnOptValBool(info->Options, OPTION_IGNORE_EDID, FALSE))
@@ -1137,8 +1146,7 @@ radeon_create_resources(xf86OutputPtr output)
 	}
     }
 
-    if (IS_DCE3_VARIANT &&
-	(OUTPUT_IS_DVI || (radeon_output->type == OUTPUT_HDMI))) {
+    if (OUTPUT_IS_DVI || (radeon_output->type == OUTPUT_HDMI)) {
 	coherent_mode_atom = MAKE_ATOM("coherent_mode");
 
 	range[0] = 0; /* off */
@@ -1150,7 +1158,7 @@ radeon_create_resources(xf86OutputPtr output)
 		       "RRConfigureOutputProperty error, %d\n", err);
 	}
 
-	data = 1; /* use coherent mode by default */
+	data = 0; /* coherent mode off by default */
 
 	err = RRChangeOutputProperty(output->randr_output, coherent_mode_atom,
 				     XA_INTEGER, 32, PropModeReplace, 1, &data,
@@ -1732,6 +1740,8 @@ legacy_setup_i2c_bus(int ddc_line)
 {
     RADEONI2CBusRec i2c;
 
+    i2c.hw_line = 0;
+    i2c.hw_capable = FALSE;
     i2c.mask_clk_mask = RADEON_GPIO_EN_1;
     i2c.mask_data_mask = RADEON_GPIO_EN_0;
     i2c.a_clk_mask = RADEON_GPIO_A_1;
@@ -1774,6 +1784,8 @@ atom_setup_i2c_bus(int ddc_line)
 {
     RADEONI2CBusRec i2c;
 
+    i2c.hw_line = 0;
+    i2c.hw_capable = FALSE;
     if (ddc_line == AVIVO_GPIO_0) {
 	i2c.put_clk_mask = (1 << 19);
 	i2c.put_data_mask = (1 << 18);

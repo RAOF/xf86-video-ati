@@ -125,11 +125,17 @@ atombios_static_pwrmgt_setup(ScrnInfoPtr pScrn, int enable);
 extern Bool
 RADEONGetATOMTVInfo(xf86OutputPtr output);
 
+extern Bool
+RADEONGetATOMLVDSInfo(xf86OutputPtr output);
+
 extern int
 atombios_external_tmds_setup(xf86OutputPtr output, DisplayModePtr mode);
 
 extern void
 atombios_get_command_table_version(atomBiosHandlePtr atomBIOS, int index, int *major, int *minor);
+
+extern xf86MonPtr
+radeon_atom_get_edid(xf86OutputPtr output);
 
 Bool
 rhdAtomASICInit(atomBiosHandlePtr handle);
