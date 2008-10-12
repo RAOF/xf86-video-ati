@@ -1,3 +1,184 @@
+commit c0e6cb6d0eeef8f2ea60d840e1cd668fa92cd7f9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Oct 10 11:09:27 2008 -0400
+
+    Fix grey level dithering setup
+
+commit 9eb2b6cd28224f0cbbabf3df451696ae1a845b9c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Oct 10 16:18:05 2008 +1000
+
+    radeon: hopefully fix plls for 30" monitors.
+    
+    Only do the HIGH trick on the DCE3 cards. Tested on rv610/630/770.
+
+commit 0975e007ec7933acf9cd8ad2f281313ef8d32ac9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Oct 9 17:16:28 2008 +1100
+
+    radeon: rename radeon_memory to radeon_legacy_memory.
+    
+    This is a setup patch for the kms/memory management code.
+
+commit d744dc013cf5ca3141c0fdf55e36d713fe9f53ba
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 8 15:50:25 2008 -0400
+
+    Fix connector table mapping for lvtma/kaleidoscope/uniphy.
+    
+    Fixes DPMS on LVDS.
+
+commit dc795ba66a8c0eb2c3fdb86bd42dfc17e0aa3b6e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Oct 7 12:32:47 2008 -0400
+
+    Fixups from last DFP/LCD refactor
+    
+    - fix DFP1 -> LCD1
+    - use _INDEX rather than _SUPPORT defs
+
+commit 4a9e8d9fe24278b56aef51677fd35289d01584a7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Oct 6 18:00:08 2008 -0400
+
+    set grey levels correctly for temporal dithering
+
+commit 5708624d1151877dd66a462d4a75fed6774604a7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Oct 6 15:11:56 2008 -0400
+
+    Turn coherent mode off by default on DVI
+
+commit a5c5ce96279d01eb519bfb92b94c06a58acb7f07
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Oct 6 15:07:31 2008 -0400
+
+    Refactor atom LCD/DFP output setup
+    
+    Simplify the code, properly handle dithering, coherent mode, encoding, etc.
+    Should fix bug 17897.
+
+commit f9826a5694b7adb6920eb5bdf45d840d8fb14d53
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Oct 3 15:24:12 2008 -0400
+
+    Add support for DDC via atom commands for RV410
+    
+    The atom calls use the hw i2c engine for DDC.  For some
+    reason, sw i2c doesn't seem to work on the VGA GPIO on
+    RV410 chips, so we use atom in that case.
+    
+    This fixes the longstanding VGA DDC problems on RV410/M26
+    chips.
+
+commit 23c17c0121d43c2fd11bb5cfbaa4b02abac2b16d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Oct 3 14:30:33 2008 -0400
+
+    man page updates
+    
+    Update render accel and page flipping information.
+    fixes bug 17887.
+
+commit 4ac6e499089aec3c79af5dbede5fe631b105ce3d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Oct 1 18:53:15 2008 -0400
+
+    proper fix for initial rotation
+    
+    The initial modeset was setting the MC regs, so just set them
+    rather than the full modeset.
+
+commit 346228b20c69a965c9e7d67157f42c1d36a5b6c3
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Oct 1 14:38:27 2008 -0400
+
+    Workaround to make initial rotation work
+    
+    Acceleration needs to be initialized before setting the mode
+    for initial rotation to work.  Changing the order in RADEONScreenInit()
+    doesn't work because RADEONDRIKernelInit() hangs in the ioctl to
+    initialize the CP if the mode is not set prior (even if the heads
+    are turned off after setting the mode).  The workaround is to set the
+    modes twice, once before accel and once after.
+    
+    This needs to be looked into further.
+
+commit c359c2a31caf9f75b9fc6b6bcbc3e9dc1fe404ba
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Sep 30 11:04:54 2008 +0200
+
+    Pass base offset into RADEONDisplayVideo() explicitly.
+    
+    This prevents the base offset from flipping back and forth if double buffering
+    is enabled and the two buffers start on different sides of a 4 MB boundary.
+    
+    Should fix http://bugs.freedesktop.org/show_bug.cgi?id=17254 ; please don't
+    reopen that bug report without attaching a log file captured after reproducing
+    the problem with this fix.
+
+commit ba21d5ae7fbbf5828c44c41655aff8b182453e2e
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Tue Sep 30 11:03:04 2008 +0200
+
+    Update GEN_INT_CNTL register value after calling DRM modeset ioctl.
+    
+    Fixes sync-to-vblank hangs after mode switch with DRM vblank-rework.
+
+commit 3110646daf05fa09faaa70066cc8c3db1bb07cec
+Author: Michel Dänzer <michel@tungstengraphics.com>
+Date:   Sun Sep 14 11:46:36 2008 +0200
+
+    Fix -Werror build.
+
+commit d82f2938f69402c641a1c8362fdc513419b27659
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Sep 26 13:51:24 2008 -0400
+
+    atombios updates from upstream
+
+commit d0d58b39e49c5ce00bc8bd12f721ad8c7f554b91
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Sep 24 11:54:34 2008 -0400
+
+    radeon: Further pll adjustments
+
+commit d100a6af8f828eb94f8ba6e8a96c24389b5cf46f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Sep 19 14:04:59 2008 -0400
+
+    cleanup macbook quirk
+
+commit 1218e38c75351a20f7414ba6fcb3545689339442
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Sep 19 13:52:07 2008 -0400
+
+    more macbook fixes
+
+commit 83e1f132965deadedda7a622184eb400cd4c120c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Sep 19 09:36:59 2008 -0400
+
+    Fix copy/paste error in the last commit
+    
+    DVI-D -> DVI-I
+
+commit 4af825f7b13cba8c3b204e72a07cab5009331240
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Sep 19 00:29:20 2008 -0400
+
+    radeon: Add quirk for macbook
+    
+    - should fix bug 17625
+
+commit 38aa450fce6a91b35c191fd07112490a62cc29c6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Aug 26 21:50:23 2008 -0400
+
+    fix some fallout from the common allocator
+    
+    should fix bug 17317
+
 commit a3cc1d7a421456186024c5c069e403d374a0f0b9
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Tue Aug 26 08:03:20 2008 +1000

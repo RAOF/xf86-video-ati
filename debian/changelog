@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.9.0+git20081012.c0e6cb6d-1) UNRELEASED; urgency=low
+
+  * Pull upstream snapshot, up to commit c0e6cb6d, closes: 500903.
+
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 12 Oct 2008 08:57:19 +0200
+
 xserver-xorg-video-ati (1:6.9.0+git20080826.a3cc1d7a-2) experimental; urgency=low
 
   * Build against xserver 1.5.
