@@ -229,15 +229,20 @@ radeon_ddc_connected(xf86OutputPtr output)
 	    (radeon_output->ddc_i2c.mask_clk_reg == RADEON_GPIO_VGA_DDC) &&
 	    info->IsAtomBios)
 	    MonInfo = radeon_atom_get_edid(output);
-	else {
+	else if (info->get_hardcoded_edid_from_bios) {
+	    MonInfo = RADEONGetHardCodedEDIDFromBIOS(output);
+	    if (MonInfo == NULL) {
+		RADEONI2CDoLock(output, TRUE);
+		MonInfo = xf86OutputGetEDID(output, radeon_output->pI2CBus);
+		RADEONI2CDoLock(output, FALSE);
+	    }
+	} else {
 	    RADEONI2CDoLock(output, TRUE);
 	    MonInfo = xf86OutputGetEDID(output, radeon_output->pI2CBus);
 	    RADEONI2CDoLock(output, FALSE);
 	}
     }
     if (MonInfo) {
-	if (!xf86ReturnOptValBool(info->Options, OPTION_IGNORE_EDID, FALSE))
-	    xf86OutputSetEDID(output, MonInfo);
 	if (radeon_output->type == OUTPUT_LVDS)
 	    MonType = MT_LCD;
 	else if (radeon_output->type == OUTPUT_DVI_D)
@@ -251,6 +256,24 @@ radeon_ddc_connected(xf86OutputPtr output)
 	    MonType = MT_DFP;
 	else
 	    MonType = MT_CRT;
+
+	if (radeon_output->shared_ddc) {
+	    if (radeon_output->type == OUTPUT_VGA) {
+		if (MonInfo->rawData[0x14] & 0x80) /* if it's digital and VGA */
+		    MonType = MT_NONE;
+		else
+		    MonType = MT_CRT;
+	    } else {
+		if (MonInfo->rawData[0x14] & 0x80) /* if it's digital and DVI/HDMI/etc. */
+		    MonType = MT_DFP;
+		else
+		    MonType = MT_NONE;
+	    }
+	}
+
+	if (MonType != MT_NONE)
+	    if (!xf86ReturnOptValBool(info->Options, OPTION_IGNORE_EDID, FALSE))
+		xf86OutputSetEDID(output, MonInfo);
     } else
 	MonType = MT_NONE;
 
@@ -454,6 +477,12 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 
     radeon_output->Flags &= ~RADEON_USE_RMX;
 
+    /* 
+     *  Refresh the Crtc values without INTERLACE_HALVE_V 
+     *  Should we use output->scrn->adjustFlags like xf86RandRModeConvert() does? 
+     */
+    xf86SetModeCrtc(adjusted_mode, 0);
+
     /* decide if we are using RMX */
     if ((radeon_output->MonType == MT_LCD || radeon_output->MonType == MT_DFP)
 	&& radeon_output->rmx_type != RMX_OFF) {
@@ -513,7 +542,7 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
     if (IS_AVIVO_VARIANT) {
 	/* hw bug */
 	if ((mode->Flags & V_INTERLACE)
-	    && (mode->CrtcVSyncStart < (mode->CrtcVDisplay + 2)))
+	    && (adjusted_mode->CrtcVSyncStart < (adjusted_mode->CrtcVDisplay + 2)))
 	    adjusted_mode->CrtcVSyncStart = adjusted_mode->CrtcVDisplay + 2;
     }
 
@@ -2660,6 +2689,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
      */
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	info->BiosConnector[i].valid = FALSE;
+	info->BiosConnector[i].shared_ddc = FALSE;
 	info->BiosConnector[i].ddc_i2c.valid = FALSE;
 	info->BiosConnector[i].DACType = DAC_NONE;
 	info->BiosConnector[i].TMDSType = TMDS_NONE;
@@ -2783,6 +2813,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    radeon_output->output_id = info->BiosConnector[i].output_id;
 	    radeon_output->ddc_i2c = info->BiosConnector[i].ddc_i2c;
 	    radeon_output->igp_lane_info = info->BiosConnector[i].igp_lane_info;
+	    radeon_output->shared_ddc = info->BiosConnector[i].shared_ddc;
 
 	    if (radeon_output->ConnectorType == CONNECTOR_DVI_D)
 		radeon_output->DACType = DAC_NONE;

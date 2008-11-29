@@ -43,6 +43,8 @@
 #include "radeon_macros.h"
 #include "radeon_atombios.h"
 
+#include "ati_pciids_gen.h"
+
 static int
 atombios_output_dac1_setup(xf86OutputPtr output, DisplayModePtr mode)
 {
@@ -330,6 +332,7 @@ atombios_output_digital_setup(xf86OutputPtr output, int device, DisplayModePtr m
 	    }
 	    if (radeon_output->type == OUTPUT_HDMI)
 		disp_data2.ucMisc |= PANEL_ENCODER_MISC_HDMI_TYPE;
+	    disp_data2.usPixelClock = cpu_to_le16(mode->Clock / 10);
 	    disp_data2.ucTruncate = 0;
 	    disp_data2.ucSpatial = 0;
 	    disp_data2.ucTemporal = 0;
@@ -372,6 +375,20 @@ atombios_output_digital_setup(xf86OutputPtr output, int device, DisplayModePtr m
 }
 
 static int
+atombios_maybe_hdmi_mode(xf86OutputPtr output)
+{
+#ifndef EDID_COMPLETE_RAWDATA
+    /* there's no getting this right unless we have complete EDID */
+    return ATOM_ENCODER_MODE_HDMI;
+#else
+    if (output && xf86MonitorIsHDMI(output->MonInfo))
+	return ATOM_ENCODER_MODE_HDMI;
+
+    return ATOM_ENCODER_MODE_DVI;
+#endif
+}
+
+static int
 atombios_output_dig1_setup(xf86OutputPtr output, DisplayModePtr mode)
 {
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
@@ -402,7 +419,7 @@ atombios_output_dig1_setup(xf86OutputPtr output, DisplayModePtr mode)
     if (OUTPUT_IS_DVI)
 	disp_data.ucEncoderMode = ATOM_ENCODER_MODE_DVI;
     else if (radeon_output->type == OUTPUT_HDMI)
-	disp_data.ucEncoderMode = ATOM_ENCODER_MODE_HDMI;
+	disp_data.ucEncoderMode = atombios_maybe_hdmi_mode(output);
     else if (radeon_output->type == OUTPUT_DP)
 	disp_data.ucEncoderMode = ATOM_ENCODER_MODE_DP;
     else if (radeon_output->type == OUTPUT_LVDS)
@@ -511,7 +528,7 @@ atombios_output_dig2_setup(xf86OutputPtr output, DisplayModePtr mode)
     if (OUTPUT_IS_DVI)
 	disp_data.ucEncoderMode = ATOM_ENCODER_MODE_DVI;
     else if (radeon_output->type == OUTPUT_HDMI)
-	disp_data.ucEncoderMode = ATOM_ENCODER_MODE_HDMI;
+	disp_data.ucEncoderMode = atombios_maybe_hdmi_mode(output);
     else if (radeon_output->type == OUTPUT_DP)
 	disp_data.ucEncoderMode = ATOM_ENCODER_MODE_DP;
     else if (radeon_output->type == OUTPUT_LVDS)
@@ -855,7 +872,8 @@ atombios_set_output_crtc_source(xf86OutputPtr output)
 		if (OUTPUT_IS_DVI)
 		    crtc_src_param2.ucEncodeMode = ATOM_ENCODER_MODE_DVI;
 		else if (radeon_output->type == OUTPUT_HDMI)
-		    crtc_src_param2.ucEncodeMode = ATOM_ENCODER_MODE_HDMI;
+		    crtc_src_param2.ucEncodeMode =
+			atombios_maybe_hdmi_mode(output);
 		else if (radeon_output->type == OUTPUT_DP)
 		    crtc_src_param2.ucEncodeMode = ATOM_ENCODER_MODE_DP;
 	    } else if (radeon_output->MonType == MT_LCD) {
@@ -892,6 +910,30 @@ atombios_set_output_crtc_source(xf86OutputPtr output)
 
     ErrorF("Set CRTC Source failed\n");
     return;
+}
+
+static void
+atombios_apply_output_quirks(xf86OutputPtr output)
+{
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    RADEONInfoPtr info       = RADEONPTR(output->scrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    /* Funky macbooks */
+    if ((info->Chipset == PCI_CHIP_RV530_71C5) &&
+	(PCI_SUB_VENDOR_ID(info->PciInfo) == 0x106b) &&
+	(PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0080)) {
+	if (radeon_output->MonType == MT_LCD) {
+	    if (radeon_output->devices & ATOM_DEVICE_LCD1_SUPPORT) {
+		uint32_t lvtma_bit_depth_control = INREG(AVIVO_LVTMA_BIT_DEPTH_CONTROL);
+
+		lvtma_bit_depth_control &= ~AVIVO_LVTMA_BIT_DEPTH_CONTROL_TRUNCATE_EN;
+		lvtma_bit_depth_control &= ~AVIVO_LVTMA_BIT_DEPTH_CONTROL_SPATIAL_DITHER_EN;
+
+		OUTREG(AVIVO_LVTMA_BIT_DEPTH_CONTROL, lvtma_bit_depth_control);
+	    }
+	}
+    }
 }
 
 void
@@ -955,7 +997,7 @@ atombios_output_mode_set(xf86OutputPtr output,
 	    atombios_output_dac2_setup(output, adjusted_mode);
 	atombios_output_tv1_setup(output, adjusted_mode);
     }
-
+    atombios_apply_output_quirks(output);
 }
 
 static AtomBiosResult
