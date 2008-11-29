@@ -1,3 +1,155 @@
+commit 783cdb7374941bb1d2b63eea375fbf2f1b808cc3
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Nov 27 15:29:06 2008 +1000
+
+    r100/r200: EXA misrenders dst == a8 + dst alpha use.
+    
+    Fedora BZ#469556
+    
+    I've played with various dst and texture formats and rewritten large
+    parts of this to no avail, so I'm punting for now.
+
+commit 2d7cfc421713286edd5121b56999246f9ae70286
+Author: Eygene Ryabinkin <rea-fbsd@codelabs.ru>
+Date:   Tue Nov 25 13:25:33 2008 -0500
+
+    Catch unsubstituted macro for PCI region base access
+    
+    also fix up some warnings.
+
+commit af7690b9c300d37c3a0c51e27e0ad2ca009224a2
+Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date:   Tue Nov 25 02:57:30 2008 -0500
+
+    [PATCH] radeon: Fix PCI usage of 32-bit driver on 64-bit platform
+    
+    The radeon driver is storing PCI addresses in unsigned long's which
+    won't work well on 32-bit platforms with 64-bit physical address space
+    such as PowerPC 4xx. This fixes it by using unsigned long long instead.
+
+commit 065938617c0feab17f4274a5350de02a692ba065
+Author: Ramon van der Stelt <rvanderstelt@xs4all.nl>
+Date:   Tue Nov 25 02:23:46 2008 -0500
+
+    Interlaced mode fixes
+    
+    see bug 12626
+
+commit 36a7dc6ea1e1929e986ab1159497c71521cb2f10
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Tue Nov 25 01:04:37 2008 -0500
+
+    Additional AGP quirks
+    
+    bug 18693
+
+commit 2acb8e4ed220fccb21b22a53c5142ab3a35d32ef
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Nov 25 15:07:09 2008 +1000
+
+    radeon: fixup shared DDC lines for some rv610 cards.
+    
+    Some cards share DDC between a HDMI and VGA output, and expect the
+    driver to use load detect or EDID to figure it out.
+    
+    airlied- shipped in RHEL5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b01e35168de40d192fd7a9ce6884b9c7419afbd4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Nov 24 21:06:42 2008 -0500
+
+    Fix up posted logic
+    
+    noticed by benh on IRC
+
+commit d7a03e93372b17d642b42f5490464616ae7c99c1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Nov 24 15:52:05 2008 -0500
+
+    Get hardcoded edid from the bios for servers that support it
+    
+    should fix bug 11300
+
+commit 3858e31fa9d77d52a5cabb02f53f06385eab40f7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Nov 24 14:39:41 2008 -0500
+
+    Don't support rotation is accel is not available
+    
+    Fixes bug 18068
+
+commit 3d27876d91ef69d71f17b6cf8c07c26bf12857b4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 10 15:47:13 2008 +1000
+
+    radeon: always align dstPitch to 64 bytes for textured video
+    
+    bz# 18454
+
+commit 6c8b352264540ccc4622a7c0b704ce452dcd707d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Oct 29 15:53:57 2008 +1000
+
+    pciid: add HD3300 - 790GX chipset.
+    
+    RH BZ (#466706)
+
+commit 902eaf768142c6c7dcc487e10775027b84cd1f9a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Nov 6 15:46:43 2008 -0500
+
+    Check for LVDS on all IGP chips
+    
+    - fixes bug 18395
+
+commit 44abaa0ea8e5e3bbe833fa73e6d011618bb6d7e7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 3 15:09:28 2008 -0500
+
+    Fix HDMI output setup on DIG1/DIG2.
+    
+    The only reliable way to detect an HDMI sink is to check for the
+    appropriate EDID extension block, so this will only work right on
+    servers with xf86DoEEDID().  RANDR 1.2 will call this internally for
+    us if it exists, but pre-1.6 servers are out of luck.
+
+commit 937b7ac2a259cf504a19dcf62a58b1db1afb8eb9
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Wed Oct 29 01:31:50 2008 -0400
+
+    Add AGP quirk table
+    
+    - set known good default agp modes for problematic chip/bridge combos
+    - should fix bug 17360, others
+
+commit 67bc2ae7f227a2afedc8e699cf0458fa7960f301
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Oct 26 16:05:04 2008 +0100
+
+    Bug#7148: Fix manpage formatting
+
+commit 98fdd78a1229584b922f816f331a45bfc178c961
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Oct 21 18:36:22 2008 +1000
+
+    atombios: oops typo
+
+commit 763dff6c117a10b6a57ba1854c5b798359789e44
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Oct 21 18:35:44 2008 +1000
+
+    atombios: set missing pixel clock
+
+commit 435cf7da68186f2601c4b888296117d4f652c625
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Oct 15 10:52:14 2008 -0400
+
+    Add LCD dithering quirk for macbook pro
+    
+    fixes bug 17897.
+
 commit c0e6cb6d0eeef8f2ea60d840e1cd668fa92cd7f9
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Fri Oct 10 11:09:27 2008 -0400
