@@ -1,9 +1,9 @@
-xserver-xorg-video-ati (1:6.9.0+git20081129.783cdb73-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.9.0+git20081129.783cdb73-1) experimental; urgency=low
 
   * Pull upstream snapshot, up to commit 783cdb73.
     + Add AGPMode quirk table, closes: #461144, #462590, #467460. 
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 29 Nov 2008 10:50:18 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Sat, 29 Nov 2008 10:52:27 +0100
 
 xserver-xorg-video-ati (1:6.9.0+git20081012.c0e6cb6d-1) experimental; urgency=low
 
