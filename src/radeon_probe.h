@@ -41,9 +41,6 @@
 #include "xf86DDC.h"
 #include "randrstr.h"
 
-#define _XF86MISC_SERVER_
-#include <X11/extensions/xf86misc.h>
-
 #include "xf86Crtc.h"
 
 #ifdef USE_EXA
@@ -105,7 +102,9 @@ typedef enum
     TMDS_EXT     = 2,
     TMDS_LVTMA   = 3,
     TMDS_DDIA    = 4,
-    TMDS_UNIPHY  = 5
+    TMDS_UNIPHY  = 5,
+    TMDS_UNIPHY1 = 6,
+    TMDS_UNIPHY2 = 7
 } RADEONTmdsType;
 
 typedef enum
@@ -210,6 +209,7 @@ typedef struct {
     int igp_lane_info;
     Bool shared_ddc;
     int i2c_line_mux;
+    Bool load_detection;
 } RADEONBIOSConnector;
 
 typedef struct _RADEONOutputPrivateRec {

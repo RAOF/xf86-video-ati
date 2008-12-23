@@ -152,7 +152,6 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_ACCEL_DFS,      "AccelDFS",         OPTV_BOOLEAN, {0}, FALSE },
 #endif
 #endif
-    { OPTION_DDC_MODE,       "DDCMode",          OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_IGNORE_EDID,    "IgnoreEDID",       OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_DISP_PRIORITY,  "DisplayPriority",  OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_PANEL_SIZE,     "PanelSize",        OPTV_ANYSTR,  {0}, FALSE },
@@ -192,6 +191,8 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_IGNORE_LID_STATUS, "IgnoreLidStatus", OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_DEFAULT_TVDAC_ADJ, "DefaultTVDACAdj", OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_INT10,             "Int10",           OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_EXA_VSYNC,         "EXAVSync",        OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_ATOM_TVOUT,	"ATOMTVOut",	   OPTV_BOOLEAN, {0}, FALSE },
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -2133,9 +2134,9 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
    if (xf86IsEntityShared(info->pEnt->index)) {
         xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
                    "Direct Rendering Disabled -- "
-                   "Dual-head configuration is not working with "
+                   "Zaphod Dual-head configuration is not working with "
                    "DRI at present.\n"
-                   "Please use the radeon MergedFB option if you "
+                   "Please use the xrandr 1.2 if you "
                    "want Dual-head with DRI.\n");
         return FALSE;
     }

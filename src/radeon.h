@@ -165,7 +165,6 @@ typedef enum {
     OPTION_ACCEL_DFS,
 #endif
 #endif
-    OPTION_DDC_MODE,
     OPTION_IGNORE_EDID,
     OPTION_DISP_PRIORITY,
     OPTION_PANEL_SIZE,
@@ -205,7 +204,9 @@ typedef enum {
     OPTION_TVSTD,
     OPTION_IGNORE_LID_STATUS,
     OPTION_DEFAULT_TVDAC_ADJ,
-    OPTION_INT10
+    OPTION_INT10,
+    OPTION_EXA_VSYNC,
+    OPTION_ATOM_TVOUT
 } RADEONOpts;
 
 
@@ -324,6 +325,8 @@ typedef enum {
     CHIP_FAMILY_RV635,
     CHIP_FAMILY_RS780,
     CHIP_FAMILY_RV770,
+    CHIP_FAMILY_RV730,
+    CHIP_FAMILY_RV710,
     CHIP_FAMILY_LAST
 } RADEONChipFamily;
 
@@ -348,6 +351,8 @@ typedef enum {
 #define IS_AVIVO_VARIANT ((info->ChipFamily >= CHIP_FAMILY_RV515))
 
 #define IS_DCE3_VARIANT ((info->ChipFamily >= CHIP_FAMILY_RV620))
+
+#define IS_DCE32_VARIANT ((info->ChipFamily >= CHIP_FAMILY_RV730))
 
 #define IS_R500_3D ((info->ChipFamily == CHIP_FAMILY_RV515)  ||  \
 	(info->ChipFamily == CHIP_FAMILY_R520)   ||  \
@@ -392,7 +397,8 @@ typedef enum {
     RADEON_MAC_POWERBOOK_VGA,
     RADEON_MAC_MINI_EXTERNAL,
     RADEON_MAC_MINI_INTERNAL,
-    RADEON_MAC_IMAC_G5_ISIGHT
+    RADEON_MAC_IMAC_G5_ISIGHT,
+    RADEON_MAC_EMAC
 } RADEONMacModel;
 #endif
 
@@ -601,6 +607,8 @@ struct radeon_accel_state {
     /* Size of tiles ... set to 65536x65536 if not tiling in that direction */
     Bool              src_tile_width;
     Bool              src_tile_height;
+
+    Bool              vsync;
 #endif
 
 #ifdef USE_XAA
@@ -941,8 +949,12 @@ extern Bool radeon_card_posted(ScrnInfoPtr pScrn);
 /* radeon_commonfuncs.c */
 #ifdef XF86DRI
 extern void RADEONWaitForIdleCP(ScrnInfoPtr pScrn);
+extern void RADEONWaitForVLineCP(ScrnInfoPtr pScrn, PixmapPtr pPix,
+	int crtc, int start, int stop, int enable);
 #endif
 extern void RADEONWaitForIdleMMIO(ScrnInfoPtr pScrn);
+extern void RADEONWaitForVLineMMIO(ScrnInfoPtr pScrn, PixmapPtr pPix,
+	int crtc, int start, int stop, int enable);
 
 /* radeon_crtc.c */
 extern void radeon_crtc_dpms(xf86CrtcPtr crtc, int mode);
@@ -1291,6 +1303,44 @@ do {									\
 } while (0)
 
 #endif /* XF86DRI */
+
+#if defined(XF86DRI) && defined(USE_EXA)
+#define RADEON_SWITCH_TO_2D()						\
+do {									\
+	uint32_t flush = 0;                                             \
+	switch (info->accel_state->engineMode) {			\
+	case EXA_ENGINEMODE_UNKNOWN:					\
+	case EXA_ENGINEMODE_3D:						\
+	    flush = 1;                                                  \
+	case EXA_ENGINEMODE_2D:						\
+	    break;							\
+	}								\
+	if (flush && info->directRenderingEnabled)                      \
+	    RADEONCPFlushIndirect(pScrn, 1);                            \
+        info->accel_state->engineMode = EXA_ENGINEMODE_2D;              \
+} while (0);
+
+#define RADEON_SWITCH_TO_3D()						\
+do {									\
+	uint32_t flush = 0;						\
+	switch (info->accel_state->engineMode) {			\
+	case EXA_ENGINEMODE_UNKNOWN:					\
+	case EXA_ENGINEMODE_2D:						\
+	    flush = 1;                                                  \
+	case EXA_ENGINEMODE_3D:						\
+	    break;							\
+	}								\
+	if (flush) {							\
+	    if (info->directRenderingEnabled)				\
+	        RADEONCPFlushIndirect(pScrn, 1);                        \
+	    RADEONInit3DEngine(pScrn);                                  \
+	}                                                               \
+        info->accel_state->engineMode = EXA_ENGINEMODE_3D;              \
+} while (0);
+#else
+#define RADEON_SWITCH_TO_2D()
+#define RADEON_SWITCH_TO_3D()
+#endif
 
 static __inline__ void RADEON_MARK_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 {

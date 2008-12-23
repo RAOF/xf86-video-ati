@@ -1187,7 +1187,7 @@ radeon_create_resources(xf86OutputPtr output)
 		       "RRConfigureOutputProperty error, %d\n", err);
 	}
 
-	data = 0; /* coherent mode off by default */
+	data = 1; /* coherent mode on by default */
 
 	err = RRChangeOutputProperty(output->randr_output, coherent_mode_atom,
 				     XA_INTEGER, 32, PropModeReplace, 1, &data,
@@ -2174,17 +2174,9 @@ void RADEONInitConnector(xf86OutputPtr output)
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
-    if (info->IsAtomBios &&
-	((radeon_output->DACType == DAC_PRIMARY) ||
-	 (radeon_output->DACType == DAC_TVDAC)))
+    if ((radeon_output->DACType == DAC_TVDAC) &&
+	xf86ReturnOptValBool(info->Options, OPTION_TVDAC_LOAD_DETECT, FALSE))
 	radeon_output->load_detection = 1;
-    else if (radeon_output->DACType == DAC_PRIMARY)
-	radeon_output->load_detection = 1; /* primary dac, only drives vga */
-    else if ((radeon_output->DACType == DAC_TVDAC) &&
-	     (xf86ReturnOptValBool(info->Options, OPTION_TVDAC_LOAD_DETECT, FALSE)))
-	radeon_output->load_detection = 1; /* shared tvdac between vga/dvi/tv */
-    else
-	radeon_output->load_detection = 0;
 
     if (radeon_output->type == OUTPUT_LVDS) {
 	radeon_output->rmx_type = RMX_FULL;
@@ -2247,12 +2239,14 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 
 	info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);
 	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].load_detection = FALSE;
 	info->BiosConnector[1].TMDSType = TMDS_NONE;
 	info->BiosConnector[1].ConnectorType = CONNECTOR_VGA;
 	info->BiosConnector[1].valid = TRUE;
 
 	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].load_detection = FALSE;
 	info->BiosConnector[2].TMDSType = TMDS_NONE;
 	info->BiosConnector[2].ddc_i2c.valid = FALSE;
 	info->BiosConnector[2].valid = TRUE;
@@ -2272,6 +2266,7 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 
 	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].load_detection = FALSE;
 	info->BiosConnector[2].TMDSType = TMDS_NONE;
 	info->BiosConnector[2].ddc_i2c.valid = FALSE;
 	info->BiosConnector[2].valid = TRUE;
@@ -2292,6 +2287,7 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 
 	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].load_detection = FALSE;
 	info->BiosConnector[2].TMDSType = TMDS_NONE;
 	info->BiosConnector[2].ddc_i2c.valid = FALSE;
 	info->BiosConnector[2].valid = TRUE;
@@ -2311,6 +2307,7 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 
 	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].load_detection = FALSE;
 	info->BiosConnector[2].TMDSType = TMDS_NONE;
 	info->BiosConnector[2].ddc_i2c.valid = FALSE;
 	info->BiosConnector[2].valid = TRUE;
@@ -2318,12 +2315,14 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
     case RADEON_MAC_MINI_EXTERNAL:
 	info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_CRT2_DDC);
 	info->BiosConnector[0].DACType = DAC_TVDAC;
+	info->BiosConnector[0].load_detection = FALSE;
 	info->BiosConnector[0].TMDSType = TMDS_EXT;
 	info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_I;
 	info->BiosConnector[0].valid = TRUE;
 
 	info->BiosConnector[1].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].load_detection = FALSE;
 	info->BiosConnector[1].TMDSType = TMDS_NONE;
 	info->BiosConnector[1].ddc_i2c.valid = FALSE;
 	info->BiosConnector[1].valid = TRUE;
@@ -2331,12 +2330,14 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
     case RADEON_MAC_MINI_INTERNAL:
 	info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_CRT2_DDC);
 	info->BiosConnector[0].DACType = DAC_TVDAC;
+	info->BiosConnector[0].load_detection = FALSE;
 	info->BiosConnector[0].TMDSType = TMDS_INT;
 	info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_I;
 	info->BiosConnector[0].valid = TRUE;
 
 	info->BiosConnector[1].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].load_detection = FALSE;
 	info->BiosConnector[1].TMDSType = TMDS_NONE;
 	info->BiosConnector[1].ddc_i2c.valid = FALSE;
 	info->BiosConnector[1].valid = TRUE;
@@ -2350,12 +2351,39 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 
 	info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_DVI_DDC);
 	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].load_detection = FALSE;
 	info->BiosConnector[1].TMDSType = TMDS_NONE;
 	info->BiosConnector[1].ConnectorType = CONNECTOR_VGA;
 	info->BiosConnector[1].valid = TRUE;
 
 	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
 	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].load_detection = FALSE;
+	info->BiosConnector[2].TMDSType = TMDS_NONE;
+	info->BiosConnector[2].ddc_i2c.valid = FALSE;
+	info->BiosConnector[2].valid = TRUE;
+	return TRUE;
+    case RADEON_MAC_EMAC:
+	/* eMac G4 800/1.0 with radeon 7500, no EDID on internal monitor
+	 * later eMac's (G4 1.25/1.42) with radeon 9200 and 9600 may have
+	 * different ddc setups.  need to verify
+	 */
+	info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);
+	info->BiosConnector[0].DACType = DAC_PRIMARY;
+	info->BiosConnector[0].TMDSType = TMDS_NONE;
+	info->BiosConnector[0].ConnectorType = CONNECTOR_VGA;
+	info->BiosConnector[0].valid = TRUE;
+
+	info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_CRT2_DDC);
+	info->BiosConnector[1].DACType = DAC_TVDAC;
+	info->BiosConnector[1].load_detection = FALSE;
+	info->BiosConnector[1].TMDSType = TMDS_NONE;
+	info->BiosConnector[1].ConnectorType = CONNECTOR_VGA;
+	info->BiosConnector[1].valid = TRUE;
+
+	info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
+	info->BiosConnector[2].DACType = DAC_TVDAC;
+	info->BiosConnector[2].load_detection = FALSE;
 	info->BiosConnector[2].TMDSType = TMDS_NONE;
 	info->BiosConnector[2].ddc_i2c.valid = FALSE;
 	info->BiosConnector[2].valid = TRUE;
@@ -2436,6 +2464,7 @@ static void RADEONSetupGenericConnectors(ScrnInfoPtr pScrn)
 		else
 		    info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);
 		info->BiosConnector[1].DACType = DAC_TVDAC;
+		info->BiosConnector[1].load_detection = FALSE;
 		info->BiosConnector[1].TMDSType = TMDS_NONE;
 		info->BiosConnector[1].ConnectorType = CONNECTOR_VGA;
 		info->BiosConnector[1].valid = TRUE;
@@ -2465,6 +2494,7 @@ static void RADEONSetupGenericConnectors(ScrnInfoPtr pScrn)
 		else
 		    info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);
 		info->BiosConnector[0].DACType = DAC_TVDAC;
+		info->BiosConnector[0].load_detection = FALSE;
 		info->BiosConnector[0].TMDSType = TMDS_NONE;
 		info->BiosConnector[0].ConnectorType = CONNECTOR_VGA;
 		info->BiosConnector[0].valid = TRUE;
@@ -2480,6 +2510,7 @@ static void RADEONSetupGenericConnectors(ScrnInfoPtr pScrn)
 	    } else {
 		info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_DVI_DDC);
 		info->BiosConnector[0].DACType = DAC_TVDAC;
+		info->BiosConnector[0].load_detection = FALSE;
 		info->BiosConnector[0].TMDSType = TMDS_INT;
 		info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_I;
 		info->BiosConnector[0].valid = TRUE;
@@ -2503,6 +2534,7 @@ static void RADEONSetupGenericConnectors(ScrnInfoPtr pScrn)
 	if (info->InternalTVOut) {
 	    info->BiosConnector[2].ConnectorType = CONNECTOR_STV;
 	    info->BiosConnector[2].DACType = DAC_TVDAC;
+	    info->BiosConnector[2].load_detection = FALSE;
 	    info->BiosConnector[2].TMDSType = TMDS_NONE;
 	    info->BiosConnector[2].ddc_i2c.valid = FALSE;
 	    info->BiosConnector[2].valid = TRUE;
@@ -2536,7 +2568,7 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
      * Unforunately, there doesn't seem to be any good way to figure it out.
      */
 
-    /* 
+    /*
      * PowerBook5,[1-5]: external tmds, single-link
      * PowerBook5,[789]: external tmds, dual-link
      * PowerBook5,6:     external tmds, single-link or dual-link
@@ -2593,6 +2625,9 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
 		    break;
 		} else if (strstr(cpuline, "iMac G5 (iSight)")) {
 		    ret = RADEON_MAC_IMAC_G5_ISIGHT;
+		    break;
+		} else if (strstr(cpuline, "eMac")) {
+		    ret = RADEON_MAC_EMAC;
 		    break;
 		}
 
@@ -2689,6 +2724,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
      */
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	info->BiosConnector[i].valid = FALSE;
+	info->BiosConnector[i].load_detection = TRUE;
 	info->BiosConnector[i].shared_ddc = FALSE;
 	info->BiosConnector[i].ddc_i2c.valid = FALSE;
 	info->BiosConnector[i].DACType = DAC_NONE;
@@ -2720,6 +2756,8 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    info->MacModel = RADEON_MAC_MINI_EXTERNAL;
 	else if (!strncmp("imac-g5-isight", optstr, strlen("imac-g5-isight")))
 	    info->MacModel = RADEON_MAC_IMAC_G5_ISIGHT;
+	else if (!strncmp("emac", optstr, strlen("emac")))
+	    info->MacModel = RADEON_MAC_EMAC;
 	else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Invalid Mac Model: %s\n", optstr);
 	}
@@ -2764,6 +2802,11 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Invalid ConnectorTable option: %s\n", optstr);
 	    return FALSE;
 	}
+
+	if (info->BiosConnector[0].DACType == DAC_TVDAC)
+	    info->BiosConnector[0].load_detection = FALSE;
+	if (info->BiosConnector[1].DACType == DAC_TVDAC)
+	    info->BiosConnector[1].load_detection = FALSE;
 
 	info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(ddc_line[0]);
 	info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(ddc_line[1]);
@@ -2814,6 +2857,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    radeon_output->ddc_i2c = info->BiosConnector[i].ddc_i2c;
 	    radeon_output->igp_lane_info = info->BiosConnector[i].igp_lane_info;
 	    radeon_output->shared_ddc = info->BiosConnector[i].shared_ddc;
+	    radeon_output->load_detection = info->BiosConnector[i].load_detection;
 
 	    if (radeon_output->ConnectorType == CONNECTOR_DVI_D)
 		radeon_output->DACType = DAC_NONE;

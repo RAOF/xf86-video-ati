@@ -221,6 +221,7 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode, int pll_flags)
     unsigned char *space;
     RADEONSavePtr save = info->ModeReg;
 
+    memset(&spc_param, 0, sizeof(spc_param));
     if (IS_AVIVO_VARIANT) {
 	uint32_t temp;
 
@@ -324,13 +325,11 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode, int pll_flags)
 		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1;
 		else if (radeon_output->DACType == DAC_TVDAC)
 		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2;
-		spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_TV;
 	    } else if (radeon_output->MonType == MT_CV) {
 		if (radeon_output->DACType == DAC_PRIMARY)
 		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC1;
 		else if (radeon_output->DACType == DAC_TVDAC)
 		    spc3_ptr->ucTransmitterId = ENCODER_OBJECT_ID_INTERNAL_KLDSCP_DAC2;
-		spc3_ptr->ucEncoderMode = ATOM_ENCODER_MODE_CV;
 	    }
 
 	    ptr = &spc_param;
@@ -491,16 +490,15 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
 
 	OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_X + radeon_crtc->crtc_offset, 0);
 	OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_Y + radeon_crtc->crtc_offset, 0);
-	OUTREG(AVIVO_D1GRPH_X_START + radeon_crtc->crtc_offset, x);
-	OUTREG(AVIVO_D1GRPH_Y_START + radeon_crtc->crtc_offset, y);
-	OUTREG(AVIVO_D1GRPH_X_END + radeon_crtc->crtc_offset, x + mode->HDisplay);
-	OUTREG(AVIVO_D1GRPH_Y_END + radeon_crtc->crtc_offset, y + mode->VDisplay);
+	OUTREG(AVIVO_D1GRPH_X_START + radeon_crtc->crtc_offset, 0);
+	OUTREG(AVIVO_D1GRPH_Y_START + radeon_crtc->crtc_offset, 0);
+	OUTREG(AVIVO_D1GRPH_X_END + radeon_crtc->crtc_offset, pScrn->virtualX);
+	OUTREG(AVIVO_D1GRPH_Y_END + radeon_crtc->crtc_offset, pScrn->virtualY);
 	OUTREG(AVIVO_D1GRPH_PITCH + radeon_crtc->crtc_offset,
 	       crtc->scrn->displayWidth);
 	OUTREG(AVIVO_D1GRPH_ENABLE + radeon_crtc->crtc_offset, 1);
 
-	OUTREG(AVIVO_D1MODE_DESKTOP_HEIGHT + radeon_crtc->crtc_offset,
-	       		mode->VDisplay);
+	OUTREG(AVIVO_D1MODE_DESKTOP_HEIGHT + radeon_crtc->crtc_offset, mode->VDisplay);
 	OUTREG(AVIVO_D1MODE_VIEWPORT_START + radeon_crtc->crtc_offset, (x << 16) | y);
 	OUTREG(AVIVO_D1MODE_VIEWPORT_SIZE + radeon_crtc->crtc_offset,
 	       (mode->HDisplay << 16) | mode->VDisplay);

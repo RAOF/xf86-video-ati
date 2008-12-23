@@ -192,6 +192,33 @@ Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, uint32_t *pitch_offset)
 	return RADEONGetOffsetPitch(pPix, bpp, pitch_offset, offset, pitch);
 }
 
+/*
+ * Used for vblank render stalling.
+ * Ideally we'd have one pixmap per crtc.
+ * syncing per-blit is unrealistic so,
+ * we sync to whichever crtc has a larger area.
+ */
+int RADEONBiggerCrtcArea(PixmapPtr pPix)
+{
+    ScrnInfoPtr pScrn =  xf86Screens[pPix->drawable.pScreen->myNum];
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int c, crtc_num = -1, area = 0;
+
+    for (c = 0; c < xf86_config->num_crtc; c++) {
+	xf86CrtcPtr crtc = xf86_config->crtc[c];
+
+	if (!crtc->enabled)
+	    continue;
+
+	if ((crtc->mode.HDisplay * crtc->mode.VDisplay) > area) {
+	    area = crtc->mode.HDisplay * crtc->mode.VDisplay;
+	    crtc_num = c;
+	}
+    }
+
+    return crtc_num;
+}
+
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 
 static unsigned long swapper_surfaces[3];
@@ -294,40 +321,6 @@ static void RADEONFinishAccess(PixmapPtr pPix, int index)
 }
 
 #endif /* X_BYTE_ORDER == X_BIG_ENDIAN */
-
-#define RADEON_SWITCH_TO_2D()						\
-do {									\
-	uint32_t wait_until = 0;			\
-	BEGIN_ACCEL(1);							\
-	switch (info->accel_state->engineMode) {			\
-	case EXA_ENGINEMODE_UNKNOWN:					\
-	    wait_until |= RADEON_WAIT_HOST_IDLECLEAN | RADEON_WAIT_2D_IDLECLEAN;	\
-	case EXA_ENGINEMODE_3D:						\
-	    wait_until |= RADEON_WAIT_3D_IDLECLEAN;			\
-	case EXA_ENGINEMODE_2D:						\
-	    break;							\
-	}								\
-	OUT_ACCEL_REG(RADEON_WAIT_UNTIL, wait_until);			\
-	FINISH_ACCEL();							\
-        info->accel_state->engineMode = EXA_ENGINEMODE_2D;              \
-} while (0);
-
-#define RADEON_SWITCH_TO_3D()						\
-do {									\
-	uint32_t wait_until = 0;			\
-	BEGIN_ACCEL(1);							\
-	switch (info->accel_state->engineMode) {			\
-	case EXA_ENGINEMODE_UNKNOWN:					\
-	    wait_until |= RADEON_WAIT_HOST_IDLECLEAN | RADEON_WAIT_3D_IDLECLEAN;	\
-	case EXA_ENGINEMODE_2D:						\
-	    wait_until |= RADEON_WAIT_2D_IDLECLEAN | RADEON_WAIT_DMA_GUI_IDLE;		\
-	case EXA_ENGINEMODE_3D:						\
-	    break;							\
-	}								\
-	OUT_ACCEL_REG(RADEON_WAIT_UNTIL, wait_until);			\
-	FINISH_ACCEL();							\
-        info->accel_state->engineMode = EXA_ENGINEMODE_3D;              \
-} while (0);
 
 #define ENTER_DRAW(x) TRACE
 #define LEAVE_DRAW(x) TRACE

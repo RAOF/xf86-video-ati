@@ -45,9 +45,6 @@
 #endif
 #endif
 
-#define VTX_DWORD_COUNT_FILTER 6
-#define VTX_DWORD_COUNT 4
-
 #ifdef ACCEL_CP
 
 #define VTX_OUT_FILTER(_dstX, _dstY, _srcX, _srcY, _maskX, _maskY)	\
@@ -127,27 +124,33 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
     dstyoff = 0;
 #endif
 
-    if (!info->accel_state->XInited3D)
-	RADEONInit3DEngine(pScrn);
+#ifdef USE_EXA
+    if (info->useEXA) {
+	RADEON_SWITCH_TO_3D();
+    } else
+#endif
+	{
+	    BEGIN_ACCEL(2);
+	    if (IS_R300_3D || IS_R500_3D)
+		OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_DC_FLUSH_3D);
+	    else
+		OUT_ACCEL_REG(RADEON_RB3D_DSTCACHE_CTLSTAT, RADEON_RB3D_DC_FLUSH);
+	    /* We must wait for 3d to idle, in case source was just written as a dest. */
+	    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
+			  RADEON_WAIT_HOST_IDLECLEAN |
+			  RADEON_WAIT_2D_IDLECLEAN |
+			  RADEON_WAIT_3D_IDLECLEAN |
+			  RADEON_WAIT_DMA_GUI_IDLE);
+	    FINISH_ACCEL();
 
-    /* we can probably improve this */
-    BEGIN_ACCEL(2);
-    if (IS_R300_3D || IS_R500_3D)
-	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_DC_FLUSH_3D);
-    else
-	OUT_ACCEL_REG(RADEON_RB3D_DSTCACHE_CTLSTAT, RADEON_RB3D_DC_FLUSH);
-    /* We must wait for 3d to idle, in case source was just written as a dest. */
-    OUT_ACCEL_REG(RADEON_WAIT_UNTIL,
-		  RADEON_WAIT_HOST_IDLECLEAN |
-		  RADEON_WAIT_2D_IDLECLEAN |
-		  RADEON_WAIT_3D_IDLECLEAN |
-		  RADEON_WAIT_DMA_GUI_IDLE);
-    FINISH_ACCEL();
+	    if (!info->accel_state->XInited3D)
+		RADEONInit3DEngine(pScrn);
+	}
 
     if (pPriv->bicubic_enabled)
-	vtx_count = VTX_DWORD_COUNT_FILTER;
+	vtx_count = 6;
     else
-	vtx_count = VTX_DWORD_COUNT;
+	vtx_count = 4;
 
     if (IS_R300_3D || IS_R500_3D) {
 	uint32_t output_fmt;
@@ -343,72 +346,421 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 
 	/* setup pixel shader */
 	if (IS_R300_3D) {
-	    BEGIN_ACCEL(9);
-	    /* 2 components: 2 for tex0 */
-	    OUT_ACCEL_REG(R300_RS_COUNT,
+	    if (pPriv->bicubic_enabled) {
+		BEGIN_ACCEL(79);
+
+		/* 4 components: 2 for tex0 and 2 for tex1 */
+		OUT_ACCEL_REG(R300_RS_COUNT, ((4 << R300_RS_COUNT_IT_COUNT_SHIFT) |
+						   R300_RS_COUNT_HIRES_EN));
+
+		/* R300_INST_COUNT_RS - highest RS instruction used */
+		OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+
+		/* Pixel stack frame size. */
+		OUT_ACCEL_REG(R300_US_PIXSIZE, 5);
+
+		/* Indirection levels */
+		OUT_ACCEL_REG(R300_US_CONFIG, ((2 << R300_NLEVEL_SHIFT) |
+							R300_FIRST_TEX));
+
+		/* Set nodes. */
+		OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
+							R300_ALU_CODE_SIZE(14) |
+							R300_TEX_CODE_OFFSET(0) |
+							R300_TEX_CODE_SIZE(6)));
+
+		/* Nodes are allocated highest first, but executed lowest first */
+		OUT_ACCEL_REG(R300_US_CODE_ADDR_0, 0);
+		OUT_ACCEL_REG(R300_US_CODE_ADDR_1, (R300_ALU_START(0) |
+							R300_ALU_SIZE(0) |
+							R300_TEX_START(0) |
+							R300_TEX_SIZE(0)));
+		OUT_ACCEL_REG(R300_US_CODE_ADDR_2, (R300_ALU_START(1) |
+							R300_ALU_SIZE(9) |
+							R300_TEX_START(1) |
+							R300_TEX_SIZE(0)));
+		OUT_ACCEL_REG(R300_US_CODE_ADDR_3, (R300_ALU_START(11) |
+							R300_ALU_SIZE(2) |
+							R300_TEX_START(2) |
+							R300_TEX_SIZE(3) |
+							R300_RGBA_OUT));
+
+		/* ** BICUBIC FP ** */
+
+		/* texcoord0 => temp0
+		 * texcoord1 => temp1 */
+
+		// first node
+		/* TEX temp2, temp1.rrr0, tex1, 1D */
+		OUT_ACCEL_REG(R300_US_TEX_INST(0), (R300_TEX_INST(R300_TEX_INST_LD) |
+						   R300_TEX_ID(1) |
+						   R300_TEX_SRC_ADDR(1) |
+						   R300_TEX_DST_ADDR(2)));
+
+		/* MOV temp1.r, temp1.ggg0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(0), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_GGG) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(0), (R300_ALU_RGB_ADDR0(1) |
+						   R300_ALU_RGB_ADDRD(1) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(0), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(0), (R300_ALU_ALPHA_ADDRD(1) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+
+		// second node
+		/* TEX temp1, temp1, tex1, 1D */
+		OUT_ACCEL_REG(R300_US_TEX_INST(1), (R300_TEX_INST(R300_TEX_INST_LD) |
+						   R300_TEX_ID(1) |
+						   R300_TEX_SRC_ADDR(1) |
+						   R300_TEX_DST_ADDR(1)));
+
+		/* MUL temp3.rg, temp2.ggg0, const0.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(1), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_GGG) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRC1_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(1), (R300_ALU_RGB_ADDR0(2) |
+						   R300_ALU_RGB_ADDR1(R300_ALU_RGB_CONST(0)) |
+						   R300_ALU_RGB_ADDRD(3) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(1), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(1), (R300_ALU_ALPHA_ADDRD(3) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+
+		/* MUL temp2.rg, temp2.rrr0, const0.rgb */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(2), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RRR) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRC1_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(2), (R300_ALU_RGB_ADDR0(2) |
+						   R300_ALU_RGB_ADDR1(R300_ALU_RGB_CONST(0)) |
+						   R300_ALU_RGB_ADDRD(2) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(2), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(2), (R300_ALU_ALPHA_ADDRD(2) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* MAD temp4.rg, temp1.ggg0, const1.rgb, temp3.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(3), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_GGG) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRC1_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(3), (R300_ALU_RGB_ADDR0(1) |
+						   R300_ALU_RGB_ADDR1(R300_ALU_RGB_CONST(1)) |
+						   R300_ALU_RGB_ADDR2(3) |
+						   R300_ALU_RGB_ADDRD(4) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(3), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(3), (R300_ALU_ALPHA_ADDRD(4) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* MAD temp5.rg, temp1.ggg0, const1.rgb, temp2.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(4), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_GGG) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRC1_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(4), (R300_ALU_RGB_ADDR0(1) |
+						   R300_ALU_RGB_ADDR1(R300_ALU_RGB_CONST(1)) |
+						   R300_ALU_RGB_ADDR2(2) |
+						   R300_ALU_RGB_ADDRD(5) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(4), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(4), (R300_ALU_ALPHA_ADDRD(5) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* MAD temp3.rg, temp1.rrr0, const1.rgb, temp3.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(5), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RRR) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRC1_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(5), (R300_ALU_RGB_ADDR0(1) |
+						   R300_ALU_RGB_ADDR1(R300_ALU_RGB_CONST(1)) |
+						   R300_ALU_RGB_ADDR2(3) |
+						   R300_ALU_RGB_ADDRD(3) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(5), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(5), (R300_ALU_ALPHA_ADDRD(3) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* MAD temp1.rg, temp1.rrr0, const1.rgb, temp2.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(6), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RRR) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRC1_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(6), (R300_ALU_RGB_ADDR0(1) |
+						   R300_ALU_RGB_ADDR1(R300_ALU_RGB_CONST(1)) |
+						   R300_ALU_RGB_ADDR2(2) |
+						   R300_ALU_RGB_ADDRD(1) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(6), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(6), (R300_ALU_ALPHA_ADDRD(1) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* ADD temp1.rg, temp0.rgb0, temp1.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(7), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(7), (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR2(1) |
+						   R300_ALU_RGB_ADDRD(1) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(7), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(7), (R300_ALU_ALPHA_ADDRD(1) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* ADD temp2.rg, temp0.rgb0, temp3.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(8), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(8), (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR2(3) |
+						   R300_ALU_RGB_ADDRD(2) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(8), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(8), (R300_ALU_ALPHA_ADDRD(2) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* ADD temp3.rg, temp0.rgb0, temp5.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(9), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(9), (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR2(5) |
+						   R300_ALU_RGB_ADDRD(3) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(9), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(9), (R300_ALU_ALPHA_ADDRD(3) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+		/* ADD temp0.rg, temp0.rgb0, temp4.rgb0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(10), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC2_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(10), (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR2(4) |
+						   R300_ALU_RGB_ADDRD(0) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_R | R300_ALU_RGB_MASK_G)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(10), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(10), (R300_ALU_ALPHA_ADDRD(0) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_NONE)));
+
+
+		// third node
+		/* TEX temp4, temp1.rg--, tex0, 1D */
+		OUT_ACCEL_REG(R300_US_TEX_INST(2), (R300_TEX_INST(R300_TEX_INST_LD) |
+						   R300_TEX_ID(0) |
+						   R300_TEX_SRC_ADDR(1) |
+						   R300_TEX_DST_ADDR(4)));
+
+		/* TEX temp3, temp3.rg--, tex0, 1D */
+		OUT_ACCEL_REG(R300_US_TEX_INST(3), (R300_TEX_INST(R300_TEX_INST_LD) |
+						   R300_TEX_ID(0) |
+						   R300_TEX_SRC_ADDR(3) |
+						   R300_TEX_DST_ADDR(3)));
+
+		/* TEX temp5, temp2.rg--, tex0, 1D */
+		OUT_ACCEL_REG(R300_US_TEX_INST(4), (R300_TEX_INST(R300_TEX_INST_LD) |
+						   R300_TEX_ID(0) |
+						   R300_TEX_SRC_ADDR(2) |
+						   R300_TEX_DST_ADDR(5)));
+
+		/* TEX temp0, temp0.rg--, tex0, 1D */
+		OUT_ACCEL_REG(R300_US_TEX_INST(5), (R300_TEX_INST(R300_TEX_INST_LD) |
+						   R300_TEX_ID(0) |
+						   R300_TEX_SRC_ADDR(0) |
+						   R300_TEX_DST_ADDR(0)));
+
+		/* LRP temp3, temp1.bbbb, temp4, temp3 ->
+		 * - PRESUB temps, temp4 - temp3
+		 * - MAD temp3, temp1.bbbb, temps, temp3 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(11), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC2_BBB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRCP_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SRCP_OP(R300_ALU_RGB_SRCP_OP_RGB1_MINUS_RGB0)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(11), (R300_ALU_RGB_ADDR0(3) |
+						   R300_ALU_RGB_ADDR1(4) |
+						   R300_ALU_RGB_ADDR2(1) |
+						   R300_ALU_RGB_ADDRD(3) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(11), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_SRC2_B) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_SRCP_A) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_SRC0_A)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(11), (R300_ALU_ALPHA_ADDR0(3) |
+						   R300_ALU_ALPHA_ADDR1(4) |
+						   R300_ALU_ALPHA_ADDR2(1) |
+						   R300_ALU_ALPHA_ADDRD(3) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_A)));
+
+		/* LRP temp0, temp1.bbbb, temp5, temp0 ->
+		 * - PRESUB temps, temp5 - temp0
+		 * - MAD temp0, temp1.bbbb, temps, temp0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(12), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC2_BBB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRCP_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SRCP_OP(R300_ALU_RGB_SRCP_OP_RGB1_MINUS_RGB0) |
+						   R300_ALU_RGB_INSERT_NOP));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(12), (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR1(5) |
+						   R300_ALU_RGB_ADDR2(1) |
+						   R300_ALU_RGB_ADDRD(0) |
+						   R300_ALU_RGB_WMASK(R300_ALU_RGB_MASK_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(12), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_SRC2_B) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_SRCP_A) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_SRC0_A)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(12), (R300_ALU_ALPHA_ADDR0(0) |
+						   R300_ALU_ALPHA_ADDR1(5) |
+						   R300_ALU_ALPHA_ADDR2(1) |
+						   R300_ALU_ALPHA_ADDRD(0) |
+						   R300_ALU_ALPHA_WMASK(R300_ALU_ALPHA_MASK_A)));
+
+		/* LRP output, temp2.bbbb, temp3, temp0 ->
+		 * - PRESUB temps, temp3 - temp0
+		 * - MAD output, temp2.bbbb, temps, temp0 */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST(13), (R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC2_BBB) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_SRCP_RGB) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_SRCP_OP(R300_ALU_RGB_SRCP_OP_RGB1_MINUS_RGB0)));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR(13), (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR1(3) |
+						   R300_ALU_RGB_ADDR2(2) |
+						   R300_ALU_RGB_OMASK(R300_ALU_RGB_MASK_RGB)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST(13), (R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_SRC2_B) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_SRCP_A) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_SRC0_A)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR(13), (R300_ALU_ALPHA_ADDR0(0) |
+						   R300_ALU_ALPHA_ADDR1(3) |
+						   R300_ALU_ALPHA_ADDR2(2) |
+						   R300_ALU_ALPHA_OMASK(R300_ALU_ALPHA_MASK_A)));
+
+		/* Shader constants. */
+		OUT_ACCEL_REG(R300_US_ALU_CONST_R(0), F_TO_24(1.0/(float)pPriv->w));
+		OUT_ACCEL_REG(R300_US_ALU_CONST_G(0), 0);
+		OUT_ACCEL_REG(R300_US_ALU_CONST_B(0), 0);
+		OUT_ACCEL_REG(R300_US_ALU_CONST_A(0), 0);
+
+		OUT_ACCEL_REG(R300_US_ALU_CONST_R(1), 0);
+		OUT_ACCEL_REG(R300_US_ALU_CONST_G(1), F_TO_24(1.0/(float)pPriv->h));
+		OUT_ACCEL_REG(R300_US_ALU_CONST_B(1), 0);
+		OUT_ACCEL_REG(R300_US_ALU_CONST_A(1), 0);
+
+		FINISH_ACCEL();
+	    } else {
+		BEGIN_ACCEL(11);
+		/* 2 components: 2 for tex0 */
+		OUT_ACCEL_REG(R300_RS_COUNT,
 			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
 			   R300_RS_COUNT_HIRES_EN));
-	    /* R300_INST_COUNT_RS - highest RS instruction used */
-	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
+		/* R300_INST_COUNT_RS - highest RS instruction used */
+		OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
 
-	    OUT_ACCEL_REG(R300_US_PIXSIZE, 0); /* highest temp used */
+		OUT_ACCEL_REG(R300_US_PIXSIZE, 0); /* highest temp used */
 
-	    OUT_ACCEL_REG(R300_US_CODE_OFFSET,
-			  (R300_ALU_CODE_OFFSET(0) |
-			   R300_ALU_CODE_SIZE(1) |
-			   R300_TEX_CODE_OFFSET(0) |
-			   R300_TEX_CODE_SIZE(1)));
+		/* Indirection levels */
+		OUT_ACCEL_REG(R300_US_CONFIG, ((0 << R300_NLEVEL_SHIFT) |
+							R300_FIRST_TEX));
 
-	    OUT_ACCEL_REG(R300_US_CODE_ADDR_3,
-			  (R300_ALU_START(0) |
-			   R300_ALU_SIZE(0) |
-			   R300_TEX_START(0) |
-			   R300_TEX_SIZE(0) |
-			   R300_RGBA_OUT));
+		OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
+						   R300_ALU_CODE_SIZE(1) |
+						   R300_TEX_CODE_OFFSET(0) |
+						   R300_TEX_CODE_SIZE(1)));
 
-	    /* tex inst is preloaded in RADEONInit3DEngine() */
+		OUT_ACCEL_REG(R300_US_CODE_ADDR_3, (R300_ALU_START(0) |
+						   R300_ALU_SIZE(0) |
+						   R300_TEX_START(0) |
+						   R300_TEX_SIZE(0) |
+						   R300_RGBA_OUT));
 
-	    /* ALU inst */
-	    /* RGB */
-	    OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR_0,
-			  (R300_ALU_RGB_ADDR0(0) |
-			   R300_ALU_RGB_ADDR1(0) |
-			   R300_ALU_RGB_ADDR2(0) |
-			   R300_ALU_RGB_ADDRD(0) |
-			   R300_ALU_RGB_OMASK((R300_ALU_RGB_MASK_R |
-					       R300_ALU_RGB_MASK_G |
-					       R300_ALU_RGB_MASK_B)) |
-			   R300_ALU_RGB_TARGET_A));
-	    OUT_ACCEL_REG(R300_US_ALU_RGB_INST_0,
-			  (R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
-			   R300_ALU_RGB_MOD_A(R300_ALU_RGB_MOD_NOP) |
-			   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
-			   R300_ALU_RGB_MOD_B(R300_ALU_RGB_MOD_NOP) |
-			   R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0) |
-			   R300_ALU_RGB_MOD_C(R300_ALU_RGB_MOD_NOP) |
-			   R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
-			   R300_ALU_RGB_OMOD(R300_ALU_RGB_OMOD_NONE) |
-			   R300_ALU_RGB_CLAMP));
-	    /* Alpha */
-	    OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR_0,
-			  (R300_ALU_ALPHA_ADDR0(0) |
-			   R300_ALU_ALPHA_ADDR1(0) |
-			   R300_ALU_ALPHA_ADDR2(0) |
-			   R300_ALU_ALPHA_ADDRD(0) |
-			   R300_ALU_ALPHA_OMASK(R300_ALU_ALPHA_MASK_A) |
-			   R300_ALU_ALPHA_TARGET_A |
-			   R300_ALU_ALPHA_OMASK_W(R300_ALU_ALPHA_MASK_NONE)));
-	    OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST_0,
-			  (R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_SRC0_A) |
-			   R300_ALU_ALPHA_MOD_A(R300_ALU_ALPHA_MOD_NOP) |
-			   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_1_0) |
-			   R300_ALU_ALPHA_MOD_B(R300_ALU_ALPHA_MOD_NOP) |
-			   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0) |
-			   R300_ALU_ALPHA_MOD_C(R300_ALU_ALPHA_MOD_NOP) |
-			   R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
-			   R300_ALU_ALPHA_OMOD(R300_ALU_ALPHA_OMOD_NONE) |
-			   R300_ALU_ALPHA_CLAMP));
-	    FINISH_ACCEL();
+		/* tex inst */
+		OUT_ACCEL_REG(R300_US_TEX_INST_0, (R300_TEX_SRC_ADDR(0) |
+						  R300_TEX_DST_ADDR(0) |
+						  R300_TEX_ID(0) |
+						  R300_TEX_INST(R300_TEX_INST_LD)));
+
+		/* ALU inst */
+		/* RGB */
+		OUT_ACCEL_REG(R300_US_ALU_RGB_ADDR_0, (R300_ALU_RGB_ADDR0(0) |
+						   R300_ALU_RGB_ADDR1(0) |
+						   R300_ALU_RGB_ADDR2(0) |
+						   R300_ALU_RGB_ADDRD(0) |
+						   R300_ALU_RGB_OMASK((R300_ALU_RGB_MASK_R |
+						   R300_ALU_RGB_MASK_G |
+						   R300_ALU_RGB_MASK_B)) |
+						   R300_ALU_RGB_TARGET_A));
+		OUT_ACCEL_REG(R300_US_ALU_RGB_INST_0, (R300_ALU_RGB_SEL_A(R300_ALU_RGB_SRC0_RGB) |
+						   R300_ALU_RGB_MOD_A(R300_ALU_RGB_MOD_NOP) |
+						   R300_ALU_RGB_SEL_B(R300_ALU_RGB_1_0) |
+						   R300_ALU_RGB_MOD_B(R300_ALU_RGB_MOD_NOP) |
+						   R300_ALU_RGB_SEL_C(R300_ALU_RGB_0_0) |
+						   R300_ALU_RGB_MOD_C(R300_ALU_RGB_MOD_NOP) |
+						   R300_ALU_RGB_OP(R300_ALU_RGB_OP_MAD) |
+						   R300_ALU_RGB_OMOD(R300_ALU_RGB_OMOD_NONE) |
+						   R300_ALU_RGB_CLAMP));
+		/* Alpha */
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_ADDR_0, (R300_ALU_ALPHA_ADDR0(0) |
+						   R300_ALU_ALPHA_ADDR1(0) |
+						   R300_ALU_ALPHA_ADDR2(0) |
+						   R300_ALU_ALPHA_ADDRD(0) |
+						   R300_ALU_ALPHA_OMASK(R300_ALU_ALPHA_MASK_A) |
+						   R300_ALU_ALPHA_TARGET_A |
+						   R300_ALU_ALPHA_OMASK_W(R300_ALU_ALPHA_MASK_NONE)));
+		OUT_ACCEL_REG(R300_US_ALU_ALPHA_INST_0, (R300_ALU_ALPHA_SEL_A(R300_ALU_ALPHA_SRC0_A) |
+						   R300_ALU_ALPHA_MOD_A(R300_ALU_ALPHA_MOD_NOP) |
+						   R300_ALU_ALPHA_SEL_B(R300_ALU_ALPHA_1_0) |
+						   R300_ALU_ALPHA_MOD_B(R300_ALU_ALPHA_MOD_NOP) |
+						   R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0) |
+						   R300_ALU_ALPHA_MOD_C(R300_ALU_ALPHA_MOD_NOP) |
+						   R300_ALU_ALPHA_OP(R300_ALU_ALPHA_OP_MAD) |
+						   R300_ALU_ALPHA_OMOD(R300_ALU_ALPHA_OMOD_NONE) |
+						   R300_ALU_ALPHA_CLAMP));
+		FINISH_ACCEL();
+		}
 	} else {
 	    if (pPriv->bicubic_enabled) {
 		BEGIN_ACCEL(7);
@@ -588,7 +940,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 						       R500_ALU_RGBA_B_SWIZ_R |
 						       R500_ALU_RGBA_A_SWIZ_G));
 
-		/* TEX temp1, temp3.zwxy, tex0, 1D */
+		/* TEX temp1, temp3.zwxy, tex0, 2D */
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
 						       R500_INST_RGB_WMASK_R |
 						       R500_INST_RGB_WMASK_G |
@@ -611,7 +963,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
 
-		/* TEX temp3, temp3.xyzw, tex0, 1D */
+		/* TEX temp3, temp3.xyzw, tex0, 2D */
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
 						       R500_INST_TEX_SEM_WAIT |
 						       R500_INST_RGB_WMASK_R |
@@ -636,7 +988,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
 
-		/* MAD temp4, const1.0y0y, temp5.yyyy, temp4 */
+		/* MAD temp4, const0.0y0y, temp5.yyyy, temp4 */
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_ALU |
 						       R500_INST_RGB_WMASK_R |
 						       R500_INST_RGB_WMASK_G |
@@ -702,7 +1054,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 						       R500_ALU_RGBA_B_SWIZ_R |
 						       R500_ALU_RGBA_A_SWIZ_G));
 
-		/* TEX temp4, temp0.zwzw, tex0, 1D */
+		/* TEX temp4, temp0.zwzw, tex0, 2D */
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
 						       R500_INST_TEX_SEM_WAIT |
 						       R500_INST_RGB_WMASK_R |
@@ -726,7 +1078,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, 0x00000000);
 
-		/* TEX temp0, temp0.xyzw, tex0, 1D */
+		/* TEX temp0, temp0.xyzw, tex0, 2D */
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_DATA, (R500_INST_TYPE_TEX |
 						       R500_INST_TEX_SEM_WAIT |
 						       R500_INST_RGB_WMASK_R |
@@ -875,7 +1227,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 		/* Shader constants. */
 		OUT_ACCEL_REG(R500_GA_US_VECTOR_INDEX, R500_US_VECTOR_CONST_INDEX(0));
 
-		/* const0 = {1 / texture[0].width, 0, 0, 0} */
+		/* const0 = {1 / texture[0].width, 1 / texture[0].height, 0, 0} */
 		OUT_ACCEL_REG_F(R500_GA_US_VECTOR_DATA, (1.0/(float)pPriv->w));
 		OUT_ACCEL_REG_F(R500_GA_US_VECTOR_DATA, (1.0/(float)pPriv->h));
 		OUT_ACCEL_REG_F(R500_GA_US_VECTOR_DATA, 0x0);
@@ -1123,10 +1475,41 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 	}
     }
 
+    FUNC_NAME(RADEONWaitForVLine)(pScrn, pPixmap,
+				  radeon_covering_crtc_num(pScrn,
+							   pPriv->drw_x,
+							   pPriv->drw_x + pPriv->dst_w,
+							   pPriv->drw_y,
+							   pPriv->drw_y + pPriv->dst_h,
+							   pPriv->desired_crtc),
+				  pPriv->drw_y,
+				  pPriv->drw_y + pPriv->dst_h,
+				  pPriv->vsync);
+
+    /*
+     * Rendering of the actual polygon is done in two different
+     * ways depending on chip generation:
+     *
+     * < R300:
+     *
+     *     These chips can render a rectangle in one pass, so
+     *     handling is pretty straight-forward.
+     *
+     * >= R300:
+     *
+     *     These chips can accept a quad, but will render it as
+     *     two triangles which results in a diagonal tear. Instead
+     *     We render a single, large triangle and use the scissor
+     *     functionality to restrict it to the desired rectangle.
+     *     Due to guardband limits on r3xx/r4xx, we can only use
+     *     the single triangle up to 2880 pixels; above that we
+     *     render as a quad.
+     */
+
     while (nBox--) {
 	int srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
-	xPointFixed srcTopLeft, srcTopRight, srcBottomLeft, srcBottomRight;
+	Bool use_quad = FALSE;
 	dstX = pBox->x1 + dstxoff;
 	dstY = pBox->y1 + dstyoff;
 	dstw = pBox->x2 - pBox->x1;
@@ -1140,20 +1523,32 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
 	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
 
-	srcTopLeft.x     = IntToxFixed(srcX);
-	srcTopLeft.y     = IntToxFixed(srcY);
-	srcTopRight.x    = IntToxFixed(srcX + srcw);
-	srcTopRight.y    = IntToxFixed(srcY);
-	srcBottomLeft.x  = IntToxFixed(srcX);
-	srcBottomLeft.y  = IntToxFixed(srcY + srch);
-	srcBottomRight.x = IntToxFixed(srcX + srcw);
-	srcBottomRight.y = IntToxFixed(srcY + srch);
-
-
 #if 0
 	ErrorF("dst: %d, %d, %d, %d\n", dstX, dstY, dstw, dsth);
 	ErrorF("src: %d, %d, %d, %d\n", srcX, srcY, srcw, srch);
 #endif
+
+	if (IS_R300_3D || IS_R500_3D) {
+	    if (IS_R300_3D && ((dstw > 1440) || (dsth > 1440)))
+		use_quad = TRUE;
+	    /*
+	     * Set up the scissor area to that of the output size.
+	     */
+	    BEGIN_ACCEL(2);
+	    if (IS_R300_3D) {
+		/* R300 has an offset */
+		OUT_ACCEL_REG(R300_SC_SCISSOR0, (((dstX + 1088) << R300_SCISSOR_X_SHIFT) |
+						 ((dstY + 1088) << R300_SCISSOR_Y_SHIFT)));
+		OUT_ACCEL_REG(R300_SC_SCISSOR1, (((dstX + dstw + 1088 - 1) << R300_SCISSOR_X_SHIFT) |
+						 ((dstY + dsth + 1088 - 1) << R300_SCISSOR_Y_SHIFT)));
+	    } else {
+		OUT_ACCEL_REG(R300_SC_SCISSOR0, (((dstX) << R300_SCISSOR_X_SHIFT) |
+						 ((dstY) << R300_SCISSOR_Y_SHIFT)));
+		OUT_ACCEL_REG(R300_SC_SCISSOR1, (((dstX + dstw - 1) << R300_SCISSOR_X_SHIFT) |
+						 ((dstY + dsth - 1) << R300_SCISSOR_Y_SHIFT)));
+	    }
+	    FINISH_ACCEL();
+	}
 
 #ifdef ACCEL_CP
 	if (info->ChipFamily < CHIP_FAMILY_R200) {
@@ -1167,60 +1562,123 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 		     RADEON_CP_VC_CNTL_MAOS_ENABLE |
 		     RADEON_CP_VC_CNTL_VTX_FMT_RADEON_MODE |
 		     (3 << RADEON_CP_VC_CNTL_NUM_SHIFT));
-	} else {
-	    if (IS_R300_3D || IS_R500_3D)
+	} else if (IS_R300_3D || IS_R500_3D) {
+	    if (use_quad) {
 		BEGIN_RING(4 * vtx_count + 4);
-	    else
-		BEGIN_RING(4 * vtx_count + 2);
+		OUT_RING(CP_PACKET3(R200_CP_PACKET3_3D_DRAW_IMMD_2,
+				    4 * vtx_count));
+		OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_QUAD_LIST |
+			 RADEON_CP_VC_CNTL_PRIM_WALK_RING |
+			 (4 << RADEON_CP_VC_CNTL_NUM_SHIFT));
+	    } else {
+		BEGIN_RING(3 * vtx_count + 4);
+		OUT_RING(CP_PACKET3(R200_CP_PACKET3_3D_DRAW_IMMD_2,
+				    3 * vtx_count));
+		OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_TRI_LIST |
+			 RADEON_CP_VC_CNTL_PRIM_WALK_RING |
+			 (3 << RADEON_CP_VC_CNTL_NUM_SHIFT));
+	    }
+	} else {
+	    BEGIN_RING(3 * vtx_count + 2);
 	    OUT_RING(CP_PACKET3(R200_CP_PACKET3_3D_DRAW_IMMD_2,
-				4 * vtx_count));
-	    OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_QUAD_LIST |
+				3 * vtx_count));
+	    OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_RECT_LIST |
 		     RADEON_CP_VC_CNTL_PRIM_WALK_RING |
-		     (4 << RADEON_CP_VC_CNTL_NUM_SHIFT));
+		     (3 << RADEON_CP_VC_CNTL_NUM_SHIFT));
 	}
 #else /* ACCEL_CP */
-	if (IS_R300_3D || IS_R500_3D)
-	    BEGIN_ACCEL(2 + vtx_count * 4);
-	else if (info->ChipFamily < CHIP_FAMILY_R200)
+	if (IS_R300_3D || IS_R500_3D) {
+	    if (use_quad)
+		BEGIN_ACCEL(2 + vtx_count * 4);
+	    else
+		BEGIN_ACCEL(2 + vtx_count * 3);
+	} else
 	    BEGIN_ACCEL(1 + vtx_count * 3);
-	else
-	    BEGIN_ACCEL(1 + vtx_count * 4);
 
 	if (info->ChipFamily < CHIP_FAMILY_R200)
 	    OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_RECTANGLE_LIST |
 					      RADEON_VF_PRIM_WALK_DATA |
 					      RADEON_VF_RADEON_MODE |
 					      (3 << RADEON_VF_NUM_VERTICES_SHIFT)));
-	else
-	    OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_QUAD_LIST |
+	else if (IS_R300_3D || IS_R500_3D) {
+	    if (use_quad)
+		OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_QUAD_LIST |
+						  RADEON_VF_PRIM_WALK_DATA |
+						  (4 << RADEON_VF_NUM_VERTICES_SHIFT)));
+	    else
+		OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_TRIANGLE_LIST |
+						  RADEON_VF_PRIM_WALK_DATA |
+						  (3 << RADEON_VF_NUM_VERTICES_SHIFT)));
+	} else
+	    OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_RECTANGLE_LIST |
 					      RADEON_VF_PRIM_WALK_DATA |
-					      (4 << RADEON_VF_NUM_VERTICES_SHIFT)));
+					      (3 << RADEON_VF_NUM_VERTICES_SHIFT)));
 
 #endif
 	if (pPriv->bicubic_enabled) {
-		VTX_OUT_FILTER((float)dstX,                       (float)dstY,
-		xFixedToFloat(srcTopLeft.x) / info->accel_state->texW[0],      xFixedToFloat(srcTopLeft.y) / info->accel_state->texH[0],
-		xFixedToFloat(srcTopLeft.x) + 0.5,                xFixedToFloat(srcTopLeft.y) + 0.5);
-		VTX_OUT_FILTER((float)dstX,                       (float)(dstY + dsth),
-		xFixedToFloat(srcBottomLeft.x) / info->accel_state->texW[0],   xFixedToFloat(srcBottomLeft.y) / info->accel_state->texH[0],
-		xFixedToFloat(srcBottomLeft.x) + 0.5,             xFixedToFloat(srcBottomLeft.y) + 0.5);
-		VTX_OUT_FILTER((float)(dstX + dstw),              (float)(dstY + dsth),
-		xFixedToFloat(srcBottomRight.x) / info->accel_state->texW[0],  xFixedToFloat(srcBottomRight.y) / info->accel_state->texH[0],
-		xFixedToFloat(srcBottomRight.x) + 0.5,            xFixedToFloat(srcBottomRight.y) + 0.5);
-		VTX_OUT_FILTER((float)(dstX + dstw),              (float)dstY,
-		xFixedToFloat(srcTopRight.x) / info->accel_state->texW[0],     xFixedToFloat(srcTopRight.y) / info->accel_state->texH[0],
-		xFixedToFloat(srcTopRight.x) + 0.5,               xFixedToFloat(srcTopRight.y) + 0.5);
+		/*
+		 * This code is only executed on >= R300, so we don't
+		 * have to deal with the legacy handling.
+		 */
+	    if (use_quad) {
+		VTX_OUT_FILTER((float)dstX,                                       (float)dstY,
+			       (float)srcX / info->accel_state->texW[0],          (float)srcY / info->accel_state->texH[0],
+			       (float)srcX + 0.5,                                 (float)srcY + 0.5);
+		VTX_OUT_FILTER((float)dstX,                                       (float)(dstY + dsth),
+			       (float)srcX / info->accel_state->texW[0],          (float)(srcY + srch) / info->accel_state->texH[0],
+			       (float)srcX + 0.5,                                 (float)(srcY + srch) + 0.5);
+		VTX_OUT_FILTER((float)(dstX + dstw),                              (float)(dstY + dsth),
+			       (float)(srcX + srcw) / info->accel_state->texW[0], (float)(srcY + srch) / info->accel_state->texH[0],
+			       (float)(srcX + srcw) + 0.5,                        (float)(srcY + srch) + 0.5);
+		VTX_OUT_FILTER((float)(dstX + dstw),                              (float)dstY,
+			       (float)(srcX + srcw) / info->accel_state->texW[0], (float)srcY / info->accel_state->texH[0],
+			       (float)(srcX + srcw) + 0.5,                        (float)srcY + 0.5);
+	    } else {
+		VTX_OUT_FILTER((float)dstX,                                    (float)dstY,
+			       (float)srcX / info->accel_state->texW[0],              (float)srcY / info->accel_state->texH[0],
+			       (float)srcX + 0.5,                                     (float)srcY + 0.5);
+		VTX_OUT_FILTER((float)dstX,                                    (float)(dstY + dsth * 2),
+			       (float)srcX / info->accel_state->texW[0],              (float)(srcY + srch * 2) / info->accel_state->texH[0],
+			       (float)srcX + 0.5,                                     (float)(srcY + srch * 2) + 0.5);
+		VTX_OUT_FILTER((float)(dstX + dstw * 2),                       (float)dstY,
+			       (float)(srcX + srcw * 2) / info->accel_state->texW[0], (float)srcY / info->accel_state->texH[0],
+			       (float)(srcX + srcw * 2) + 0.5,                        (float)srcY + 0.5);
+	    }
 	} else {
-		if (info->ChipFamily >= CHIP_FAMILY_R200) {
-			VTX_OUT((float)dstX,                              (float)dstY,
-			xFixedToFloat(srcTopLeft.x) / info->accel_state->texW[0],      xFixedToFloat(srcTopLeft.y) / info->accel_state->texH[0]);
+	    if (IS_R300_3D || IS_R500_3D) {
+		if (use_quad) {
+		    VTX_OUT((float)dstX,                                           (float)dstY,
+			    (float)srcX / info->accel_state->texW[0],              (float)srcY / info->accel_state->texH[0]);
+		    VTX_OUT((float)dstX,                                           (float)(dstY + dsth),
+			    (float)srcX / info->accel_state->texW[0],              (float)(srcY + srch) / info->accel_state->texH[0]);
+		    VTX_OUT((float)(dstX + dstw),                                  (float)(dstY + dsth),
+			    (float)(srcX + srcw) / info->accel_state->texW[0],     (float)(srcY + srch) / info->accel_state->texH[0]);
+		    VTX_OUT((float)(dstX + dstw),                                  (float)dstY,
+			    (float)(srcX + srcw) / info->accel_state->texW[0],     (float)srcY / info->accel_state->texH[0]);
+		} else {
+		    /*
+		     * Render a big, scissored triangle. This means
+		     * doubling the triangle size and adjusting
+		     * texture coordinates.
+		     */
+		    VTX_OUT((float)dstX,                                           (float)dstY,
+			    (float)srcX / info->accel_state->texW[0],              (float)srcY / info->accel_state->texH[0]);
+		    VTX_OUT((float)dstX,                                           (float)(dstY + dsth * 2),
+			    (float)srcX / info->accel_state->texW[0],              (float)(srcY + srch * 2) / info->accel_state->texH[0]);
+		    VTX_OUT((float)(dstX + dstw * 2),                              (float)dstY,
+			    (float)(srcX + srcw * 2) / info->accel_state->texW[0], (float)srcY / info->accel_state->texH[0]);
 		}
-		VTX_OUT((float)dstX,                              (float)(dstY + dsth),
-		xFixedToFloat(srcBottomLeft.x) / info->accel_state->texW[0],   xFixedToFloat(srcBottomLeft.y) / info->accel_state->texH[0]);
-		VTX_OUT((float)(dstX + dstw),                     (float)(dstY + dsth),
-		xFixedToFloat(srcBottomRight.x) / info->accel_state->texW[0],  xFixedToFloat(srcBottomRight.y) / info->accel_state->texH[0]);
-		VTX_OUT((float)(dstX + dstw),                     (float)dstY,
-		xFixedToFloat(srcTopRight.x) / info->accel_state->texW[0],     xFixedToFloat(srcTopRight.y) / info->accel_state->texH[0]);
+	    } else {
+		/*
+		 * Just render a rect (using three coords).
+		 */
+		VTX_OUT((float)dstX,                                       (float)(dstY + dsth),
+			(float)srcX / info->accel_state->texW[0],          (float)(srcY + srch) / info->accel_state->texH[0]);
+		VTX_OUT((float)(dstX + dstw),                              (float)(dstY + dsth),
+			(float)(srcX + srcw) / info->accel_state->texW[0], (float)(srcY + srch) / info->accel_state->texH[0]);
+		VTX_OUT((float)(dstX + dstw),                              (float)dstY,
+			(float)(srcX + srcw) / info->accel_state->texW[0], (float)srcY / info->accel_state->texH[0]);
+	    }
 	}
 
 	if (IS_R300_3D || IS_R500_3D)
@@ -1237,7 +1695,8 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
     }
 
     if (IS_R300_3D || IS_R500_3D) {
-	BEGIN_ACCEL(2);
+	BEGIN_ACCEL(3);
+	OUT_ACCEL_REG(R300_SC_CLIP_RULE, 0xAAAA);
 	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_RB3D_DC_FLUSH_ALL);
     } else
 	BEGIN_ACCEL(1);

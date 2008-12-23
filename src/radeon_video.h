@@ -95,6 +95,10 @@ typedef struct {
    int           bicubic_offset;
    Bool          bicubic_enabled;
    uint32_t      bicubic_src_offset;
+   int           bicubic_state;
+#define BICUBIC_OFF  0
+#define BICUBIC_ON   1
+#define BICUBIC_AUTO 2
 
    Atom          device_id, location_id, instance_id;
 
@@ -111,7 +115,13 @@ typedef struct {
     int src_w, src_h, dst_w, dst_h;
     int w, h;
     int drw_x, drw_y;
+    int vsync;
 } RADEONPortPrivRec, *RADEONPortPrivPtr;
+
+int
+radeon_covering_crtc_num(ScrnInfoPtr pScrn,
+                         int x1, int x2, int y1, int y2,
+                         xf86CrtcPtr desired);
 
 void RADEONInitI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 void RADEONResetI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);

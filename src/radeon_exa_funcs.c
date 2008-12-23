@@ -129,6 +129,8 @@ FUNC_NAME(RADEONSolid)(PixmapPtr pPix, int x1, int y1, int x2, int y2)
 
     TRACE;
 
+    FUNC_NAME(RADEONWaitForVLine)(pScrn, pPix, RADEONBiggerCrtcArea(pPix), y1, y2, info->accel_state->vsync);
+
     BEGIN_ACCEL(2);
     OUT_ACCEL_REG(RADEON_DST_Y_X, (y1 << 16) | x1);
     OUT_ACCEL_REG(RADEON_DST_HEIGHT_WIDTH, ((y2 - y1) << 16) | (x2 - x1));
@@ -228,6 +230,8 @@ FUNC_NAME(RADEONCopy)(PixmapPtr pDst,
 	dstY += h - 1;
     }
 
+    FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), dstY, dstY + h, info->accel_state->vsync);
+
     BEGIN_ACCEL(3);
 
     OUT_ACCEL_REG(RADEON_SRC_Y_X,	   (srcY << 16) | srcX);
@@ -264,7 +268,7 @@ FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
     unsigned int   hpass;
     uint32_t	   buf_pitch, dst_pitch_off;
 #endif
-#if X_BYTE_ORDER == X_BIG_ENDIAN 
+#if X_BYTE_ORDER == X_BIG_ENDIAN
     unsigned char *RADEONMMIO = info->MMIO;
     unsigned int swapper = info->ModeReg->surface_cntl &
 	    ~(RADEON_NONSURF_AP0_SWP_32BPP | RADEON_NONSURF_AP1_SWP_32BPP |
@@ -284,6 +288,9 @@ FUNC_NAME(RADEONUploadToScreen)(PixmapPtr pDst, int x, int y, int w, int h,
 	ACCEL_PREAMBLE();
 
 	RADEON_SWITCH_TO_2D();
+
+	FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), y, y + h, info->accel_state->vsync);
+
 	while ((buf = RADEONHostDataBlit(pScrn,
 					 cpp, w, dst_pitch_off, &buf_pitch,
 					 x, &y, (unsigned int*)&h, &hpass)) != 0) {
@@ -604,6 +611,12 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
     info->accel_state->exa->maxX = 16320 / 4;
 #endif
     info->accel_state->exa->maxY = 8192;
+
+    if (xf86ReturnOptValBool(info->Options, OPTION_EXA_VSYNC, FALSE)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "EXA VSync enabled\n");
+	info->accel_state->vsync = TRUE;
+    } else
+	info->accel_state->vsync = FALSE;
 
     RADEONEngineInit(pScrn);
 

@@ -320,7 +320,11 @@ static Bool R100CheckCompositeTexture(PicturePtr pPict, int unit)
     int h = pPict->pDrawable->height;
     int i;
 
-    if ((w > 0x7ff) || (h > 0x7ff))
+    /* r100 limit should be 2048, there are issues with 2048
+     * see 197a62704742a4a19736c2637ac92d1dc5ab34ed
+     */
+
+    if ((w > 2047) || (h > 2047))
 	RADEON_FALLBACK(("Picture w/h too large (%dx%d)\n", w, h));
 
     for (i = 0; i < sizeof(R100TexFormats) / sizeof(R100TexFormats[0]); i++) {
@@ -456,10 +460,14 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
     if (!pSrcPicture->pDrawable)
 	return FALSE;
 
+    /* r100 limit should be 2048, there are issues with 2048
+     * see 197a62704742a4a19736c2637ac92d1dc5ab34ed
+     */
+
     pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
 
-    if (pSrcPixmap->drawable.width >= 2048 ||
-	pSrcPixmap->drawable.height >= 2048) {
+    if (pSrcPixmap->drawable.width > 2047 ||
+	pSrcPixmap->drawable.height > 2047) {
 	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
 			 pSrcPixmap->drawable.width,
 			 pSrcPixmap->drawable.height));
@@ -467,8 +475,8 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
 
     pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
 
-    if (pDstPixmap->drawable.width >= 2048 ||
-	pDstPixmap->drawable.height >= 2048) {
+    if (pDstPixmap->drawable.width > 2047 ||
+	pDstPixmap->drawable.height > 2047) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
 			 pDstPixmap->drawable.width,
 			 pDstPixmap->drawable.height));
@@ -477,8 +485,8 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
     if (pMaskPicture) {
 	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
-	if (pMaskPixmap->drawable.width >= 2048 ||
-	    pMaskPixmap->drawable.height >= 2048) {
+	if (pMaskPixmap->drawable.width > 2047 ||
+	    pMaskPixmap->drawable.height > 2047) {
 	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
 			     pMaskPixmap->drawable.width,
 			     pMaskPixmap->drawable.height));
@@ -527,14 +535,11 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
 
     TRACE;
 
-    if (!info->accel_state->XInited3D)
-	RADEONInit3DEngine(pScrn);
-
     if (!RADEONGetDestFormat(pDstPicture, &dst_format))
 	return FALSE;
 
     if (pDstPicture->format == PICT_a8 && RadeonBlendOp[op].dst_alpha)
-        RADEON_FALLBACK("Can't dst alpha blend A8\n");
+	RADEON_FALLBACK("Can't dst alpha blend A8\n");
 
     if (pMask)
 	info->accel_state->has_mask = TRUE;
@@ -559,6 +564,8 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
     if (!RADEONSetupSourceTile(pSrcPicture, pSrc, FALSE, TRUE))
 	return FALSE;
 
+    RADEON_SWITCH_TO_3D();
+
     if (!FUNC_NAME(R100TextureSetup)(pSrcPicture, pSrc, 0))
 	return FALSE;
     pp_cntl = RADEON_TEX_0_ENABLE | RADEON_TEX_BLEND_0_ENABLE;
@@ -570,8 +577,6 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
     } else {
 	info->accel_state->is_transform[1] = FALSE;
     }
-
-    RADEON_SWITCH_TO_3D();
 
     BEGIN_ACCEL(8);
     OUT_ACCEL_REG(RADEON_PP_CNTL, pp_cntl);
@@ -638,7 +643,7 @@ static Bool R200CheckCompositeTexture(PicturePtr pPict, int unit)
     int h = pPict->pDrawable->height;
     int i;
 
-    if ((w > 0x7ff) || (h > 0x7ff))
+    if ((w > 2048) || (h > 2048))
 	RADEON_FALLBACK(("Picture w/h too large (%dx%d)\n", w, h));
 
     for (i = 0; i < sizeof(R200TexFormats) / sizeof(R200TexFormats[0]); i++)
@@ -765,8 +770,8 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 
     pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
 
-    if (pSrcPixmap->drawable.width >= 2048 ||
-	pSrcPixmap->drawable.height >= 2048) {
+    if (pSrcPixmap->drawable.width > 2048 ||
+	pSrcPixmap->drawable.height > 2048) {
 	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
 			 pSrcPixmap->drawable.width,
 			 pSrcPixmap->drawable.height));
@@ -774,8 +779,8 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 
     pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
 
-    if (pDstPixmap->drawable.width >= 2048 ||
-	pDstPixmap->drawable.height >= 2048) {
+    if (pDstPixmap->drawable.width > 2048 ||
+	pDstPixmap->drawable.height > 2048) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
 			 pDstPixmap->drawable.width,
 			 pDstPixmap->drawable.height));
@@ -784,8 +789,8 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     if (pMaskPicture) {
 	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
-	if (pMaskPixmap->drawable.width >= 2048 ||
-	    pMaskPixmap->drawable.height >= 2048) {
+	if (pMaskPixmap->drawable.width > 2048 ||
+	    pMaskPixmap->drawable.height > 2048) {
 	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
 			     pMaskPixmap->drawable.width,
 			     pMaskPixmap->drawable.height));
@@ -830,14 +835,11 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
 
     TRACE;
 
-    if (!info->accel_state->XInited3D)
-	RADEONInit3DEngine(pScrn);
-
     if (!RADEONGetDestFormat(pDstPicture, &dst_format))
 	return FALSE;
 
     if (pDstPicture->format == PICT_a8 && RadeonBlendOp[op].dst_alpha)
-        RADEON_FALLBACK("Can't dst alpha blend A8\n");
+	RADEON_FALLBACK("Can't dst alpha blend A8\n");
 
     if (pMask)
 	info->accel_state->has_mask = TRUE;
@@ -860,6 +862,8 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
     if (!RADEONSetupSourceTile(pSrcPicture, pSrc, FALSE, TRUE))
 	return FALSE;
 
+    RADEON_SWITCH_TO_3D();
+
     if (!FUNC_NAME(R200TextureSetup)(pSrcPicture, pSrc, 0))
 	return FALSE;
     pp_cntl = RADEON_TEX_0_ENABLE | RADEON_TEX_BLEND_0_ENABLE;
@@ -871,8 +875,6 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
     } else {
 	info->accel_state->is_transform[1] = FALSE;
     }
-
-    RADEON_SWITCH_TO_3D();
 
     BEGIN_ACCEL(11);
 
@@ -1060,7 +1062,7 @@ static Bool FUNC_NAME(R300TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
       txfilter |= R300_TX_CLAMP_T(R300_TX_CLAMP_WRAP);
     else
       txfilter |= R300_TX_CLAMP_T(R300_TX_CLAMP_CLAMP_GL);
-		   
+
     txfilter |= (unit << R300_TX_ID_SHIFT);
 
     switch (pPict->filter) {
@@ -1127,8 +1129,8 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 	max_dst_h = 2560;
     }
 
-    if (pSrcPixmap->drawable.width >= max_tex_w ||
-	pSrcPixmap->drawable.height >= max_tex_h) {
+    if (pSrcPixmap->drawable.width > max_tex_w ||
+	pSrcPixmap->drawable.height > max_tex_h) {
 	RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
 			 pSrcPixmap->drawable.width,
 			 pSrcPixmap->drawable.height));
@@ -1136,8 +1138,8 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 
     pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
 
-    if (pDstPixmap->drawable.width >= max_dst_w ||
-	pDstPixmap->drawable.height >= max_dst_h) {
+    if (pDstPixmap->drawable.width > max_dst_w ||
+	pDstPixmap->drawable.height > max_dst_h) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
 			 pDstPixmap->drawable.width,
 			 pDstPixmap->drawable.height));
@@ -1146,8 +1148,8 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     if (pMaskPicture) {
 	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
-	if (pMaskPixmap->drawable.width >= max_tex_w ||
-	    pMaskPixmap->drawable.height >= max_tex_h) {
+	if (pMaskPixmap->drawable.width > max_tex_w ||
+	    pMaskPixmap->drawable.height > max_tex_h) {
 	    RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
 			     pMaskPixmap->drawable.width,
 			     pMaskPixmap->drawable.height));
@@ -1194,9 +1196,6 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 
     TRACE;
 
-    if (!info->accel_state->XInited3D)
-	RADEONInit3DEngine(pScrn);
-
     if (!R300GetDestFormat(pDstPicture, &dst_format))
 	return FALSE;
 
@@ -1224,6 +1223,8 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     if (!RADEONSetupSourceTile(pSrcPicture, pSrc, TRUE, FALSE))
 	return FALSE;
 
+    RADEON_SWITCH_TO_3D();
+
     if (!FUNC_NAME(R300TextureSetup)(pSrcPicture, pSrc, 0))
 	return FALSE;
     txenable = R300_TEX_0_ENABLE;
@@ -1235,8 +1236,6 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
     } else {
 	info->accel_state->is_transform[1] = FALSE;
     }
-
-    RADEON_SWITCH_TO_3D();
 
     /* setup the VAP */
     if (info->accel_state->has_tcl) {
@@ -1422,8 +1421,8 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 
 
 	/* setup the rasterizer, load FS */
-	BEGIN_ACCEL(10);
 	if (pMask) {
+	    BEGIN_ACCEL(16);
 	    /* 4 components: 2 for tex0, 2 for tex1 */
 	    OUT_ACCEL_REG(R300_RS_COUNT,
 			  ((4 << R300_RS_COUNT_IT_COUNT_SHIFT) |
@@ -1443,7 +1442,10 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 			   R300_TEX_START(0) |
 			   R300_TEX_SIZE(1) |
 			   R300_RGBA_OUT));
+
+
 	} else {
+	    BEGIN_ACCEL(15);
 	    /* 2 components: 2 for tex0 */
 	    OUT_ACCEL_REG(R300_RS_COUNT,
 			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
@@ -1462,14 +1464,45 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 			   R300_TEX_START(0) |
 			   R300_TEX_SIZE(0) |
 			   R300_RGBA_OUT));
+
 	}
+
+	OUT_ACCEL_REG(R300_US_CONFIG, (0 << R300_NLEVEL_SHIFT) | R300_FIRST_TEX);
+	OUT_ACCEL_REG(R300_US_CODE_ADDR_0,
+		      (R300_ALU_START(0) |
+		       R300_ALU_SIZE(0) |
+		       R300_TEX_START(0) |
+		       R300_TEX_SIZE(0)));
+	OUT_ACCEL_REG(R300_US_CODE_ADDR_1,
+		      (R300_ALU_START(0) |
+		       R300_ALU_SIZE(0) |
+		       R300_TEX_START(0) |
+		       R300_TEX_SIZE(0)));
+	OUT_ACCEL_REG(R300_US_CODE_ADDR_2,
+		      (R300_ALU_START(0) |
+		       R300_ALU_SIZE(0) |
+		       R300_TEX_START(0) |
+		       R300_TEX_SIZE(0)));
 
 	OUT_ACCEL_REG(R300_US_PIXSIZE, 1); /* highest temp used */
 	/* shader output swizzling */
 	OUT_ACCEL_REG(R300_US_OUT_FMT_0, output_fmt);
 
-	/* tex inst for src texture is pre-loaded in RADEONInit3DEngine() */
-	/* tex inst for mask texture is pre-loaded in RADEONInit3DEngine() */
+	/* tex inst for src texture */
+	OUT_ACCEL_REG(R300_US_TEX_INST(0),
+		      (R300_TEX_SRC_ADDR(0) |
+		       R300_TEX_DST_ADDR(0) |
+		       R300_TEX_ID(0) |
+		       R300_TEX_INST(R300_TEX_INST_LD)));
+
+	if (pMask) {
+	    /* tex inst for mask texture */
+	    OUT_ACCEL_REG(R300_US_TEX_INST(1),
+			  (R300_TEX_SRC_ADDR(1) |
+			   R300_TEX_DST_ADDR(1) |
+			   R300_TEX_ID(1) |
+			   R300_TEX_INST(R300_TEX_INST_LD)));
+	}
 
 	/* RGB inst
 	 * temp addresses for texture inputs
@@ -1835,6 +1868,14 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 	FINISH_ACCEL();
     }
 
+    /* Clear out scissoring */
+    BEGIN_ACCEL(2);
+    OUT_ACCEL_REG(R300_SC_SCISSOR0, ((0 << R300_SCISSOR_X_SHIFT) |
+				     (0 << R300_SCISSOR_Y_SHIFT)));
+    OUT_ACCEL_REG(R300_SC_SCISSOR1, ((8191 << R300_SCISSOR_X_SHIFT) |
+				     (8191 << R300_SCISSOR_Y_SHIFT)));
+    FINISH_ACCEL();
+
     BEGIN_ACCEL(3);
 
     OUT_ACCEL_REG(R300_RB3D_COLOROFFSET0, dst_offset);
@@ -1845,11 +1886,16 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 
     FINISH_ACCEL();
 
+    BEGIN_ACCEL(1);
+    if (info->accel_state->has_mask)
+	OUT_ACCEL_REG(R300_VAP_VTX_SIZE, 6);
+    else
+	OUT_ACCEL_REG(R300_VAP_VTX_SIZE, 4);
+    FINISH_ACCEL();
+
     return TRUE;
 }
 
-#define VTX_COUNT_MASK 6
-#define VTX_COUNT 4
 
 #ifdef ACCEL_CP
 
@@ -1955,15 +2001,11 @@ static void FUNC_NAME(RadeonCompositeTile)(PixmapPtr pDst,
     }
 
     if (info->accel_state->has_mask)
-	vtx_count = VTX_COUNT_MASK;
+	vtx_count = 6;
     else
-	vtx_count = VTX_COUNT;
+	vtx_count = 4;
 
-    if (IS_R300_3D || IS_R500_3D) {
-	BEGIN_ACCEL(1);
-	OUT_ACCEL_REG(R300_VAP_VTX_SIZE, vtx_count);
-	FINISH_ACCEL();
-    }
+    FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), dstY, dstY + h, info->accel_state->vsync);
 
 #ifdef ACCEL_CP
     if (info->ChipFamily < CHIP_FAMILY_R200) {
@@ -1982,41 +2024,46 @@ static void FUNC_NAME(RadeonCompositeTile)(PixmapPtr pDst,
 		 RADEON_CP_VC_CNTL_MAOS_ENABLE |
 		 RADEON_CP_VC_CNTL_VTX_FMT_RADEON_MODE |
 		 (3 << RADEON_CP_VC_CNTL_NUM_SHIFT));
-    } else {
-	if (IS_R300_3D || IS_R500_3D)
-	    BEGIN_RING(4 * vtx_count + 4);
-	else
-	    BEGIN_RING(4 * vtx_count + 2);
-
+    } else if (IS_R300_3D || IS_R500_3D) {
+	BEGIN_RING(4 * vtx_count + 4);
 	OUT_RING(CP_PACKET3(R200_CP_PACKET3_3D_DRAW_IMMD_2,
 			    4 * vtx_count));
 	OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_QUAD_LIST |
 		 RADEON_CP_VC_CNTL_PRIM_WALK_RING |
 		 (4 << RADEON_CP_VC_CNTL_NUM_SHIFT));
+    } else {
+	BEGIN_RING(3 * vtx_count + 2);
+	OUT_RING(CP_PACKET3(R200_CP_PACKET3_3D_DRAW_IMMD_2,
+			    3 * vtx_count));
+	OUT_RING(RADEON_CP_VC_CNTL_PRIM_TYPE_RECT_LIST |
+		 RADEON_CP_VC_CNTL_PRIM_WALK_RING |
+		 (3 << RADEON_CP_VC_CNTL_NUM_SHIFT));
     }
 
 #else /* ACCEL_CP */
     if (IS_R300_3D || IS_R500_3D)
 	BEGIN_ACCEL(2 + vtx_count * 4);
-    else if (info->ChipFamily < CHIP_FAMILY_R200)
-	BEGIN_ACCEL(1 + vtx_count * 3);
     else
-	BEGIN_ACCEL(1 + vtx_count * 4);
+	BEGIN_ACCEL(1 + vtx_count * 3);
 
     if (info->ChipFamily < CHIP_FAMILY_R200)
 	OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_RECTANGLE_LIST |
 					  RADEON_VF_PRIM_WALK_DATA |
 					  RADEON_VF_RADEON_MODE |
 					  (3 << RADEON_VF_NUM_VERTICES_SHIFT)));
-    else
+    else if (IS_R300_3D || IS_R500_3D)
 	OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_QUAD_LIST |
 					  RADEON_VF_PRIM_WALK_DATA |
 					  (4 << RADEON_VF_NUM_VERTICES_SHIFT)));
+    else
+	OUT_ACCEL_REG(RADEON_SE_VF_CNTL, (RADEON_VF_PRIM_TYPE_RECTANGLE_LIST |
+					  RADEON_VF_PRIM_WALK_DATA |
+					  (3 << RADEON_VF_NUM_VERTICES_SHIFT)));
 
 #endif
 
     if (info->accel_state->has_mask) {
-	if (info->ChipFamily >= CHIP_FAMILY_R200) {
+	if (IS_R300_3D || IS_R500_3D) {
 	    VTX_OUT_MASK((float)dstX,                                      (float)dstY,
 			 xFixedToFloat(srcTopLeft.x) / info->accel_state->texW[0],      xFixedToFloat(srcTopLeft.y) / info->accel_state->texH[0],
 			 xFixedToFloat(maskTopLeft.x) / info->accel_state->texW[1],     xFixedToFloat(maskTopLeft.y) / info->accel_state->texH[1]);
@@ -2031,7 +2078,7 @@ static void FUNC_NAME(RadeonCompositeTile)(PixmapPtr pDst,
 		xFixedToFloat(srcTopRight.x) / info->accel_state->texW[0],     xFixedToFloat(srcTopRight.y) / info->accel_state->texH[0],
 		xFixedToFloat(maskTopRight.x) / info->accel_state->texW[1],    xFixedToFloat(maskTopRight.y) / info->accel_state->texH[1]);
     } else {
-	if (info->ChipFamily >= CHIP_FAMILY_R200) {
+	if (IS_R300_3D || IS_R500_3D) {
 	    VTX_OUT((float)dstX,                                      (float)dstY,
 		    xFixedToFloat(srcTopLeft.x) / info->accel_state->texW[0],      xFixedToFloat(srcTopLeft.y) / info->accel_state->texH[0]);
 	}
@@ -2127,7 +2174,8 @@ static void FUNC_NAME(RadeonDoneComposite)(PixmapPtr pDst)
     ENTER_DRAW(0);
 
     if (IS_R300_3D || IS_R500_3D) {
-	BEGIN_ACCEL(2);
+	BEGIN_ACCEL(3);
+	OUT_ACCEL_REG(R300_SC_CLIP_RULE, 0xAAAA);
 	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_RB3D_DC_FLUSH_ALL);
     } else
 	BEGIN_ACCEL(1);

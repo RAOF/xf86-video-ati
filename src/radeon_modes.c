@@ -186,6 +186,65 @@ static DisplayModePtr RADEONFPNativeMode(xf86OutputPtr output)
     return new;
 }
 
+#if defined(__powerpc__)
+/* Apple eMacs need special modes for the internal CRT, e.g.,
+ * Modeline "640x480"    62.12   640  680  752  864  480 481 484  521 +HSync +Vsync
+ * Modeline "800x600"    76.84   800  848  936 1072  600 601 604  640 +HSync +Vsync
+ * Modeline "1024x768"   99.07  1024 1088 1200 1376  768 769 772  809 +HSync +Vsync
+ * Modeline "1152x864"  112.36  1152 1224 1352 1552  864 865 868  905 +HSync +Vsync
+ * Modeline "1280x960"  124.54  1280 1368 1504 1728  960 961 964 1001 +HSync +Vsync
+ */
+static DisplayModePtr RADEONeMacModes(xf86OutputPtr output)
+{
+    ScrnInfoPtr pScrn = output->scrn;
+    DisplayModePtr last=NULL, new=NULL, first=NULL;
+    int i, *modep;
+    static const char *modenames[5] = {
+	"640x480", "800x600", "1024x768", "1152x864", "1280x960"
+    };
+    static int modes[9*5] = {
+	 62120,  640,  680,  752,  864, 480, 481, 484,  521,
+	 76840,  800,  848,  936, 1072, 600, 601, 604,  640,
+	 99070, 1024, 1088, 1200, 1376, 768, 769, 772,  809,
+	112360, 1152, 1224, 1352, 1552, 864, 865, 868,  905,
+	124540, 1280, 1368, 1504, 1728, 960, 961, 964, 1001
+    };
+    modep = modes;
+
+    for (i=0; i<5; i++) {
+	new = xnfcalloc(1, sizeof (DisplayModeRec));
+	if (new) {
+	    new->name       = xnfalloc(strlen(modenames[i]) + 1);
+	    strcpy(new->name, modenames[i]);
+	    new->Clock      = *modep++;
+
+	    new->HDisplay   = *modep++;
+	    new->HSyncStart = *modep++;
+	    new->HSyncEnd   = *modep++;
+	    new->HTotal     = *modep++;
+
+	    new->VDisplay   = *modep++;
+	    new->VSyncStart = *modep++;
+	    new->VSyncEnd   = *modep++;
+	    new->VTotal     = *modep++;
+
+	    new->Flags      = 0;
+	    new->type       = M_T_DRIVER;
+	    if (i==2)
+		new->type |= M_T_PREFERRED;
+	    new->next       = NULL;
+	    new->prev       = last;
+	    if (last) last->next = new;
+	    last = new;
+	    if (!first) first = new;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Added eMac mode %s\n", modenames[i]);
+	}
+    }
+
+    return first;
+}
+#endif
+
 /* this function is basically a hack to add the screen modes */
 static void RADEONAddScreenModes(xf86OutputPtr output, DisplayModePtr *modeList)
 {
@@ -284,6 +343,12 @@ RADEONProbeOutputModes(xf86OutputPtr output)
 	} else {
 	    if (output->MonInfo)
 		modes = xf86OutputGetEDIDModes (output);
+#if defined(__powerpc__)
+	    if ((info->MacModel == RADEON_MAC_EMAC) &&
+		(radeon_output->DACType == DAC_PRIMARY) &&
+		(modes == NULL))
+		modes = RADEONeMacModes(output);
+#endif
 	    if (modes == NULL) {
 		if ((radeon_output->type == OUTPUT_LVDS) && info->IsAtomBios) {
 		    atomBiosResult = RHDAtomBiosFunc(pScrn->scrnIndex,

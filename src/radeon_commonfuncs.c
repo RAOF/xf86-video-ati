@@ -496,44 +496,9 @@ static void FUNC_NAME(RADEONInit3DEngine)(ScrnInfoPtr pScrn)
 	}
 	FINISH_ACCEL();
 
-	/* pre-load FS tex instructions */
-	if (IS_R300_3D) {
-	    BEGIN_ACCEL(2);
-	    /* tex inst for src texture */
-	    OUT_ACCEL_REG(R300_US_TEX_INST(0),
-			  (R300_TEX_SRC_ADDR(0) |
-			   R300_TEX_DST_ADDR(0) |
-			   R300_TEX_ID(0) |
-			   R300_TEX_INST(R300_TEX_INST_LD)));
-
-	    /* tex inst for mask texture */
-	    OUT_ACCEL_REG(R300_US_TEX_INST(1),
-			  (R300_TEX_SRC_ADDR(1) |
-			   R300_TEX_DST_ADDR(1) |
-			   R300_TEX_ID(1) |
-			   R300_TEX_INST(R300_TEX_INST_LD)));
-	    FINISH_ACCEL();
-	}
-
-	if (IS_R300_3D) {
-	    BEGIN_ACCEL(8);
-	    OUT_ACCEL_REG(R300_US_CONFIG, (0 << R300_NLEVEL_SHIFT) | R300_FIRST_TEX);
-	    OUT_ACCEL_REG(R300_US_CODE_ADDR_0,
-			  (R300_ALU_START(0) |
-			   R300_ALU_SIZE(0) |
-			   R300_TEX_START(0) |
-			   R300_TEX_SIZE(0)));
-	    OUT_ACCEL_REG(R300_US_CODE_ADDR_1,
-			  (R300_ALU_START(0) |
-			   R300_ALU_SIZE(0) |
-			   R300_TEX_START(0) |
-			   R300_TEX_SIZE(0)));
-	    OUT_ACCEL_REG(R300_US_CODE_ADDR_2,
-			  (R300_ALU_START(0) |
-			   R300_ALU_SIZE(0) |
-			   R300_TEX_START(0) |
-			   R300_TEX_SIZE(0)));
-	} else {
+	if (IS_R300_3D)
+	    BEGIN_ACCEL(4);
+	else {
 	    BEGIN_ACCEL(6);
 	    OUT_ACCEL_REG(R300_US_CONFIG, R500_ZERO_TIMES_ANYTHING_EQUALS_ZERO);
 	    OUT_ACCEL_REG(R500_US_FC_CTRL, 0);
@@ -583,13 +548,8 @@ static void FUNC_NAME(RADEONInit3DEngine)(ScrnInfoPtr pScrn)
 	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_DC_FLUSH_3D | R300_DC_FREE_3D);
 	FINISH_ACCEL();
 
-	BEGIN_ACCEL(7);
+	BEGIN_ACCEL(5);
 	OUT_ACCEL_REG(R300_SC_EDGERULE, 0xA5294A5);
-	OUT_ACCEL_REG(R300_SC_SCISSOR0, ((0 << R300_SCISSOR_X_SHIFT) |
-					 (0 << R300_SCISSOR_Y_SHIFT)));
-	OUT_ACCEL_REG(R300_SC_SCISSOR1, ((8191 << R300_SCISSOR_X_SHIFT) |
-					 (8191 << R300_SCISSOR_Y_SHIFT)));
-
 	if (IS_R300_3D) {
 	    /* clip has offset 1440 */
 	    OUT_ACCEL_REG(R300_SC_CLIP_0_A, ((1088 << R300_CLIP_X_SHIFT) |
@@ -610,7 +570,7 @@ static void FUNC_NAME(RADEONInit3DEngine)(ScrnInfoPtr pScrn)
 	       (info->ChipFamily == CHIP_FAMILY_RS300) ||
 	       (info->ChipFamily == CHIP_FAMILY_R200)) {
 
-	BEGIN_ACCEL(7);
+	BEGIN_ACCEL(6);
 	if (info->ChipFamily == CHIP_FAMILY_RS300) {
 	    OUT_ACCEL_REG(R200_SE_VAP_CNTL_STATUS, RADEON_TCL_BYPASS);
 	} else {
@@ -619,7 +579,6 @@ static void FUNC_NAME(RADEONInit3DEngine)(ScrnInfoPtr pScrn)
 	OUT_ACCEL_REG(R200_PP_CNTL_X, 0);
 	OUT_ACCEL_REG(R200_PP_TXMULTI_CTL_0, 0);
 	OUT_ACCEL_REG(R200_SE_VTX_STATE_CNTL, 0);
-	OUT_ACCEL_REG(R200_RE_CNTL, 0x0);
 	OUT_ACCEL_REG(R200_SE_VTE_CNTL, 0);
 	OUT_ACCEL_REG(R200_SE_VAP_CNTL, R200_VAP_FORCE_W_TO_ONE |
 	    R200_VAP_VF_MAX_VTX_NUM);
@@ -667,6 +626,75 @@ static void FUNC_NAME(RADEONInit3DEngine)(ScrnInfoPtr pScrn)
 
 }
 
+/* inserts a wait for vline in the command stream */
+void FUNC_NAME(RADEONWaitForVLine)(ScrnInfoPtr pScrn, PixmapPtr pPix,
+	int crtc, int start, int stop, Bool enable)
+{
+    RADEONInfoPtr  info = RADEONPTR(pScrn);
+    xf86CrtcConfigPtr  xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    uint32_t offset;
+    ACCEL_PREAMBLE();
+
+    if (!enable)
+	return;
+
+    if ((crtc < 0) || (crtc > 1))
+	return;
+
+    if (stop < start)
+	return;
+
+    if (!xf86_config->crtc[crtc]->enabled)
+	return;
+
+#ifdef USE_EXA
+    if (info->useEXA)
+	offset = exaGetPixmapOffset(pPix);
+    else
+#endif
+	offset = pPix->devPrivate.ptr - info->FB;
+
+    /* if drawing to front buffer */
+    if (offset != 0)
+	return;
+
+    start = max(start, 0);
+    stop = max(stop, xf86_config->crtc[crtc]->mode.VDisplay);
+
+    if (start > xf86_config->crtc[crtc]->mode.VDisplay)
+	return;
+
+    BEGIN_ACCEL(2);
+
+    if (IS_AVIVO_VARIANT) {
+	RADEONCrtcPrivatePtr radeon_crtc = xf86_config->crtc[crtc]->driver_private;
+
+	OUT_ACCEL_REG(AVIVO_D1MODE_VLINE_START_END + radeon_crtc->crtc_offset,
+		      ((start << AVIVO_D1MODE_VLINE_START_SHIFT) |
+		       (stop << AVIVO_D1MODE_VLINE_END_SHIFT) |
+		       AVIVO_D1MODE_VLINE_INV));
+    } else {
+	if (crtc == 0)
+	    OUT_ACCEL_REG(RADEON_CRTC_GUI_TRIG_VLINE,
+			  ((start << RADEON_CRTC_GUI_TRIG_VLINE_START_SHIFT) |
+			   (stop << RADEON_CRTC_GUI_TRIG_VLINE_END_SHIFT) |
+			   RADEON_CRTC_GUI_TRIG_VLINE_INV));
+	else
+	    OUT_ACCEL_REG(RADEON_CRTC2_GUI_TRIG_VLINE,
+			  ((start << RADEON_CRTC_GUI_TRIG_VLINE_START_SHIFT) |
+			   (stop << RADEON_CRTC_GUI_TRIG_VLINE_END_SHIFT) |
+			   RADEON_CRTC_GUI_TRIG_VLINE_INV));
+    }
+
+    if (crtc == 0)
+	OUT_ACCEL_REG(RADEON_WAIT_UNTIL, (RADEON_WAIT_CRTC_VLINE |
+					  RADEON_ENG_DISPLAY_SELECT_CRTC0));
+    else
+	OUT_ACCEL_REG(RADEON_WAIT_UNTIL, (RADEON_WAIT_CRTC_VLINE |
+					  RADEON_ENG_DISPLAY_SELECT_CRTC1));
+
+    FINISH_ACCEL();
+}
 
 /* MMIO:
  *
@@ -721,6 +749,9 @@ void FUNC_NAME(RADEONWaitForIdle)(ScrnInfoPtr pScrn)
 		   INREG(RADEON_RBBM_STATUS) & RADEON_RBBM_FIFOCNT_MASK,
 		   INREG(RADEON_RBBM_STATUS));
 #endif
+
+    if (info->ChipFamily >= CHIP_FAMILY_R600)
+      return;
 
     /* Wait for the engine to go idle */
     RADEONWaitForFifoFunction(pScrn, 64);
