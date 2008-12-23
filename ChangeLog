@@ -1,3 +1,529 @@
+commit 631123d144d088d4f77a0599c34deaa31d551d71
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 23 10:08:46 2008 +1000
+
+    radeon: update to 6.9.0.91
+    
+    do a prerelease for end of year.
+
+commit 047f7603174f6047090f4fafbe6488d697eb78bc
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Dec 23 08:16:25 2008 +1000
+
+    radeon: pass distcheck
+
+commit c0c33dab44e6966b1702d4e8cfba3537fc6e2d5c
+Author: Patrick Haller <patrick.haller@haller-consult.com>
+Date:   Mon Dec 22 03:06:23 2008 -0500
+
+    Fix off by one in EXA composite limit checking
+    
+    Patch from Patrick, with some updates from me:
+    - fix r200 limits
+    - note about r100 limits
+
+commit d01a609a2b07da4ca0f182e79459432584ec61f6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 22 02:18:43 2008 -0500
+
+    R3xx-R5xx: better fix for xv primitive tearing issues
+    
+    R5xx:      always use single clipped triangle
+    R3xx/R4xx: use single clipped triangle up to guardband limit,
+    	   then use quad.
+
+commit 4d009d14c9c72f6e1bc8100ec8d9b8037ee4e514
+Merge: d52882d... 4e96278...
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 16:00:01 2008 +1000
+
+    Merge branch 'atom-tvout'
+
+commit 4e96278b581e296c1203d97a6d7aa3bff3977222
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 15:58:35 2008 +1000
+
+    atombios/tv: add an option to enable atom tv-out for users.
+    
+    This code is still experimental but we will allow users to enable it for experimental reasons
+
+commit d52882d8188830dd52fa112dadcf5ea7f3e5fd5e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 09:27:47 2008 +1000
+
+    radeon: setup 3D engine even when no DRI.
+    
+    This should fix some missing font issues in EXA without DRI cases.
+
+commit 2346fd7cbd90dcdce2b361d374a53da064fa6a12
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Dec 18 16:35:13 2008 +1000
+
+    radeon: add all new pci ids for rv730/rv710 families
+
+commit b2b43905a5385a8bb0b59b8e50952863d8dacb59
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 00:59:52 2008 -0500
+
+    Pre-avivo: fix FP setup
+    
+    - make sure to clear various shadow timing bits
+    - crtc1 select bit was set wrong.
+    - should fix bugs like 19100
+
+commit 3754cc23abac99880eda87d06aa42e16081b6c8a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 00:56:19 2008 -0500
+
+    R2xx: switch EXA composite to rects rather quads
+    
+    For conistency with Xv path and to reduce potential diagonal tearing
+
+commit 435d996949185201a97493e131f9920a32863acd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:50:48 2008 +1000
+
+    radeon: tv timings have crev/frev wrong way around for some reason.
+
+commit b9549e89cbdf8fff4aa7bd9f3adfb7d5732508cc
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:40:53 2008 +1000
+
+    atombios: re-enable TV dpms
+
+commit db85ff2e0c52a030546c0cc8ed0b851418f3e045
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:37:17 2008 +1000
+
+    atom/r600: re-enable TV outputs
+
+commit ff7b52c9a48f2e417acf6bec3b72546ad9b33471
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:36:38 2008 +1000
+
+    radeon: use latest atombios constants for TV encoders in set_crtc_source
+
+commit 1e0c7d3f0bf6be67b976fdea8fa2df0b4b16435f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:35:06 2008 +1000
+
+    atom: spc3 only requires ucEncoderMode for DIG outputs
+
+commit 105cfd0b8696347ef71ad9daa941abb308bd6c2c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:31:15 2008 +1000
+
+    atom/tv: enable scaler can set the TV output scaler up.
+    
+    Add the tv standard to the scaler enable for TV use.
+
+commit 2a768abbd2f18abe203571213260bccc225f70fd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:29:07 2008 +1000
+
+    atom/tv: fixup the tv out default if bios doesn't specify
+
+commit b7fdd5da08bfec705691363b8890699c794dce53
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 11:24:56 2008 +1000
+
+    atombios: fixup parsing of TV tables on r500 and r600 cards.
+    
+    The TV tables changed between for later cards.
+
+commit e3b08cb59716b525b3063b184eab70e32b9d66f0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 16 15:43:16 2008 +1000
+
+    atombios: correct fix for previous issue.
+    
+    I committed an old patch.
+
+commit 1431bc6900b0e0d7f486b5b3ba281873472b3fdc
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 16 15:31:34 2008 +1000
+
+    atombios: fix issue with Clearing of MM_INDEX 0.
+    
+    While playing with tv-out I discovered this issue with clearing
+    the MM_INDEX register.
+
+commit f72367aff2d09161d30066a00673ba291b292a36
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 16 12:32:24 2008 +1000
+
+    radeon: add initial rv730 pciids.
+    
+    Lots more to come, this just adds a few to start.
+
+commit 4d2429f3ec4d7d3e1512b268c7ff5cbff8d186b4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 16 12:19:00 2008 +1000
+
+    DCE32: add support for DCE3.2 digital outputs.
+    
+    This adds support for the digital outputs on the RV730.
+
+commit 4d3792fd1b9f733107582436540f483d8993199f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Dec 12 10:34:57 2008 +1000
+
+    radeon: fixes from Alex for some output engines
+    (cherry picked from commit 1e8ac6ea7b35ccbc3649c96ead60f69158f66ebc)
+
+commit f892154dbd0d8b6dd8abdf2196ab0c7c18327412
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 15 19:41:32 2008 -0500
+
+    R3xx-R5xx: switch back to quad rendering for Xv
+    
+    The large clipped triangle trick hits the guardband limits on
+    large displays.  This gets textured video working again
+    until we sort out how to deal with the situation better.
+    
+    See bug 19046
+
+commit 62344e460f5d0cac81f94c535cda77d3d76528a9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 15 11:30:42 2008 -0500
+
+    Remove remnants of unused DDCMode option
+
+commit f1efee6a11dc9436276fb12cfb90aa79ada1192b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 15 11:27:17 2008 -0500
+
+    Remove mention of MergedFB from server log
+    
+    noticed by Fabio, bug 19098
+
+commit 94bffac6968057cdedc792f8540fe44cb6ecfd7c
+Author: Fabio <fabio.ped@libero.it>
+Date:   Mon Dec 15 11:22:56 2008 -0500
+
+    man page updates
+    
+    from bug 19098 with some minor fixes from me
+
+commit c7899905ec824071f9cabbd1e271c4d76010b733
+Author: Fabio <fabio.ped@libero.it>
+Date:   Mon Dec 15 10:58:23 2008 -0500
+
+    Remove duplicate ATI in some device names
+    
+    from bug 19098
+
+commit 89a8fd5337c77abf1f3166e69ed061d85b5c20f0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 15 14:41:10 2008 +1000
+
+    r600: don't idle engine
+    (cherry picked from commit b77729448e487d37707ce028d8edc59352d1cc2d)
+
+commit 4ce255a9db8027f2471ba50e57724d3e4d5b16ba
+Author: Fabio <fabio.ped@libero.it>
+Date:   Fri Dec 12 09:53:33 2008 -0500
+
+    Fix formatting in man page
+    
+    fixes bug 19039
+
+commit 0e99017cb9a6d46b891705df73678c2705439532
+Author: Joseph Adams <joeyadams3.14159@gmail.com>
+Date:   Thu Dec 11 00:57:03 2008 -0500
+
+    Add more eMac modes, fix crash in last patch
+
+commit fb46c30d316ab3ec54c54f3aec91d5164070a423
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 10 17:16:56 2008 -0500
+
+    Add support for Apple eMacs
+    
+    Thanks to Joseph Adams for helping me sort this out.
+    Verified on eMac G4/1.0 with radeon 7500
+    Later eMacs with radeon 9200 or 9600 chips may have
+    different ddc setups.  Need to verify.
+
+commit c0bcea9150ef215fa614733cef9a5b71a55a33bd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 10 11:40:47 2008 -0500
+
+    Add another AGP quirk
+    
+    fixes bug 12544
+
+commit 607b02d6abf78147902a5944bd006897ad95e982
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 10 03:54:35 2008 -0500
+
+    Add randr 1.3 panning support
+
+commit 24007acbf36bcfd09cb5e74ce4a8d918d393cf34
+Author: Benjamin Close <Benjamin.Close@clearchain.com>
+Date:   Wed Dec 10 02:17:56 2008 -0500
+
+    [PATCH] xf86misc extension has been removed, update driver to reflect it
+
+commit 69e445f7f2ebd299070e44457b434bbc28b7e05c
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Dec 9 18:59:11 2008 +1000
+
+    radeon: memset the pll setting function
+    
+    Thanks to Peter Zijlstra for making me debug this and providing
+    feedback.
+
+commit c72b732a2f5597cd72bd4ebe207799ae07f2681e
+Author: Adrian Friedli <adi@koalatux.ch>
+Date:   Mon Dec 8 10:42:46 2008 -0500
+
+    Add another AGP quirk
+
+commit 979ad04d901676cb41aea5cf47a8a2e9c19064dd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Dec 5 17:53:57 2008 -0500
+
+    Add missing .TP in man page
+
+commit b89d434011787fb71593395f462d142375783e35
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Fri Dec 5 17:52:02 2008 -0500
+
+    Fix scissor setup for Xv
+    
+    We need to adjust the scissoring for each clip box, so move the setup
+    to inside the while loop.
+
+commit 83c1115333cbe763f86422fa5aabf4ab21951e68
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Dec 5 11:52:18 2008 -0500
+
+    R200: Remove scissor setup from init3d()
+    
+    We aren't using them, so no need to set them up.
+
+commit 7593d5399cdb2f42ecbcb5193580385b286a9db9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Dec 5 11:18:15 2008 -0500
+
+    set coherent mode consistently (enabled for now)
+    
+    It's set to enabled in the output setup, but then was set to
+    disabled when teh output properties were setup.  Set it up
+    consistently.
+
+commit ad2579f8898251105a6b36b745afd1ce1dab103e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Fri Dec 5 20:03:53 2008 +1000
+
+    radeon: damn you bios, HDMI cannot have DACs.
+
+commit bae30856f2cb3884387ef347327af6ff00b75854
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Dec 5 08:15:59 2008 +0100
+
+    Make VSync for EXA and Xv configurable
+
+commit 33638d9e388b330e2f4eb4debd05ba09924cf176
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Thu Dec 4 23:29:31 2008 +0100
+
+    Optimise RADEONWaitForVLine
+    
+    Only avoid the vlines we are rendering to, instead of the entire
+    screen. This way we don't stall the card for longer than we
+    absolutely have to.
+    
+    EXA calls fixed by Alex Deucher.
+
+commit d1690f5cc096e2f735c8b407c370a1c1cd7a8afc
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Wed Dec 3 21:49:37 2008 +0100
+
+    Improve tearing avoidance for Xvideo in two steps
+    
+    - Fix up VLINE handling to trigger whenever scanout is outside the
+      visible area.
+    
+    - Render the video as a scissored triangle as R300+ cannot render a
+      quad in a single pass.
+
+commit 4d98acbca2e630056bf56cdcd0e23007fded2ced
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jul 16 03:14:06 2008 -0400
+
+    First pass at tear-free accel
+    
+    if the dest pixmap is the front buffer, stall the pipe
+    until the vline is outside the active area.
+    For EXA, pick crtc based on the larger mode area;
+    ideally we'd have one pixmap per crtc.
+    For Xv, use dst window area to determine crtc.
+
+commit 82d67b70d0fb747cf7b1eb0b64244ae56cb84572
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Thu Dec 4 15:38:13 2008 -0500
+
+    Switch r200 Xv to use rect lists rather than quads to avoid tearing
+    
+    Patch from Pierre with fixes from me.
+
+commit 9eccd0ad0827a1b8ec9abb2cebf5768d204a5ce9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Dec 4 12:28:12 2008 -0500
+
+    Fix up US setup after r3xx bicubic merge
+
+commit e13fba853ba19e6b0f081b9b3d9fa76c38a0f82b
+Merge: d296337... 79bbdd9...
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Dec 4 12:25:29 2008 -0500
+
+    Merge branch 'bicubic' of git://git.infradead.org/users/drzeus/xf86-video-ati
+
+commit d29633708b5451f5541e88371d831ae03019a7f5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Dec 4 09:08:48 2008 +1000
+
+    radeon: apply atom quirks to object table
+
+commit 941ac0d3ab839dc5aaaef2f3b7f5c7085b2894c5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 3 17:31:25 2008 -0500
+
+    Make sure 3D state is emited when switching to 3D IB
+    
+    - fixes bug 18864
+
+commit 79bbdd984c925e37f5b3db2605339f1a21377fcf
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Wed Dec 3 20:33:36 2008 +0100
+
+    Change the XV_BICUBIC attribute to a tristate, where the third state
+    automatically turns the filter on and off as appropriate.
+
+commit bbdf821c179242266fd86edf9e688a6be9cf985f
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Wed Dec 3 19:42:50 2008 +0100
+
+    Make the R300 bicubic shader program a bit easier to understand by
+    having comments that describe the operation, not how it has to be
+    implemented in the hardware.
+
+commit 8f4b22932c91f1d51fcbf1d1a99d852fcdaafdcc
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Wed Dec 3 19:31:31 2008 +0100
+
+    Now that we have a bicubic code path that messes up the pixel shader,
+    we need to restore it in the non-bicubic code.
+
+commit 0851daa6e7db77e440188d774ef8b3236146bcb9
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Wed Dec 3 19:17:36 2008 +0100
+
+    Fix macros so that they are safe to use with expressions as parameters.
+
+commit e04bcb0066781f61e97787856261e3380036d304
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Wed Dec 3 19:16:03 2008 +0100
+
+    Fix node setup on R300 bicubic pixel shader. It was backwards and used
+    the wrong base for sizes.
+
+commit 927aee181f3637bda1b761caf93fbc0652e1207b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 3 01:39:38 2008 -0500
+
+    Only flush IB when direct rendering is enabled
+
+commit ca74ebf8813b7fab8d08465ef9600f001c948e94
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Dec 2 22:26:21 2008 -0500
+
+    move 3d state init after RADEON_SWITCH_TO_3D()
+
+commit fc079c5267baf431bbecee7744e484783d393152
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 2 22:11:57 2008 -0500
+
+    Don't mix 2D and 3D in the same IB
+    
+    fix from radeon-gem-cs
+
+commit 678693aabd0b4c1812ab44bf5abb4c8394b254bb
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 2 22:02:21 2008 -0500
+
+    Stability fixes from radeon-gem-cs
+
+commit f231e4d9b2c683dc16f42cf09484fae926a892c1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 3 11:39:04 2008 +1000
+
+    radeon: fix HDMI having DACs in some BIOSes
+
+commit fe73d9a7dfe8ec5c8f1a8dc08e14b4e138aa9276
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Tue Dec 2 19:47:45 2008 -0500
+
+    Add another AGP quirk
+
+commit 6e0c48958c6a50a639368e369ce72d813256aee4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 1 18:50:40 2008 -0500
+
+    Add quirk for r200 card with the primary dac wired to both ports
+    
+    refactor load detection setup as a byproduct
+    should fix bug 18719
+
+commit fa496d7b0397d9be57db90d0860928e9ced73cca
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Mon Dec 1 08:29:29 2008 +0100
+
+    Fix comments for R500 fragment shader to reflect the code.
+
+commit 0d95fca114194664d9ab612c90d3222912cf41ff
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sat Aug 30 12:38:43 2008 -0700
+
+    Fix indentation on IS_R300_3D Xv code.
+
+commit 36a62b8c47def3f23a0b735875f59d23ed3c095a
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Sat Aug 30 11:15:20 2008 -0700
+
+    r3xx: Various Xv fixes.
+
+commit 01ed5462fad56f5b7bf867041d00443bdf81c653
+Author: Corbin Simpson <MostAwesomeDude@gmail.com>
+Date:   Thu Aug 7 18:08:54 2008 -0700
+
+    Switch to Mesa-style 24-bit float packing.
+    Seems like Mesa's got it right, so we should follow suit.
+
+commit 85bbe889045aa434f71a3eb0ba8153b7d2cc5023
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Thu Aug 7 07:06:46 2008 -0700
+
+    Enable bicubic Xv on r3xx+. Still some buggies in the actual display, but looks pretty good.
+
+commit bf6263cff50bb85c19ff6dfebb739333fa8aca18
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Thu Aug 7 07:00:36 2008 -0700
+
+    Add r3xx-specific bicubic filtering code. FP, RS, mostly, everything else is shared with r5xx.
+
+commit da021c36bbdf3bca31ee50ebe01cdb9495c09b36
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Nov 30 18:44:24 2008 +1000
+
+    radeon_drm.h: remove kernel defines
+    
+    remove these we should update from an installed kernel copy not from the
+    original kernel copy.
+
 commit 783cdb7374941bb1d2b63eea375fbf2f1b808cc3
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Nov 27 15:29:06 2008 +1000
