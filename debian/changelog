@@ -1,3 +1,10 @@
+xserver-xorg-video-ati (1:6.10.0-1) experimental; urgency=low
+
+  * New upstream release.
+    + Add AGP quirk for Fujitsu-Siemens E8010, closes: #510208.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 07 Jan 2009 09:23:15 +0100
+
 xserver-xorg-video-ati (1:6.9.0.91-1) experimental; urgency=low
 
   * New upstream release candidate.
