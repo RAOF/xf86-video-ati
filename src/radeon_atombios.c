@@ -1530,6 +1530,13 @@ static void RADEONApplyATOMQuirks(ScrnInfoPtr pScrn, int index)
 	    info->BiosConnector[index].ConnectorType = CONNECTOR_DVI_D;
 	}
     }
+    /* a-bit f-i90hd - ciaranm on #radeonhd - this board has no DVI */
+    if ((info->Chipset == PCI_CHIP_RS600_7941) &&
+	(PCI_SUB_VENDOR_ID(info->PciInfo) == 0x147b) &&
+	(PCI_SUB_DEVICE_ID(info->PciInfo) == 0x2412)) {
+	if (info->BiosConnector[index].ConnectorType == CONNECTOR_DVI_I)
+	    info->BiosConnector[index].valid = FALSE;
+    }
 
     /* Falcon NW laptop lists vga ddc line for LVDS */
     if ((info->Chipset == PCI_CHIP_RV410_5653) &&
@@ -1637,8 +1644,8 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn)
 	for (j = 0; j < SrcDstTable->ucNumberOfSrc; j++) {
 	    uint8_t sobj_id;
 
-	    sobj_id = (SrcDstTable->usSrcObjectID[j] & OBJECT_ID_MASK) >> OBJECT_ID_SHIFT;
-	    ErrorF("src object id %04x %d\n", SrcDstTable->usSrcObjectID[j], sobj_id);
+	    sobj_id = (le16_to_cpu(SrcDstTable->usSrcObjectID[j]) & OBJECT_ID_MASK) >> OBJECT_ID_SHIFT;
+	    ErrorF("src object id %04x %d\n", le16_to_cpu(SrcDstTable->usSrcObjectID[j]), sobj_id);
 
 	    switch(sobj_id) {
 	    case ENCODER_OBJECT_ID_INTERNAL_LVDS:
@@ -2042,8 +2049,7 @@ RADEONGetATOMConnectorInfoFromBIOSConnectorTable (ScrnInfoPtr pScrn)
 	    (i == ATOM_DEVICE_TV2_INDEX) ||
 	    (i == ATOM_DEVICE_CV_INDEX))
 	    info->BiosConnector[i].ddc_i2c.valid = FALSE;
-	else if ((info->ChipFamily == CHIP_FAMILY_RS600) ||
-		 (info->ChipFamily == CHIP_FAMILY_RS690) ||
+	else if ((info->ChipFamily == CHIP_FAMILY_RS690) ||
 		 (info->ChipFamily == CHIP_FAMILY_RS740)) {
 	    /* IGP DFP ports use non-standard gpio entries */
 	    if ((i == ATOM_DEVICE_DFP2_INDEX) || (i == ATOM_DEVICE_DFP3_INDEX))

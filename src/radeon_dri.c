@@ -750,6 +750,8 @@ static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
     { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x1043,0x1942,  1 },
     /* Intel 82852/82855 host bridge / Mobility FireGL 9000 R250 Needs AGPMode 1 (lp #296617) */
     { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4c66,  0x1028,0x0149,  1 },
+    /* Intel 82852/82855 host bridge / Mobility 9600/9700 Needs AGPMode 1 (deb #510208) */
+    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x10cf,0x127f,  1 },
 
     /* ASRock K7VT4A+ AGP 8x / ATI Radeon 9250 AGP Needs AGPMode 4 (LP: #133192) */
     { 0x1849,0x3189,            PCI_VENDOR_ATI,0x5960,  0x1787, 0x5960,          4},
@@ -762,6 +764,9 @@ static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
     { 0x1106,0x0691,            PCI_VENDOR_ATI,0x5960,  0x1043,0x0054,           2 },
     /* VIA K8M800 Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 4 (fdo #12544) */
     { 0x1106,0x0204,            PCI_VENDOR_ATI,0x5960,  0x17af,0x2020,           4 },
+
+    /* ATI Host Bridge / RV280 [M9+] Needs AGPMode 1 (phoronix forum) */
+    { 0x1002,0xcbb2,            PCI_VENDOR_ATI,0x5c61,  0x104d,0x8175,           1 },
 
     { 0, 0, 0, 0, 0, 0, 0 },
 };
@@ -861,10 +866,12 @@ static Bool RADEONSetAgpMode(RADEONInfoPtr info, ScreenPtr pScreen)
     } /* Don't mention this otherwise, so that people don't get funny ideas */
 
     xf86DrvMsg(pScreen->myNum, X_INFO,
-	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x; Card 0x%04x/0x%04x]\n",
+	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x; Card 0x%04x/0x%04x 0x%04x/0x%04x]\n",
 	       mode, vendor, device,
 	       PCI_DEV_VENDOR_ID(info->PciInfo),
-	       PCI_DEV_DEVICE_ID(info->PciInfo));
+	       PCI_DEV_DEVICE_ID(info->PciInfo),
+	       PCI_SUB_VENDOR_ID(info->PciInfo),
+	       PCI_SUB_DEVICE_ID(info->PciInfo));
 
     if (drmAgpEnable(info->dri->drmFD, mode) < 0) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR, "[agp] AGP not enabled\n");
