@@ -1,3 +1,522 @@
+commit 610b8b65fd7aa97f9c03b2ff6ae607aa959eab0b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 16:33:20 2009 -0500
+
+    Bump for rc release
+
+commit 04859362ce64ed4ae48305a83c92059899c1db4b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Feb 8 20:13:06 2009 -0500
+
+    Add some missing r6xx/r7xx pci ids
+
+commit bba5d806cc46328ad9e4c521bfeeb2a59f96862b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 6 19:44:17 2009 -0500
+
+    AVIVO: better fix for rotation
+    
+    This should handle initial rotation as well.
+
+commit 28cf3492f431f325cb08d7c6aade43d8886df3f6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 6 19:20:18 2009 -0500
+
+    AVIVO: fix rotation
+    
+    When rotation is active, virtualX and virtualY change.
+
+commit 16e01a5796a8e8b86ad25d3aa45b9e7044dc72d1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 3 19:46:10 2009 -0500
+
+    Fix encoder accounting
+    
+    Should fix bug 19924
+
+commit 9abb09d5f43320bd27b336612d39d264fe93549f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 3 11:17:13 2009 -0500
+
+    Fix bad rv710 pci id
+
+commit c88c3ef6f3db266c1aacba5297b8dfc8b66bf00e
+Author: Wolke Liu <wolke.liu@amd.com>
+Date:   Mon Feb 2 17:01:34 2009 -0500
+
+    AVIVO: Save/restore vga pll registers
+    
+    This fixes some VT switch issues on some chips
+
+commit 6fac3cefd1f46161c1e276ba40e72da2823aa9f6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Jan 31 14:21:02 2009 -0500
+
+    Return NULL for encoder if no active device is assigned
+    
+    fixes bug 19855
+
+commit db178c852d00e9b85513d750b5f8f7495f9e3360
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:37:41 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit fa8e5a4fc236f8f15f462cb0d6164b194a65a118
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Fri Jan 30 16:16:26 2009 +0100
+
+    EXA: Accelerate Composite of RepeatPad/Reflect pictures when possible.
+
+commit 3a6e958c59b4b44fe620c8abe760ed1abf0007b1
+Author: airlied <airlied@roo.(none)>
+Date:   Fri Jan 30 07:56:14 2009 +1000
+
+    rs780: include RS780 in the InitMemory to leave alone
+    
+    This stops the MC_FB_LOCATION getting reassigned to 0, which
+    is really bad thing to happen.
+    
+    I've had reported memory corruption on these cards so hopefully this
+    fixes it.
+
+commit bd8021d46e9066e4cd116c03a7b7adcfe2557aff
+Merge: 4f88dd8... 20d5dd3...
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 28 14:33:14 2009 -0500
+
+    Merge branch 'atom-rework' and fix conflicts
+
+commit 20d5dd387da555e895e2b73fb53e2b026dd91003
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 28 14:12:26 2009 -0500
+
+    Move encoder specific data to encoder dev_priv
+
+commit 4f88dd83f290fb38e41256a7f1804008c0f28139
+Merge: 1c5678f... 2ca970c...
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 28 13:13:13 2009 -0500
+
+    Merge branch 'atom-tvout' of ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+    
+    Conflicts:
+    
+    	src/radeon_atombios.c
+
+commit 1a62360e8260eaf5f98fa6be3f89f64c8cae7d32
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 10:11:28 2009 -0500
+
+    Encoders not assigned yet, use supported devices
+    
+    need to move this to encoder setup
+
+commit 44d9ceacb1fa6e1859d5d8bd1c55405aea24ad85
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 03:47:32 2009 -0500
+
+    Fix legacy output setup
+    
+    don't have assigned encoders at this point.  Need to
+    eventually move this stuff to encoder dev_priv.
+
+commit 0c24cbcea56c8f36374aca0f8ba849adfbf0ecfe
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 03:24:19 2009 -0500
+
+    ATOM: print useful output info for DPMS events
+
+commit 2f92b885457c5cee2098ebbf8c6fe5a5eb98ec48
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 03:12:44 2009 -0500
+
+    Warning fixes
+
+commit 4cbf6189f3a7945a1141b0451e4f7881ceaaadcd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 02:59:51 2009 -0500
+
+    Move legacy output setup functions to legacy_output.c
+
+commit 93ed767255b60fbdf5b416b9bd06c366036a5141
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 02:40:41 2009 -0500
+
+    Fix off by one when printing encoder name
+    
+    - also cleanup some debugging output
+
+commit b515eee4b1cafae78ed39cd91c18b4f5e671b20b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 26 01:50:18 2009 -0500
+
+    Additional output cleanup
+
+commit 1c5678fc452dbc93135e9ece50a4cff6583f6078
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Sat Jan 24 11:10:00 2009 +0100
+
+    Drop memcpy fallbacks from EXA UploadToScreen and DownloadFromScreen hooks.
+    
+    While in theory it's possible for the PrepareAccess hook to fail on big endian
+    platforms, in practice it isn't at this point because there's no other users of
+    the surface registers.
+
+commit 5cbd6082b9f8d7009ee9ef5e036673f99e1bfb05
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Sat Jan 24 11:07:12 2009 +0100
+
+    Don't transform EXA Composite mask coordinates when there's no mask.
+
+commit 7e54c4b8acafead8de5d0dd6fdc1b619f832dd6f
+Author: Thomas Jaeger <ThJaeger@gmail.com>
+Date:   Fri Jan 23 20:03:27 2009 -0500
+
+    Fall back to software for unsupported repeat modes
+
+commit 289b4a377cfff0c2a8ec938951cfbae1e270570e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 23 20:00:43 2009 -0500
+
+    Remove OutputType and other cruft
+
+commit 5f98508effbdc1fd62d0df15798722c147d88da1
+Author: Maciej Cencora <m.cencora@gmail.com>
+Date:   Fri Jan 23 19:33:25 2009 -0500
+
+    Make sure gb_num_pipes is initialized when DRI is disabled
+    
+    Found with valgrind
+
+commit 0faab02cc732414af3cfb2014d3ddc1139aff063
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 23 17:35:01 2009 -0500
+
+    Remove some unused cruft
+
+commit 025082160c53c01a44f4d681cc63bf26ac4561d5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 23 17:31:18 2009 -0500
+
+    track encoder state
+
+commit 82f12e5a40c1fbcb91910a0f8b725c34fff02aae
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 23 16:21:33 2009 -0500
+
+    Remove TMDSType, DACType, LVDSType from output rec
+
+commit 7b42b57d748f77ff6ef6f8ade7cbc983a98d7204
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 16:28:00 2009 -0500
+
+    few more logic pasto's bits I missed
+
+commit fef1c12fbe4ceb4676258850d1fa5cac994f7c21
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 15:34:01 2009 -0500
+
+    Fix compilation with RADEON_TRACE_FALL set
+    
+    noticed by curaga on phoronix forum
+
+commit 1305376b009d17d65b4935896dc35cb7530f7c52
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 15:20:47 2009 -0500
+
+    Move active_device setup to detect()
+    
+    Also add encoder debugging printouts
+
+commit 9e0cc0ca5d7bc68756ae92ee3b5b2392366be71a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 14:47:08 2009 -0500
+
+    Fix logic cut and paste error
+
+commit 12010ae9296635ffa5f42ce0cd14482aaa290cf7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 13:52:11 2009 -0500
+
+    More legacy rework
+
+commit 3f8bbede8bf639050f773780888b89cbdcb425b8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 13:45:11 2009 -0500
+
+    fix legacy crtc routing and add some debugging info
+
+commit 80e0162ea2c1f793964731268251aba2d3243127
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 13:28:14 2009 -0500
+
+    ATOM: fix encoder init
+
+commit aea27d9caabb0e54e868a21e6e547733a4ca2709
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 12:33:49 2009 -0500
+
+    Switch legacy output code to use new encoder objects
+
+commit 9b44a4b57b00b150d041a5d82cb2df42159c062b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 11:32:24 2009 -0500
+
+    ATOM: more output cleanup
+
+commit 9e283fa9de34407fa6f0d5a8006a611b104f4bf2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 03:16:20 2009 -0500
+
+    Fixup encoder setup on pre-ATOM chips
+
+commit 5850abbdcd22b70bdbccd3642f8ba1a27e38e7cd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 21 02:28:47 2009 -0500
+
+    clean up encoder setup
+    
+    - make sure not to duplicate encoders
+    - use single encoder array
+
+commit 152d1d4c179c262be4d0a5618400aa13b4820342
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 20 00:58:18 2009 -0500
+
+    First pass at converting legacy code to encoder objects
+
+commit 7cc7ba8bf9ce2f0eebfd9b48aa648c416c333ff4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 19 18:42:12 2009 -0500
+
+    ATOM: round 1 of output rework
+
+commit 25f3878858e6efb486888e5271b60d4ba08c73c6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 19 15:54:42 2009 -0500
+
+    start to re-org outputs
+
+commit cbeb310d35e5ea25ba7a45a2c555468391cdf29e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 16 19:53:49 2009 -0500
+
+    ATOM: switch to define for external tmds
+
+commit d0d157abced43f822885fa26f14a4924766594cd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 16 19:51:07 2009 -0500
+
+    ATOM: combine DAC setup functions
+    
+    plus a few other clean-ups
+
+commit f6f969338f8187529c7ae9b2adc980b71a3f5837
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jan 16 18:10:34 2009 -0500
+
+    DCE30: LVTMA requires DIG2 encoder
+    
+    Fixes bug 19544
+
+commit 549ae63aecc2624a69b41ce4db75883d03d59c23
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jan 15 19:26:40 2009 -0500
+
+    RV280 Add another AGP quirk
+
+commit 0e69068a8ed82e3fb7349d8224933451955e5f16
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Tue Jan 13 20:31:17 2009 -0500
+
+    [PATCH] Add yet another AGP quirk for RV280
+
+commit b437da34cb4f7c637674fb432ad81b9bf32244a3
+Author: Christiaan van Dijk <dvbmail@xs4all.nl>
+Date:   Mon Jan 12 11:54:15 2009 -0500
+
+    R3xx/R4xx: Maximize the use of clipped triangles for Xv rendering
+    
+    While trying to get tear free video on my RS690 I found some problems in the code for rendering the
+    video as a clipped triangle. The size limitations are quite strict and scaling the video output window
+    creates all kinds of weird effects. This patch maximizes the use of this function and resolves the
+    scaling issues. There could be a problem with zero target height/width, not sure if this is handled
+    elsewhere.
+
+commit 3d106b990fa8daba96e590c57b164640a2faae7f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:26:04 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 14d29a223028c183ba11e717a3737285d0ac8de1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 7 17:04:42 2009 -0500
+
+    RV280: add another AGP quirk
+
+commit 1795706a6bb13272a58e8fa1bd5ad2603d553dde
+Author: Nicos Gollan <gtdev@spearhead.de>
+Date:   Wed Jan 7 14:25:24 2009 -0500
+
+    [PATCH] Fixed enumerations in radeon-output.c
+
+commit f69ad5aa17bb907105c1657803628d52b5ff3f11
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jan 7 11:33:53 2009 -0500
+
+    Bump version post release
+
+commit a0dd5d7ee3f038a9bfe051db8dbfac4934a81581
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 19:08:28 2009 -0500
+
+    Bump version for release
+
+commit c3fb8bb279959512a4ced644a64cc660c5cd97bd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 17:41:22 2009 -0500
+
+    ATOM: rework encoder/transmitter setup
+
+commit 9bb6b8ceaf772e1ce63610812a12260ee3860c27
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 16:25:26 2009 -0500
+
+    ATOM: refactor output dpms
+
+commit 467995d960bdefb1911eabfc2a047cf816013101
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 15:18:41 2009 -0500
+
+    ATOM: Adjust PLL setup for recent atom changes
+
+commit ee6310174c44809c761dbdb423e56e61392a0e10
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 14:59:22 2009 -0500
+
+    ATOM: handle cases where TMDS uses linkb
+    
+    fixes bug 18564
+
+commit 690999b682c0f954e27d9f1b3a3d8db4ef865c21
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 14:55:49 2009 -0500
+
+    ATOM: rework object table parsing
+
+commit e23baa2fa8b25b68cd473aec7a3d8cf3ee7b0ea8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 6 14:38:06 2009 -0500
+
+    R100: Fix typo in e55598cc1b35d398c9eb2c3946df71456775f621
+    
+    Noticed by Andreas Stenglein
+
+commit d5cb24075928690377fd2dfaa32abfebff9990df
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Jan 4 21:04:52 2009 -0500
+
+    ATOM: add format rev 2 for digitial command tables
+    
+    should fix bug 18911
+
+commit 1813456af3def38c6f53103054976f3092491746
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Jan 4 21:01:05 2009 -0500
+
+    ATOM: fail on more tables with unhandled revisions
+
+commit 90ce00a3dbf37833a71db234372695460c8f0342
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Jan 4 19:13:53 2009 -0500
+
+    AGP: Print both device and subsytem pci ids for agp
+    
+    helpful for adding quirks with libpciaccess
+
+commit 006d736d890a6b2f1d7eb8ee20ccf467a939516f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Jan 4 19:08:37 2009 -0500
+
+    Another AGP quirk
+    
+    debian bug 510208
+
+commit c39ca66a7e216b7492fc5e3680ac535831cfb9a1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Dec 30 19:05:58 2008 -0500
+
+    R2xx: add another AGP quirk
+    
+    from http://www.phoronix.com/forums/showthread.php?t=14626
+
+commit 877be1b268f275b8ad83d5e245a0f0d3b1a05091
+Author: Fabio <fabio.ped@libero.it>
+Date:   Mon Dec 29 18:11:10 2008 -0500
+
+    man page updates
+    
+    bug 19329
+
+commit 837f7e8a48ea35d21de24b620830a2c6db854861
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Tue Dec 30 06:50:54 2008 +1000
+
+    atombios: endian fix in r600 object table handling
+    
+    This fixes the r600 object table on r600.
+
+commit 45f8b911659dba7f43b9b70bde4b9c3be51b0b5b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 29 10:25:33 2008 -0500
+
+    RS600: remove gpio quirk for ddc
+    
+    Doesn't seem necessary on RS600.  I'll try and find out more.
+
+commit e913990030c536427bfecdb7b3d1e18f1beb90d2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 29 10:22:20 2008 -0500
+
+    Revert "radeon: maybe special handling only needed for DVI port not HDMI one."
+    
+    This reverts commit c877450a75d3fd4a2f200af197c691669966f6f4.
+    
+    This breaks RS690 setups.  I think for now we just apply this quirk to
+    RS690/RS740.  I'll follow up with the bios folks about RS600.
+
+commit c877450a75d3fd4a2f200af197c691669966f6f4
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 29 09:05:45 2008 +1000
+
+    radeon: maybe special handling only needed for DVI port not HDMI one.
+    
+    fixes ciaranm's rs600 board on radeon DDC
+
+commit 2a9bc6be3246ec230b181391221e3a46beb94a23
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Dec 29 09:05:16 2008 +1000
+
+    radeon: a-bit motherboard has no DVI output
+    
+    thanks to ciaranm for finding this.
+
+commit eccf3fed2be54f5c02fefef32e39c4084acbbe22
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Dec 26 19:51:58 2008 -0500
+
+    Make sure to include radeon_drm.h in the tarball
+
+commit e55598cc1b35d398c9eb2c3946df71456775f621
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Dec 26 19:31:55 2008 -0500
+
+    R2xx EXA: limit composite to 2047 like r1xx
+    
+    See bug 19269
+
 commit 631123d144d088d4f77a0599c34deaa31d551d71
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Dec 23 10:08:46 2008 +1000
@@ -61,6 +580,42 @@ Date:   Thu Dec 18 16:35:13 2008 +1000
 
     radeon: add all new pci ids for rv730/rv710 families
 
+commit 2ca970c7aa1f3f212f03bf3287d6b60eeafd68ae
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 13:07:19 2008 -0500
+
+    Allow arbitrary tv-out modes
+
+commit 5da147eec70abb7c9125a8940089fd3ff8bdea95
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 05:37:58 2008 -0500
+
+    missed one in last commit
+
+commit 6bfbb930c549e67f68969f7f0483380417f755b5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 05:36:09 2008 -0500
+
+    Make sure we hit the right bios reg
+
+commit 6ed0e68060fd2775e2d4027ff1533729e87848ba
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 04:54:50 2008 -0500
+
+    properly handle EnableYUV
+    
+    A bit of a hack.  we really need to restructure the
+    bios scratch reg handling.
+
+commit f21e673aced1bb5138bbb80e6d9724530eb95ebf
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Dec 17 03:17:45 2008 -0500
+
+    Fix colors on tv-out
+    
+    Call EnableYUV to set the transform and enable/disable it.
+    should also fix green tint with tv connected at boot issues.
+
 commit b2b43905a5385a8bb0b59b8e50952863d8dacb59
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Dec 17 00:59:52 2008 -0500
@@ -78,6 +633,26 @@ Date:   Wed Dec 17 00:56:19 2008 -0500
     R2xx: switch EXA composite to rects rather quads
     
     For conistency with Xv path and to reduce potential diagonal tearing
+
+commit be12cf8fcc7a5a3c3ee2c630474e2f9d9368f4d4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 15:28:25 2008 +1000
+
+    radeon: r500 tv-out force scaler values to nice set that looks correct
+
+commit 01f7a50d76f706a456de7a4eb8323939d905c82b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 13:43:21 2008 +1000
+
+    r500: re-enable TV out
+
+commit 45b9ff5e250d69de0df41f68b33524f7e2ce13b7
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Dec 17 13:42:10 2008 +1000
+
+    radeon: r500 PAL timings are slightly incorrect
+    
+    this stablises the PAL image at least
 
 commit 435d996949185201a97493e131f9920a32863acd
 Author: Dave Airlie <airlied@redhat.com>
