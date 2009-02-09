@@ -3495,6 +3495,25 @@
 #       define AVIVO_DVGA_CONTROL_ROTATE (1<<24)
 #define AVIVO_D2VGA_CONTROL					0x0338
 
+#define AVIVO_VGA25_PPLL_REF_DIV_SRC				0x0360
+#define AVIVO_VGA25_PPLL_REF_DIV				0x0364
+#define AVIVO_VGA28_PPLL_REF_DIV_SRC				0x0368
+#define AVIVO_VGA28_PPLL_REF_DIV				0x036c
+#define AVIVO_VGA41_PPLL_REF_DIV_SRC				0x0370
+#define AVIVO_VGA41_PPLL_REF_DIV				0x0374
+#define AVIVO_VGA25_PPLL_FB_DIV				0x0378
+#define AVIVO_VGA28_PPLL_FB_DIV				0x037c
+#define AVIVO_VGA41_PPLL_FB_DIV				0x0380
+#define AVIVO_VGA25_PPLL_POST_DIV_SRC				0x0384
+#define AVIVO_VGA25_PPLL_POST_DIV				0x0388
+#define AVIVO_VGA28_PPLL_POST_DIV_SRC				0x038c
+#define AVIVO_VGA28_PPLL_POST_DIV				0x0390
+#define AVIVO_VGA41_PPLL_POST_DIV_SRC				0x0394
+#define AVIVO_VGA41_PPLL_POST_DIV				0x0398
+#define AVIVO_VGA25_PPLL_CNTL					0x039c
+#define AVIVO_VGA28_PPLL_CNTL					0x03a0
+#define AVIVO_VGA41_PPLL_CNTL					0x03a4
+
 #define AVIVO_EXT1_PPLL_REF_DIV_SRC                             0x400
 #define AVIVO_EXT1_PPLL_REF_DIV                                 0x404
 #define AVIVO_EXT1_PPLL_UPDATE_LOCK                             0x408
@@ -3592,6 +3611,8 @@
 #define AVIVO_D1GRPH_UPDATE                                     0x6144
 #       define AVIVO_D1GRPH_UPDATE_LOCK                 (1<<16)
 #define AVIVO_D1GRPH_FLIP_CONTROL                               0x6148
+
+#define AVIVO_D1GRPH_COLOR_MATRIX_TRANSFORMATION_CNTL           0x6380
 
 #define AVIVO_D1CUR_CONTROL                     0x6400
 #       define AVIVO_D1CURSOR_EN           (1<<0)
