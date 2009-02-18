@@ -1,3 +1,179 @@
+commit 0d3d1f1f7b450dabd3ad7d2df26ad1c72709b29b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 17:24:57 2009 -0500
+
+    bump for release
+
+commit 76a32f8391317513538dafee49cbb61c0d756356
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 16:31:44 2009 -0500
+
+    R6xx: Connector quirk for asus board
+    
+    bug 19943
+
+commit 97b8482dba4e99088b59d3ab1396be98a70e823e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 13:27:15 2009 -0500
+
+    Set default RMX type to FULL on LVDS
+
+commit 7d22b1799b34010d34c3600d6cb02ffe839a0780
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 12:55:40 2009 -0500
+
+    DCE3.2+: allow output cloning
+
+commit 1a237a40958c006c56b80850bd77b2ac6c17e030
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 11:46:20 2009 -0500
+
+    ATOM: reset crtc initialized flag on CloseScreen()
+    
+    additional fix needed for bug 16781
+
+commit 9a108f0a0b7203458673ce6221e747a166d39617
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 17 19:52:27 2009 -0500
+
+    ATOM: don't unblank uninitialized crtcs
+    
+    If the crtc timing isn't setup, you might get stuck in a loop
+    in the BlankCRTC command table
+    
+    fixes bug 16781
+
+commit 31bd6d28dd35021e0e706d4f094989deb856c26a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 17 11:24:02 2009 -0500
+
+    Fix crtc routing on pre-DCE3.2 systems
+    
+    This should fix peterz and bug 20074
+
+commit 3c9e00c7f2ed494976713e8f77b729e0d76409db
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 16 16:18:42 2009 -0500
+
+    RV350: add another AGP quirk
+
+commit 036a17bec5dabbb91640b907811da060dac154d6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 16 13:10:45 2009 -0500
+
+    RV280: add another agp quirk
+
+commit 00ac9d2f8d58725d0d3e6b1bf7f728d9ae7e6109
+Author: David Miller <davem@davemloft.net>
+Date:   Sun Feb 15 18:26:14 2009 +1000
+
+    GART: Save/restore GART table consistently.
+    
+    Always save the GART table with the RADEON_SURFACE_CNTL register
+    zero'd out to make sure we always use the same endinanness.
+    
+    fixed up as per Michel's suggestion for endianness.
+    
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+    Signed-off-by: Dave Airlie <airlied@linux.ie>
+
+commit 2de90c8349409eb892edc57fd24b61b679eb7719
+Author: David Miller <davem@davemloft.net>
+Date:   Sun Feb 15 18:24:01 2009 +1000
+
+    DRI: Fix page size used in RADEONDRIGetPciAperTableSize().
+    
+    The ATI GART has a fixed size of 4096 bytes.  So using
+    the system page size here is wrong.
+    
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+    Signed-off-by: Dave Airlie <airlied@linux.ie>
+
+commit 3ff1eb7e50fef22adb6280dd7de77c3ecafdb451
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Feb 12 19:24:41 2009 +0100
+
+    EXA: If making a pixmap offscreen fails, return ~0ULL as texture offset.
+    
+    This allows AIGLX to fall back to the non-zero-copy code rather than messing up
+    the 3D driver.
+
+commit c19aa4fc8da7ac4745624098b146bcc42c0436dd
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Feb 12 19:22:12 2009 +0100
+
+    EXA: The source tiling code can't handle RepeatReflect yet.
+
+commit adc35636aa1e936ec74cba8931ccffe2b5c11656
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 12 13:10:53 2009 -0500
+
+    R1xx/R2xx EXA: fix non repeat texture setup
+
+commit c6e1bf75c399807716b99486ab3301aeba60fa79
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 12 12:49:24 2009 -0500
+
+    R3xx-R5xx EXA: fix texture setup for non-repeat case
+    
+    fixes bug 19923
+
+commit 0804dde9012cf33f614a1c2ee6d5d0def040a9af
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 12 12:02:57 2009 -0500
+
+    AVIVO: fix dualhead/rotation for real
+
+commit d98359b20e1eb8eae893581ab199c299c8352dc4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 12:03:56 2009 -0500
+
+    Revert "Radeon EXA: wait for the engine to be idle before sw access"
+    
+    This reverts commit 0c4694c58f2ec152b19023626bc7ced891d9da65.
+    
+    This patch just adds latency and thus isn't a real solution
+
+commit 0c4694c58f2ec152b19023626bc7ced891d9da65
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 10 17:08:37 2009 -0500
+
+    Radeon EXA: wait for the engine to be idle before sw access
+    
+    Really we need proper fencing with timestamps but this should
+    help in the short term.
+    
+    This should help with minor corruption issues and possibly
+    lockups.
+
+commit 13ab61d90bb58112bef4ce7267ef127935315f80
+Author: Fabio <fabio.ped@libero.it>
+Date:   Tue Feb 10 10:50:30 2009 -0500
+
+    man page updates
+    
+    bug 20030
+
+commit 615f2f202cee5f0dd2c6b29329f843bb1c9c70d5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 10 10:17:47 2009 -0500
+
+    Bump version post RC release
+
+commit ff6efe513e0c3148812d6a9578d2265522417053
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 17:43:24 2009 -0500
+
+    ATOM: warning fixes
+
+commit 87ad9006f3dafb45e131c9a3d6df713321f39998
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 17:40:41 2009 -0500
+
+    RV350: add AGP quirk
+    
+    bug 19981
+
 commit 610b8b65fd7aa97f9c03b2ff6ae607aa959eab0b
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Mon Feb 9 16:33:20 2009 -0500
