@@ -736,6 +736,8 @@ typedef struct {
 /* Keep sorted by hostbridge vendor and device */
 static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
 
+    /* Intel E7505 Memory Controller Hub / RV350 AR [Radeon 9600XT] Needs AGPMode 4 (deb #515326) */
+    { PCI_VENDOR_INTEL,0x2550,  PCI_VENDOR_ATI,0x4152,  0x1458,0x4038,  4 },
     /* Intel 82865G/PE/P DRAM Controller/Host-Hub / Mobility 9800 Needs AGPMode 4 (deb #462590) */
     { PCI_VENDOR_INTEL,0x2570,  PCI_VENDOR_ATI,0x4a4e,  PCI_VENDOR_DELL,0x5106,  4 },
     /* Intel 82855PM Processor to I/O Controller / Mobility M6 LY Needs AGPMode 1 (deb #467235) */
@@ -768,8 +770,12 @@ static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
     { 0x1106,0x3189,            PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
     /* VIA VT82C693A Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 2 */
     { 0x1106,0x0691,            PCI_VENDOR_ATI,0x5960,  0x1043,0x0054,           2 },
+    /* VIA VT82C693A Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 2 (deb #515512) */
+    { 0x1106,0x0691,            PCI_VENDOR_ATI,0x5960,  0x1043,0x004c,           2 },
     /* VIA K8M800 Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 4 (fdo #12544) */
     { 0x1106,0x0204,            PCI_VENDOR_ATI,0x5960,  0x17af,0x2020,           4 },
+    /* VIA KT880 Host Bridge / RV350 [Radeon 9550] Needs AGPMode 4 (fdo #19981) */
+    { 0x1106,0x0269,            PCI_VENDOR_ATI,0x4153,  0x1043,0x003c,           4 },
 
     /* ATI Host Bridge / RV280 [M9+] Needs AGPMode 1 (phoronix forum) */
     { 0x1002,0xcbb2,            PCI_VENDOR_ATI,0x5c61,  0x104d,0x8175,           1 },
@@ -2293,11 +2299,10 @@ void RADEONDRIAllocatePCIGARTTable(ScreenPtr pScreen)
 int RADEONDRIGetPciAperTableSize(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
-    int page_size  = getpagesize();
     int ret_size;
     int num_pages;
 
-    num_pages = (info->dri->pciAperSize * 1024 * 1024) / page_size;
+    num_pages = (info->dri->pciAperSize * 1024 * 1024) / 4096;
     
     ret_size = num_pages * sizeof(unsigned int);
 

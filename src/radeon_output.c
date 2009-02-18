@@ -510,10 +510,12 @@ radeon_mode_prepare(xf86OutputPtr output)
 	    xf86CrtcPtr other_crtc = loop_output->crtc;
 	    RADEONCrtcPrivatePtr other_radeon_crtc = other_crtc->driver_private;
 	    if (other_crtc->enabled) {
-		radeon_crtc_dpms(other_crtc, DPMSModeOff);
-		if (IS_AVIVO_VARIANT)
-		    atombios_lock_crtc(info->atomBIOS, other_radeon_crtc->crtc_id, 1);
-		radeon_dpms(loop_output, DPMSModeOff);
+		if (other_radeon_crtc->initialized) {
+		    radeon_crtc_dpms(other_crtc, DPMSModeOff);
+		    if (IS_AVIVO_VARIANT)
+			atombios_lock_crtc(info->atomBIOS, other_radeon_crtc->crtc_id, 1);
+		    radeon_dpms(loop_output, DPMSModeOff);
+		}
 	    }
 	}
     }
@@ -553,10 +555,12 @@ radeon_mode_commit(xf86OutputPtr output)
 	    xf86CrtcPtr other_crtc = loop_output->crtc;
 	    RADEONCrtcPrivatePtr other_radeon_crtc = other_crtc->driver_private;
 	    if (other_crtc->enabled) {
-		radeon_crtc_dpms(other_crtc, DPMSModeOn);
-		if (IS_AVIVO_VARIANT)
-		    atombios_lock_crtc(info->atomBIOS, other_radeon_crtc->crtc_id, 0);
-		radeon_dpms(loop_output, DPMSModeOn);
+		if (other_radeon_crtc->initialized) {
+		    radeon_crtc_dpms(other_crtc, DPMSModeOn);
+		    if (IS_AVIVO_VARIANT)
+			atombios_lock_crtc(info->atomBIOS, other_radeon_crtc->crtc_id, 0);
+		    radeon_dpms(loop_output, DPMSModeOn);
+		}
 	    }
 	}
     }
@@ -1844,7 +1848,10 @@ void RADEONInitConnector(xf86OutputPtr output)
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
-    radeon_output->rmx_type = RMX_OFF;
+    if (radeon_output->devices & (ATOM_DEVICE_LCD_SUPPORT))
+	radeon_output->rmx_type = RMX_FULL;
+    else
+	radeon_output->rmx_type = RMX_OFF;
 
     if (!IS_AVIVO_VARIANT) {
 	if (radeon_output->devices & (ATOM_DEVICE_CRT2_SUPPORT)) {
@@ -2465,13 +2472,9 @@ static int
 radeon_output_clones (ScrnInfoPtr pScrn, xf86OutputPtr output)
 {
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
-    RADEONInfoPtr info       = RADEONPTR(pScrn);
     xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR (pScrn);
     int			o;
     int			index_mask = 0;
-
-    if (IS_DCE3_VARIANT)
-	return index_mask;
 
     /* LVDS is too wacky */
     if (radeon_output->devices & (ATOM_DEVICE_LCD_SUPPORT))

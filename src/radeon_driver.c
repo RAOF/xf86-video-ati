@@ -3248,6 +3248,12 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     info->crtc_on = FALSE;
     info->crtc2_on = FALSE;
 
+    /* save the real front buffer size
+     * it changes with randr, rotation, etc.
+     */
+    info->virtualX = pScrn->virtualX;
+    info->virtualY = pScrn->virtualY;
+
     RADEONSave(pScrn);
 
     /* set initial bios scratch reg state */
@@ -5505,8 +5511,17 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
     	if (info->cardType == CARD_PCIE &&
 	    info->dri->pKernelDRMVersion->version_minor >= 19 &&
 	    info->FbSecureSize) {
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+	    unsigned char *RADEONMMIO = info->MMIO;
+	    unsigned int sctrl = INREG(RADEON_SURFACE_CNTL);
+
 	    /* we need to backup the PCIE GART TABLE from fb memory */
+	    OUTREG(RADEON_SURFACE_CNTL, 0);
+#endif
 	    memcpy(info->FB + info->dri->pciGartOffset, info->dri->pciGartBackup, info->dri->pciGartSize);
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+	    OUTREG(RADEON_SURFACE_CNTL, sctrl);
+#endif
     	}
 
 	/* get the DRI back into shape after resume */
@@ -5556,8 +5571,17 @@ void RADEONLeaveVT(int scrnIndex, int flags)
         if (info->cardType == CARD_PCIE &&
 	    info->dri->pKernelDRMVersion->version_minor >= 19 &&
 	    info->FbSecureSize) {
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+	    unsigned char *RADEONMMIO = info->MMIO;
+	    unsigned int sctrl = INREG(RADEON_SURFACE_CNTL);
+
             /* we need to backup the PCIE GART TABLE from fb memory */
+	    OUTREG(RADEON_SURFACE_CNTL, 0);
+#endif
             memcpy(info->dri->pciGartBackup, (info->FB + info->dri->pciGartOffset), info->dri->pciGartSize);
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+	    OUTREG(RADEON_SURFACE_CNTL, sctrl);
+#endif
         }
 
 	/* Make sure 3D clients will re-upload textures to video RAM */
@@ -5577,18 +5601,24 @@ void RADEONLeaveVT(int scrnIndex, int flags)
     }
 #endif
 
-#ifndef HAVE_FREE_SHADOW
+
     for (i = 0; i < config->num_crtc; i++) {
 	xf86CrtcPtr crtc = config->crtc[i];
+	RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
+	radeon_crtc->initialized = FALSE;
+
+#ifndef HAVE_FREE_SHADOW
 	if (crtc->rotatedPixmap || crtc->rotatedData) {
 	    crtc->funcs->shadow_destroy(crtc, crtc->rotatedPixmap,
 					crtc->rotatedData);
 	    crtc->rotatedPixmap = NULL;
 	    crtc->rotatedData = NULL;
 	}
+#endif
     }
-#else
+
+#ifdef HAVE_FREE_SHADOW
     xf86RotateFreeShadow(pScrn);
 #endif
 
@@ -5611,6 +5641,8 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 {
     ScrnInfoPtr    pScrn = xf86Screens[scrnIndex];
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
+    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int i;
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONCloseScreen\n");
@@ -5619,6 +5651,13 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
      * wrong times, especially if we had DRI, after DRI has been stopped
      */
     info->accelOn = FALSE;
+
+    for (i = 0; i < config->num_crtc; i++) {
+	xf86CrtcPtr crtc = config->crtc[i];
+	RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+
+	radeon_crtc->initialized = FALSE;
+    }
 
 #ifdef XF86DRI
 #ifdef DAMAGE
