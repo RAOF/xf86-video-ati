@@ -1,9 +1,9 @@
-xserver-xorg-video-ati (1:6.11.0-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.11.0-1) experimental; urgency=low
 
   * New upstream release.
     + Add more AGPMode quirks, closes: #515326, #515512.
 
- -- Brice Goglin <bgoglin@debian.org>  Thu, 19 Feb 2009 00:12:55 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Thu, 19 Feb 2009 00:13:59 +0100
 
 xserver-xorg-video-ati (1:6.10.99.0-1) experimental; urgency=low
 
