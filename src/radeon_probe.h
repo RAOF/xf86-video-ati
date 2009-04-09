@@ -101,7 +101,8 @@ typedef enum
 {
     RMX_OFF,
     RMX_FULL,
-    RMX_CENTER
+    RMX_CENTER,
+    RMX_ASPECT
 } RADEONRMXType;
 
 typedef struct {
@@ -152,7 +153,7 @@ typedef struct _RADEONCrtcPrivateRec {
     int binding;
     uint32_t cursor_offset;
     /* Lookup table values to be set when the CRTC is enabled */
-    uint8_t lut_r[256], lut_g[256], lut_b[256];
+    uint16_t lut_r[256], lut_g[256], lut_b[256];
 
     uint32_t crtc_offset;
     int can_tile;
@@ -270,8 +271,10 @@ typedef struct _RADEONOutputPrivateRec {
     radeon_tvout_rec tvout;
 
     /* dce 3.x dig block */
-    int transmitter_config;
     int igp_lane_info;
+    int dig_block;
+
+    int pixel_clock;
 } RADEONOutputPrivateRec, *RADEONOutputPrivatePtr;
 
 struct avivo_pll_state {
@@ -373,7 +376,7 @@ struct avivo_state
     /* dvoa */
     uint32_t dvoa[16];
 
-    /* DCE3 chips */
+    /* DCE3+ chips */
     uint32_t fmt1[18];
     uint32_t fmt2[18];
     uint32_t dig1[19];
@@ -384,9 +387,15 @@ struct avivo_state
     uint32_t aux_cntl2[14];
     uint32_t aux_cntl3[14];
     uint32_t aux_cntl4[14];
+    uint32_t aux_cntl5[14];
+    uint32_t aux_cntl6[14];
     uint32_t phy[10];
     uint32_t uniphy1[8];
     uint32_t uniphy2[8];
+    uint32_t uniphy3[8];
+    uint32_t uniphy4[8];
+    uint32_t uniphy5[8];
+    uint32_t uniphy6[8];
 
 };
 

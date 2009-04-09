@@ -45,10 +45,13 @@
 #include "radeon.h"
 #include "radeon_video.h"
 #include "radeon_reg.h"
+#include "r600_reg.h"
 #include "radeon_macros.h"
 #include "radeon_drm.h"
 #include "radeon_dri.h"
 #include "radeon_version.h"
+
+#include "atipciids.h"
 
 				/* X and server generic header files */
 #include "xf86.h"
@@ -722,7 +725,7 @@ static void RADEONDRIInitGARTValues(RADEONInfoPtr info)
 /* AGP Mode Quirk List - Certain hostbridge/gfx-card combos don't work with
  * the standard AGPMode settings, so we detect and handle these
  * on a case-by-base basis with quirks.  To see if an AGPMode is valid, test
- * it by setting Option "AGPMode" "1" (or "2", or "4" or "8"). */
+ * it by setting Option "AGPMode" "1" (or "2", or "4", or "8"). */
 typedef struct {
     unsigned int hostbridgeVendor;
     unsigned int hostbridgeDevice;
@@ -737,48 +740,59 @@ typedef struct {
 static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
 
     /* Intel E7505 Memory Controller Hub / RV350 AR [Radeon 9600XT] Needs AGPMode 4 (deb #515326) */
-    { PCI_VENDOR_INTEL,0x2550,  PCI_VENDOR_ATI,0x4152,  0x1458,0x4038,  4 },
+    { PCI_VENDOR_INTEL,0x2550,  PCI_VENDOR_ATI,0x4152,  0x1458,0x4038,           4 },
     /* Intel 82865G/PE/P DRAM Controller/Host-Hub / Mobility 9800 Needs AGPMode 4 (deb #462590) */
     { PCI_VENDOR_INTEL,0x2570,  PCI_VENDOR_ATI,0x4a4e,  PCI_VENDOR_DELL,0x5106,  4 },
+    /* Intel 82865G/PE/P DRAM Controller/Host-Hub / RV280 [Radeon 9200 SE] Needs AGPMode 4 (lp #300304) */
+    { PCI_VENDOR_INTEL,0x2570,  PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
     /* Intel 82855PM Processor to I/O Controller / Mobility M6 LY Needs AGPMode 1 (deb #467235) */
-    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x4c59,  0x1014,0x052f,   1 },
+    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x4c59,  PCI_VENDOR_IBM,0x052f,   1 },
+    /* Intel 82855PM host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (lp #195051) */
+    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x4e50,  PCI_VENDOR_IBM,0x0550,   1 },
+    /* Intel 82855PM host bridge / FireGL Mobility T2 RV350 Needs AGPMode 2 (fdo #20647) */
+    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x4e54,  PCI_VENDOR_IBM,0x054f,   2 },
+    /* Intel 82855PM host bridge / Mobility M9+ / VaioPCG-V505DX Needs AGPMode 2 (fdo #17928) */
+    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x5c61,  PCI_VENDOR_SONY,0x816b,  2 },
     /* Intel 82855PM Processor to I/O Controller / Mobility M9+ Needs AGPMode 8 (phoronix forum) */
-    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x5c61,  0x104d,0x8195,   8 },
+    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x5c61,  PCI_VENDOR_SONY,0x8195,  8 },
     /* Intel 82830 830 Chipset Host Bridge / Mobility M6 LY Needs AGPMode 2 (fdo #17360)*/
     { PCI_VENDOR_INTEL,0x3575,  PCI_VENDOR_ATI,0x4c59,  PCI_VENDOR_DELL,0x00e3,  2 },
-    /* Intel 82852/82855 host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (deb #467460) */
-    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x1025,0x0061,  1 },
-    /* Intel 82852/82855 host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (lp #203007) */
-    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x1025,0x0064,  1 },
-    /* Intel 82852/82855 host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (lp #141551) */
-    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x1043,0x1942,  1 },
     /* Intel 82852/82855 host bridge / Mobility FireGL 9000 R250 Needs AGPMode 1 (lp #296617) */
-    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4c66,  0x1028,0x0149,  1 },
+    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4c66,  PCI_VENDOR_DELL,0x0149,  1 },
+    /* Intel 82852/82855 host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (deb #467460) */
+    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x1025,0x0061,           1 },
+    /* Intel 82852/82855 host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (lp #203007) */
+    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x1025,0x0064,           1 },
+    /* Intel 82852/82855 host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (lp #141551) */
+    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  PCI_VENDOR_ASUS,0x1942,  1 },
     /* Intel 82852/82855 host bridge / Mobility 9600/9700 Needs AGPMode 1 (deb #510208) */
-    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x10cf,0x127f,  1 },
+    { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x10cf,0x127f,           1 },
 
-    /* ASRock K7VT4A+ AGP 8x / ATI Radeon 9250 AGP Needs AGPMode 4 (LP: #133192) */
-    { 0x1849,0x3189,            PCI_VENDOR_ATI,0x5960,  0x1787, 0x5960,          4 },
+    /* ASRock K7VT4A+ AGP 8x / ATI Radeon 9250 AGP Needs AGPMode 4 (lp #133192) */
+    { 0x1849,0x3189,            PCI_VENDOR_ATI,0x5960,  0x1787,0x5960,           4 },
 
-    /* VIA VT8363 Host Bridge / R200 QL [Radeon 8500] Needs AGPMode 2 (lp #141551) */
-    { 0x1106,0x0305,            PCI_VENDOR_ATI,0x514c,  0x1002,0x013a,           2 },
-    /* VIA VT8377 Host Bridge / R200 QM [Radeon 9100] Needs AGPMode 4 (deb #461144) */
-    { 0x1106,0x3189,            PCI_VENDOR_ATI,0x514d,  0x174b,0x7149,           4 },
-    /* VIA VT8377 Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 4 (lp #312693) */
-    { 0x1106,0x3189,            PCI_VENDOR_ATI,0x5960,  0x1462,0x0380,           4 },
-    /* VIA VT8377 Host Bridge / RV280 Needs AGPMode 4 (ati ML) */
-    { 0x1106,0x3189,            PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
-    /* VIA VT82C693A Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 2 */
-    { 0x1106,0x0691,            PCI_VENDOR_ATI,0x5960,  0x1043,0x0054,           2 },
-    /* VIA VT82C693A Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 2 (deb #515512) */
-    { 0x1106,0x0691,            PCI_VENDOR_ATI,0x5960,  0x1043,0x004c,           2 },
     /* VIA K8M800 Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 4 (fdo #12544) */
-    { 0x1106,0x0204,            PCI_VENDOR_ATI,0x5960,  0x17af,0x2020,           4 },
+    { PCI_VENDOR_VIA,0x0204,    PCI_VENDOR_ATI,0x5960,  0x17af,0x2020,           4 },
     /* VIA KT880 Host Bridge / RV350 [Radeon 9550] Needs AGPMode 4 (fdo #19981) */
-    { 0x1106,0x0269,            PCI_VENDOR_ATI,0x4153,  0x1043,0x003c,           4 },
+    { PCI_VENDOR_VIA,0x0269,    PCI_VENDOR_ATI,0x4153,  PCI_VENDOR_ASUS,0x003c,  4 },
+    /* VIA VT8363 Host Bridge / R200 QL [Radeon 8500] Needs AGPMode 2 (lp #141551) */
+    { PCI_VENDOR_VIA,0x0305,    PCI_VENDOR_ATI,0x514c,  PCI_VENDOR_ATI,0x013a,   2 },
+    /* VIA VT82C693A Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 2 (deb #515512) */
+    { PCI_VENDOR_VIA,0x0691,    PCI_VENDOR_ATI,0x5960,  PCI_VENDOR_ASUS,0x004c,  2 },
+    /* VIA VT82C693A Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 2 */
+    { PCI_VENDOR_VIA,0x0691,    PCI_VENDOR_ATI,0x5960,  PCI_VENDOR_ASUS,0x0054,  2 },
+    /* VIA VT8377 Host Bridge / R200 QM [Radeon 9100] Needs AGPMode 4 (deb #461144) */
+    { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x514d,  0x174b,0x7149,           4 },
+    /* VIA VT8377 Host Bridge / RV280 [Radeon 9200 PRO] Needs AGPMode 4 (lp #312693) */
+    { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x5960,  0x1462,0x0380,           4 },
+    /* VIA VT8377 Host Bridge / RV280 Needs AGPMode 4 (ati ML) */
+    { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
 
     /* ATI Host Bridge / RV280 [M9+] Needs AGPMode 1 (phoronix forum) */
-    { 0x1002,0xcbb2,            PCI_VENDOR_ATI,0x5c61,  0x104d,0x8175,           1 },
+    { PCI_VENDOR_ATI,0xcbb2,    PCI_VENDOR_ATI,0x5c61,  PCI_VENDOR_SONY,0x8175,  1 },
+
+    /* HP Host Bridge / R300 [FireGL X1] Needs AGPMode 2 (fdo #7770) */
+    { PCI_VENDOR_HP,0x122e,    PCI_VENDOR_ATI,0x4e47,  PCI_VENDOR_ATI,0x0152,    2 },
 
     { 0, 0, 0, 0, 0, 0, 0 },
 };
@@ -790,92 +804,96 @@ static Bool RADEONSetAgpMode(RADEONInfoPtr info, ScreenPtr pScreen)
     unsigned long mode   = drmAgpGetMode(info->dri->drmFD);	/* Default mode */
     unsigned int  vendor = drmAgpVendorId(info->dri->drmFD);
     unsigned int  device = drmAgpDeviceId(info->dri->drmFD);
-    /* ignore agp 3.0 mode bit from the chip as it's buggy on some cards with
-       pcie-agp rialto bridge chip - use the one from bridge which must match */
-    uint32_t agp_status = (INREG(RADEON_AGP_STATUS) | RADEON_AGPv3_MODE) & mode;
-    Bool is_v3 = (agp_status & RADEON_AGPv3_MODE);
-    unsigned int defaultMode;
-    MessageType from;
 
-    if (is_v3) {
-	defaultMode = (agp_status & RADEON_AGPv3_8X_MODE) ? 8 : 4;
-    } else {
-	if (agp_status & RADEON_AGP_4X_MODE) defaultMode = 4;
-	else if (agp_status & RADEON_AGP_2X_MODE) defaultMode = 2;
-	else defaultMode = 1;
-    }
+    if (info->ChipFamily < CHIP_FAMILY_R600) {
+	/* ignore agp 3.0 mode bit from the chip as it's buggy on some cards with
+	   pcie-agp rialto bridge chip - use the one from bridge which must match */
+	uint32_t agp_status = (INREG(RADEON_AGP_STATUS) | RADEON_AGPv3_MODE) & mode;
+	Bool is_v3 = (agp_status & RADEON_AGPv3_MODE);
+	unsigned int defaultMode;
+	MessageType from;
 
-    /* Apply AGPMode Quirks */
-    radeon_agpmode_quirk_ptr p = radeon_agpmode_quirk_list;
-    while (p && p->chipDevice != 0) {
-        if (vendor == p->hostbridgeVendor &&
-            device == p->hostbridgeDevice &&
-            PCI_DEV_VENDOR_ID(info->PciInfo) == p->chipVendor &&
-            PCI_DEV_DEVICE_ID(info->PciInfo) == p->chipDevice &&
-            PCI_SUB_VENDOR_ID(info->PciInfo) == p->subsysVendor &&
-            PCI_SUB_DEVICE_ID(info->PciInfo) == p->subsysDevice)
-        {
-            defaultMode = p->defaultMode;
-        }
-        ++p;
-    }
+	if (is_v3) {
+	    defaultMode = (agp_status & RADEON_AGPv3_8X_MODE) ? 8 : 4;
+	} else {
+	    if (agp_status & RADEON_AGP_4X_MODE) defaultMode = 4;
+	    else if (agp_status & RADEON_AGP_2X_MODE) defaultMode = 2;
+	    else defaultMode = 1;
+	}
 
-    from = X_DEFAULT;
+	/* Apply AGPMode Quirks */
+	radeon_agpmode_quirk_ptr p = radeon_agpmode_quirk_list;
+	while (p && p->chipDevice != 0) {
+	    if (vendor == p->hostbridgeVendor &&
+		device == p->hostbridgeDevice &&
+		PCI_DEV_VENDOR_ID(info->PciInfo) == p->chipVendor &&
+		PCI_DEV_DEVICE_ID(info->PciInfo) == p->chipDevice &&
+		PCI_SUB_VENDOR_ID(info->PciInfo) == p->subsysVendor &&
+		PCI_SUB_DEVICE_ID(info->PciInfo) == p->subsysDevice)
+	    {
+		defaultMode = p->defaultMode;
+	    }
+	    ++p;
+	}
 
-    if (xf86GetOptValInteger(info->Options, OPTION_AGP_MODE, &info->dri->agpMode)) {
-	if ((info->dri->agpMode < (is_v3 ? 4 : 1)) ||
-            (info->dri->agpMode > (is_v3 ? 8 : 4)) ||
-	    (info->dri->agpMode & (info->dri->agpMode - 1))) {
-	    xf86DrvMsg(pScreen->myNum, X_ERROR,
-		       "Illegal AGP Mode: %d (valid values: %s), leaving at "
-		       "%dx\n", info->dri->agpMode, is_v3 ? "4, 8" : "1, 2, 4",
-		       defaultMode);
-	    info->dri->agpMode = defaultMode;
+	from = X_DEFAULT;
+
+	if (xf86GetOptValInteger(info->Options, OPTION_AGP_MODE, &info->dri->agpMode)) {
+	    if ((info->dri->agpMode < (is_v3 ? 4 : 1)) ||
+		(info->dri->agpMode > (is_v3 ? 8 : 4)) ||
+		(info->dri->agpMode & (info->dri->agpMode - 1))) {
+		xf86DrvMsg(pScreen->myNum, X_ERROR,
+			   "Illegal AGP Mode: %d (valid values: %s), leaving at "
+			   "%dx\n", info->dri->agpMode, is_v3 ? "4, 8" : "1, 2, 4",
+			   defaultMode);
+		info->dri->agpMode = defaultMode;
+	    } else
+		from = X_CONFIG;
 	} else
-	    from = X_CONFIG;
+	    info->dri->agpMode = defaultMode;
+
+	xf86DrvMsg(pScreen->myNum, from, "Using AGP %dx\n", info->dri->agpMode);
+
+	mode &= ~RADEON_AGP_MODE_MASK;
+	if (is_v3) {
+	    /* only set one mode bit for AGPv3 */
+	    switch (info->dri->agpMode) {
+	    case 8:          mode |= RADEON_AGPv3_8X_MODE; break;
+	    case 4: default: mode |= RADEON_AGPv3_4X_MODE;
+	    }
+	    /*TODO: need to take care of other bits valid for v3 mode
+	     *      currently these bits are not used in all tested cards.
+	     */
+	} else {
+	    switch (info->dri->agpMode) {
+	    case 4:          mode |= RADEON_AGP_4X_MODE;
+	    case 2:          mode |= RADEON_AGP_2X_MODE;
+	    case 1: default: mode |= RADEON_AGP_1X_MODE;
+	    }
+	}
+
+	/* AGP Fast Writes.
+	 * TODO: take into account that certain agp modes don't support fast
+	 * writes at all */
+	mode &= ~RADEON_AGP_FW_MODE; /* Disable per default */
+	if (xf86ReturnOptValBool(info->Options, OPTION_AGP_FW, FALSE)) {
+	    xf86DrvMsg(pScreen->myNum, X_WARNING,
+		       "WARNING: Using the AGPFastWrite option is not recommended.\n");
+	    xf86Msg(X_NONE, "\tThis option does not provide much of a noticable speed"
+		    " boost, while it\n\twill probably hard lock your machine."
+		    " All bets are off!\n");
+
+	    /* Black list some host/AGP bridges. */
+	    if ((vendor == PCI_VENDOR_AMD) && (device == PCI_CHIP_AMD761))
+		xf86DrvMsg(pScreen->myNum, X_PROBED, "Ignoring AGPFastWrite option "
+			   "for the AMD 761 northbridge.\n");
+	    else {
+		xf86DrvMsg(pScreen->myNum, X_CONFIG, "Enabling AGP Fast Writes.\n");
+		mode |= RADEON_AGP_FW_MODE;
+	    }
+	} /* Don't mention this otherwise, so that people don't get funny ideas */
     } else
-	info->dri->agpMode = defaultMode;
-
-    xf86DrvMsg(pScreen->myNum, from, "Using AGP %dx\n", info->dri->agpMode);
-
-    mode &= ~RADEON_AGP_MODE_MASK;
-    if (is_v3) {
-	/* only set one mode bit for AGPv3 */
-	switch (info->dri->agpMode) {
-	case 8:          mode |= RADEON_AGPv3_8X_MODE; break;
-	case 4: default: mode |= RADEON_AGPv3_4X_MODE;
-	}
-	/*TODO: need to take care of other bits valid for v3 mode
-	 *      currently these bits are not used in all tested cards.
-	 */
-    } else {
-	switch (info->dri->agpMode) {
-	case 4:          mode |= RADEON_AGP_4X_MODE;
-	case 2:          mode |= RADEON_AGP_2X_MODE;
-	case 1: default: mode |= RADEON_AGP_1X_MODE;
-	}
-    }
-
-    /* AGP Fast Writes.
-     * TODO: take into account that certain agp modes don't support fast
-     * writes at all */
-    mode &= ~RADEON_AGP_FW_MODE; /* Disable per default */
-    if (xf86ReturnOptValBool(info->Options, OPTION_AGP_FW, FALSE)) {
-	xf86DrvMsg(pScreen->myNum, X_WARNING,
-		   "WARNING: Using the AGPFastWrite option is not recommended.\n");
-	xf86Msg(X_NONE, "\tThis option does not provide much of a noticable speed"
-		" boost, while it\n\twill probably hard lock your machine."
-		" All bets are off!\n");
-
-	/* Black list some host/AGP bridges. */
-	if ((vendor == PCI_VENDOR_AMD) && (device == PCI_CHIP_AMD761))
-	    xf86DrvMsg(pScreen->myNum, X_PROBED, "Ignoring AGPFastWrite option "
-		       "for the AMD 761 northbridge.\n");
-	else {
-	    xf86DrvMsg(pScreen->myNum, X_CONFIG, "Enabling AGP Fast Writes.\n");
-	    mode |= RADEON_AGP_FW_MODE;
-	}
-    } /* Don't mention this otherwise, so that people don't get funny ideas */
+	info->dri->agpMode = 8; /* doesn't matter at this point */
 
     xf86DrvMsg(pScreen->myNum, X_INFO,
 	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x; Card 0x%04x/0x%04x 0x%04x/0x%04x]\n",
@@ -909,6 +927,9 @@ static void RADEONSetAgpBase(RADEONInfoPtr info, ScreenPtr pScreen)
 {
     ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
     unsigned char *RADEONMMIO = info->MMIO;
+
+    if (info->ChipFamily >= CHIP_FAMILY_R600)
+	return;
 
     /* drm already does this, so we can probably remove this.
      * agp_base_2 ?
@@ -1183,13 +1204,14 @@ static int RADEONDRIKernelInit(RADEONInfoPtr info, ScreenPtr pScreen)
     drm_radeon_init_t  drmInfo;
 
     memset(&drmInfo, 0, sizeof(drm_radeon_init_t));
-    if ( info->ChipFamily >= CHIP_FAMILY_R300 )
-       drmInfo.func             = RADEON_INIT_R300_CP;
+    if ( info->ChipFamily >= CHIP_FAMILY_R600 )
+	drmInfo.func             = RADEON_INIT_R600_CP;
+    else if ( info->ChipFamily >= CHIP_FAMILY_R300 )
+	drmInfo.func             = RADEON_INIT_R300_CP;
+    else if ( info->ChipFamily >= CHIP_FAMILY_R200 )
+	drmInfo.func		= RADEON_INIT_R200_CP;
     else
-    if ( info->ChipFamily >= CHIP_FAMILY_R200 )
-       drmInfo.func		= RADEON_INIT_R200_CP;
-    else
-       drmInfo.func		= RADEON_INIT_CP;
+	drmInfo.func		= RADEON_INIT_CP;
 
     drmInfo.sarea_priv_offset   = sizeof(XF86DRISAREARec);
     drmInfo.is_pci              = (info->cardType!=CARD_AGP);
@@ -1223,7 +1245,8 @@ static int RADEONDRIKernelInit(RADEONInfoPtr info, ScreenPtr pScreen)
      * registers back to their default values, so we need to restore
      * those engine register here.
      */
-    RADEONEngineRestore(pScrn);
+    if (info->ChipFamily < CHIP_FAMILY_R600)
+	RADEONEngineRestore(pScrn);
 
     return TRUE;
 }
@@ -1299,14 +1322,16 @@ static void RADEONDRIIrqInit(RADEONInfoPtr info, ScreenPtr pScreen)
 		       "[drm] falling back to irq-free operation\n");
 	    info->dri->irq = 0;
 	} else {
-	    unsigned char *RADEONMMIO = info->MMIO;
-	    info->ModeReg->gen_int_cntl = INREG( RADEON_GEN_INT_CNTL );
+	    if (info->ChipFamily < CHIP_FAMILY_R600) {
+		unsigned char *RADEONMMIO = info->MMIO;
+		info->ModeReg->gen_int_cntl = INREG( RADEON_GEN_INT_CNTL );
 
-	    /* Let the DRM know it can safely disable the vblank interrupts */
-	    radeon_crtc_modeset_ioctl(XF86_CRTC_CONFIG_PTR(pScrn)->crtc[0],
-				      FALSE);
-	    radeon_crtc_modeset_ioctl(XF86_CRTC_CONFIG_PTR(pScrn)->crtc[0],
-				      TRUE);
+		/* Let the DRM know it can safely disable the vblank interrupts */
+		radeon_crtc_modeset_ioctl(XF86_CRTC_CONFIG_PTR(pScrn)->crtc[0],
+					  FALSE);
+		radeon_crtc_modeset_ioctl(XF86_CRTC_CONFIG_PTR(pScrn)->crtc[0],
+					  TRUE);
+	    }
 	}
     }
 
@@ -1840,7 +1865,8 @@ void RADEONDRIResume(ScreenPtr pScreen)
 	/* FIXME: return? */
     }
 
-    RADEONEngineRestore(pScrn);
+    if (info->ChipFamily < CHIP_FAMILY_R600)
+	RADEONEngineRestore(pScrn);
 
     RADEONDRICPInit(pScrn);
 }
@@ -2303,8 +2329,12 @@ int RADEONDRIGetPciAperTableSize(ScrnInfoPtr pScrn)
     int num_pages;
 
     num_pages = (info->dri->pciAperSize * 1024 * 1024) / 4096;
-    
-    ret_size = num_pages * sizeof(unsigned int);
+
+    if ((info->ChipFamily >= CHIP_FAMILY_R600) ||
+	(info->ChipFamily == CHIP_FAMILY_RS600))
+	ret_size = num_pages * sizeof(uint64_t);
+    else
+	ret_size = num_pages * sizeof(unsigned int);
 
     return ret_size;
 }

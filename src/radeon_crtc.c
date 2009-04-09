@@ -77,7 +77,7 @@ radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
     if ((mode == DPMSModeOn) && radeon_crtc->enabled)
 	return;
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_crtc_dpms(crtc, mode);
     } else {
 
@@ -114,6 +114,9 @@ static void
 radeon_crtc_mode_prepare(xf86CrtcPtr crtc)
 {
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+
+    if (radeon_crtc->initialized)
+	radeon_crtc_dpms(crtc, DPMSModeOff);
 
     if (radeon_crtc->enabled)
 	crtc->funcs->hide_cursor(crtc);
@@ -271,7 +274,7 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     ScrnInfoPtr pScrn = crtc->scrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_crtc_mode_set(crtc, mode, adjusted_mode, x, y);
     } else {
 	legacy_crtc_mode_set(crtc, mode, adjusted_mode, x, y);
@@ -283,6 +286,8 @@ radeon_crtc_mode_commit(xf86CrtcPtr crtc)
 {
     if (crtc->scrn->pScreen != NULL)
 	xf86_reload_cursors(crtc->scrn->pScreen);
+
+    radeon_crtc_dpms(crtc, DPMSModeOn);
 }
 
 void
@@ -339,20 +344,20 @@ radeon_crtc_gamma_set(xf86CrtcPtr crtc, uint16_t *red, uint16_t *green,
 	for (i = 0; i < 64; i++) {
 	    if (i <= 31) {
 		for (j = 0; j < 8; j++) {
-		    radeon_crtc->lut_r[i * 8 + j] = red[i] >> 8;
-		    radeon_crtc->lut_b[i * 8 + j] = blue[i] >> 8;
+		    radeon_crtc->lut_r[i * 8 + j] = red[i] >> 6;
+		    radeon_crtc->lut_b[i * 8 + j] = blue[i] >> 6;
 		}
 	    }
 
 	    for (j = 0; j < 4; j++) {
-		radeon_crtc->lut_g[i * 4 + j] = green[i] >> 8;
+		radeon_crtc->lut_g[i * 4 + j] = green[i] >> 6;
 	    }
 	}
     } else {
 	for (i = 0; i < 256; i++) {
-	    radeon_crtc->lut_r[i] = red[i] >> 8;
-	    radeon_crtc->lut_g[i] = green[i] >> 8;
-	    radeon_crtc->lut_b[i] = blue[i] >> 8;
+	    radeon_crtc->lut_r[i] = red[i] >> 6;
+	    radeon_crtc->lut_g[i] = green[i] >> 6;
+	    radeon_crtc->lut_b[i] = blue[i] >> 6;
 	}
     }
 
@@ -410,6 +415,14 @@ radeon_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
     int align = 4096, size;
     int cpp = pScrn->bitsPerPixel / 8;
 
+    /* No rotation without accel */
+    if (((info->ChipFamily >= CHIP_FAMILY_R600) && !info->directRenderingEnabled) ||
+	xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Acceleration required for rotation\n");
+	return NULL;
+    }
+
     rotate_pitch = pScrn->displayWidth * cpp;
     size = rotate_pitch * height;
 
@@ -424,7 +437,7 @@ radeon_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
 
     return info->FB + rotate_offset;
 }
-    
+
 /**
  * Creates a pixmap for this CRTC's rotated shadow framebuffer.
  */
@@ -499,6 +512,8 @@ radeon_crtc_set_origin(xf86CrtcPtr crtc, int x, int y)
     unsigned char *RADEONMMIO = info->MMIO;
 
     if (IS_AVIVO_VARIANT) {
+	x &= ~3;
+	y &= ~1;
 	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 1);
 	OUTREG(AVIVO_D1MODE_VIEWPORT_START + radeon_crtc->crtc_offset, (x << 16) | y);
 	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 0);
@@ -587,8 +602,7 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
-    if ((info->ChipFamily < CHIP_FAMILY_R600) &&
-	(!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE))) {
+    if (!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
 	radeon_crtc_funcs.shadow_create = radeon_crtc_shadow_create;
 	radeon_crtc_funcs.shadow_allocate = radeon_crtc_shadow_allocate;
 	radeon_crtc_funcs.shadow_destroy = radeon_crtc_shadow_destroy;

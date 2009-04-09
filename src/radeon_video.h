@@ -90,6 +90,11 @@ typedef struct {
    void         *video_memory;
    int           video_offset;
 
+   Bool          planar_hw;
+   Bool          planar_state;
+   int           planeu_offset;
+   int           planev_offset;
+
    /* bicubic filtering */
    void         *bicubic_memory;
    int           bicubic_offset;
@@ -118,10 +123,9 @@ typedef struct {
     int vsync;
 } RADEONPortPrivRec, *RADEONPortPrivPtr;
 
-int
-radeon_covering_crtc_num(ScrnInfoPtr pScrn,
-                         int x1, int x2, int y1, int y2,
-                         xf86CrtcPtr desired);
+xf86CrtcPtr
+radeon_xv_pick_best_crtc(ScrnInfoPtr pScrn,
+			 int x1, int x2, int y1, int y2);
 
 void RADEONInitI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 void RADEONResetI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);

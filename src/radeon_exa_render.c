@@ -458,7 +458,7 @@ static Bool FUNC_NAME(R100TextureSetup)(PicturePtr pPict, PixmapPtr pPix,
 
 #ifdef ONLY_ONCE
 
-static PixmapPtr
+PixmapPtr
 RADEONGetDrawablePixmap(DrawablePtr pDrawable)
 {
     if (pDrawable->type == DRAWABLE_WINDOW)
@@ -2015,13 +2015,14 @@ static inline void transformPoint(PictTransform *transform, xPointFixed *point)
 }
 #endif
 
-static void FUNC_NAME(RadeonCompositeTile)(PixmapPtr pDst,
+static void FUNC_NAME(RadeonCompositeTile)(ScrnInfoPtr pScrn,
+					   RADEONInfoPtr info,
+					   PixmapPtr pDst,
 					   int srcX, int srcY,
 					   int maskX, int maskY,
 					   int dstX, int dstY,
 					   int w, int h)
 {
-    RINFO_FROM_SCREEN(pDst->drawable.pScreen);
     int vtx_count;
     xPointFixed srcTopLeft, srcTopRight, srcBottomLeft, srcBottomRight;
     static xPointFixed maskTopLeft, maskTopRight, maskBottomLeft, maskBottomRight;
@@ -2069,7 +2070,8 @@ static void FUNC_NAME(RadeonCompositeTile)(PixmapPtr pDst,
     } else
 	vtx_count = 4;
 
-    FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), dstY, dstY + h, info->accel_state->vsync);
+    if (info->accel_state->vsync)
+	FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), dstY, dstY + h);
 
 #ifdef ACCEL_CP
     if (info->ChipFamily < CHIP_FAMILY_R200) {
@@ -2180,7 +2182,9 @@ static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
     RINFO_FROM_SCREEN(pDst->drawable.pScreen);
 
     if (!info->accel_state->need_src_tile_x && !info->accel_state->need_src_tile_y) {
-	FUNC_NAME(RadeonCompositeTile)(pDst,
+	FUNC_NAME(RadeonCompositeTile)(pScrn,
+				       info,
+				       pDst,
 				       srcX, srcY,
 				       maskX, maskY,
 				       dstX, dstY,
@@ -2214,7 +2218,9 @@ static void FUNC_NAME(RadeonComposite)(PixmapPtr pDst,
 		w = remainingWidth;
 	    remainingWidth -= w;
 	    
-	    FUNC_NAME(RadeonCompositeTile)(pDst,
+	    FUNC_NAME(RadeonCompositeTile)(pScrn,
+					   info,
+					   pDst,
 					   tileSrcX, tileSrcY,
 					   tileMaskX, tileMaskY,
 					   tileDstX, tileDstY,

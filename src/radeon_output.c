@@ -110,7 +110,6 @@ extern void atombios_output_mode_set(xf86OutputPtr output,
 				     DisplayModePtr adjusted_mode);
 extern void atombios_output_dpms(xf86OutputPtr output, int mode);
 extern RADEONMonitorType atombios_dac_detect(xf86OutputPtr output);
-extern int atombios_external_tmds_setup(xf86OutputPtr output, DisplayModePtr mode);
 extern AtomBiosResult
 atombios_lock_crtc(atomBiosHandlePtr atomBIOS, int crtc, int lock);
 static void
@@ -168,6 +167,7 @@ radeon_set_active_device(xf86OutputPtr output)
     radeon_output->active_device = 0;
 
     switch (radeon_output->MonType) {
+    case MT_DP:
     case MT_DFP:
 	if (radeon_output->devices & ATOM_DEVICE_DFP1_SUPPORT)
 	    radeon_output->active_device = ATOM_DEVICE_DFP1_SUPPORT;
@@ -204,6 +204,7 @@ radeon_set_active_device(xf86OutputPtr output)
 	    radeon_output->active_device = ATOM_DEVICE_CV_SUPPORT;
 	break;
     default:
+	ErrorF("Unhandled monitor type %d\n", radeon_output->MonType);
 	radeon_output->active_device = 0;
     }
 }
@@ -255,7 +256,11 @@ radeon_ddc_connected(xf86OutputPtr output)
 		MonType = MT_DFP;
 	    break;
 	case CONNECTOR_DISPLAY_PORT:
-	    MonType = MT_DP;
+	    /*
+	     * XXX wrong. need to infer based on whether we got DDC from I2C
+	     * or AUXCH.
+	     */
+	    MonType = MT_DFP;
 	case CONNECTOR_DVI_I:
 	    if (MonInfo->rawData[0x14] & 0x80) /* if it's digital and DVI */
 		MonType = MT_DFP;
@@ -342,7 +347,7 @@ radeon_dpms(xf86OutputPtr output, int mode)
     if ((mode == DPMSModeOn) && radeon_output->enabled)
 	return;
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_output_dpms(output, mode);
     } else {
 	legacy_output_dpms(output, mode);
@@ -397,6 +402,23 @@ radeon_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 	    else
 		return MODE_CLOCK_RANGE;
 	}
+    }
+
+    /* single link DVI check */
+    if (pMode->Clock > 165000 && radeon_output->MonType == MT_DFP) {
+	/* DP->DVI converter */
+	if (radeon_output->ConnectorType == CONNECTOR_DISPLAY_PORT)
+	    return MODE_CLOCK_HIGH;
+
+	/* XXX some HDMI can do better than 165MHz on a link */
+	if (radeon_output->ConnectorType == CONNECTOR_HDMI_TYPE_A)
+	    return MODE_CLOCK_HIGH;
+
+	/* XXX some R300 and R400 can actually do this */
+	if (!IS_AVIVO_VARIANT)
+	    return MODE_CLOCK_HIGH;
+
+	/* XXX and some AVIVO can't */
     }
 
     if (radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT)) {
@@ -498,32 +520,8 @@ radeon_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 static void
 radeon_mode_prepare(xf86OutputPtr output)
 {
-    RADEONInfoPtr info = RADEONPTR(output->scrn);
-    xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR (output->scrn);
-    int o;
-
-    for (o = 0; o < config->num_output; o++) {
-	xf86OutputPtr loop_output = config->output[o];
-	if (loop_output == output)
-	    continue;
-	else if (loop_output->crtc) {
-	    xf86CrtcPtr other_crtc = loop_output->crtc;
-	    RADEONCrtcPrivatePtr other_radeon_crtc = other_crtc->driver_private;
-	    if (other_crtc->enabled) {
-		if (other_radeon_crtc->initialized) {
-		    radeon_crtc_dpms(other_crtc, DPMSModeOff);
-		    if (IS_AVIVO_VARIANT)
-			atombios_lock_crtc(info->atomBIOS, other_radeon_crtc->crtc_id, 1);
-		    radeon_dpms(loop_output, DPMSModeOff);
-		}
-	    }
-	}
-    }
-
     radeon_bios_output_lock(output, TRUE);
     radeon_dpms(output, DPMSModeOff);
-    radeon_crtc_dpms(output->crtc, DPMSModeOff);
-
 }
 
 static void
@@ -532,7 +530,7 @@ radeon_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 {
     RADEONInfoPtr info = RADEONPTR(output->scrn);
 
-    if (IS_AVIVO_VARIANT)
+    if (IS_AVIVO_VARIANT || info->r4xx_atom)
 	atombios_output_mode_set(output, mode, adjusted_mode);
     else
 	legacy_output_mode_set(output, mode, adjusted_mode);
@@ -543,30 +541,7 @@ radeon_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 static void
 radeon_mode_commit(xf86OutputPtr output)
 {
-    RADEONInfoPtr info = RADEONPTR(output->scrn);
-    xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR (output->scrn);
-    int o;
-
-    for (o = 0; o < config->num_output; o++) {
-	xf86OutputPtr loop_output = config->output[o];
-	if (loop_output == output)
-	    continue;
-	else if (loop_output->crtc) {
-	    xf86CrtcPtr other_crtc = loop_output->crtc;
-	    RADEONCrtcPrivatePtr other_radeon_crtc = other_crtc->driver_private;
-	    if (other_crtc->enabled) {
-		if (other_radeon_crtc->initialized) {
-		    radeon_crtc_dpms(other_crtc, DPMSModeOn);
-		    if (IS_AVIVO_VARIANT)
-			atombios_lock_crtc(info->atomBIOS, other_radeon_crtc->crtc_id, 0);
-		    radeon_dpms(loop_output, DPMSModeOn);
-		}
-	    }
-	}
-    }
-
     radeon_dpms(output, DPMSModeOn);
-    radeon_crtc_dpms(output->crtc, DPMSModeOn);
     radeon_bios_output_lock(output, FALSE);
 }
 
@@ -608,93 +583,60 @@ radeon_bios_output_dpms(xf86OutputPtr output, int mode)
 
     if (info->IsAtomBios) {
 	if (radeon_output->active_device & ATOM_DEVICE_TV1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_TV1_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_TV1_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_TV1_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_TV1_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_CV_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_CV_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_CV_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_CV_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_CV_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_CRT1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_CRT1_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_CRT1_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_CRT1_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_CRT1_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_CRT2_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_CRT2_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_CRT2_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_CRT2_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_CRT2_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_LCD1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_LCD1_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_LCD1_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_LCD1_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_LCD1_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_DFP1_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_DFP1_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_DFP1_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_DFP1_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP2_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_DFP2_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_DFP2_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_DFP2_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_DFP2_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP3_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_DFP3_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_DFP3_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_DFP3_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_DFP3_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP4_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_DFP4_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_DFP4_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_DFP4_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_DFP4_ACTIVE;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP5_SUPPORT) {
-	    if (mode == DPMSModeOn) {
+	    if (mode == DPMSModeOn)
 		save->bios_2_scratch &= ~ATOM_S2_DFP5_DPMS_STATE;
-		save->bios_3_scratch |= ATOM_S3_DFP5_ACTIVE;
-	    } else {
+	    else
 		save->bios_2_scratch |= ATOM_S2_DFP5_DPMS_STATE;
-		save->bios_3_scratch &= ~ATOM_S3_DFP5_ACTIVE;
-	    }
 	}
-	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+	if (info->ChipFamily >= CHIP_FAMILY_R600)
 	    OUTREG(R600_BIOS_2_SCRATCH, save->bios_2_scratch);
-	    OUTREG(R600_BIOS_3_SCRATCH, save->bios_3_scratch);
-	} else {
+	else
 	    OUTREG(RADEON_BIOS_2_SCRATCH, save->bios_2_scratch);
-	    OUTREG(RADEON_BIOS_3_SCRATCH, save->bios_3_scratch);
-	}
     } else {
 	if (mode == DPMSModeOn) {
 	    save->bios_6_scratch &= ~(RADEON_DPMS_MASK | RADEON_SCREEN_BLANKING);
@@ -704,55 +646,36 @@ radeon_bios_output_dpms(xf86OutputPtr output, int mode)
 	    save->bios_6_scratch |= (RADEON_DPMS_OFF | RADEON_SCREEN_BLANKING);
 	}
 	if (radeon_output->active_device & ATOM_DEVICE_TV1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
-		save->bios_5_scratch |= RADEON_TV1_ON;
+	    if (mode == DPMSModeOn)
 		save->bios_6_scratch |= RADEON_TV_DPMS_ON;
-	    } else {
-		save->bios_5_scratch &= ~RADEON_TV1_ON;
+	    else
 		save->bios_6_scratch &= ~RADEON_TV_DPMS_ON;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_CRT1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
-		save->bios_5_scratch |= RADEON_CRT1_ON;
+	    if (mode == DPMSModeOn)
 		save->bios_6_scratch |= RADEON_CRT_DPMS_ON;
-	    } else {
-		save->bios_5_scratch &= ~RADEON_CRT1_ON;
+	    else
 		save->bios_6_scratch &= ~RADEON_CRT_DPMS_ON;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_CRT2_SUPPORT) {
-	    if (mode == DPMSModeOn) {
-		save->bios_5_scratch |= RADEON_CRT2_ON;
+	    if (mode == DPMSModeOn)
 		save->bios_6_scratch |= RADEON_CRT_DPMS_ON;
-	    } else {
-		save->bios_5_scratch &= ~RADEON_CRT2_ON;
+	    else
 		save->bios_6_scratch &= ~RADEON_CRT_DPMS_ON;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_LCD1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
-		save->bios_5_scratch |= RADEON_LCD1_ON;
+	    if (mode == DPMSModeOn)
 		save->bios_6_scratch |= RADEON_LCD_DPMS_ON;
-	    } else {
-		save->bios_5_scratch &= ~RADEON_LCD1_ON;
+	    else
 		save->bios_6_scratch &= ~RADEON_LCD_DPMS_ON;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP1_SUPPORT) {
-	    if (mode == DPMSModeOn) {
-		save->bios_5_scratch |= RADEON_DFP1_ON;
+	    if (mode == DPMSModeOn)
 		save->bios_6_scratch |= RADEON_DFP_DPMS_ON;
-	    } else {
-		save->bios_5_scratch &= ~RADEON_DFP1_ON;
+	    else
 		save->bios_6_scratch &= ~RADEON_DFP_DPMS_ON;
-	    }
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP2_SUPPORT) {
-	    if (mode == DPMSModeOn) {
-		save->bios_5_scratch |= RADEON_DFP2_ON;
+	    if (mode == DPMSModeOn)
 		save->bios_6_scratch |= RADEON_DFP_DPMS_ON;
-	    } else {
-		save->bios_5_scratch &= ~RADEON_DFP2_ON;
+	    else
 		save->bios_6_scratch &= ~RADEON_DFP_DPMS_ON;
-	    }
 	}
-	OUTREG(RADEON_BIOS_5_SCRATCH, save->bios_5_scratch);
 	OUTREG(RADEON_BIOS_6_SCRATCH, save->bios_6_scratch);
     }
 }
@@ -773,25 +696,25 @@ radeon_bios_output_crtc(xf86OutputPtr output)
 	    save->bios_3_scratch &= ~ATOM_S3_TV1_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 18);
 	} else if (radeon_output->active_device & ATOM_DEVICE_CV_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_CV_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_CV_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 24);
 	} else if (radeon_output->active_device & ATOM_DEVICE_CRT1_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_CRT1_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_CRT1_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 16);
 	} else if (radeon_output->active_device & ATOM_DEVICE_CRT2_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_CRT2_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_CRT2_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 20);
 	} else if (radeon_output->active_device & ATOM_DEVICE_LCD1_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_LCD1_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_LCD1_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 17);
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP1_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_DFP1_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_DFP1_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 19);
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP2_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_DFP2_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_DFP2_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 23);
 	} else if (radeon_output->active_device & ATOM_DEVICE_DFP3_SUPPORT) {
-	    save->bios_2_scratch &= ~ATOM_S3_DFP3_CRTC_ACTIVE;
+	    save->bios_3_scratch &= ~ATOM_S3_DFP3_CRTC_ACTIVE;
 	    save->bios_3_scratch |= (radeon_crtc->crtc_id << 25);
 	}
 	if (info->ChipFamily >= CHIP_FAMILY_R600)
@@ -834,66 +757,101 @@ radeon_bios_output_connected(xf86OutputPtr output, Bool connected)
     if (info->IsAtomBios) {
 	switch (radeon_output->active_device) {
 	case ATOM_DEVICE_TV1_SUPPORT:
-	    if (!connected)
+	    if (connected)
+		save->bios_3_scratch |= ATOM_S3_TV1_ACTIVE;
+	    else {
 		save->bios_0_scratch &= ~ATOM_S0_TV1_MASK;
+		save->bios_3_scratch &= ~ATOM_S3_TV1_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_CV_SUPPORT:
-	    if (!connected)
+	    if (connected)
+		save->bios_3_scratch |= ATOM_S3_CV_ACTIVE;
+	    else {
 		save->bios_0_scratch &= ~ATOM_S0_CV_MASK;
+		save->bios_3_scratch &= ~ATOM_S3_CV_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_LCD1_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_LCD1;
-	    else
+		save->bios_3_scratch |= ATOM_S3_LCD1_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_LCD1;
+		save->bios_3_scratch &= ~ATOM_S3_LCD1_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_CRT1_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_CRT1_COLOR;
-	    else
+		save->bios_3_scratch |= ATOM_S3_CRT1_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_CRT1_MASK;
+		save->bios_3_scratch &= ~ATOM_S3_CRT1_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_CRT2_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_CRT2_COLOR;
-	    else
+		save->bios_3_scratch |= ATOM_S3_CRT2_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_CRT2_MASK;
+		save->bios_3_scratch &= ~ATOM_S3_CRT2_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP1_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_DFP1;
-	    else
+		save->bios_3_scratch |= ATOM_S3_DFP1_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_DFP1;
+		save->bios_3_scratch &= ~ATOM_S3_DFP1_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP2_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_DFP2;
-	    else
+		save->bios_3_scratch |= ATOM_S3_DFP2_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_DFP2;
+		save->bios_3_scratch &= ~ATOM_S3_DFP2_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP3_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_DFP3;
-	    else
+		save->bios_3_scratch |= ATOM_S3_DFP3_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_DFP3;
+		save->bios_3_scratch &= ~ATOM_S3_DFP3_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP4_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_DFP4;
-	    else
+		save->bios_3_scratch |= ATOM_S3_DFP4_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_DFP4;
+		save->bios_3_scratch &= ~ATOM_S3_DFP4_ACTIVE;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP5_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_0_scratch |= ATOM_S0_DFP5;
-	    else
+		save->bios_3_scratch |= ATOM_S3_DFP5_ACTIVE;
+	    } else {
 		save->bios_0_scratch &= ~ATOM_S0_DFP5;
+		save->bios_3_scratch &= ~ATOM_S3_DFP5_ACTIVE;
+	    }
 	    break;
 	}
-	if (info->ChipFamily >= CHIP_FAMILY_R600)
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	    OUTREG(R600_BIOS_0_SCRATCH, save->bios_0_scratch);
-	else
+	    OUTREG(R600_BIOS_3_SCRATCH, save->bios_3_scratch);
+	} else {
 	    OUTREG(RADEON_BIOS_0_SCRATCH, save->bios_0_scratch);
+	    OUTREG(RADEON_BIOS_3_SCRATCH, save->bios_3_scratch);
+	}
     } else {
 	switch (radeon_output->active_device) {
 	case ATOM_DEVICE_TV1_SUPPORT:
@@ -902,41 +860,60 @@ radeon_bios_output_connected(xf86OutputPtr output, Bool connected)
 		    save->bios_4_scratch |= RADEON_TV1_ATTACHED_SVIDEO;
 		else if (radeon_output->MonType == MT_CTV)
 		    save->bios_4_scratch |= RADEON_TV1_ATTACHED_COMP;
-	    } else
+		save->bios_5_scratch |= RADEON_TV1_ON;
+	    } else {
 		save->bios_4_scratch &= ~RADEON_TV1_ATTACHED_MASK;
+		save->bios_5_scratch &= ~RADEON_TV1_ON;
+	    }
 	    break;
 	case ATOM_DEVICE_LCD1_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_4_scratch |= RADEON_LCD1_ATTACHED;
-	    else
+		save->bios_5_scratch |= RADEON_LCD1_ON;
+	    } else {
 		save->bios_4_scratch &= ~RADEON_LCD1_ATTACHED;
+		save->bios_5_scratch &= ~RADEON_LCD1_ON;
+	    }
 	    break;
 	case ATOM_DEVICE_CRT1_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_4_scratch |= RADEON_CRT1_ATTACHED_COLOR;
-	    else
+		save->bios_5_scratch |= RADEON_CRT1_ON;
+	    } else {
 		save->bios_4_scratch &= ~RADEON_CRT1_ATTACHED_MASK;
+		save->bios_5_scratch &= ~RADEON_CRT1_ON;
+	    }
 	    break;
 	case ATOM_DEVICE_CRT2_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_4_scratch |= RADEON_CRT2_ATTACHED_COLOR;
-	    else
+		save->bios_5_scratch |= RADEON_CRT2_ON;
+	    } else {
 		save->bios_4_scratch &= ~RADEON_CRT2_ATTACHED_MASK;
+		save->bios_5_scratch &= ~RADEON_CRT2_ON;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP1_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_4_scratch |= RADEON_DFP1_ATTACHED;
-	    else
+		save->bios_5_scratch |= RADEON_DFP1_ON;
+	    } else {
 		save->bios_4_scratch &= ~RADEON_DFP1_ATTACHED;
+		save->bios_5_scratch &= ~RADEON_DFP1_ON;
+	    }
 	    break;
 	case ATOM_DEVICE_DFP2_SUPPORT:
-	    if (connected)
+	    if (connected) {
 		save->bios_4_scratch |= RADEON_DFP2_ATTACHED;
-	    else
+		save->bios_5_scratch |= RADEON_DFP2_ON;
+	    } else {
 		save->bios_4_scratch &= ~RADEON_DFP2_ATTACHED;
+		save->bios_5_scratch &= ~RADEON_DFP2_ON;
+	    }
 	    break;
 	}
 	OUTREG(RADEON_BIOS_4_SCRATCH, save->bios_4_scratch);
+	OUTREG(RADEON_BIOS_5_SCRATCH, save->bios_5_scratch);
     }
 
 }
@@ -1046,6 +1023,7 @@ radeon_detect(xf86OutputPtr output)
             radeon_output->MonType = MT_CV;
 	    break;
 	case CONNECTOR_DISPLAY_PORT:
+	    radeon_output->MonType = MT_DP;
 	    break;
 	}
     }
@@ -1147,7 +1125,7 @@ radeon_create_resources(xf86OutputPtr output)
     }
 #endif
 
-    if (radeon_output->devices & (ATOM_DEVICE_CRT_SUPPORT)) {
+    if (radeon_output->devices & (ATOM_DEVICE_CRT_SUPPORT | ATOM_DEVICE_TV_SUPPORT | ATOM_DEVICE_CV_SUPPORT)) {
 	load_detection_atom = MAKE_ATOM("load_detection");
 
 	range[0] = 0; /* off */
@@ -1237,10 +1215,21 @@ radeon_create_resources(xf86OutputPtr output)
 		       "RRConfigureOutputProperty error, %d\n", err);
 	}
 	/* Set the current value of the property */
-	if (radeon_output->devices & (ATOM_DEVICE_LCD_SUPPORT))
-	    s = "full";
-	else
+	switch (radeon_output->rmx_type) {
+	case RMX_OFF:
+	default:
 	    s = "off";
+	    break;
+	case RMX_FULL:
+	    s = "full";
+	    break;
+	case RMX_CENTER:
+	    s = "center";
+	    break;
+	case RMX_ASPECT:
+	    s = "aspect";
+	    break;
+	}
 	err = RRChangeOutputProperty(output->randr_output, rmx_atom,
 				     XA_STRING, 8, PropModeReplace, strlen(s), (pointer)s,
 				     FALSE, FALSE);
@@ -1465,6 +1454,11 @@ radeon_set_property(xf86OutputPtr output, Atom property,
 	    radeon_output->rmx_type = RMX_FULL;
 	} else if (value->size == strlen("center") && !strncmp("center", s, strlen("center"))) {
 	    radeon_output->rmx_type = RMX_CENTER;
+	} else if (value->size == strlen("aspect") && !strncmp("aspect", s, strlen("aspect"))) {
+	    if (IS_AVIVO_VARIANT)
+		radeon_output->rmx_type = RMX_ASPECT;
+	    else
+		return FALSE;
 	} else if (value->size == strlen("off") && !strncmp("off", s, strlen("off"))) {
 	    radeon_output->rmx_type = RMX_OFF;
 	} else
@@ -1853,6 +1847,10 @@ void RADEONInitConnector(xf86OutputPtr output)
     else
 	radeon_output->rmx_type = RMX_OFF;
 
+    /* dce 3.2 chips have problems with low dot clocks, so use the scaler */
+    if (IS_DCE32_VARIANT && (radeon_output->devices & (ATOM_DEVICE_DFP_SUPPORT)))
+	radeon_output->rmx_type = RMX_FULL;
+
     if (!IS_AVIVO_VARIANT) {
 	if (radeon_output->devices & (ATOM_DEVICE_CRT2_SUPPORT)) {
 	    if (xf86ReturnOptValBool(info->Options, OPTION_TVDAC_LOAD_DETECT, FALSE))
@@ -2036,12 +2034,12 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 	info->BiosConnector[0].load_detection = FALSE;
 	info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_I;
 	info->BiosConnector[0].valid = TRUE;
-	info->BiosConnector[0].devices = ATOM_DEVICE_CRT1_SUPPORT | ATOM_DEVICE_DFP2_SUPPORT;
+	info->BiosConnector[0].devices = ATOM_DEVICE_CRT2_SUPPORT | ATOM_DEVICE_DFP2_SUPPORT;
 	if (!radeon_add_encoder(pScrn,
 				radeon_get_encoder_id_from_supported_device(pScrn,
-									    ATOM_DEVICE_CRT1_SUPPORT,
-									    1),
-				ATOM_DEVICE_CRT1_SUPPORT))
+									    ATOM_DEVICE_CRT2_SUPPORT,
+									    2),
+				ATOM_DEVICE_CRT2_SUPPORT))
 	    return FALSE;
 	if (!radeon_add_encoder(pScrn,
 				radeon_get_encoder_id_from_supported_device(pScrn,
@@ -2067,12 +2065,12 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 	info->BiosConnector[0].load_detection = FALSE;
 	info->BiosConnector[0].ConnectorType = CONNECTOR_DVI_I;
 	info->BiosConnector[0].valid = TRUE;
-	info->BiosConnector[0].devices = ATOM_DEVICE_CRT1_SUPPORT | ATOM_DEVICE_DFP1_SUPPORT;
+	info->BiosConnector[0].devices = ATOM_DEVICE_CRT2_SUPPORT | ATOM_DEVICE_DFP1_SUPPORT;
 	if (!radeon_add_encoder(pScrn,
 				radeon_get_encoder_id_from_supported_device(pScrn,
-									    ATOM_DEVICE_CRT1_SUPPORT,
-									    1),
-				ATOM_DEVICE_CRT1_SUPPORT))
+									    ATOM_DEVICE_CRT2_SUPPORT,
+									    2),
+				ATOM_DEVICE_CRT2_SUPPORT))
 	    return FALSE;
 	if (!radeon_add_encoder(pScrn,
 				radeon_get_encoder_id_from_supported_device(pScrn,
@@ -2471,10 +2469,15 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
 static int
 radeon_output_clones (ScrnInfoPtr pScrn, xf86OutputPtr output)
 {
+    RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
     xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR (pScrn);
     int			o;
     int			index_mask = 0;
+
+    /* DIG routing gets problematic */
+    if (IS_DCE32_VARIANT)
+	return index_mask;
 
     /* LVDS is too wacky */
     if (radeon_output->devices & (ATOM_DEVICE_LCD_SUPPORT))
@@ -2500,6 +2503,14 @@ radeon_output_clones (ScrnInfoPtr pScrn, xf86OutputPtr output)
     return index_mask;
 }
 
+static xf86OutputPtr
+RADEONOutputCreate(ScrnInfoPtr pScrn, const char *name, int i)
+{
+    char buf[32];
+    sprintf(buf, name, i);
+    return xf86OutputCreate(pScrn, &radeon_output_funcs, buf);
+}
+
 /*
  * initialise the static data sos we don't have to re-do at randr change */
 Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
@@ -2512,6 +2523,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
     int num_vga = 0;
     int num_dvi = 0;
     int num_hdmi = 0;
+    int num_dp = 0;
 
     /* We first get the information about all connectors from BIOS.
      * This is how the card is phyiscally wired up.
@@ -2648,15 +2660,18 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->BiosConnector[i].valid) {
-	    if ((info->BiosConnector[i].ConnectorType == CONNECTOR_DVI_D) ||
-		(info->BiosConnector[i].ConnectorType == CONNECTOR_DVI_I) ||
-		(info->BiosConnector[i].ConnectorType == CONNECTOR_DVI_A)) {
+	    RADEONConnectorType conntype = info->BiosConnector[i].ConnectorType;
+	    if ((conntype == CONNECTOR_DVI_D) ||
+		(conntype == CONNECTOR_DVI_I) ||
+		(conntype == CONNECTOR_DVI_A)) {
 		num_dvi++;
-	    } else if (info->BiosConnector[i].ConnectorType == CONNECTOR_VGA) {
+	    } else if (conntype == CONNECTOR_VGA) {
 		num_vga++;
-	    } else if ((info->BiosConnector[i].ConnectorType == CONNECTOR_HDMI_TYPE_A) ||
-		       (info->BiosConnector[i].ConnectorType == CONNECTOR_HDMI_TYPE_B)) {
+	    } else if ((conntype == CONNECTOR_HDMI_TYPE_A) ||
+		       (conntype == CONNECTOR_HDMI_TYPE_B)) {
 		num_hdmi++;
+	    } else if (conntype == CONNECTOR_DISPLAY_PORT) {
+		num_dp++;
 	    }
 	}
     }
@@ -2664,8 +2679,9 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
     for (i = 0 ; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->BiosConnector[i].valid) {
 	    RADEONOutputPrivatePtr radeon_output;
+	    RADEONConnectorType conntype = info->BiosConnector[i].ConnectorType;
 
-	    if (info->BiosConnector[i].ConnectorType == CONNECTOR_NONE)
+	    if (conntype == CONNECTOR_NONE)
 		continue;
 
 	    radeon_output = xnfcalloc(sizeof(RADEONOutputPrivateRec), 1);
@@ -2673,7 +2689,7 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 		return FALSE;
 	    }
 	    radeon_output->MonType = MT_UNKNOWN;
-	    radeon_output->ConnectorType = info->BiosConnector[i].ConnectorType;
+	    radeon_output->ConnectorType = conntype;
 	    radeon_output->devices = info->BiosConnector[i].devices;
 	    radeon_output->ddc_i2c = info->BiosConnector[i].ddc_i2c;
 	    radeon_output->igp_lane_info = info->BiosConnector[i].igp_lane_info;
@@ -2682,33 +2698,21 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    radeon_output->linkb = info->BiosConnector[i].linkb;
 	    radeon_output->connector_id = info->BiosConnector[i].connector_object;
 
-	    if ((info->BiosConnector[i].ConnectorType == CONNECTOR_DVI_D) ||
-		(info->BiosConnector[i].ConnectorType == CONNECTOR_DVI_I) ||
-		(info->BiosConnector[i].ConnectorType == CONNECTOR_DVI_A)) {
-		if (num_dvi > 1) {
-		    output = xf86OutputCreate(pScrn, &radeon_output_funcs, "DVI-1");
-		    num_dvi--;
-		} else {
-		    output = xf86OutputCreate(pScrn, &radeon_output_funcs, "DVI-0");
-		}
-	    } else if (info->BiosConnector[i].ConnectorType == CONNECTOR_VGA) {
-		if (num_vga > 1) {
-		    output = xf86OutputCreate(pScrn, &radeon_output_funcs, "VGA-1");
-		    num_vga--;
-		} else {
-		    output = xf86OutputCreate(pScrn, &radeon_output_funcs, "VGA-0");
-		}
-	    } else if ((info->BiosConnector[i].ConnectorType == CONNECTOR_HDMI_TYPE_A) ||
-		(info->BiosConnector[i].ConnectorType == CONNECTOR_HDMI_TYPE_B)) {
-		if (num_hdmi > 1) {
-		    output = xf86OutputCreate(pScrn, &radeon_output_funcs, "HDMI-1");
-		    num_hdmi--;
-		} else {
-		    output = xf86OutputCreate(pScrn, &radeon_output_funcs, "HDMI-0");
-		}
-	    } else
-		output = xf86OutputCreate(pScrn, &radeon_output_funcs,
-					  ConnectorTypeName[radeon_output->ConnectorType]);
+	    if ((conntype == CONNECTOR_DVI_D) ||
+		(conntype == CONNECTOR_DVI_I) ||
+		(conntype == CONNECTOR_DVI_A)) {
+		output = RADEONOutputCreate(pScrn, "DVI-%d", --num_dvi);
+	    } else if (conntype == CONNECTOR_VGA) {
+		output = RADEONOutputCreate(pScrn, "VGA-%d", --num_vga);
+	    } else if ((conntype == CONNECTOR_HDMI_TYPE_A) ||
+		       (conntype == CONNECTOR_HDMI_TYPE_B)) {
+		output = RADEONOutputCreate(pScrn, "HDMI-%d", --num_hdmi);
+	    } else if (conntype == CONNECTOR_DISPLAY_PORT) {
+		output = RADEONOutputCreate(pScrn, "DisplayPort-%d", --num_dp);
+	    } else {
+		output = RADEONOutputCreate(pScrn,
+					    ConnectorTypeName[conntype], 0);
+	    }
 
 	    if (!output) {
 		return FALSE;

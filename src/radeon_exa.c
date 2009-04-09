@@ -35,6 +35,7 @@
 
 #include "radeon.h"
 #include "radeon_reg.h"
+#include "r600_reg.h"
 #ifdef XF86DRI
 #include "radeon_drm.h"
 #endif
@@ -221,7 +222,7 @@ int RADEONBiggerCrtcArea(PixmapPtr pPix)
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 
-static unsigned long swapper_surfaces[3];
+static unsigned long swapper_surfaces[6];
 
 static Bool RADEONPrepareAccess(PixmapPtr pPix, int index)
 {

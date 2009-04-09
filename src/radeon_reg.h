@@ -274,6 +274,9 @@
 #define RADEON_BUS_CNTL1                    0x0034
 #       define RADEON_BUS_WAIT_ON_LOCK_EN    (1 << 4)
 
+#define RADEON_PCIE_INDEX                   0x0030
+#define RADEON_PCIE_DATA                    0x0034
+
 #define RADEON_CACHE_CNTL                   0x1724
 #define RADEON_CACHE_LINE                   0x0f0c /* PCI */
 #define RADEON_CAPABILITIES_ID              0x0f50 /* PCI */
@@ -3027,6 +3030,18 @@
 #       define R200_TXA_REPL_ARG_B_MASK		(3 << 28)
 #       define R200_TXA_REPL_ARG_C_SHIFT	30
 #       define R200_TXA_REPL_ARG_C_MASK		(3 << 30)
+#define R200_PP_TXCBLEND_1			0x2f10
+#define R200_PP_TXCBLEND2_1			0x2f14
+#define R200_PP_TXABLEND_1			0x2f18
+#define R200_PP_TXABLEND2_1			0x2f1c
+#define R200_PP_TXCBLEND_2			0x2f20
+#define R200_PP_TXCBLEND2_2			0x2f24
+#define R200_PP_TXABLEND_2			0x2f28
+#define R200_PP_TXABLEND2_2			0x2f2c
+#define R200_PP_TXCBLEND_3			0x2f30
+#define R200_PP_TXCBLEND2_3			0x2f34
+#define R200_PP_TXABLEND_3			0x2f38
+#define R200_PP_TXABLEND2_3			0x2f3c
 
 #define R200_SE_VTX_FMT_0			0x2088
 #       define R200_VTX_XY			0 /* always have xy */
@@ -3291,7 +3306,9 @@
 #       define RADEON_RGB_CONVERT_BY_PASS	  (1 << 10)
 #       define RADEON_UVRAM_READ_MARGIN_SHIFT	  16
 #       define RADEON_FIFORAM_FFMACRO_READ_MARGIN_SHIFT	  20
+#	define RADEON_RGB_ATTEN_SEL(x) 		  ((x) << 24)
 #	define RADEON_TVOUT_SCALE_EN 		  (1 << 26)
+#	define RADEON_RGB_ATTEN_VAL(x) 		  ((x) << 28)
 #define RADEON_TV_SYNC_CNTL                          0x0808
 #       define RADEON_SYNC_OE                     (1 <<  0)
 #       define RADEON_SYNC_OUT                    (1 <<  1)
@@ -3445,15 +3462,24 @@
 #define RS690_MC_STATUS                         0x90
 #define RS690_MC_STATUS_IDLE                    (1 << 0)
 
-#define RS600_MC_INDEX				0x78
-#	define RS600_MC_INDEX_MASK		0xff
-#	define RS600_MC_INDEX_WR_EN		(1 << 8)
-#	define RS600_MC_INDEX_WR_ACK		0xff
-#define RS600_MC_DATA				0x7c
+#define RS600_MC_INDEX                          0x70
+#	define RS600_MC_ADDR_MASK		0xffff
+#       define RS600_MC_IND_SEQ_RBS_0           (1 << 16)
+#       define RS600_MC_IND_SEQ_RBS_1           (1 << 17)
+#       define RS600_MC_IND_SEQ_RBS_2           (1 << 18)
+#       define RS600_MC_IND_SEQ_RBS_3           (1 << 19)
+#       define RS600_MC_IND_AIC_RBS             (1 << 20)
+#       define RS600_MC_IND_CITF_ARB0           (1 << 21)
+#       define RS600_MC_IND_CITF_ARB1           (1 << 22)
+#       define RS600_MC_IND_WR_EN               (1 << 23)
+#define RS600_MC_DATA                           0x74
 
-#define RS600_MC_FB_LOCATION			0xA
-#define RS600_MC_STATUS                         0x0
-#define RS600_MC_STATUS_IDLE                    (1 << 0)
+#define RS600_MC_STATUS			        0x0
+#	define RS600_MC_IDLE		        (1 << 1)
+#define RS600_MC_FB_LOCATION                    0x4
+#define RS600_MC_AGP_LOCATION                   0x5
+#define RS600_AGP_BASE                          0x6
+#define RS600_AGP_BASE2                         0x7
 
 #define AVIVO_MC_INDEX				0x0070
 #define R520_MC_STATUS                          0x00
@@ -3481,6 +3507,8 @@
 #define R600_RAMCFG				       0x2408
 #       define R600_CHANSIZE                           (1 << 7)
 #       define R600_CHANSIZE_OVERRIDE                  (1 << 10)
+
+#define R600_SRBM_STATUS			       0x0e50
 
 #define AVIVO_HDP_FB_LOCATION 0x134
 
@@ -3599,6 +3627,13 @@
 #       define AVIVO_D1GRPH_MACRO_ADDRESS_MODE          (1<<21)
 
 #define AVIVO_D1GRPH_LUT_SEL                                    0x6108
+
+#define R600_D1GRPH_SWAP_CONTROL                               0x610C
+#       define R600_D1GRPH_SWAP_ENDIAN_NONE                    (0 << 0)
+#       define R600_D1GRPH_SWAP_ENDIAN_16BIT                   (1 << 0)
+#       define R600_D1GRPH_SWAP_ENDIAN_32BIT                   (2 << 0)
+#       define R600_D1GRPH_SWAP_ENDIAN_64BIT                   (3 << 0)
+
 #define AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS                    0x6110
 #define AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS                  0x6118
 #define AVIVO_D1GRPH_PITCH                                      0x6120
@@ -3662,6 +3697,8 @@
 #       define AVIVO_D1MODE_VLINE_START_SHIFT   0
 #       define AVIVO_D1MODE_VLINE_END_SHIFT     16
 #       define AVIVO_D1MODE_VLINE_INV           (1 << 31)
+#define AVIVO_D1MODE_VLINE_STATUS               0x653c
+#       define AVIVO_D1MODE_VLINE_STAT          (1 << 12)
 #define AVIVO_D1MODE_VIEWPORT_START             0x6580
 #define AVIVO_D1MODE_VIEWPORT_SIZE              0x6584
 #define AVIVO_D1MODE_EXT_OVERSCAN_LEFT_RIGHT    0x6588
@@ -3984,6 +4021,9 @@
 #define R600_MC_VM_SYSTEM_APERTURE_DEFAULT_ADDR                    0x2198
 
 #define R700_MC_VM_FB_LOCATION                                     0x2024
+#define R700_MC_VM_AGP_TOP                                         0x2028
+#define R700_MC_VM_AGP_BOT                                         0x202c
+#define R700_MC_VM_AGP_BASE                                        0x2030
 
 #define R600_HDP_NONSURFACE_BASE                                0x2c04
 
@@ -4390,6 +4430,7 @@
 #define R300_TX_INVALTAGS				0x4100
 #define R300_TX_FILTER0_0				0x4400
 #define R300_TX_FILTER0_1				0x4404
+#define R300_TX_FILTER0_2				0x4408
 #       define R300_TX_CLAMP_S(x)                       ((x) << 0)
 #       define R300_TX_CLAMP_T(x)                       ((x) << 3)
 #       define R300_TX_CLAMP_R(x)                       ((x) << 6)
@@ -4408,8 +4449,10 @@
 #       define R300_TX_ID_SHIFT                         28
 #define R300_TX_FILTER1_0				0x4440
 #define R300_TX_FILTER1_1				0x4444
+#define R300_TX_FILTER1_2				0x4448
 #define R300_TX_FORMAT0_0				0x4480
 #define R300_TX_FORMAT0_1				0x4484
+#define R300_TX_FORMAT0_2				0x4488
 #       define R300_TXWIDTH_SHIFT                       0
 #       define R300_TXHEIGHT_SHIFT                      11
 #       define R300_NUM_LEVELS_SHIFT                    26
@@ -4418,6 +4461,7 @@
 #       define R300_TXPITCH_EN                          (1 << 31)
 #define R300_TX_FORMAT1_0				0x44c0
 #define R300_TX_FORMAT1_1				0x44c4
+#define R300_TX_FORMAT1_2				0x44c8
 #	define R300_TX_FORMAT_X8		    0x0
 #	define R300_TX_FORMAT_X16		    0x1
 #	define R300_TX_FORMAT_Y4X4		    0x2
@@ -4490,13 +4534,23 @@
 #       define R300_TX_FORMAT_YUV_TO_RGB_NO_CLAMP      (2 << 22)
 #       define R300_TX_FORMAT_SWAP_YUV                 (1 << 24)
 
+#       define R300_TX_FORMAT_CACHE_WHOLE              (0 << 27)
+#       define R300_TX_FORMAT_CACHE_HALF_REGION_0      (2 << 27)
+#       define R300_TX_FORMAT_CACHE_HALF_REGION_1      (3 << 27)
+#       define R300_TX_FORMAT_CACHE_FOURTH_REGION_0    (4 << 27)
+#       define R300_TX_FORMAT_CACHE_FOURTH_REGION_1    (5 << 27)
+#       define R300_TX_FORMAT_CACHE_FOURTH_REGION_2    (6 << 27)
+#       define R300_TX_FORMAT_CACHE_FOURTH_REGION_3    (7 << 27)
+
 #define R300_TX_FORMAT2_0				0x4500
 #define R300_TX_FORMAT2_1				0x4504
+#define R300_TX_FORMAT2_2				0x4508
 #       define R500_TXWIDTH_11                          (1 << 15)
 #       define R500_TXHEIGHT_11                         (1 << 16)
 
 #define R300_TX_OFFSET_0				0x4540
 #define R300_TX_OFFSET_1				0x4544
+#define R300_TX_OFFSET_2				0x4548
 #       define R300_ENDIAN_SWAP_16_BIT                  (1 << 0)
 #       define R300_ENDIAN_SWAP_32_BIT                  (2 << 0)
 #       define R300_ENDIAN_SWAP_HALF_DWORD              (3 << 0)
@@ -4507,6 +4561,7 @@
 #define R300_TX_ENABLE				        0x4104
 #       define R300_TEX_0_ENABLE                        (1 << 0)
 #       define R300_TEX_1_ENABLE                        (1 << 1)
+#       define R300_TEX_2_ENABLE                        (1 << 2)
 
 #define R300_US_W_FMT				        0x46b4
 #define R300_US_OUT_FMT_1				0x46a8
@@ -5361,5 +5416,33 @@
 #   define R500_RS_IP_OFFSET_EN 			(1 << 31)
 
 #define R500_DYN_SCLK_PWMEM_PIPE                        0x000d /* PLL */
+
+/* r6xx/r7xx stuff */
+#define R600_GRBM_STATUS                                   	   0x8010
+#       define R600_CMDFIFO_AVAIL_MASK                             0x1f
+#       define R700_CMDFIFO_AVAIL_MASK                             0xf
+#       define R600_GUI_ACTIVE                                     (1 << 31)
+
+#define R600_GRBM_SOFT_RESET                                    0x8020
+#       define R600_SOFT_RESET_CP                               (1 << 0)
+
+#define R600_WAIT_UNTIL                                         0x8040
+
+#define R600_CP_ME_CNTL                                         0x86d8
+#       define R600_CP_ME_HALT                                  (1 << 28)
+
+#define R600_CP_RB_BASE                                            0xc100
+#define R600_CP_RB_CNTL                                            0xc104
+#       define R600_RB_NO_UPDATE                                   (1 << 27)
+#       define R600_RB_RPTR_WR_ENA                                 (1 << 31)
+#define R600_CP_RB_RPTR_WR                                         0xc108
+#define R600_CP_RB_RPTR_ADDR                                       0xc10c
+#define R600_CP_RB_RPTR_ADDR_HI                                    0xc110
+#define R600_CP_RB_WPTR                                            0xc114
+#define R600_CP_RB_WPTR_ADDR                                       0xc118
+#define R600_CP_RB_WPTR_ADDR_HI                                    0xc11c
+
+#define R600_CP_RB_RPTR                                            0x8700
+#define R600_CP_RB_WPTR_DELAY                                      0x8704
 
 #endif

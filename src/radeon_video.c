@@ -135,15 +135,14 @@ radeon_box_area(BoxPtr box)
     return (int) (box->x2 - box->x1) * (int) (box->y2 - box->y1);
 }
 
-int
-radeon_covering_crtc_num(ScrnInfoPtr pScrn,
-			 int x1, int x2, int y1, int y2,
-			 xf86CrtcPtr desired)
+xf86CrtcPtr
+radeon_xv_pick_best_crtc(ScrnInfoPtr pScrn,
+			 int x1, int x2, int y1, int y2)
 {
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    int			coverage, best_coverage;
-    int			c, best_crtc = 0;
+    int			coverage, best_coverage, c;
     BoxRec		box, crtc_box, cover_box;
+    xf86CrtcPtr         best_crtc = NULL;
 
     box.x1 = x1;
     box.x2 = x2;
@@ -155,10 +154,8 @@ radeon_covering_crtc_num(ScrnInfoPtr pScrn,
 	radeon_crtc_box(crtc, &crtc_box);
 	radeon_box_intersect(&cover_box, &crtc_box, &box);
 	coverage = radeon_box_area(&cover_box);
-	if (coverage && crtc == desired) {
-	    return c;
-	} else if (coverage > best_coverage) {
-	    best_crtc = c;
+	if (coverage > best_coverage) {
+	    best_crtc = crtc;
 	    best_coverage = coverage;
 	}
     }
@@ -297,22 +294,19 @@ void RADEONInitVideo(ScreenPtr pScreen)
 	RADEONInitOffscreenImages(pScreen);
     }
 
-    if (info->ChipFamily != CHIP_FAMILY_RV250) {
-	if ((info->ChipFamily < CHIP_FAMILY_RS400)
+    if ((info->ChipFamily < CHIP_FAMILY_RS400)
 #ifdef XF86DRI
-	    || (info->directRenderingEnabled)
+	|| (info->directRenderingEnabled)
 #endif
-	    ) {
-	    texturedAdaptor = RADEONSetupImageTexturedVideo(pScreen);
-	    if (texturedAdaptor != NULL) {
-		adaptors[num_adaptors++] = texturedAdaptor;
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up textured video\n");
-	    } else
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to set up textured video\n");
+	) {
+	texturedAdaptor = RADEONSetupImageTexturedVideo(pScreen);
+	if (texturedAdaptor != NULL) {
+	    adaptors[num_adaptors++] = texturedAdaptor;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up textured video\n");
 	} else
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Textured video requires CP on R5xx/IGP\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to set up textured video\n");
     } else
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Textured video disabled on RV250 due to HW bug\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Textured video requires CP on R5xx/R6xx/R7xx/IGP\n");
 
     if(num_adaptors)
 	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
@@ -1070,11 +1064,11 @@ static void RADEONSetTransform (ScrnInfoPtr pScrn,
     OvGCr = CAdjGCr * gamma_curve_r100[gamma].OvGammaCont;
     OvBCb = CAdjBCb * gamma_curve_r100[gamma].OvGammaCont;
     OvBCr = CAdjBCr * gamma_curve_r100[gamma].OvGammaCont;
-    OvROff = CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
+    OvROff = RedAdj + CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
 	OvLuma * Loff - (OvRCb + OvRCr) * Coff;
-    OvGOff = CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
+    OvGOff = GreenAdj + CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
 	OvLuma * Loff - (OvGCb + OvGCr) * Coff;
-    OvBOff = CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
+    OvBOff = BlueAdj + CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
 	OvLuma * Loff - (OvBCb + OvBCr) * Coff;
 #if 0 /* default constants */
     OvROff = -888.5;

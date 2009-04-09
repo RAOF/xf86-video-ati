@@ -265,6 +265,8 @@ static SymTabRec RADEONChipsets[] = {
   { PCI_CHIP_RV770_9456, "ATI FirePro V8700 (FireGL)" },
   { PCI_CHIP_RV770_945A, "ATI Mobility RADEON HD 4870" },
   { PCI_CHIP_RV770_945B, "ATI Mobility RADEON M98" },
+  { PCI_CHIP_RV790_9460, "ATI Radeon 4800 Series" },
+  { PCI_CHIP_RV790_9462, "ATI Radeon 4800 Series" },
   { PCI_CHIP_RV770_946A, "ATI FirePro M7750" },
   { PCI_CHIP_RV770_946B, "ATI M98" },
   { PCI_CHIP_RV770_947A, "ATI M98" },
@@ -349,5 +351,12 @@ static SymTabRec RADEONChipsets[] = {
   { PCI_CHIP_RS780_9612, "ATI Radeon HD 3200 Graphics" },
   { PCI_CHIP_RS780_9613, "ATI Radeon 3100 Graphics" },
   { PCI_CHIP_RS780_9614, "ATI Radeon HD 3300 Graphics" },
+  { PCI_CHIP_RS780_9615, "ATI Radeon HD 3200 Graphics" },
+  { PCI_CHIP_RS780_9616, "ATI Radeon 3000 Graphics" },
+  { PCI_CHIP_RS880_9710, "ATI Radeon HD Graphics" },
+  { PCI_CHIP_RS880_9711, "ATI Radeon Graphics" },
+  { PCI_CHIP_RS880_9712, "ATI Mobility Radeon HD Graphics" },
+  { PCI_CHIP_RS880_9713, "ATI Mobility Radeon Graphics" },
+  { PCI_CHIP_RS880_9714, "ATI Radeon Graphics" },
   { -1,                 NULL }
 };

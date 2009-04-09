@@ -65,15 +65,19 @@ void RADEONSetPitch (ScrnInfoPtr pScrn)
     align_large = info->allowColorTiling || IS_AVIVO_VARIANT;
 
     /* FIXME: May need to validate line pitch here */
-    switch (pScrn->depth / 8) {
-    case 1: pitch_mask = align_large ? 255 : 127;
-	break;
-    case 2: pitch_mask = align_large ? 127 : 31;
-	break;
-    case 3:
-    case 4: pitch_mask = align_large ? 63 : 15;
-	break;
-    }
+    if (info->ChipFamily < CHIP_FAMILY_R600) {
+	switch (pScrn->depth / 8) {
+	case 1: pitch_mask = align_large ? 255 : 127;
+	    break;
+	case 2: pitch_mask = align_large ? 127 : 31;
+	    break;
+	case 3:
+	case 4: pitch_mask = align_large ? 63 : 15;
+	    break;
+	}
+    } else
+	pitch_mask = 255; /* r6xx/r7xx need 256B alignment for accel */
+
     dummy = (pScrn->virtualX + pitch_mask) & ~pitch_mask;
     pScrn->displayWidth = dummy;
     info->CurrentLayout.displayWidth = pScrn->displayWidth;
@@ -411,6 +415,56 @@ RADEONUpdatePanelSize(xf86OutputPtr output)
     }
 }
 
+static void
+radeon_add_common_modes(xf86OutputPtr output, DisplayModePtr modes)
+{
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    radeon_native_mode_ptr native_mode = &radeon_output->native_mode;
+    DisplayModePtr  last       = NULL;
+    DisplayModePtr  new        = NULL;
+    DisplayModePtr  first      = NULL;
+    int i;
+    /* Add some common sizes */
+    int widths[15]  = {640, 800, 1024, 1152, 1280, 1280, 1280, 1280, 1280, 1440, 1400, 1680, 1600, 1920, 1920};
+    int heights[15] = {480, 600,  768,  768,  720,  800,  854,  960, 1024,  900, 1050, 1050, 1200, 1080, 1200};
+
+    for (i = 0; i < 15; i++) {
+	if (radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT)) {
+	    /* already added the native mode */
+	    if (widths[i] == native_mode->PanelXRes && heights[i] == native_mode->PanelYRes)
+		continue;
+
+	    /* Note: We allow all non-standard modes as long as they do not
+	     * exceed the native resolution of the panel.  Since these modes
+	     * need the internal RMX unit in the video chips (and there is
+	     * only one per card), this will only apply to the primary head.
+	     */
+	    if (widths[i] < 320 || widths[i] > native_mode->PanelXRes ||
+		heights[i] < 200 || heights[i] > native_mode->PanelYRes)
+		continue;
+	}
+
+	new = xf86CVTMode(widths[i], heights[i], 60.0, FALSE, FALSE);
+
+	new->type       = M_T_DRIVER;
+
+	new->next       = NULL;
+	new->prev       = last;
+
+	if (last) last->next = new;
+	last = new;
+	if (!first) first = new;
+    }
+
+    if (last) {
+	last->next   = NULL; //first;
+	first->prev  = NULL; //last;
+    }
+
+    xf86ModesAdd(modes, first);
+
+}
+
 DisplayModePtr
 RADEONProbeOutputModes(xf86OutputPtr output)
 {
@@ -459,11 +513,15 @@ RADEONProbeOutputModes(xf86OutputPtr output)
 		    if (radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT))
 			modes = RADEONFPNativeMode(output);
 		    /* add the screen modes */
-		    RADEONAddScreenModes(output, &modes);
+		    if (modes == NULL)
+			RADEONAddScreenModes(output, &modes);
 		}
 	    }
 	}
     }
+
+    if (radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT))
+	radeon_add_common_modes(output, modes);
 
     return modes;
 }

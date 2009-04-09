@@ -1398,7 +1398,7 @@ xf86MonPtr radeon_atom_get_edid(xf86OutputPtr output)
     AtomBiosArgRec data;
     unsigned char *space;
     int i2c_clock = 50;
-    int engine_clk = info->sclk * 100;
+    int engine_clk = (int)info->sclk * 100;
     int prescale;
     unsigned char *edid;
     xf86MonPtr mon = NULL;
@@ -1771,15 +1771,20 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn)
 	    con_obj_type = (path->usConnObjectId & OBJECT_TYPE_MASK) >> OBJECT_TYPE_SHIFT;
 
 	    if ((path->usDeviceTag == ATOM_DEVICE_TV1_SUPPORT) ||
-		(path->usDeviceTag == ATOM_DEVICE_TV2_SUPPORT) ||
-		(path->usDeviceTag == ATOM_DEVICE_CV_SUPPORT)) {
+		(path->usDeviceTag == ATOM_DEVICE_TV2_SUPPORT)) {
 		if (!enable_tv) {
 		    info->BiosConnector[i].valid = FALSE;
 		    continue;
 		}
 	    }
 
-	    if ((info->ChipFamily == CHIP_FAMILY_RS780) &&
+	    /* don't support CV yet */
+	    if (path->usDeviceTag == ATOM_DEVICE_CV_SUPPORT) {
+		info->BiosConnector[i].valid = FALSE;
+		continue;
+	    }
+
+	    if (info->IsIGP &&
 		(con_obj_id == CONNECTOR_OBJECT_ID_PCIE_CONNECTOR)) {
 		uint32_t slot_config, ct;
 
@@ -1876,6 +1881,7 @@ RADEONGetATOMConnectorInfoFromBIOSObject (ScrnInfoPtr pScrn)
 	    for (j = 0; j < ATOM_MAX_SUPPORTED_DEVICE; j++) {
 		if (info->BiosConnector[j].valid && (i != j) ) {
 		    if (info->BiosConnector[i].i2c_line_mux == info->BiosConnector[j].i2c_line_mux) {
+			ErrorF("Shared DDC line: %d %d\n", i, j);
 			info->BiosConnector[i].shared_ddc = TRUE;
 			info->BiosConnector[j].shared_ddc = TRUE;
 		    }
@@ -2202,7 +2208,8 @@ RADEONGetATOMConnectorInfoFromBIOSConnectorTable (ScrnInfoPtr pScrn)
 	    continue;
 	}
 
-	if (!enable_tv && (i == ATOM_DEVICE_CV_INDEX)) {
+	/* don't support CV yet */
+	if (i == ATOM_DEVICE_CV_INDEX) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Skipping Component Video\n");
 	    info->BiosConnector[i].valid = FALSE;
 	    continue;
