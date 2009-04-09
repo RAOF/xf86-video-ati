@@ -1,3 +1,928 @@
+commit 1b02b93895c31a0c9d641e47b46dce43b40edd97
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 8 10:34:44 2009 -0400
+
+    Bump for release
+
+commit da74b94a5da8f0bcf4ae99b20e594d2f0f4fc6f6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 7 18:59:06 2009 -0400
+
+    ATOM: code cleanup
+    
+    - remove cases that aren't possible (e.g., no TMDSA on DCE3 cards)
+    - condense duplicate cases
+
+commit a24aa7250d09ae68ceaaba987314388b5e52096c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 7 18:52:08 2009 -0400
+
+    DCE3/3.2: further fixes
+    
+    disable the dig transmitter and encoder before setup and enable
+
+commit 284e1943f6726ed08e796f99e49fbd90ac7fa8a4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 1 15:07:01 2009 -0400
+
+    Cast info->sclk to int
+
+commit b580e388e0e31843308c783c1ca859672dc6ca0e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 1 14:59:43 2009 -0400
+
+    Fix missing ')' in PCIE macro
+
+commit 8ec27be3c8043a6ddc816b0b1480dd19f8d73832
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 7 11:33:44 2009 -0400
+
+    radeon: fix Xv vsync for multi-head
+
+commit f8c7d6a6162196a743f6885ecaf63ba50de1722a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Apr 4 16:05:20 2009 -0400
+
+    DCE3/3.2: cleanup dpms after previous changes
+
+commit a707d355c3c6ff92252c5a060a1fc32d97547552
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Apr 4 15:20:01 2009 -0400
+
+    DCE3/3.2: fix up transmitter/encoder setup
+    
+    Should fix bug 21050
+
+commit 215e12f9c0e8ac62c23af1add776ef88f9a0dc54
+Author: Eduard Fuchs <edfuchs@uni-kassel.de>
+Date:   Thu Apr 2 12:36:59 2009 -0400
+
+    Enable byte swapping for r6xx/r7xx Hardware
+    
+    Patch from Eduard Fuchs with some cleanup from me.
+    
+    Tested at 32 bpp on MPC8641HPCN board (PowerPC) with
+    HD2400 PCIe card
+
+commit 0ded9fab6bc3fecc1976ae8369b788659e4d7793
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 2 12:09:00 2009 -0400
+
+    Add RV790 (HD 4890) support
+
+commit 0c6f20a9404c6a4210c5180bdca61c13fc186754
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 31 15:51:11 2009 -0400
+
+    Add PCIE register accessors
+
+commit 229d4e20e5adcdf9207944c19ca721477936ff02
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 31 15:39:42 2009 -0400
+
+    Unify mc_idle()
+
+commit f44b486848094b75479abef61c1aa075aede835c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 31 15:33:11 2009 -0400
+
+    COMBIS: Clarify case 0 for LCD DDC table
+
+commit e6f3c48899a92174a55f6fe7327412bc88039d87
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 31 15:30:40 2009 -0400
+
+    COMBIOS: fix default sclk/mclk from bios
+
+commit 75bf5272936093bc024559e5744d97d8e79943b1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 31 15:17:37 2009 -0400
+
+    mac mini: 3rd time's the charm
+    
+    fixes 10fbbac4bed59e12ad794ac873dd415d9ee4e340
+    fixes bugs 20796 and 20979
+
+commit 10fbbac4bed59e12ad794ac873dd415d9ee4e340
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 31 15:14:27 2009 -0400
+
+    Mac mini: fix connector setup for real
+    
+    fixes f061308e7abcf93d1612681b935387fee23e0a24
+    fixes bugs 20796 and 20979
+
+commit 8f2a03bfc86422669a46c2853050979f099a17a8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 30 11:30:34 2009 -0400
+
+    r1xx-r3xx TV: fix white noise
+    
+    should fix bug 13872
+
+commit f061308e7abcf93d1612681b935387fee23e0a24
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 27 01:14:12 2009 -0400
+
+    mac mini: fix connector setup regression
+    
+    fixes bug 20796
+
+commit 47134ca77988f8c3b42d55ac4fcbb5dc182878d4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 26 17:18:47 2009 -0400
+
+    radeon: re-enable r/g/b intensity attributes for overlay
+    
+    Noticed by sroland on IRC.
+
+commit e2b5e48e2652daf03fcae852d8368f29ea4abcd9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 26 13:42:25 2009 -0400
+
+    R6xx/R7xx EXA: rework composite pixel shader
+    
+    - move to vram storage
+    - move swizzle logic to tex setup
+
+commit 24dbd3f93c640f819a9f5029f5a49e41ab875bd4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 26 12:01:07 2009 -0400
+
+    R6xx/R7xx: clean up logic in EXA Comp PS setup
+
+commit 076e4e3ac1c81086aecb4e70dd30fd5d26ec7bc8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 26 11:36:26 2009 -0400
+
+    R6xx/R7xx: clean up bool const code
+    
+    3 regs: 1 bit per bool, 32 bools per ps/vs/gs
+
+commit d2c3964fe04be42fe538f36439ed5ffca96e436a
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Wed Mar 18 01:55:12 2009 +0100
+
+    fix textured video allocation bug
+    
+    size needs to be calculated after dstPitch adjustments, got already fixed
+    for earlier than R600 chips by planar textured yuv patches, clean this up.
+
+commit 18e56eb179fde28477487c63e6f9ebf7579e2cd5
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Thu Mar 5 02:07:46 2009 +0100
+
+    don't convert planar yuv to packed for r200
+    
+    uses 3 textures for planar yuv and does yuv->rgb conversion in the shader.
+    Similar to r300 code, but might have precision issues - hardware alu should
+    have enough precision but hardware consts are only 8bit and we'd want
+    at least 11.
+    This also enables textured video on rv250 (and also supports packed yuv
+    on that chip by using basically the same shader with packed data).
+
+commit 58530bf4912800f9e09ebaea42a13cff8a80c19e
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Sat Feb 21 04:46:31 2009 +0100
+
+    don't convert planar yuv to packed for r300
+    
+    uses 3 textures for planar yuv and does yuv->rgb conversion in the shader.
+    small performance advantage, but manual texture cache setting is necessary
+    otherwise it may be measurably slower (but probably not relevant) in some
+    cases.
+    Unlike some other drivers, using MADs instead of DP3s, since this requires
+    less instructions due to no MOVs are required, the end result is the same
+    though the constants need to be different.
+    Use of this is user settable for now (XV_HWPLANAR attrib).
+
+commit 97e19d96ba65a3df2fa3bbf73cfcc01b6dc3e796
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Tue Dec 30 22:23:39 2008 +0100
+
+    clip fixes
+    
+    This fixes some oddities observed when the video is only partly visible.
+    Instead of recalculating the geometry of the video, always use the same.
+    Also fixes a assignment present twice, and another issue (bring in line with
+    what the overlay code does).
+
+commit 7aaf5f08e4147b75c4975e6d680d3f5a93424164
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 23 12:55:02 2009 -0400
+
+    R4xx ATOM: fix crtc routing for CRT1
+    
+    should fix bug 20814
+
+commit 2fe6b393d9dbb193d4f0a3351ad76618cda07e2c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 22 01:31:30 2009 -0400
+
+    radeon: add new chip ids
+
+commit 1ddee7cd6fd267b2fc86f21af27c5425eb0835a4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 20 13:44:00 2009 -0400
+
+    DCE3.2: use RMX for for non-native modes on DVI
+    
+    DVI seems to have issues with low dotclocks, so
+    use the scaler instead.
+    
+    Fixes bug 20754
+
+commit 44081e8fd2bf974272d5447b45dd7b206cf939c1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 19 20:48:16 2009 -0400
+
+    R6xx/R7xx EXA: fix maxPitchBytes
+    
+    should now allow accel up the hw max of 8192x8192
+
+commit e8e2367b66d9a4f5977d95f52b37cdbad75e409a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 19 20:09:32 2009 -0400
+
+    Add new pci ids
+
+commit 68e83f10adb23fc359c1da881f5d666cd08b4067
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 18 20:58:19 2009 -0400
+
+    bump version post release
+
+commit a196aae19603c8651dc502f5cb0df4d55befe163
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 18 20:52:12 2009 -0400
+
+    bump for release
+
+commit 537da7018b0fd2ad263fc5cdc55b3b85cf8e9205
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 18 19:22:55 2009 -0400
+
+    ATOM: fix up tv-out support
+    
+    - fix purple hue when using ATOMTvOut option
+    - fix TV load detection on newer r6xx/r7xx chips
+    - disable CV for now
+
+commit c0e2513ab128ddd5be0ed626d9e31777a98983ef
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 18 14:08:30 2009 -0400
+
+    R6xx/R7xx AGP: disable gart data transfers
+    
+    UTS/DFS/Xv
+    
+    Doesn't seem to be reliable on AGP.
+    
+    fixes bugs: 20436, 20236, several reports on ML and IRC
+
+commit e3e1f0c7b892b094b292081021a0e97932b8e079
+Author: Fabio <fabio.ped@libero.it>
+Date:   Wed Mar 18 12:13:53 2009 -0400
+
+    man page update
+
+commit 6ae54d3ea023968887bf0cb0ec1be2115621d554
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 18 11:50:22 2009 -0400
+
+    AVIVO: Fix dac load detection
+
+commit 04e36b794c216e4fa77c780fd989df1ef1c7f0d9
+Author: Fabio <fabio.ped@libero.it>
+Date:   Tue Mar 17 11:29:26 2009 -0400
+
+    man page updates
+    
+    from bug 20648
+
+commit a6855c370194b6df307ea33724fe17a85d67607e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 16 13:52:42 2009 -0400
+
+    radeon: add another AGP quirk
+    
+    bug 20647
+
+commit a55ced5ee20c07e743c7c0978803fd10589c1531
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 15 12:08:04 2009 -0400
+
+    Fix fallout from r6xx/r7xx EXA merge in IB handling
+    
+    Noticed Christiaan van Dijk.
+    Should fix bug 20510
+
+commit a065eeb9b301ab452cc8fbd3cac1fd9a3841c4e1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Mar 14 18:40:28 2009 -0400
+
+    atom: fix up bios scartch register usage
+    
+    the bios scratch registers keep 3 types of state for each output:
+    1. dpms
+    2. active
+    3. connected
+    
+    some of the command tables use the active flags.  We used to set the active
+    flags based on dpms state, but instead set them based on whether they are
+    connected or not.
+
+commit 5c4ef924d082fd3b279f62fda7a97f563b009d38
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Mar 14 18:16:49 2009 -0400
+
+    radeon: fix typo in bios scratch reg setup
+
+commit 96fce5a56269509a935e8ee621a5e17cc9005ddc
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 19:29:58 2009 -0400
+
+    Bump post-release
+
+commit 8da1b82a70de7b3ef38905bd77c58a20fd44ddd6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 19:23:19 2009 -0400
+
+    bump for release
+
+commit 28d9d699dcdff394aa561505f7f54f08db800828
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 18:18:31 2009 -0400
+
+    radeon: man page updates
+
+commit 06963796d00b5cb6704412a7d4417fcefae4aa4d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Mar 13 18:14:43 2009 -0400
+
+    uniphy: start adding DisplayPort setup
+
+commit 1db81afe4f8db55e02a65cd22ad84c6bbb27e8ef
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 17:51:56 2009 -0400
+
+    radeon: add support for 30 bit LUTs
+    
+    All radeons have them.  Thanks to Yang Zhao for figuring
+    this out.
+
+commit 5bb326c64ad3bf5c93943280dcbcb25c8910d1aa
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 14:10:58 2009 -0400
+
+    R6xx/R7xx: EXA VSync Option not supported yet
+
+commit 8c2d40894448329e721360811c124998a17ba2ba
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 14:03:43 2009 -0400
+
+    R6xx/R7xx: fix up vline stuff along the lines of previous chips
+    
+    Avoids an additional function call.
+
+commit 176c1b43fc3ee48e87c134446754360b3683c24b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 13:28:42 2009 -0400
+
+    R6xx/R7xx: return in RADEONWaitForIdleMMIO() if accel is off
+    
+    Don't wait for engine idle if we haven't initialized the engine.
+    Behavior should be consistent with versions of the driver prior
+    to accel support being added.
+    
+    Should fix bug 20645
+
+commit d538a4508248adf2debaf0cc870a2d1c48abd986
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 13 13:22:03 2009 -0400
+
+    R6xx/r7xx: clarify accel messages
+    
+    We only support EXA and and only with DRI.
+
+commit 1b7090a4c0d6a38701fbfb928fac8e15d40fb81f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Mar 13 17:41:59 2009 -0400
+
+    Add some more cases to the DVI single-link checks.
+
+commit 104e13da74de37477e3a31a5de96c5ebb8fe888b
+Author: Cooper Yuan <cooperyuan@gmail.com>
+Date:   Fri Mar 13 11:47:43 2009 -0400
+
+    radeon: save bios scratch registers in Preinit()
+    
+    The display detect routines can change these which causes
+    havok with some bioses.
+
+commit f70d7a0fd9ac3659d93511ab362eb80a7ff49777
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Mar 13 12:56:29 2009 +1000
+
+    r600: reload shaders into VRAM on resume
+    
+    As VRAM gets zeroed out over s/r, we need to reload the
+    shaders.
+
+commit 1fe0dcfe98dfe30499ba53c1f208c4ef10bef001
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Thu Mar 12 18:50:32 2009 -0400
+
+    R6xx/R7xx shader: Fix OFFSET_[XYZ] macro for TEX_DWORD2 to accept floats
+    
+    Values for OFFSET_[XYZ] are 5-bits two's-complement fixed-point with
+    one-bit after decimal point. Values in [-8.0, 7.5] are valid. Inputs
+    that do not exactly land on 0.5 increments are rounded towards 0 to the
+    nearest increment.
+
+commit f356ca7795531e0c080775efb598141eb7db44ba
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 12 03:42:40 2009 -0400
+
+    RS600: fix page table size for rs600 as well
+
+commit ef69336584c45e35aabb797a06c4030e75d66507
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Mar 12 14:54:18 2009 +1000
+
+    r600: fix sizing of PCI GART table for r600
+
+commit 945ccbbd4fa2b65ccdfb23716c178c95b036734d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 10 09:53:14 2009 -0400
+
+    radeon: clean more thoroughly in RADEONFreeRec()
+
+commit 03ec2099fdc859b23e5fa56ac8696ec045f1b110
+Author: 오유연(Yu-yeon Oh) <yuyeon_oh@tmax.co.kr>
+Date:   Tue Mar 10 09:51:08 2009 -0400
+
+    radeon_driver.c small memory bug
+
+commit 60dac878cc8626b0821c4c7a6a6dfa12a5597cfa
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 9 20:48:39 2009 -0400
+
+    R4xx: add R4xxATOM option
+    
+    If set, enables the use of atombios for modesetting
+    on r4xx cards.
+
+commit 758fcc33c232c32e7b66261fca51de161d1a4800
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Mar 10 10:34:13 2009 +1000
+
+    r600: enable DRI by default
+    
+    fallback to shadowfb if DRI fails pre init
+
+commit 7735e411954fd2cb6105c30ebd5a1b209974ce22
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 9 17:49:25 2009 -0400
+
+    R6xx/r7xx: clarify EXA message
+
+commit 1d355798f3d421cabf2a3a0ba32a580483476ab0
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 9 15:13:01 2009 -0400
+
+    AVIVO: fix panning
+    
+    low 2 bits of X need to be 0.
+
+commit d1add18f3d238c755f9875b5e5c211e4af742482
+Author: root <root@benzylpiperazine.boston.devel.redhat.com>
+Date:   Fri Mar 6 17:53:59 2009 -0500
+
+    output: Filter out dual-link modes from DP->DVI connections
+    
+    There's not enough pins on a DP->DVI connector for this to possibly work.
+
+commit 04481bf450650d1ea5aadabc9213b899b0fe8119
+Author: root <root@benzylpiperazine.boston.devel.redhat.com>
+Date:   Fri Mar 6 17:32:15 2009 -0500
+
+    atom: Enable DisplayPort source to DVI/HDMI sink
+    
+    DP source to DP sink still doesn't work yet, of course.
+
+commit 0ba73e040b94590867f8b1071a26da2526a3c375
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Mar 6 15:38:00 2009 -0500
+
+    output: Allow for multiple DisplayPort outputs.
+
+commit 8f7c17a6b77ca368f067c2acb803cc8f9ef19351
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Fri Mar 6 09:42:39 2009 -0500
+
+    RV350: Add AGPMode quirk for Thinkpad
+    
+    fixes bug 15096 (and Ubuntu bug #195051)
+
+commit 5dc4b69fbdd0e8ca48cc00321f193260a8f10bd0
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 5 12:26:04 2009 -0500
+
+    radeon: add a few more default common modes for lvds
+
+commit 3b0fc22ad9e5c0f120a74c4f3d8e48c270f0ff29
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 4 19:04:34 2009 -0500
+
+    R6xx/R7xx: wire up DMAForXv option like older asics
+    
+    Select between SW and HW-assisted uploads
+
+commit 52f06ace04ad8141effc45fb6a0107a05bb46a73
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 4 18:51:44 2009 -0500
+
+    R6xx/R7xx: disable XV_BICUBIC attribute
+    
+    It's not implemented yet.
+
+commit b1fd883b59b85fed8782e035890098908902f4ce
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 4 11:17:16 2009 -0500
+
+    RN50: fix up cloning on servers
+    
+    Since the rn50 only has one crtc, but often has multiple outputs,
+    occasionally one of the outputs doesn't get a crtc assigned eventhough
+    the outputs may have common modes.  If we see an output with modes, but
+    no crtc, assign it so all the attached outputs light up.
+    
+    fixes bugs 19457 and similar ones
+
+commit 592bcac52f113a95923a8f1cb8427e7552d5670b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 4 10:53:20 2009 -0500
+
+    ATOM: don't use fixed ref div for LVDS
+    
+    The bios doesn't provide one.  If there are problems
+    with certain panels, we may need to adjust the PLL flags
+    in certain cases.
+    
+    Should fix bug 20458
+
+commit e88b0eac8cab8b54b769fd7b4ad3b3b65a90de09
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 4 02:52:36 2009 -0500
+
+    radeon: just add some common modes for LVDS
+    
+    avoids needing to hack around with the edid
+
+commit 2bb319fd80d20a3d4e5cc9416891bc7e4c3e431e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 4 02:50:45 2009 -0500
+
+    Revert "radeon: adjust LVDS so that default modes get added"
+    
+    This reverts commit 1a2b16561d19ec9c027c562902f5fc086c856994.
+
+commit 1a2b16561d19ec9c027c562902f5fc086c856994
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 3 20:21:17 2009 -0500
+
+    radeon: adjust LVDS so that default modes get added
+    
+    we can scale, so add the default modes.  for panels
+    with an EDID, set the continous freq bit.  for panels without
+    and EDID, add a FAKE edid with the continous freq bit set.
+    
+    Based on similar code in the Intel driver.
+
+commit 71117970df36cbe689ef15e9a6cca24439b4cd62
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 3 19:40:30 2009 -0500
+
+    AVIVO: add aspect scaling mode
+    
+    No luck yet for aspect on pre-avivo chips
+
+commit d586a2c6f821c821a4a7708a3382acb63187534f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 3 12:17:30 2009 -0500
+
+    Rotation: don't rotate if acceleration is not active
+
+commit fdc64948119e2218921b4dc0a492522442668875
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 2 16:33:46 2009 -0500
+
+    R6xx/r7xx: remove some unneeded code I missed in the last commit
+
+commit 4ad1c4decfee653dbbc1ea2ca4270487be622382
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 2 15:38:35 2009 -0500
+
+    R6xx/R7xx EXA: cleanup composite texture setup
+
+commit b7164ac4ad55e5d0fc474df8ae762b469b91ba30
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 2 04:08:09 2009 -0500
+
+    R6xx/R7xx EXA: combine composite mask/non-mask VS
+    
+    Also fix set_bool_const()
+    the CF bool consts are not contiguous by shader type
+    There are 96 boolean constants (32 each for PS, VS, GS) and
+    they are ordered as follows:
+    ps, vs, gs ... ps, vs, gs
+
+commit fa98f424de739be2c6005b740a74bbf1ee968a8b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 2 02:28:57 2009 -0500
+
+    R6xx/R7xx Xv: combine packed and planar shaders
+    
+    use a bool const to select the tex fetch routine
+
+commit ccde35c3eda3fff0de29eb8c6fdc392629724a34
+Author: Christian Koenig <deathsimple@vodafone.de>
+Date:   Sun Mar 1 23:38:37 2009 -0500
+
+    R6xx/R7xx: move shaders to r600_shader.c and fixup Xv PS
+    
+    patches from Christian Koenig with some adjustments from me
+
+commit a8e631c1b1c9b46602aeca66f8e7e68154d0bfc8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 1 22:30:31 2009 -0500
+
+    R6xx/R7xx: code cleanups
+
+commit 528061d51bb4248d6fabec9579dead32a730467a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 1 18:28:13 2009 -0500
+
+    R6xx/R7xx: write vertexes directly to the IB
+    
+    Reduces the vertex buffer setup overhead
+
+commit 96a0bafa16dbb67a3d10fa6fe45be13930495ddc
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 1 17:58:36 2009 -0500
+
+    R6xx/R7xx: switch emit functions to macros
+    
+    This improves performance due to decreased function call
+    overhead.
+
+commit cbd579c41a16bddcbb8793eac2a41f2e958bef4d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 1 13:16:20 2009 -0500
+
+    Print a message when we have a shared DDC line
+
+commit a7f465f73363fce409870f62173d518b1bc02ae6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Mar 1 12:39:31 2009 -0500
+
+    R300: Add AGP quirk
+    
+    bug 7770
+
+commit 017bc7f34de2e40919f0e711205b78ee4e3643f6
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sat Feb 28 10:33:35 2009 -0500
+
+    M9+: Add AGP quirk for Sony Vaio
+
+commit 49b57767d0d2c041517b0764c2ed2d2ba5a7092c
+Author: Bryce Harrington <bryce@bryceharrington.org>
+Date:   Fri Feb 27 20:31:03 2009 -0500
+
+    Quirk for RV280 on 82865G/PE/P DRAM Controller/Host-Hub
+    
+    Solves issue where display suffers from line corruption.
+    (See https://edge.launchpad.net/ubuntu/+bug/300304)
+
+commit 150abd4123664eab65ea43585dbdb9b3151c46af
+Author: Tormod Volden <lists.tormod@gmail.com>
+Date:   Fri Feb 27 11:23:32 2009 -0500
+
+    Janitor: cosmetic clean-up of AGPMode quirk table
+
+commit c7d344f0ad255761d5ae30da59cf0a8b532dfc68
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Fri Feb 27 17:05:01 2009 +0100
+
+    EXA: Make sure Prepare/FinishAccess hooks can handle EXA_PREPARE_AUX* indices.
+    
+    And signal this to the EXA core using the new EXA_SUPPORTS_PREPARE_AUX flag.
+
+commit f4d57105fc869e9318f447a1514f1b284a0a4ec0
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Fri Feb 27 09:23:24 2009 +0100
+
+    Revert "EXA: Adapt to EXA changes in xserver Git."
+    
+    This reverts commit de358736dc696559ba99c71cf5b2a97508201630.
+
+commit 3285a4af17b19f2d1c24eebfb6aa51cddcf3ca50
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 26 17:31:13 2009 -0500
+
+    DCE3.2: fix up Save()/Restore()
+
+commit 4fc978f3d83ef6370c9715e7ca5350640ccbfe10
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 26 12:10:08 2009 -0500
+
+    R6xx/R7xx: use shadowfb if DRI is disabled
+
+commit 000756e052a291230e5c95e48b69a5aa9c4fab0e
+Merge: 22d7746 8373f43
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 26 11:44:13 2009 -0500
+
+    Merge branch 'r6xx-r7xx-support' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati
+
+commit 22d7746bfc1bcbb3269afac88971254088ea9ece
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 26 11:00:46 2009 -0500
+
+    RS600: enable the DRI by default
+
+commit 8373f4399b03961f2c928a9275d47e9f41bd92bb
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 25 09:16:38 2009 -0500
+
+    R6xx/R7xx EXA: same surface and same coords equals nop
+    
+    should fix bug 20305
+
+commit c74727015453ff3c3d6d06b812ebca9eb19a9767
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 24 11:08:46 2009 -0500
+
+    R6xx/R7xx EXA: init copy_area to NULL
+
+commit 95ce13572dc2d9f5dd6cf55c23411e275c0aadf1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 24 10:51:13 2009 -0500
+
+    R6xx/R7xx EXA: Optimize temp surface for overlapping copies
+    
+    - allocate temp surface in PrepareCopy()
+    - fall back to old OverlapCopy() path if we are not able
+    to allocate a temp surface
+
+commit 1a7db3fc2a0277d724d60d028064d8ef75019c28
+Author: Mark van Doesburg <mark.vandoesburg@hetnet.nl>
+Date:   Tue Feb 24 10:44:19 2009 -0500
+
+    R6xx/R7xx EXA: use a temp surface for overlapping copy
+
+commit 957c2ba3459af152ad16a3f6dd4631044f9df6f9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 24 09:43:58 2009 -0500
+
+    RS600: fix MC addr mask
+    
+    Noticed by osiris on IRC
+
+commit de358736dc696559ba99c71cf5b2a97508201630
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Tue Feb 24 08:30:23 2009 +0100
+
+    EXA: Adapt to EXA changes in xserver Git.
+    
+    The PrepareAccess hook can now get six different indices.
+    
+    Also remove superfluous instances of #include "exa.h".
+    
+    Note that you may need to run autoheader manually to get config.h.in updated.
+
+commit 752b0218af36a45b333a12f66dfdce8c1e662aa8
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Tue Feb 24 08:13:06 2009 +0100
+
+    EXA: Pass pScrn and info into RadeonCompositeTile.
+    
+    Saves some cycles looking them up.
+
+commit e2e508bc08d993fc108297e9cd2fa0ce183282bc
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Tue Feb 24 08:12:42 2009 +0100
+
+    Only call RADEONWaitForVLine if it might actually do anything useful.
+    
+    Otherwise it and RADEONBiggerCrtcArea show up pretty high in x11perf -aa*text
+    profiles.
+
+commit 5ab8699c97c050424cf813b9a60550aba32446a2
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Tue Feb 24 08:12:23 2009 +0100
+
+    Fix compile warning when building without EXA.
+
+commit 132e61741185f4a1114e66a34bdbf21e08e4d5d8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 23 12:13:41 2009 -0500
+
+    radeon: re-enable load detection output attribute for TV/CV
+
+commit 918d511f6f26d2fdeb63d6e32cd348707b4a2140
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 23 10:22:19 2009 -0500
+
+    RS600: fix up MC setup
+    
+    Please test if you have an RS600
+
+commit 27f8ca2cce65be2bcb3375231886d5444d251808
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 21:18:07 2009 -0500
+
+    R6xx/R7xx: add wait for idle MMIO path
+
+commit 1f783117f79f95f1744681ccc7d80dc0e7b53057
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 21:07:06 2009 -0500
+
+    RBBM_GUICNTL is pre-r6xx only
+
+commit f3933ed200dbf61b05a114f7697f2bb68d92abe7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 20:12:33 2009 -0500
+
+    Don't write new HDP location until we've written the new FB location
+
+commit 7f6801abb4bbd79830999d99ccdbd672a9984df6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 19:02:52 2009 -0500
+
+    radeon: one more 32 -> 64 just to be safe
+    
+    missed this in cadae2a8d9979b2d61eae7d1f7a9ab8f5eb28e83
+
+commit ca22390c8a5256bbc8eeff775d5eebf0e892d890
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 18:58:40 2009 -0500
+
+    R6xx/R7xx: fix up a few more paths
+
+commit cadae2a8d9979b2d61eae7d1f7a9ab8f5eb28e83
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 18:50:49 2009 -0500
+
+    Fix MC setup on systems with more than 512 MB of VRAM
+    
+    many thanks to app4des on IRC for helping me sort this out.
+
+commit 42492c70c481c88911337eefb97ba9d030adf7b6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 19 10:20:28 2009 -0500
+
+    R6xx/R7xx: wait for MC idle when changing the MC
+    
+    should fix bug 19984
+
+commit e6475282486f4895bc68f6b093ecbb1aa6d25f72
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 20:21:13 2009 -0500
+
+    R6xx/R7xx Xv: fix some missing bits from last commit
+
+commit adff8906c9899dde7711382577a63f4a726437ca
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 20:01:57 2009 -0500
+
+    R6xx/R7xx EXA/Xv: properly deal with running out of vertex buffer space
+    
+    As noted by mhopf, if VGT_MAX/MIN_INDX, etc. regs change, you need to re-emit
+    CB blocks to avoid a hang.  So, just set the VGT_MAX_INDX to a reasonably large value
+    in the default state and don't touch them when drawing.  When we run out of VB space,
+    just draw the current buffer, grab a new one, and continue.
+
+commit cf85d4a1d43a3209c7ca9307aede2c2c243f7130
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 19:02:56 2009 -0500
+
+    R6xx/R7xx: reset 3D state after VT switch
+
+commit 6545f0a2967414fa518a78440060b8b69c0146ee
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 18:15:18 2009 -0500
+
+    R6xx/R7xx: fixup accel paths
+
+commit 61311b1de019c5a2344928a47347a966c229b08a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 18 17:27:05 2009 -0500
+
+    Bump version post release
+
 commit 0d3d1f1f7b450dabd3ad7d2df26ad1c72709b29b
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Feb 18 17:24:57 2009 -0500
@@ -42,6 +967,12 @@ Date:   Tue Feb 17 19:52:27 2009 -0500
     in the BlankCRTC command table
     
     fixes bug 16781
+
+commit 3dff20e276615e8b77177689a4a5f8d91b3e8eac
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 17 13:14:38 2009 -0500
+
+    R6xx/R7xx EXA: switch to surface sync packet
 
 commit 31bd6d28dd35021e0e706d4f094989deb856c26a
 Author: Alex Deucher <alexdeucher@gmail.com>
@@ -89,6 +1020,35 @@ Date:   Sun Feb 15 18:24:01 2009 +1000
     Signed-off-by: David S. Miller <davem@davemloft.net>
     Signed-off-by: Dave Airlie <airlied@linux.ie>
 
+commit 7cde00f49649e25fd5816927c7a5e28b608fabcd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 12 17:39:44 2009 -0500
+
+    R6xx/R7xx: switch to drm for wait for idle
+    
+    THIS REQUIRES AN UPDATED DRM
+
+commit e22cd4011b9be437ba89bff568e7fb82b4907d99
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Thu Feb 12 14:46:53 2009 -0500
+
+    R6xx/R7xx EXA: Further optimizations to overlapping copy
+    
+    Diagonal overlapping copies can be reduced to either horizontal- or
+    vertical-only offset, and the one with fewer copies is picked.
+
+commit da08b760bcf3d04d775c4440fafec10657bb1863
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 12 13:53:11 2009 -0500
+
+    R6xx/R7xx EXA: handle running out of vertex space in the copy path
+
+commit e3be312b0b73982c24f1f5d9cf76d7caafae0853
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 12 13:48:36 2009 -0500
+
+    R6xx/R7xx EXA: properly handle non repeat cases in the texture setup
+
 commit 3ff1eb7e50fef22adb6280dd7de77c3ecafdb451
 Author: Michel Dänzer <daenzer@vmware.com>
 Date:   Thu Feb 12 19:24:41 2009 +0100
@@ -124,6 +1084,63 @@ Date:   Thu Feb 12 12:02:57 2009 -0500
 
     AVIVO: fix dualhead/rotation for real
 
+commit 3e5ac32f747bef70903e9cdf41652a827eece707
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 17:40:20 2009 -0500
+
+    Revert "R6xx/R7xx: handle running out of vertex buffer space"
+    
+    This reverts commit 4fd7228de7ad88edf825dbc3039df877795a9479.
+    
+    Causes lockups.
+
+commit bd141aa73a77f68301715fb3b5664e2082327a80
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 15:31:47 2009 -0500
+
+    R6xx/R7xx Xv: switch packed over to Yang's new shader code
+
+commit cb4a1ceaa32d6847b146a31291772e1183972ee7
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Wed Feb 11 15:18:00 2009 -0500
+
+    R6xx/R7xx Xv: Planar - Properly scale Y'CbCr values before converting to RGB
+    
+    According to MPEG-2 spec, Y' and Cb/Cr values are scaled to [16, 235]
+    and [16, 240], respectively, when packed into bytes. Properly take care
+    of the reverse scaling before translating to RGB.
+    
+    Conversion matrix has been simplified to remove 3rd column, as the fitting
+    to [-0.5, 0.5] can be done with scaling.
+    
+    Redundant MOV instructions were also removed, and now only 3 GPRs are required.
+
+commit 4fd7228de7ad88edf825dbc3039df877795a9479
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 14:46:02 2009 -0500
+
+    R6xx/R7xx: handle running out of vertex buffer space
+    
+    draw current VB and start a new one.
+
+commit ec60ef094762901ede4df5cde55c3f162e8c667b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 13:05:27 2009 -0500
+
+    R6xx/R7xx: be more verbose about what function ran out of VB space
+
+commit e7dedbc355970407eddb38370b58a8c96d204c1d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 12:45:14 2009 -0500
+
+    R6xx/R7xx: Move engine idle to sync functions
+
+commit 4a759a907ecd571460c7ff64cd6288380359b04b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 12:29:50 2009 -0500
+
+    adjust alignment
+
 commit d98359b20e1eb8eae893581ab199c299c8352dc4
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Feb 11 12:03:56 2009 -0500
@@ -133,6 +1150,18 @@ Date:   Wed Feb 11 12:03:56 2009 -0500
     This reverts commit 0c4694c58f2ec152b19023626bc7ced891d9da65.
     
     This patch just adds latency and thus isn't a real solution
+
+commit d6c50b221cbab6e726948e2310c1def9fc38da64
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 11:05:02 2009 -0500
+
+    R6xx/R7xx Xv: add support for packed uploads
+
+commit 8e437e996cc3f2c424c342701f4aa6bcf72ad08e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Feb 11 10:53:50 2009 -0500
+
+    R6xx/R7xx Xv: Add native support for packed formats
 
 commit 0c4694c58f2ec152b19023626bc7ced891d9da65
 Author: Alex Deucher <alexdeucher@gmail.com>
@@ -160,6 +1189,12 @@ Date:   Tue Feb 10 10:17:47 2009 -0500
 
     Bump version post RC release
 
+commit 1b4afc1c9f8458f9ab3434418f4ccf959f532ac1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 19:50:37 2009 -0500
+
+    R6xx/R7xx: Add checks to make sure we don't overrun VB space
+
 commit ff6efe513e0c3148812d6a9578d2265522417053
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Mon Feb 9 17:43:24 2009 -0500
@@ -180,11 +1215,66 @@ Date:   Mon Feb 9 16:33:20 2009 -0500
 
     Bump for rc release
 
+commit e85b7a1c5948b5123eddf9dfbb9e002d74fbe9fb
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 14:13:16 2009 -0500
+
+    R6xx/R7xx Xv: fix cache flush buffer size for planar
+
+commit 2a893bac1faffd28dce6d9a9693108196c71e6d3
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 13:18:17 2009 -0500
+
+    R6xx/R7xx Xv: add accelerated uploads for planar formats
+
+commit 231aee18a73805be2f6c962e94a8345dd89fd0df
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 13:02:27 2009 -0500
+
+    R6xx/R7xx Xv: implement native shader for planar formats
+
+commit 6c76bfe8105e3cf4e7e6ea1bfe1235be2079110f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Feb 9 09:47:22 2009 -0500
+
+    R6xx/R7xx UTS: move actual upload to separate function
+    
+    So it can be shared with Xv
+
 commit 04859362ce64ed4ae48305a83c92059899c1db4b
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Sun Feb 8 20:13:06 2009 -0500
 
     Add some missing r6xx/r7xx pci ids
+
+commit 132e4c575dc4675f4995e45f08c53c26bffd999a
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sat Feb 7 13:54:51 2009 -0500
+
+    R6xx/R7xx EXA: Optimize overlapping copy
+    
+    Overlapping copy is now done in chunks proportional to the
+    non-overlapping area.
+    
+    Diagonal overlaps are also handled properly.
+
+commit 8e9ef8ff581892cbe1b7ea56d48b9a1abd70179d
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Sat Feb 7 18:57:47 2009 +0100
+
+    Xv vsync support on r6xx/r7xx cards.
+
+commit 2222f0fd700f100b2e91fac2babe7d1b53f56c3e
+Author: Pierre Ossman <pierre@ossman.eu>
+Date:   Sat Feb 7 18:56:42 2009 +0100
+
+    Fix bad range adjustment in VLINE code.
+
+commit 8ce6c024e31f6a3f5ae6c882738b1e64ae2944a1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Feb 7 10:32:01 2009 -0500
+
+    R6xx/R7xx Xv: fix typos in cache flushing commands
 
 commit bba5d806cc46328ad9e4c521bfeeb2a59f96862b
 Author: Alex Deucher <alexdeucher@gmail.com>
@@ -202,6 +1292,89 @@ Date:   Fri Feb 6 19:20:18 2009 -0500
     
     When rotation is active, virtualX and virtualY change.
 
+commit 1b45936ae614244aa49b1a5d3c7fc39773c4f9b6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 6 18:29:55 2009 -0500
+
+    R6xx/R7xx EXA: Fix typo in DFS
+    
+    noticed by pzad in IRC
+
+commit c06d89e16d5b2553142e8641e66080e1770c1563
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 6 18:07:22 2009 -0500
+
+    R6xx/R7xx EXA: fallback on overlapping blits for now
+    
+    Leave this disabled until we get a proper solution.
+
+commit 1d5fc3febf3470b94c423a1eda5e0683856909df
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 6 14:43:30 2009 -0500
+
+    Revert "r6xx/r7xx EXA: Optimize overlapping copy"
+    
+    This reverts commit 0dfadc1843e0d14b9cc1ee19a72f4fd60a2c495b.
+    
+    This doesn't always work properly.
+
+commit def317e22d072405cd95ddb19d17eacd784ffd9e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 6 11:04:59 2009 -0500
+
+    R6xx/R7xx EXA: add accelerated UTS/DFS hooks
+    
+    I'm not sure how much of a win these are.  I need to
+    do some benchmarking.
+
+commit 0dfadc1843e0d14b9cc1ee19a72f4fd60a2c495b
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Fri Feb 6 10:29:39 2009 -0500
+
+    r6xx/r7xx EXA: Optimize overlapping copy
+    
+    When source and destination blocks are only offset horizontally, it
+    appears to be unnecessary to perform careful, segment-by-segment copy.
+    The code path that does this is taken out completely.
+    
+    For the case where offset is only vertical, copying is now done by
+    height of the non-overlapping area each time, instead of always
+    line-by-line.
+
+commit 3d17bd199423e92d201c20f047d5e699942af976
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 5 19:25:03 2009 -0500
+
+    Revert "R6xx/R7xx EXA: improve overlapping copy performance"
+    
+    This reverts commit b24827c9d211e8a35da53b665385a7733d19910d.
+    
+    This seems to cause corruption in some cases.
+
+commit bf74055f543e7f0664741620fb1fe827ebc12711
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 5 17:31:43 2009 -0500
+
+    r6xx/r7xx EXA: fix corruption when doing sw access
+    
+    need to wait until the engine is idle.  Ideally we wait
+    on a timestamp shadowed in memory, but polling the
+    GRBM_STATUS reg will do for now.
+
+commit b24827c9d211e8a35da53b665385a7733d19910d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 5 16:21:37 2009 -0500
+
+    R6xx/R7xx EXA: improve overlapping copy performance
+    
+    send vertices for each line of the copy, but only draw once
+
+commit 729fe756f809a41494dc161252d82313956e4a4b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 5 16:08:35 2009 -0500
+
+    r6xx/r7xx EXA: cleanup overlapping copy
+
 commit 16e01a5796a8e8b86ad25d3aa45b9e7044dc72d1
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Tue Feb 3 19:46:10 2009 -0500
@@ -210,11 +1383,31 @@ Date:   Tue Feb 3 19:46:10 2009 -0500
     
     Should fix bug 19924
 
+commit d7bf7b9c17add31dc9a115b56a563c7f9bf2cdb6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 3 18:28:38 2009 -0500
+
+    EXA: fix and re-enable Solid() on R7xx
+    
+    missing last bit in alu clause in solid PS
+
 commit 9abb09d5f43320bd27b336612d39d264fe93549f
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Tue Feb 3 11:17:13 2009 -0500
 
     Fix bad rv710 pci id
+
+commit e5b916770946a9eebcb4bd1e6f698220db8c718a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 3 10:48:41 2009 -0500
+
+    Allow rotation on r6xx/r7xx
+
+commit d1f071c7f1dad6babfbcfcc2cb2b722a4987f372
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Feb 3 10:44:10 2009 -0500
+
+    Initial R6xx/R7xx EXA and textured video support
 
 commit c88c3ef6f3db266c1aacba5297b8dfc8b66bf00e
 Author: Wolke Liu <wolke.liu@amd.com>
@@ -257,7 +1450,7 @@ Date:   Fri Jan 30 07:56:14 2009 +1000
     fixes it.
 
 commit bd8021d46e9066e4cd116c03a7b7adcfe2557aff
-Merge: 4f88dd8... 20d5dd3...
+Merge: 4f88dd8 20d5dd3
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Jan 28 14:33:14 2009 -0500
 
@@ -270,7 +1463,7 @@ Date:   Wed Jan 28 14:12:26 2009 -0500
     Move encoder specific data to encoder dev_priv
 
 commit 4f88dd83f290fb38e41256a7f1804008c0f28139
-Merge: 1c5678f... 2ca970c...
+Merge: 1c5678f 2ca970c
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Jan 28 13:13:13 2009 -0500
 
@@ -728,7 +1921,7 @@ Date:   Mon Dec 22 02:18:43 2008 -0500
     	   then use quad.
 
 commit 4d009d14c9c72f6e1bc8100ec8d9b8037ee4e514
-Merge: d52882d... 4e96278...
+Merge: d52882d 4e96278
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Dec 22 16:00:01 2008 +1000
 
@@ -1127,7 +2320,7 @@ Date:   Thu Dec 4 12:28:12 2008 -0500
     Fix up US setup after r3xx bicubic merge
 
 commit e13fba853ba19e6b0f081b9b3d9fa76c38a0f82b
-Merge: d296337... 79bbdd9...
+Merge: d296337 79bbdd9
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Thu Dec 4 12:25:29 2008 -0500
 
@@ -2388,7 +3581,7 @@ Date:   Wed Jun 25 15:50:16 2008 -0400
     - Make sure 3D is idle too (after composite or textured video)
 
 commit 07be302f6dba61dd15918963fae66502230c74b7
-Merge: 8c9b8de... 5245974...
+Merge: 8c9b8de 5245974
 Author: Jerome Glisse <glisse@freedesktop.org>
 Date:   Wed Jun 25 10:30:45 2008 +0200
 
@@ -2510,7 +3703,7 @@ Date:   Fri Jun 20 07:51:27 2008 +1000
     discovered on irc with wpwrak.
 
 commit 5b323a2cbbc412b6dd4e782438b64ee996558d05
-Merge: dd18caa... eed2415...
+Merge: dd18caa eed2415
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Jun 20 07:49:16 2008 +1000
 
@@ -3504,7 +4697,7 @@ Date:   Wed Mar 19 17:58:34 2008 -0400
     defines it.
 
 commit bed9754ad21d6c0a7f61067b04ba31c430a7cecb
-Merge: 55e446b... f71ac0e...
+Merge: 55e446b f71ac0e
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Mar 19 16:06:41 2008 -0400
 
@@ -3887,7 +5080,7 @@ Date:   Thu Mar 6 17:46:00 2008 -0500
     AVIVO: don't add outputs for invalid connectors
 
 commit 600dbe080997a01ceaf6be86723189d518bc1281
-Merge: 594743a... 5b7875d...
+Merge: 594743a 5b7875d
 Author: Alex Deucher <alex@cube.(none)>
 Date:   Thu Mar 6 17:31:37 2008 -0500
 
@@ -3906,7 +5099,7 @@ Date:   Thu Mar 6 14:31:06 2008 -0500
     Bug #14826: Fix a bogus check around xf86SetOperatingState.
 
 commit 651fe23f4c650ed91843dec48db24e18e8b91219
-Merge: 3de2dc8... 766f464...
+Merge: 3de2dc8 766f464
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Thu Mar 6 14:28:27 2008 -0500
 
@@ -4273,7 +5466,7 @@ Date:   Mon Feb 25 07:10:48 2008 +1000
     fixup check for EXA composite pointed out by Alan Swanson
 
 commit 85e470e64f629de72e361c77770e2e29998d1bf4
-Merge: 27ddb39... 1b84c76...
+Merge: 27ddb39 1b84c76
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Sun Feb 24 05:37:22 2008 -0500
 
@@ -4971,7 +6164,7 @@ Date:   Mon Jan 14 16:11:09 2008 -0500
     Fixes bug 14001
 
 commit 729da30c80d6545b75c8faea44754634f477cc09
-Merge: 000741e... 625a885...
+Merge: 000741e 625a885
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Jan 14 10:05:01 2008 -0500
 
@@ -5164,7 +6357,7 @@ Date:   Wed Jan 2 19:48:28 2008 -0500
     RADEON: various avivo tv-out related clean-ups
 
 commit ce34090c758ac91171cb6adb9b8a36e4adbf99cf
-Merge: 2180f04... 30cab1d...
+Merge: 2180f04 30cab1d
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Jan 2 16:41:36 2008 -0500
 
@@ -5371,7 +6564,7 @@ Date:   Fri Dec 21 09:45:55 2007 +1000
     set ddc line correctly post-merge
 
 commit 3c31b96afa20913ad947e68fe0c3a662e5eafbdd
-Merge: eb99c3c... f5e8c18...
+Merge: eb99c3c f5e8c18
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Dec 21 09:36:22 2007 +1000
 
@@ -5412,7 +6605,7 @@ Date:   Wed Dec 19 19:15:19 2007 -0500
     The correct thing to do is filter by the mode's effective memory bandwidth.
 
 commit c1b0b69cc50516c3b7e881b0eb46cb3cd2e9dce6
-Merge: 0e66348... ce4fa1c...
+Merge: 0e66348 ce4fa1c
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Dec 19 11:54:50 2007 -0500
 
@@ -5487,14 +6680,14 @@ Date:   Mon Dec 17 20:20:04 2007 -0500
     RADEON: fix typo from merge
 
 commit 19b9d3708852b7efe2b05249c8359dadb924dd94
-Merge: cf685f3... 29706ca...
+Merge: cf685f3 29706ca
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Dec 17 20:07:32 2007 -0500
 
     Merge branch 'atombios-support' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
 
 commit cf685f37ec874f0aacd09e7c4eb0402c6daec1b0
-Merge: 2a134af... 44d07c4...
+Merge: 2a134af 44d07c4
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Dec 17 20:07:07 2007 -0500
 
@@ -5643,7 +6836,7 @@ Date:   Thu Dec 13 18:45:09 2007 -0500
     - Unify the PLL calculation between legacy and avivo chips
 
 commit f5ac34983411e4c4f41ab1817dce582830f398fd
-Merge: f2b2e08... 6ccf5b3...
+Merge: f2b2e08 6ccf5b3
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Dec 12 22:37:44 2007 -0500
 
@@ -5696,7 +6889,7 @@ Date:   Tue Dec 11 14:04:58 2007 -0500
     RADEON: handle HMDI properly (untested) and fix some merge leftovers
 
 commit 3c22ad977c25d5ca2811821fcac6bb8ecd79994a
-Merge: c9a0cee... f3d2ec3...
+Merge: c9a0cee f3d2ec3
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Dec 11 13:11:15 2007 -0500
 
@@ -5752,7 +6945,7 @@ Date:   Mon Dec 10 15:25:56 2007 +1000
     add support for building against legacy servers similiar to Intel codepaths
 
 commit 9c278cb7fa7f18d13bde053fd75221cfba9da377
-Merge: 6451ea2... cc167b9...
+Merge: 6451ea2 cc167b9
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Dec 10 15:18:03 2007 +1000
 
@@ -5766,7 +6959,7 @@ Date:   Mon Dec 10 15:18:03 2007 +1000
     	src/radeon_output.c
 
 commit 6451ea2dcc4fac762442f699935864f4a8d445f7
-Merge: 0d89556... 5896ca4...
+Merge: 0d89556 5896ca4
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Dec 10 15:08:42 2007 +1000
 
@@ -5826,7 +7019,7 @@ Date:   Thu Dec 6 19:23:06 2007 +1100
     powerpc: build fixes from last merge
 
 commit dbe3d2608ecc9896db9c23b3a347b50748c51e13
-Merge: 48e31cd... 21ed435...
+Merge: 48e31cd 21ed435
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Dec 6 14:22:03 2007 +1000
 
@@ -5927,7 +7120,7 @@ Date:   Fri Nov 30 20:11:42 2007 -0500
     mode or vesafb etc. after running the driver.
 
 commit af0196f7bf0d1d5d211391149c18935d64ed2b06
-Merge: d9858a2... 0175b79...
+Merge: d9858a2 0175b79
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 30 16:40:28 2007 -0500
 
@@ -5959,7 +7152,7 @@ Date:   Fri Nov 30 15:37:42 2007 -0500
     for now.
 
 commit e1945f1f25a34310bd58ce128c8ff27ecc985618
-Merge: b368b0f... df7777b...
+Merge: b368b0f df7777b
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 30 14:30:55 2007 -0500
 
@@ -6180,7 +7373,7 @@ Date:   Wed Nov 21 17:03:39 2007 -0500
     Thanks to AMD for the information
 
 commit a12390c832abe423def60e39cd5a9118e5910339
-Merge: d531792... e74dca1...
+Merge: d531792 e74dca1
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Nov 21 02:24:48 2007 -0500
 
@@ -6233,7 +7426,7 @@ Date:   Wed Nov 21 00:05:42 2007 -0500
     RADEON: store devices ids from bios for each driver output
 
 commit 3975da2ea8cb628f7f66c3f26c5dfa181cd1c532
-Merge: e283aa3... 295ce27...
+Merge: e283aa3 295ce27
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Nov 20 23:52:29 2007 -0500
 
@@ -6333,7 +7526,7 @@ Date:   Tue Nov 20 13:37:00 2007 +1000
     atombios: add all r5xx and r6xx pci ids
 
 commit 5d023e2c3c2ab44ea57ffadc9607025d602c376c
-Merge: 0d1e0c7... c887260...
+Merge: 0d1e0c7 c887260
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 13:02:43 2007 +1000
 
@@ -6358,7 +7551,7 @@ Date:   Tue Nov 20 08:15:58 2007 +1000
     r5xx: cleanups after last merge
 
 commit fe2f7a09050fb7a345a1f52239f8f3c4f1053891
-Merge: 744c8cb... 49055d8...
+Merge: 744c8cb 49055d8
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 08:04:32 2007 +1000
 
@@ -6370,7 +7563,7 @@ Date:   Tue Nov 20 08:04:32 2007 +1000
     	src/radeon_output.c
 
 commit 744c8cb6c293fcaa687566f52901644e699baace
-Merge: e258fbe... e530af7...
+Merge: e258fbe e530af7
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 07:56:33 2007 +1000
 
@@ -6383,14 +7576,14 @@ Date:   Mon Nov 19 16:35:05 2007 +1000
     makes 2-headed cursor work
 
 commit e530af79adf51b3e95a0eca676c915a34dcbf4a7
-Merge: 69e197f... 52aba8d...
+Merge: 69e197f 52aba8d
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 19 00:59:30 2007 -0500
 
     Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
 
 commit 69e197f2c8002aacf2587754c8d3bd63c88f85b1
-Merge: 5e8940f... 862dcab...
+Merge: 5e8940f 862dcab
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 19 00:57:34 2007 -0500
 
@@ -6421,7 +7614,7 @@ Date:   Mon Nov 19 00:39:19 2007 -0500
     Don't assign a gpio for TV
 
 commit 52aba8d73189ba959f19c0437499d5e7a8829827
-Merge: 862dcab... 5e8940f...
+Merge: 862dcab 5e8940f
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Nov 19 15:30:46 2007 +1000
 
@@ -6458,7 +7651,7 @@ Date:   Sun Nov 18 23:43:06 2007 -0500
     fix typo in loop
 
 commit 384cd8f52c89d089c6559e2eedbae45641fcd14e
-Merge: f3f0e4e... 234b607...
+Merge: f3f0e4e 234b607
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Nov 19 14:02:55 2007 +1000
 
@@ -6527,7 +7720,7 @@ Date:   Sat Nov 17 00:34:56 2007 -0500
     WIP: more new ATOM integration work
 
 commit 67db114d97abed7a607467e5d67c7b4ffa2c347e
-Merge: 7d06a87... ea15346...
+Merge: 7d06a87 ea15346
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 16 14:29:53 2007 -0500
 
@@ -6590,7 +7783,7 @@ Date:   Fri Nov 16 14:48:36 2007 +1000
     Add copyright headers
 
 commit 3cfcd2164b400bd0d1cb4ede8eeb01abba9d75c8
-Merge: efac14e... 718bfd3...
+Merge: efac14e 718bfd3
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Thu Nov 15 23:25:39 2007 -0500
 
@@ -7111,7 +8304,7 @@ Date:   Thu Oct 4 11:32:48 2007 +0200
     Surprisingly easy, thanks to George's pci-rework changes.
 
 commit 7addf41885ec5658f531624a9c24ea5bd7d22d19
-Merge: 3a958ba... 78c6bd3...
+Merge: 3a958ba 78c6bd3
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Oct 4 11:06:08 2007 +0200
 
@@ -7570,7 +8763,7 @@ Date:   Tue Aug 28 15:37:11 2007 +0300
     It still uses the old probe method though, this is due to the ati wrapper.
 
 commit 7b38d9a1209f87255e5bb0aefe46a363ce4fb6ef
-Merge: 2e3d43a... 673f799...
+Merge: 2e3d43a 673f799
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Tue Aug 28 16:01:12 2007 +0300
 
@@ -7834,14 +9027,14 @@ Date:   Thu Aug 23 19:56:21 2007 +1000
     updated release numbering for randr 1.2
 
 commit 81a8093f2ffdce59d4e8a44f65f3d5c771fd6425
-Merge: c08e6ec... 53a67e3...
+Merge: c08e6ec 53a67e3
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Aug 23 19:51:47 2007 +1000
 
     Merge remote branch 'origin/randr-1.2'
 
 commit c08e6ec9e7ac06caee53689b0ec50ef6a7a0ba37
-Merge: 5793e87... a0d0fcd...
+Merge: 5793e87 a0d0fcd
 Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
 Date:   Thu Aug 23 19:42:19 2007 +1000
 
@@ -8714,7 +9907,7 @@ Date:   Wed May 30 17:49:01 2007 +1000
     we hang when moving the cursor into the second CRTC.
 
 commit 7fc02657c4d740941fbda5a8823cf45de3eca3f8
-Merge: 800bf53... 4c61c0e...
+Merge: 800bf53 4c61c0e
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Wed May 30 17:27:22 2007 +1000
 
@@ -8769,7 +9962,7 @@ Date:   Tue May 29 07:23:24 2007 +1000
     rs480: only has single dac
 
 commit c52322354fe64725733842b3356798c50e7735d5
-Merge: dd6a966... 975da59...
+Merge: dd6a966 975da59
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Tue May 29 07:21:48 2007 +1000
 
@@ -9251,7 +10444,7 @@ Date:   Tue May 8 19:27:48 2007 +0200
     remove some old mergedfb cruft
 
 commit 76670f665ebec7cdf40a04bf9379cb3ad4417507
-Merge: 83f81ed... a3ee422...
+Merge: 83f81ed a3ee422
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Tue May 8 18:41:25 2007 +0200
 
@@ -9702,7 +10895,7 @@ Date:   Sun Feb 25 23:29:09 2007 +1100
     fix typo
 
 commit 3cfe94d5438961b869766dacbcd13fde8b770ca2
-Merge: 31c018c... 3b43788...
+Merge: 31c018c 3b43788
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Sun Feb 25 23:27:19 2007 +1100
 
@@ -9895,7 +11088,7 @@ Date:   Sun Feb 4 11:28:54 2007 +0200
     case because pATI->PCIInfo is now set after ATIProcessOptions() is called.
 
 commit 9d77aabdff919360f0c9333105436c31f1f5749a
-Merge: ff8ea19... 57822be...
+Merge: ff8ea19 57822be
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Mon Feb 5 19:16:51 2007 +0200
 
@@ -11068,7 +12261,7 @@ Date:   Mon Sep 25 11:35:32 2006 +1000
     radeon: cleanup some bits from superpatch
 
 commit 9827afaa40720a58e2fc029c0bf92ad2fe223d11
-Merge: 10b4b46... ad8259c...
+Merge: 10b4b46 ad8259c
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Sep 25 11:25:17 2006 +1000
 
@@ -11213,7 +12406,7 @@ Date:   Fri Sep 22 06:35:34 2006 +1000
     radeon: add enable display function
 
 commit 4a54886d510f26b29d27e5c9a73647554291b1a6
-Merge: 70264d6... 9fa176c...
+Merge: 70264d6 9fa176c
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Sep 22 06:00:04 2006 +1000
 
@@ -11829,7 +13022,7 @@ Date:   Thu Jun 15 15:35:05 2006 +0200
     Fix some more cosmetic warnings.
 
 commit ec93e08b24f7c0e583970d08bfe18ad142e6b047
-Merge: 051c49d... 6ca9862...
+Merge: 051c49d 6ca9862
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 15:03:27 2006 +0200
 
@@ -11848,7 +13041,7 @@ Date:   Thu Jun 15 21:24:16 2006 +1000
     remove all printf specifier warnings on Linux
 
 commit 051c49d0f002c72d1d8f15f6df264d8b093d4e95
-Merge: a840afc... dfac819...
+Merge: a840afc dfac819
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 13:10:44 2006 +0200
 
@@ -11873,7 +13066,7 @@ Date:   Thu Jun 15 20:59:33 2006 +1000
     some more unused variable cleanups
 
 commit a840afc75a0453b4694e3f987ebdbddc6844a169
-Merge: c90c49d... d511ef4...
+Merge: c90c49d d511ef4
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 12:46:58 2006 +0200
 
