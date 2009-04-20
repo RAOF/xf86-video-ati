@@ -28,6 +28,7 @@ Description: X.Org X server -- ATI display driver wrapper
 Package: xserver-xorg-video-ati-dbg
 Architecture: any
 Depends: xserver-xorg-video-ati (= ${binary:Version}), xserver-xorg-video-mach64-dbg, xserver-xorg-video-r128-dbg, xserver-xorg-video-radeon-dbg,
+Section: debug
 Priority: extra
 Description: X.Org X server -- ATI display driver wrapper (debugging symbols)
  This driver for the X.Org X server (see xserver-xorg for a further description)
@@ -67,6 +68,7 @@ Package: xserver-xorg-video-radeon-dbg
 Architecture: any
 Depends: xserver-xorg-video-radeon (= ${binary:Version})
 Replaces: xserver-xorg-video-ati-dbg (<= 1:6.8.191-1)
+Section: debug
 Priority: extra
 Description: X.Org X server -- ATI Radeon display driver (debugging symbols)
  This driver for the X.Org X server (see xserver-xorg for a further description)
