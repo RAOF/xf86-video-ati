@@ -1,3 +1,13 @@
+xserver-xorg-video-ati (1:6.12.2-2) unstable; urgency=low
+
+  * The standard linux kernels in Debian as of version 2.6.29-1 do not
+    contain the firmware necessary to allow the radeon driver to use 3D
+    acceleration via DRI. This firmware has been moved to the
+    firmware-linux package in non-free, and must be installed to use
+    this feature.
+
+ -- David Nusinow <dnusinow@debian.org>  Wed, 29 Apr 2009 21:14:53 -0400
+
 xserver-xorg-video-ati (1:6.8.1~git20080302.a4398ac3-1) experimental; urgency=low
 
   * The 'ati' Xorg driver module does not contain the 'r128' and 'mach64'
