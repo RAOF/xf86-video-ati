@@ -7,8 +7,10 @@ xserver-xorg-video-ati (1:6.12.2-2) UNRELEASED; urgency=low
 
   [ David Nusinow ]
   * Add a note in NEWS.Debian about firmware-linux
+  * Remove 01_gen_pci_ids.diff patch as the server just uses a built-in 
+    table to choose drivers now
 
- -- David Nusinow <dnusinow@debian.org>  Wed, 29 Apr 2009 21:18:41 -0400
+ -- David Nusinow <dnusinow@debian.org>  Wed, 29 Apr 2009 21:45:58 -0400
 
 xserver-xorg-video-ati (1:6.12.2-1) unstable; urgency=low
 
