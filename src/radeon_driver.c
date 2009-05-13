@@ -1814,16 +1814,6 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	break;
     }
 
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
-        xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-                   "R600 support is mostly incomplete and very experimental\n");
-    }
-
-    if ((info->ChipFamily >= CHIP_FAMILY_RV515) && (info->ChipFamily < CHIP_FAMILY_R600)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-                   "R500 support is under development. Please report any issues to xorg-driver-ati@lists.x.org\n");
-    }
-
     from               = X_PROBED;
     info->LinearAddr   = PCI_REGION_BASE(info->PciInfo, 0, REGION_MEM) & ~0x1ffffffULL;
     pScrn->memPhysBase = info->LinearAddr;
@@ -2778,7 +2768,6 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     xf86Int10InfoPtr  pInt10 = NULL;
     void *int10_save = NULL;
     const char *s;
-    int crtc_max_X, crtc_max_Y;
     RADEONEntPtr pRADEONEnt;
     DevUnion* pPriv;
 
@@ -2984,51 +2973,10 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 
     RADEONPreInitColorTiling(pScrn);
 
-    /* we really need an FB manager... */
-    if (pScrn->display->virtualX) {
-	crtc_max_X = pScrn->display->virtualX;
-	crtc_max_Y = pScrn->display->virtualY;
-	if (info->allowColorTiling) {
-	    if (crtc_max_X > info->MaxSurfaceWidth ||
-		crtc_max_Y > info->MaxLines) {
-		info->allowColorTiling = FALSE;
-		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-			   "Requested desktop size exceeds surface limts for tiling, ColorTiling disabled\n");
-	    }
-	}
-	if (crtc_max_X > 8192)
-	    crtc_max_X = 8192;
-	if (crtc_max_Y > 8192)
-	    crtc_max_Y = 8192;
-    } else {
-	/*
-	 * note that these aren't really the CRTC limits, they're just
-	 * heuristics until we have a better memory manager.
-	 */
-	if (pScrn->videoRam <= 16384) {
-	    crtc_max_X = 1600;
-	    crtc_max_Y = 1200;
-	} else if (IS_R300_VARIANT) {
-	    crtc_max_X = 2560;
-	    crtc_max_Y = 1200;
-	} else if (IS_AVIVO_VARIANT) {
-	    crtc_max_X = 2560;
-	    crtc_max_Y = 1600;
-	} else {
-	    crtc_max_X = 2048;
-	    crtc_max_Y = 1200;
-	}
-    }
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Max desktop size set to %dx%d\n",
-	       crtc_max_X, crtc_max_Y);
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "For a larger or smaller max desktop size, add a Virtual line to your xorg.conf\n");
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "If you are having trouble with 3D, "
-	       "reduce the desktop size by adjusting the Virtual line to your xorg.conf\n");
-
-    /*xf86CrtcSetSizeRange (pScrn, 320, 200, info->MaxSurfaceWidth, info->MaxLines);*/
-    xf86CrtcSetSizeRange (pScrn, 320, 200, crtc_max_X, crtc_max_Y);
+    if (IS_AVIVO_VARIANT)
+	xf86CrtcSetSizeRange (pScrn, 320, 200, 8192, 8192);
+    else
+	xf86CrtcSetSizeRange (pScrn, 320, 200, 4096, 4096);
 
     RADEONPreInitDDC(pScrn);
 
@@ -3763,6 +3711,10 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
             return FALSE;
         }
     }
+
+    /* Clear the framebuffer */
+    memset(info->FB + pScrn->fbOffset, 0,
+           pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
 
     /* set the modes with desired rotation, etc. */
     if (!xf86SetDesiredModes (pScrn))
@@ -5659,6 +5611,10 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
 	radeon_crtc_modeset_ioctl(config->crtc[i], TRUE);
 
     pScrn->vtSema = TRUE;
+
+    /* Clear the framebuffer */
+    memset(info->FB + pScrn->fbOffset, 0,
+           pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
 
     if (!xf86SetDesiredModes(pScrn))
 	return FALSE;
