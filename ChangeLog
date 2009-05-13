@@ -1,3 +1,251 @@
+commit 248b435ae63d7122971a8021f8aa8e0963d8a850
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri May 8 12:55:26 2009 -0400
+
+    R3xx/R4xx tex vid: increase the guardband limit for rendering with a tri
+    
+    limit goes from 2880 to 4021 now that we've switched to 1/12 subpixel mode.
+    
+    This allows us to render with a clipped tri at higher resolutions preventing
+    diagonal tearing.
+
+commit cd03bc17ccb30f1598af61c455b623c14ea42e6b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri May 8 12:54:00 2009 -0400
+
+    r3xx-r5xx: switch to 1/12 subpixel precision
+    
+    - based on similar patch in Jerome's cs ddx tree
+    - also fix clipping offsets
+    - should eventually allow for 4k render targets
+    - mesa driver uses 1/12 mode, this avoids changing the
+      subpixel mode when switching between ddx and mesa
+
+commit 26472556fcbbf13e2e4ac2355d587651d6c8f662
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri May 8 12:37:47 2009 -0400
+
+    R3xx-R5xx: don't set TX_OFFSET_RS in RS_INST_COUNT
+    
+    Isn't necessary and seems to cause problems for RS690 users
+
+commit 96667eebd8c7949873d63454746129d270bb36e5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun May 3 13:09:39 2009 -0400
+
+    RS690: gpio/connector fixes
+    
+    Fixes bug 21521
+
+commit faa782c7a56de99900c9b3f54714f010ce73dcf3
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 16 11:58:19 2009 -0400
+
+    RS690/RS740: fix connector enumeration in some cases
+    
+    Should fix Masta-G's issue reported on IRC.
+
+commit f2c0fa5e3d96f1bcc916e1a36268bdc7acd4cda7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed May 6 12:24:35 2009 -0400
+
+    AVIVO: set default cursor mode in cursor init
+    
+    Should fix bug 21557
+
+commit b6cd47ec007af2022af180f537a7ba01244b2c88
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri May 8 12:21:33 2009 -0400
+
+    AVIVO: fix cursor corruption bands for real
+    
+    Don't have to leave both cursors enabled, just have to use
+    the same mode for both cursors whether or not they are enabled.
+
+commit cb8081a8e70b3354037f8ca99380288fe2eb9828
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 4 12:57:36 2009 -0400
+
+    AVIVO: move cusor offscreen when disabling
+    
+    Adapted from Yang's patch. Setting size to zero is
+    actually a 1x1 cursor.
+
+commit 0e49efbe8c271c26cec4dfca063c73755dc2d25f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun May 3 18:52:00 2009 -0400
+
+    r2xx-r4xx: fix typo in last i2c fix and clarify hw i2c pin sel
+
+commit 421085949e195596000e37ea6693489db7c075b5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 29 12:38:15 2009 -0400
+
+    radeon: fix several dpms issues
+    
+    - atom dpms was unblanking for standby/suspend
+    - return if r600+ in radeon_crtc_modeset_ioctl()
+    - remove seprate standby/suspend handling in legacy
+      crtc dpms.  we turn the outputs off, so turn the
+      crtcs off too.
+    - disable the crtcs in legacy crtc dpms
+    - move radeon_crtc_modeset_ioctl() calls to radeon_crtc_dpms()
+      so they will get called for both atom and legacy paths
+    
+    Should fix bug 21321
+
+commit fbb04716e4c28347c9e627f3cc78b4420e9abfa0
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 29 01:55:10 2009 -0400
+
+    AVIVO: better fix for cursor flickering/corruption issues
+    
+    Should prevent ghost cursor from being left on screen.
+
+commit 666b0ff9f7fd216f7c31315b284c4bf389a51007
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 29 01:05:31 2009 -0400
+
+    R6xx/r7xx: fix CURSOR_SWAPPING_* macros
+    
+    r6xx/r7xx have different swapper regs
+
+commit 998fd24417d1e86ad70e15a2f55bb81320b28987
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 28 19:28:25 2009 -0400
+
+    AVIVO: fix cursor corruption/flickering issues
+    
+    When both crtcs are enabled, both cursors need to be enabled
+    or you get corruption bands.
+    
+    Thanks to Yang Zhao for figuring this out.
+
+commit 97c63973ff187744fe2bb72bdd7bcd16cb95e33f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 28 12:33:24 2009 -0400
+
+    RV410: SE variants only have 1 quad pipe
+    
+    Should fix EXA corruption with the 3D engine.
+    Mesa and drm patches forthcoming.
+    
+    Reported by Kano on IRC.
+
+commit f2aaa70871f87f39d0c08b4652840ec4b3dc74a4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 27 03:35:24 2009 -0400
+
+    AVIVO: make sure cursor width isn't negative
+
+commit db375c70a00865976ddb3b32bb4b25113735bf1e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 23 14:06:06 2009 -0400
+
+    r2xx/r3xx/r4xx: further i2c fixups
+    
+    - hw i2c engine has pin selection on r2xx/r2xx/r3xx chips
+    - also switch hw i2c pin sel for external tmds
+
+commit 0ea75453eaa5bb41bf12666d454a203ee1481461
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 22 14:31:44 2009 -0400
+
+    AVIVO: fix for cursor corruption issue
+
+commit 3b1d26f649257a13d2e929a000f911cf8016d369
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 21 12:06:24 2009 -0400
+
+    RS690: add quirk for acer board
+    
+    thanks to Gino Badouri for testing
+
+commit 3a7be25ef1b99b30581517ffad558d52226664c8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 20 13:05:18 2009 -0400
+
+    Endian fixes for object table
+
+commit dd852a4044a97bf68ad64ad2c55b3ef258d7f732
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Apr 19 12:13:18 2009 -0400
+
+    Remove old messages
+    
+    R5xx/r6xx support isn't really experimental anymore
+
+commit 4b042f0c0f0389529b736dccd9646a97b5297a7a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Apr 17 10:30:21 2009 +1000
+
+    radeon: tweak ddc fix for all r300s.
+    
+    Alex seems to think this might affect some other chips
+
+commit 1ea41d7f4834037c0d16b1091f8e8e8c126f406a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Apr 17 10:24:15 2009 +1000
+
+    radeon: fix DDC on rv410 VGA ports for non-atom use.
+    
+    The rv410 hw i2c block appears to hold down whatever i2c lines
+    it is connected to when in reset, so when doing DDC change hw i2c to
+    point at different i2c lines.
+
+commit 36d6b5f3edbb30b273aceb2452265bb7ce1ab9e0
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 16 10:41:28 2009 -0400
+
+    Revert "DCE3/3.2: cleanup dpms after previous changes"
+    
+    This reverts commit f8c7d6a6162196a743f6885ecaf63ba50de1722a.
+    
+    This is apparently still needed for some setups, however, I can't
+    reproduce this locally anymore.
+
+commit f3b0701ac78c08b8e26145bb697e03d19d742242
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 10 09:37:15 2009 -0400
+
+    radeon: fix tmds_pll randr property
+
+commit 3c348091ae5d88ef3cb850889ca74674e0530b4e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 9 20:17:03 2009 -0400
+
+    radeon: remove old crtc size heuristics
+    
+    IIRC, the old randr code used to use this to use for front buffer sizing,
+    but it has since been changed.
+
+commit 8c86ac945055d6168016a2c8f4600462cd63bfec
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 9 19:59:19 2009 -0400
+
+    R6xx/R7xx: cleanup macro
+
+commit a5597cbf9c7573a247788a5c3b33ca872dd3bd10
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Apr 9 09:41:56 2009 +0200
+
+    Clear the framebuffer before initializing modes.
+    
+    Fixes garbage being visible shortly on server startup or when VT switching back
+    to X.
+
+commit 2e9ab215b026a629bfb7fdf11389ef486bdd3409
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 8 13:34:23 2009 -0400
+
+    radeon: chip family typo
+
+commit 031cacafb6b7de4226d13b444c195761bc934f43
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Apr 8 13:10:01 2009 -0400
+
+    R6xx/R7xx: set proper 3D client driver name for r600
+
 commit 1b02b93895c31a0c9d641e47b46dce43b40edd97
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Apr 8 10:34:44 2009 -0400
