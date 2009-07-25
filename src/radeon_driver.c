@@ -1932,7 +1932,6 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	}
     }
 
-
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s card detected\n",
 	       (info->cardType==CARD_PCI) ? "PCI" :
 		(info->cardType==CARD_PCIE) ? "PCIE" : "AGP");
@@ -1952,12 +1951,15 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	if (strcmp(s, "AGP") == 0) {
 	    info->cardType = CARD_AGP;
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into AGP mode\n");
-	} else if (strcmp(s, "PCI") == 0) {
-	    info->cardType = CARD_PCI;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI mode\n");
-	} else if (strcmp(s, "PCIE") == 0) {
-	    info->cardType = CARD_PCIE;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI Express mode\n");
+	} else if ((strcmp(s, "PCI") == 0) ||
+		   (strcmp(s, "PCIE") == 0)) {
+	    if (info->ChipFamily >= CHIP_FAMILY_RV380) {
+		info->cardType = CARD_PCIE;
+		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI Express mode\n");
+	    } else {
+		info->cardType = CARD_PCI;
+		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI mode\n");
+	    }
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
 		       "Invalid BusType option, using detected type\n");
