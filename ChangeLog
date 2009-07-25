@@ -1,3 +1,124 @@
+commit b1f005bf16064db62ae35d362f69250427a45b3b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Jul 25 14:19:38 2009 -0400
+
+    radeon: Set PCI/PCIE bus type properly per asic
+    
+    - r1xx-rv350 chips have the old pci gart
+    - rv380+ chips have newer pcie gart
+    
+    Select the right kind regardless of whether the user selects
+    PCI or PCIE.
+
+commit a591ba2a45004bce9d1c51fd813edf05d249e50a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jul 14 18:13:27 2009 -0400
+
+    Add an r420 AGP quirk
+    
+    fixes bug 22726
+
+commit 2abbe22339552c799727433ab7f147b6dc621cbf
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jul 9 12:48:06 2009 -0400
+
+    RV280: another AGP quirk
+    
+    fdo bug 12544
+
+commit 9d285dbc55a45f9b852aa0c82a5aa572c5284da7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jul 9 12:42:45 2009 -0400
+
+    RV280: Add an AGP quirk
+    
+    lp bug 370205 via fdo bug 12544
+
+commit e1a582fd40f22d88b94a591c6886fb1b2154c3df
+Author: Fredrik Höglund <fredrik@kde.org>
+Date:   Mon Jun 29 22:38:26 2009 +0200
+
+    Check if the composite op is supported in R200CheckComposite.
+
+commit d75287b84e830a655f17060de8fea55777b6db55
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Sun Jun 28 16:54:32 2009 -0400
+
+    R6xx/R7xx: fix pixel centers
+    
+    Make sure we are using GL mode (centers at 0.5) rather
+    than D3D mode (centers at 0.0).  This also fixes fdo
+    bug 21963.
+
+commit 2ba11f922321076027f0a08ec5bd079871ae73f8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sun Jun 28 16:20:10 2009 -0400
+
+    Add some missing M96 pci ids
+    
+    fixes fdo bug 22404
+
+commit 6dd7659ef17cf400be94676bcaf6c115fd537439
+Author: Markus Gapp <markus.gapp@gmx.net>
+Date:   Sat Jun 13 11:51:29 2009 -0400
+
+    Add quirk for asus hd3450 board
+    
+    Fixes bug 22266
+
+commit a00db22e52631ccbf5bbcbd8175802f9b3407521
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 4 09:57:22 2009 -0400
+
+    atom: connector quirk
+    
+    Some r6xx cards have a VGA and an HDMI port with
+    a shared ddc line listed as an HDMI port with both
+    analog and digital encoders.
+    
+    Fixes bug 19943
+
+commit 486684ba68bc54c54cf86a9e69d224a13bb0a00d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri May 29 16:29:50 2009 -0400
+
+    Add RV740 (HD4770) support
+    
+    Verified by ernstp on IRC
+
+commit 74cb2aba79049b792c22abf25ade3693b802b260
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 18 10:48:25 2009 -0400
+
+    r4xx: Add some missing pci ids
+    
+    Noticed by Romain in bug 21798
+
+commit a5a0c4626a982a1823146eab82efc94ea7853b62
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu May 14 15:48:54 2009 -0400
+
+    radeon: try harder when checking if a card is posted
+    
+    fixes debian bug 524280, possibly others.
+
+commit 94d9bb93013c71cb212ea46458cf063cf2aba2fa
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu May 14 10:24:07 2009 +0200
+
+    Pre-R600 EXA: Fix coordinate limits off-by-one error.
+    
+    Fixes http://bugs.freedesktop.org/show_bug.cgi?id=21598 .
+    (cherry picked from commit 22e39392297fa11003df90c175db3c449d8f9853)
+
+commit f006899280506c9704c0105fb9869ce9f67fdf4e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 11 02:22:13 2009 -0400
+
+    RV770: add missing pci id
+    
+    Fixes bug 21209
+
 commit 248b435ae63d7122971a8021f8aa8e0963d8a850
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Fri May 8 12:55:26 2009 -0400
