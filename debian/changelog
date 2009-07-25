@@ -3,8 +3,9 @@ xserver-xorg-video-ati (1:6.12.2-3) UNRELEASED; urgency=low
   * Pull upstream commits from 6.12-branch up to commit b1f005bf:
     + Try harder when checking if a card is posted, closes: #524280.
   * Add README.source, bump Standards-Version to 3.8.2.
+  * Remove the unused patching systems and drop quilt from Build-Depends.
 
- -- Brice Goglin <bgoglin@debian.org>  Sat, 25 Jul 2009 20:50:41 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Sat, 25 Jul 2009 21:01:53 +0200
 
 xserver-xorg-video-ati (1:6.12.2-2) unstable; urgency=low
 
