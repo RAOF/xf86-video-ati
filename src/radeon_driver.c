@@ -2057,6 +2057,9 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
     }
 
     info->useEXA = FALSE;
+    /* if we have shadow fb bail */
+    if (info->r600_shadow_fb) 
+	return TRUE;
 
     if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT,
