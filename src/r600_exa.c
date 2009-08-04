@@ -315,6 +315,7 @@ R600DoneSolid(PixmapPtr pPix)
     if ((info->ChipFamily == CHIP_FAMILY_RV610) ||
 	(info->ChipFamily == CHIP_FAMILY_RV620) ||
 	(info->ChipFamily == CHIP_FAMILY_RS780) ||
+	(info->ChipFamily == CHIP_FAMILY_RS880) ||
 	(info->ChipFamily == CHIP_FAMILY_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
@@ -553,6 +554,7 @@ R600DoCopy(ScrnInfoPtr pScrn)
     if ((info->ChipFamily == CHIP_FAMILY_RV610) ||
 	(info->ChipFamily == CHIP_FAMILY_RV620) ||
 	(info->ChipFamily == CHIP_FAMILY_RS780) ||
+	(info->ChipFamily == CHIP_FAMILY_RS880) ||
 	(info->ChipFamily == CHIP_FAMILY_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
@@ -1715,6 +1717,7 @@ static void R600DoneComposite(PixmapPtr pDst)
     if ((info->ChipFamily == CHIP_FAMILY_RV610) ||
 	(info->ChipFamily == CHIP_FAMILY_RV620) ||
 	(info->ChipFamily == CHIP_FAMILY_RS780) ||
+	(info->ChipFamily == CHIP_FAMILY_RS880) ||
 	(info->ChipFamily == CHIP_FAMILY_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
