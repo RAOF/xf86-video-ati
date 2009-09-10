@@ -92,9 +92,11 @@
 				/* X and server generic header files */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86RAC.h"
 #include "xf86RandR12.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
+#include "xf86RAC.h"
 #include "xf86Resources.h"
+#endif
 #include "xf86cmap.h"
 #include "vbe.h"
 
@@ -2057,6 +2059,9 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
     }
 
     info->useEXA = FALSE;
+    /* if we have shadow fb bail */
+    if (info->r600_shadow_fb) 
+	return TRUE;
 
     if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT,
@@ -2229,9 +2234,6 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 	    return FALSE;
 	}
     }
-
-    if (info->ChipFamily == CHIP_FAMILY_RS880)
-	return FALSE;
 
     if (!xf86ReturnOptValBool(info->Options, OPTION_DRI, TRUE)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -2873,12 +2875,14 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 	       PCI_DEV_DEV(info->PciInfo),
 	       PCI_DEV_FUNC(info->PciInfo));
 
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(info->pEnt->index, 0, ResExclusive))
 	goto fail;
 
     xf86SetOperatingState(resVga, info->pEnt->index, ResUnusedOpr);
 
     pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_VIEWPORT | RAC_CURSOR;
+#endif
     pScrn->monitor     = pScrn->confScreen->monitor;
 
    /* Allocate an xf86CrtcConfig */
