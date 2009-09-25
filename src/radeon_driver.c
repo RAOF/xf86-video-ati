@@ -3727,6 +3727,8 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     memset(info->FB + pScrn->fbOffset, 0,
            pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
 
+    pScrn->pScreen = pScreen;
+
     /* set the modes with desired rotation, etc. */
     if (!xf86SetDesiredModes (pScrn))
 	return FALSE;
