@@ -503,7 +503,12 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
     }
 
     if (pMaskPicture) {
-	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
+	PixmapPtr pMaskPixmap;
+
+	if (!pMaskPicture->pDrawable)
+	    RADEON_FALLBACK(("Solid or gradient pictures not supported yet\n"));
+
+	pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
 	if (pMaskPixmap->drawable.width > 2047 ||
 	    pMaskPixmap->drawable.height > 2047) {
@@ -833,7 +838,12 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     }
 
     if (pMaskPicture) {
-	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
+	PixmapPtr pMaskPixmap;
+
+	if (!pMaskPicture->pDrawable)
+	    RADEON_FALLBACK(("Solid or gradient pictures not supported yet\n"));
+
+	pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
 	if (pMaskPixmap->drawable.width > 2047 ||
 	    pMaskPixmap->drawable.height > 2047) {
@@ -1213,7 +1223,12 @@ static Bool R300CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
     }
 
     if (pMaskPicture) {
-	PixmapPtr pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
+	PixmapPtr pMaskPixmap;
+
+	if (!pMaskPicture->pDrawable)
+	    RADEON_FALLBACK(("Solid or gradient pictures not supported yet\n"));
+
+	pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
 	if (pMaskPixmap->drawable.width > max_tex_w ||
 	    pMaskPixmap->drawable.height > max_tex_h) {
