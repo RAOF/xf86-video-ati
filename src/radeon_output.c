@@ -236,10 +236,40 @@ radeon_ddc_connected(xf86OutputPtr output)
 	case CONNECTOR_HDMI_TYPE_A:
 	case CONNECTOR_HDMI_TYPE_B:
 	    if (radeon_output->shared_ddc) {
+		xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR (output->scrn);
+		int i;
+
 		if (MonInfo->rawData[0x14] & 0x80) /* if it's digital and DVI/HDMI/etc. */
 		    MonType = MT_DFP;
 		else
 		    MonType = MT_NONE;
+
+		for (i = 0; i < config->num_output; i++) {
+		    if (output != config->output[i]) {
+			RADEONOutputPrivatePtr other_radeon_output =
+			    config->output[i]->driver_private;
+			if (radeon_output->devices & other_radeon_output->devices) {
+#ifndef EDID_COMPLETE_RAWDATA
+			    if (radeon_output->ConnectorType == CONNECTOR_HDMI_TYPE_A) {
+				MonType = MT_NONE;
+				break;
+			    }
+#else
+			    if (xf86MonitorIsHDMI(MonInfo)) {
+				if (radeon_output->ConnectorType == CONNECTOR_DVI_D) {
+				    MonType = MT_NONE;
+				    break;
+				}
+			    } else {
+				if (radeon_output->ConnectorType == CONNECTOR_HDMI_TYPE_A) {
+				    MonType = MT_NONE;
+				    break;
+				}
+			    }
+#endif
+			}
+		    }
+		}
 	    } else
 		MonType = MT_DFP;
 	    break;
@@ -333,6 +363,22 @@ radeon_dpms(xf86OutputPtr output, int mode)
 
     if ((mode == DPMSModeOn) && radeon_output->enabled)
 	return;
+
+    if ((mode != DPMSModeOn) && radeon_output->shared_ddc) {
+	xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR (output->scrn);
+	int i;
+
+	for (i = 0; i < config->num_output; i++) {
+	    if (output != config->output[i]) {
+		RADEONOutputPrivatePtr other_radeon_output =
+		    config->output[i]->driver_private;
+		if (radeon_output->devices & other_radeon_output->devices) {
+		    if (output->status == XF86OutputStatusDisconnected)
+			return;
+		}
+	    }
+	}
+    }
 
     if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_output_dpms(output, mode);
