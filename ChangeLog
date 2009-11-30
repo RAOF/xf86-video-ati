@@ -1,3 +1,24 @@
+commit b7c14b00ff6a217cb69727b384cc4f4b433a907e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 11 09:31:46 2009 +1000
+
+    ati 6.12.4
+
+commit 93df2faf1ea2008248566326f10ed737e7f6fc66
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 11 09:19:17 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    
+    Conflicts:
+    
+    	src/drmmode_display.c
+
 commit 9589d19eb8cbf7b1a978c7ea3eaacb328fb48cd8
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Sep 10 13:02:26 2009 +1000

@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.12.4-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Mon, 30 Nov 2009 16:01:49 +0200
+
 xserver-xorg-video-ati (1:6.12.3-1) unstable; urgency=low
 
   * New upstream release.
