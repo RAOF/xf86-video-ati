@@ -7,8 +7,9 @@ xserver-xorg-video-ati (1:6.12.4-1) UNRELEASED; urgency=low
   [ Brice Goglin ]
   * Properly generate each binary package substvars so as to fix shlibs
     dependencies, closes: #558290.
+  * Build against xserver 1.7.
 
- -- Brice Goglin <bgoglin@debian.org>  Thu, 03 Dec 2009 16:37:07 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Thu, 03 Dec 2009 16:37:52 +0100
 
 xserver-xorg-video-ati (1:6.12.3-1) unstable; urgency=low
 
