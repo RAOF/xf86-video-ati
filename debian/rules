@@ -54,7 +54,7 @@ build-stamp: obj-$(DEB_BUILD_GNU_TYPE)/config.status
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp
+	rm -f build-stamp install-stamp
 
 	rm -f config.cache config.log config.status
 	rm -f */config.cache */config.log */config.status
@@ -67,16 +67,22 @@ clean:
 
 	dh_clean
 
-install: build
+.PHONY: install
+install: install-stamp
+install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
 
 	cd obj-$(DEB_BUILD_GNU_TYPE) && $(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
+	>$@
+
+serverabi-%: install
+	$(MAKE) -f debian/rules serverabi PACKAGE=xserver-xorg-video-$*
 
 # Build architecture-dependent files here.
-binary-arch: build install serverabi
+binary-arch: build install serverabi-ati serverabi-radeon
 	dh_testdir
 	dh_testroot
 
@@ -91,7 +97,6 @@ binary-arch: build install serverabi
 	dh_fixperms
 	dh_installdeb
 	dh_shlibdeps -- --warnings=6
-	cp -f debian/xserver-xorg-video-ati.substvars debian/xserver-xorg-video-radeon.substvars # xsfbs serverabi hack
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
