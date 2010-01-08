@@ -1,6 +1,10 @@
 xserver-xorg-video-ati (1:6.12.4-2) UNRELEASED; urgency=low
 
+  [ Julien Cristau ]
   * Drop obsolete build-dep on xf86miscproto.
+
+  [ Cyril Brulebois ]
+  * Add ${misc:Depends} to xserver-xorg-video-*-dbg's Depends.
 
  -- Julien Cristau <jcristau@debian.org>  Sun, 06 Dec 2009 14:55:44 +0100
 
