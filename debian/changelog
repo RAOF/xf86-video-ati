@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.12.4-2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.12.4-2) unstable; urgency=low
 
   [ Julien Cristau ]
   * Drop obsolete build-dep on xf86miscproto.
@@ -6,8 +6,9 @@ xserver-xorg-video-ati (1:6.12.4-2) UNRELEASED; urgency=low
   [ Cyril Brulebois ]
   * Add ${misc:Depends} to xserver-xorg-video-*-dbg's Depends.
   * Wrap all Depends while I'm at it.
+  * Upload to unstable.
 
- -- Julien Cristau <jcristau@debian.org>  Sun, 06 Dec 2009 14:55:44 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Fri, 08 Jan 2010 01:16:00 +0100
 
 xserver-xorg-video-ati (1:6.12.4-1) experimental; urgency=low
 
