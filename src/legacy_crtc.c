@@ -670,8 +670,7 @@ legacy_crtc_dpms(xf86CrtcPtr crtc, int mode)
     unsigned char *RADEONMMIO = pRADEONEnt->MMIO;
 
     if (radeon_crtc->crtc_id)
-	mask = (RADEON_CRTC2_EN |
-		RADEON_CRTC2_DISP_DIS |
+	mask = (RADEON_CRTC2_DISP_DIS |
 		RADEON_CRTC2_VSYNC_DIS |
 		RADEON_CRTC2_HSYNC_DIS |
 		RADEON_CRTC2_DISP_REQ_EN_B);
@@ -683,7 +682,7 @@ legacy_crtc_dpms(xf86CrtcPtr crtc, int mode)
     switch(mode) {
     case DPMSModeOn:
 	if (radeon_crtc->crtc_id) {
-	    OUTREGP(RADEON_CRTC2_GEN_CNTL, RADEON_CRTC2_EN, ~mask);
+	    OUTREGP(RADEON_CRTC2_GEN_CNTL, RADEON_CRTC2_EN, ~(RADEON_CRTC2_EN | mask));
 	} else {
 	    OUTREGP(RADEON_CRTC_GEN_CNTL, RADEON_CRTC_EN, ~(RADEON_CRTC_EN | RADEON_CRTC_DISP_REQ_EN_B));
 	    OUTREGP(RADEON_CRTC_EXT_CNTL, 0, ~mask);
@@ -693,7 +692,7 @@ legacy_crtc_dpms(xf86CrtcPtr crtc, int mode)
     case DPMSModeSuspend:
     case DPMSModeOff:
 	if (radeon_crtc->crtc_id) {
-	    OUTREGP(RADEON_CRTC2_GEN_CNTL, mask, ~mask);
+	    OUTREGP(RADEON_CRTC2_GEN_CNTL, mask, ~(RADEON_CRTC2_EN | mask));
 	} else {
 	    OUTREGP(RADEON_CRTC_GEN_CNTL, RADEON_CRTC_DISP_REQ_EN_B, ~(RADEON_CRTC_EN | RADEON_CRTC_DISP_REQ_EN_B));
 	    OUTREGP(RADEON_CRTC_EXT_CNTL, mask, ~mask);
@@ -912,6 +911,11 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 			   | ((mode->Flags & V_INTERLACE)
 			      ? RADEON_CRTC_INTERLACE_EN
 			      : 0));
+
+    /* 200M freezes on VT switch sometimes if CRTC is disabled */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480))
+	save->crtc_gen_cntl |= RADEON_CRTC_EN;
 
     save->crtc_ext_cntl |= (RADEON_XCRT_CNT_EN|
 			    RADEON_CRTC_VSYNC_DIS |
@@ -1162,6 +1166,11 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 			     | ((mode->Flags & V_INTERLACE)
 				? RADEON_CRTC2_INTERLACE_EN
 				: 0));
+
+    /* 200M freezes on VT switch sometimes if CRTC is disabled */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480))
+	save->crtc2_gen_cntl |= RADEON_CRTC2_EN;
 
     save->disp2_merge_cntl = info->SavedReg->disp2_merge_cntl;
     save->disp2_merge_cntl &= ~(RADEON_DISP2_RGB_OFFSET_EN);

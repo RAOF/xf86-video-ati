@@ -1362,6 +1362,18 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     if (aper_size > mem_size)
 	mem_size = aper_size;
 
+    /* don't map the whole FB in the internal address space.
+     * we don't currently use fb space larger than the aperture
+     * size and on cards with more than 512 MB of vram, this can overflow
+     * the internal top of gart calculation on some systems.
+     * Limit it to cards with more than 512 MB as this causes problems
+     * on some other cards due to the way the ddx and drm set up the
+     * internal memory map.
+     * See fdo bug 24301.
+     */
+    if (mem_size > 0x20000000)
+	mem_size = aper_size;
+
 #ifdef XF86DRI
     /* Apply memory map limitation if using an old DRI */
     if (info->directRenderingEnabled && !info->dri->newMemoryMap) {
@@ -1947,6 +1959,11 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
     if (info->cardType == CARD_PCIE && info->IsIGP)
 	info->cardType = CARD_PCI;
 
+    /* some rs4xx cards report as agp */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480))
+	info->cardType = CARD_PCI;
+
     if ((info->ChipFamily >= CHIP_FAMILY_R600) && info->IsIGP)
 	info->cardType = CARD_PCIE;
 
@@ -1960,7 +1977,13 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into AGP mode\n");
 	} else if ((strcmp(s, "PCI") == 0) ||
 		   (strcmp(s, "PCIE") == 0)) {
-	    if (info->ChipFamily >= CHIP_FAMILY_RV380) {
+	    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+		(info->ChipFamily == CHIP_FAMILY_RS480) ||
+		(info->ChipFamily == CHIP_FAMILY_RS690) ||
+		(info->ChipFamily == CHIP_FAMILY_RS740)) {
+		info->cardType = CARD_PCI;
+		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI mode\n");
+	    } else if (info->ChipFamily >= CHIP_FAMILY_RV380) {
 		info->cardType = CARD_PCIE;
 		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI Express mode\n");
 	    } else {
@@ -3726,6 +3749,8 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     /* Clear the framebuffer */
     memset(info->FB + pScrn->fbOffset, 0,
            pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
+
+    pScrn->pScreen = pScreen;
 
     /* set the modes with desired rotation, etc. */
     if (!xf86SetDesiredModes (pScrn))
