@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.12.4-3) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.12.4-3) unstable; urgency=low
 
   [ Julien Cristau ]
   * Rename the build directory to not include DEB_BUILD_GNU_TYPE for no
@@ -8,7 +8,7 @@ xserver-xorg-video-ati (1:6.12.4-3) UNRELEASED; urgency=low
   * Pull upstream 6.12-branch up to commit 712ac98a.
     + Some EXA fixes, closes: #565506.
 
- -- Julien Cristau <jcristau@debian.org>  Sat, 16 Jan 2010 16:57:39 +0000
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 27 Jan 2010 16:44:30 +0100
 
 xserver-xorg-video-ati (1:6.12.4-2) unstable; urgency=low
 
