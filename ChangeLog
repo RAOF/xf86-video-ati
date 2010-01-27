@@ -1,3 +1,211 @@
+commit 712ac98af7cd862e802a8f735318dfb9c6a7ad28
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 19 11:59:38 2010 -0500
+
+    ATOM: Upstream parser updates
+
+commit 664ab901c09872c27d3d2ed76c9a48c10ce274da
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jan 7 01:52:35 2010 -0500
+
+    radeon: updated ObjectID.h
+
+commit 687521bd16027c26e1b9f206cdedb19e2fce8910
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 21 17:32:40 2009 -0500
+
+    ATOM: add new power table defs
+
+commit a89b7b880a464cbd416c1ad23663d07efb07c9af
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 11 15:13:45 2010 -0500
+
+    rv100: fix typo in fix for bug 25992
+    
+    Noticed by Maarten Maathuis.
+
+commit 6065ca92763fef1a08185854fc07fb60259ca99e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 4 11:05:44 2010 -0500
+
+    radeon: fix LVDS power sequence on Mac cards
+    
+    Noticed by John R. Dunning.  Fix taken from radeonfb.
+    
+    I'm not sure if this sequence would be useful on any PC
+    laptops or not so make it mac specific for now.
+
+commit e8b9de06482ff792b8d7fa40ce3bc024caca62f6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jan 11 12:40:06 2010 -0500
+
+    rv100: reject modes >135 Mhz with DVI
+    
+    Due to heat issues. fixes bug 25992
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 587f693886e9025ba6fc30a8405902c43b2fcfb2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Dec 22 08:45:27 2009 -0500
+
+    radeon: add cvt timing if we only have panel w/h
+    
+    fixes mac laptops without an edid
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit e7b26abc3c20fb53bf2cd02404ac5e0654fee18d
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Dec 15 10:53:48 2009 -0500
+
+    fix 200M freezes on VT switch if CRTC is disabled
+    
+    It appears that RS4xx chips need to have the crtc
+    enabled when the timing is programmed.
+    
+    agd5f: minor fixes/cleanup of the original patch
+
+commit 45edca0e9d7b833b9de3037e94f293122c922e42
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Sep 3 14:55:05 2009 +0200
+
+    EXA: Check for solid/gradient pictures the same way for all generations.
+    
+    In particular, also catch them for >= R300.
+
+commit 3d59746808bc5f335104d27a8dce0fe94ab3cb78
+Author: Matthijs Kooijman <matthijs@stdin.nl>
+Date:   Thu Dec 3 12:10:14 2009 -0500
+
+    radeon: fix crtc2 dpms
+    
+    noticed by Matthijs Kooijman on fdo bug 22140
+
+commit 26ecf3aad5f3a70b3267614bff6030604820f4d9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Nov 23 12:54:41 2009 -0500
+
+    DCE3.2: fix uniphy2 dvi issues
+    
+    In some cases the atom transmitter table sets the
+    golden value of this reg differently which some monitors
+    don't like. I haven't had time to dig further, so this
+    works around it for now.
+    
+    Fixes fdo bug 24313
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 51266161f70baf4ddbf79ba6225ee2ae107a9f36
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Nov 17 14:16:22 2009 -0500
+
+    radeon: deal with connectors sourced to the same encoder
+    
+    Some systems have multiple connectors connected to the
+    same encoder; e.g., DVI and HDMI connected to the same
+    encoder with the same ddc line.  Since we expose
+    connectors as xrandr outputs, randr treats them separately
+    which results in it trying to source the same encoder to
+    different crtcs.  If we have an HDMI and DVI-D port on the
+    same encoder, pick the one to be considered connected
+    based on the edid (HDMI if edid indicates HDMI, DVI
+    otherwise).  Also, don't turn off (dpms) encoders that are
+    shared.
+    
+    Fixes fdo bug 21767.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit c2892cbd18e0f25401b615055425f727e096b7cd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Nov 17 11:45:09 2009 -0500
+
+    radeon: fix potential memory leak in ddc code
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 93de38348fa77987297c3977d5acddbae54fbc10
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Nov 12 11:11:17 2009 -0500
+
+    radeon: man page updates
+
+commit 6dc632e2e91b6a7159ab3a27617b031713d8b8c4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Nov 9 15:09:34 2009 -0500
+
+    IGP: some IGP chips report as AGP
+    
+    Set bus type appropriately.  fixes bug 25002
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit eab41805c0e6cc6deb7eca9342457b690834d7d2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Nov 5 10:23:03 2009 -0500
+
+    EXA: fallback if no pMaskPicture->pDrawable
+    
+    A solid or gradient mask could be used for blending
+    the source picture onto the destination picture.
+    
+    Fixes fdo bug 24838
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit ca9c619c9c085fac3bea486cfce1c8b5ba09cd52
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Oct 30 17:36:29 2009 -0400
+
+    radeon: clamp the internal FB map to the aperture size v2
+    
+    We don't use the invisible memory yet and on cards with
+    large amounts of vram this can cause the top of GART
+    calculation to overflow.
+    
+    Fixes bug fdo bug 24301:
+    http://bugs.freedesktop.org/show_bug.cgi?id=24301
+    
+    v2: only clamp cards with more than 512 MB. This seems
+    to cause problems on some older cards due to the way the
+    drm and ddx set up the internal memory map.
+
+commit 0db4b1708c2e5f3c14f48de186ee866ab8d9d5a9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Oct 7 17:01:55 2009 -0400
+
+    radeon: clamp the internal FB map to the aperture size
+    
+    We don't use the invisible memory yet and on cards with
+    large amounts of vram this can cause the top of GART
+    calculation to overflow.
+    
+    Fixes bug fdo bug 24301:
+    http://bugs.freedesktop.org/show_bug.cgi?id=24301
+
+commit ecc192e2e5d72090bb35b142c6dc4639ec2542f0
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat Sep 26 06:03:51 2009 +1000
+
+    radeon: fix zaphod
+
+commit d1d3681748251fb7e95b8d56e6c37847ca6b1a8d
+Author: Michael Olbrich <m.olbrich@pengutronix.de>
+Date:   Sun Sep 20 14:19:41 2009 +0200
+
+    use AC_CHECK_HEADER instead of AC_CHECK_FILE
+    
+    AC_CHECK_FILE is not possible when cross-compiling. Use AC_CHECK_HEADER /
+    AC_PREPROC_IFELSE instead.
+    
+    [ Michel Dänzer: Shuffled things around slightly to make it work on my setup ]
+    
+    Signed-off-by: Michael Olbrich <m.olbrich@pengutronix.de>
+    Signed-off-by: Michel Dänzer <daenzer@vmware.com>
+    (cherry picked from commit 97a4e747bfac14f34646c55ddf639e8fe22f2f55)
+
 commit b7c14b00ff6a217cb69727b384cc4f4b433a907e
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Sep 11 09:31:46 2009 +1000
