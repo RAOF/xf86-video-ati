@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.12.99+git20100201.a887818f-1) UNRELEASED; urgency=low
+
+  * New upstream release snapshot.
+
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 01 Feb 2010 21:35:44 +0100
+
 xserver-xorg-video-ati (1:6.12.4-3) unstable; urgency=low
 
   [ Julien Cristau ]
