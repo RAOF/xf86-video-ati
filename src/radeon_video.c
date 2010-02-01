@@ -284,7 +284,7 @@ void RADEONInitVideo(ScreenPtr pScreen)
     memcpy(newAdaptors, adaptors, num_adaptors * sizeof(XF86VideoAdaptorPtr));
     adaptors = newAdaptors;
 
-    if (!IS_AVIVO_VARIANT) {
+    if (!IS_AVIVO_VARIANT && !info->kms_enabled) {
 	overlayAdaptor = RADEONSetupImageVideo(pScreen);
 	if (overlayAdaptor != NULL) {
 	    adaptors[num_adaptors++] = overlayAdaptor;
@@ -541,25 +541,12 @@ static XF86ImageRec Images[NUM_IMAGES] =
 
 #endif
 
-/* Reference color space transform data */
-typedef struct tagREF_TRANSFORM
-{
-    float   RefLuma;
-    float   RefRCb;
-    float   RefRCr;
-    float   RefGCb;
-    float   RefGCr;
-    float   RefBCb;
-    float   RefBCr;
-} REF_TRANSFORM;
-
 /* Parameters for ITU-R BT.601 and ITU-R BT.709 colour spaces */
 static REF_TRANSFORM trans[2] =
 {
     {1.1678, 0.0, 1.6007, -0.3929, -0.8154, 2.0232, 0.0}, /* BT.601 */
     {1.1678, 0.0, 1.7980, -0.2139, -0.5345, 2.1186, 0.0}  /* BT.709 */
 };
-
 
 /* Gamma curve definition for preset gammas */
 typedef struct tagGAMMA_CURVE_R100
@@ -1524,6 +1511,8 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
 	RADEONVIP_init(pScrn, pPriv);
 
     info->adaptor = adapt;
+    info->xv_max_width = 2048;
+    info->xv_max_height = 2048;
 
 	if(!xf86LoadSubModule(pScrn,"theatre_detect")) 
 	{
@@ -1661,10 +1650,6 @@ RADEONStopVideo(ScrnInfoPtr pScrn, pointer data, Bool cleanup)
 
   if (pPriv->textured) {
       if (cleanup) {
-	  if (pPriv->bicubic_memory != NULL) {
-	      radeon_legacy_free_memory(pScrn, pPriv->bicubic_memory);
-	      pPriv->bicubic_memory = NULL;
-	  }
 	  if (pPriv->video_memory != NULL) {
 	      radeon_legacy_free_memory(pScrn, pPriv->video_memory);
 	      pPriv->video_memory = NULL;
@@ -1716,12 +1701,6 @@ RADEONSetPortAttribute(ScrnInfoPtr  pScrn,
     unsigned char *RADEONMMIO = info->MMIO;
 
     RADEON_SYNC(info, pScrn);
-
-#define RTFSaturation(a)   (1.0 + ((a)*1.0)/1000.0)
-#define RTFBrightness(a)   (((a)*1.0)/2000.0)
-#define RTFIntensity(a)   (((a)*1.0)/2000.0)
-#define RTFContrast(a)   (1.0 + ((a)*1.0)/1000.0)
-#define RTFHue(a)   (((a)*3.1416)/1000.0)
 
     if(attribute == xvAutopaintColorkey)
     {
@@ -2221,36 +2200,37 @@ RADEONCopyData(
     else
 #endif /* XF86DRI */
     {
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-	unsigned char *RADEONMMIO = info->MMIO;
-	unsigned int swapper = info->ModeReg->surface_cntl &
-		~(RADEON_NONSURF_AP0_SWP_32BPP | RADEON_NONSURF_AP1_SWP_32BPP |
-		  RADEON_NONSURF_AP0_SWP_16BPP | RADEON_NONSURF_AP1_SWP_16BPP);
+	int swap = RADEON_HOST_DATA_SWAP_NONE;
 
-	switch(bpp) {
-	case 2:
-	    swapper |= RADEON_NONSURF_AP0_SWP_16BPP
-		    |  RADEON_NONSURF_AP1_SWP_16BPP;
-	    break;
-	case 4:
-	    swapper |= RADEON_NONSURF_AP0_SWP_32BPP
-		    |  RADEON_NONSURF_AP1_SWP_32BPP;
-	    break;
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+	if (info->kms_enabled) {
+	    switch(bpp) {
+	    case 2:
+		swap = RADEON_HOST_DATA_SWAP_16BIT;
+		break;
+	    case 4:
+		swap = RADEON_HOST_DATA_SWAP_32BIT;
+		break;
+	    }
+	} else if (bpp != pScrn->bitsPerPixel) {
+	    if (bpp == 8)
+		swap = RADEON_HOST_DATA_SWAP_32BIT;
+	    else
+		swap = RADEON_HOST_DATA_SWAP_HDW;
 	}
-	OUTREG(RADEON_SURFACE_CNTL, swapper);
 #endif
+
 	w *= bpp;
 
-	while (h--) {
-	    memcpy(dst, src, w);
-	    src += srcPitch;
-	    dst += dstPitch;
+	if (dstPitch == w && dstPitch == srcPitch)
+	    RADEONCopySwap(dst, src, h * dstPitch, swap);
+	else {
+	    while (h--) {
+		RADEONCopySwap(dst, src, w, swap);
+		src += srcPitch;
+		dst += dstPitch;
+	    }
 	}
-
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-	/* restore byte swapping */
-	OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
-#endif
     }
 }
 
@@ -2305,9 +2285,10 @@ RADEONCopyRGB24Data(
     {
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 	unsigned char *RADEONMMIO = info->MMIO;
-	OUTREG(RADEON_SURFACE_CNTL, (info->ModeReg->surface_cntl
-				   | RADEON_NONSURF_AP0_SWP_32BPP)
-				  & ~RADEON_NONSURF_AP0_SWP_16BPP);
+
+	if (!info->kms_enabled)
+	    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl &
+		   ~(RADEON_NONSURF_AP0_SWP_16BPP | RADEON_NONSURF_AP0_SWP_32BPP));
 #endif
 
 	for (j = 0; j < h; j++) {
@@ -2315,13 +2296,15 @@ RADEONCopyRGB24Data(
 	    sptr = src + j * srcPitch;
 
 	    for (i = 0; i < w; i++, sptr += 3) {
-		dptr[i] = (sptr[2] << 16) | (sptr[1] << 8) | sptr[0];
+		dptr[i] = cpu_to_le32((sptr[2] << 16) | (sptr[1] << 8) | sptr[0]);
 	    }
 	}
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
-	/* restore byte swapping */
-	OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
+	if (!info->kms_enabled) {
+	    /* restore byte swapping */
+	    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
+	}
 #endif
     }
 }
@@ -2400,9 +2383,10 @@ RADEONCopyMungedData(
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 	unsigned char *RADEONMMIO = info->MMIO;
-	OUTREG(RADEON_SURFACE_CNTL, (info->ModeReg->surface_cntl
-				   | RADEON_NONSURF_AP0_SWP_32BPP)
-				  & ~RADEON_NONSURF_AP0_SWP_16BPP);
+
+	if (!info->kms_enabled)
+	    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl &
+		   ~(RADEON_NONSURF_AP0_SWP_16BPP | RADEON_NONSURF_AP0_SWP_32BPP));
 #endif
 
 	w /= 2;
@@ -2414,16 +2398,16 @@ RADEONCopyMungedData(
 	    i = w;
 	    while( i > 4 )
 	    {
-		dst[0] = s1[0] | (s1[1] << 16) | (s3[0] << 8) | (s2[0] << 24);
-		dst[1] = s1[2] | (s1[3] << 16) | (s3[1] << 8) | (s2[1] << 24);
-		dst[2] = s1[4] | (s1[5] << 16) | (s3[2] << 8) | (s2[2] << 24);
-		dst[3] = s1[6] | (s1[7] << 16) | (s3[3] << 8) | (s2[3] << 24);
+		dst[0] = cpu_to_le32(s1[0] | (s1[1] << 16) | (s3[0] << 8) | (s2[0] << 24));
+		dst[1] = cpu_to_le32(s1[2] | (s1[3] << 16) | (s3[1] << 8) | (s2[1] << 24));
+		dst[2] = cpu_to_le32(s1[4] | (s1[5] << 16) | (s3[2] << 8) | (s2[2] << 24));
+		dst[3] = cpu_to_le32(s1[6] | (s1[7] << 16) | (s3[3] << 8) | (s2[3] << 24));
 		dst += 4; s2 += 4; s3 += 4; s1 += 8;
 		i -= 4;
 	    }
 	    while( i-- )
 	    {
-		dst[0] = s1[0] | (s1[1] << 16) | (s3[0] << 8) | (s2[0] << 24);
+		dst[0] = cpu_to_le32(s1[0] | (s1[1] << 16) | (s3[0] << 8) | (s2[0] << 24));
 		dst++; s2++; s3++;
 		s1 += 2;
 	    }
@@ -2437,8 +2421,10 @@ RADEONCopyMungedData(
 	    }	
 	}
 #if X_BYTE_ORDER == X_BIG_ENDIAN
-	/* restore byte swapping */
-	OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
+	if (!info->kms_enabled) {
+	    /* restore byte swapping */
+	    OUTREG(RADEON_SURFACE_CNTL, info->ModeReg->surface_cntl);
+	}
 #endif
     }
 }
@@ -3093,10 +3079,11 @@ RADEONQueryImageAttributes(
     unsigned short *w, unsigned short *h,
     int *pitches, int *offsets
 ){
+    const RADEONInfoRec * const info = RADEONPTR(pScrn);
     int size, tmp;
 
-    if(*w > 2048) *w = 2048;
-    if(*h > 2048) *h = 2048;
+    if(*w > info->xv_max_width) *w = info->xv_max_width;
+    if(*h > info->xv_max_height) *h = info->xv_max_height;
 
     *w = (*w + 1) & ~1;
     if(offsets) offsets[0] = 0;

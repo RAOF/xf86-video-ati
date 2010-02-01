@@ -22,15 +22,23 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-ati],
-        6.12.4,
+        6.12.99,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-ati)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], 
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
+
 AC_CONFIG_AUX_DIR(.)
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AC_SYS_LARGEFILE
 
 AM_MAINTAINER_MODE
 
@@ -62,6 +70,12 @@ AC_ARG_ENABLE(exa,
               [EXA="$enableval"],
               [EXA=yes])
 
+AC_ARG_ENABLE(kms,
+              AC_HELP_STRING([--disable-kms],
+                             [Disable KMS support [[default=enabled]]]),
+              [DRM_MODE="$enableval"],
+              [DRM_MODE=yes])
+
 AC_ARG_WITH(xserver-source,AC_HELP_STRING([--with-xserver-source=XSERVER_SOURCE],
                                           [Path to X server source tree]),
                            [ XSERVER_SOURCE="$withval" ],
@@ -80,7 +94,6 @@ PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
 AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
 
@@ -124,7 +137,29 @@ if test "$DRI" = yes; then
 	if test "$have_damage_h" = yes; then
 		AC_DEFINE(DAMAGE,1,[Use Damage extension])
 	fi
+
+        save_CFLAGS="$CFLAGS"
+        CFLAGS="$XORG_CFLAGS $DRI_CFLAGS $CFLAGS"
+	if test "$DRM_MODE" = yes; then
+	   	AC_CHECK_HEADER(xf86drmMode.h,[DRM_MODE=yes],[DRM_MODE=no],[#include <stdint.h>
+#include <stdlib.h>])
+		if test "x$DRM_MODE" = xyes; then
+			PKG_CHECK_MODULES(LIBDRM_RADEON, [xorg-server >= 1.6.2 libdrm_radeon],
+			[LIBDRM_RADEON=yes], [LIBDRM_RADEON=no])
+
+			if test "x$LIBDRM_RADEON" = xyes; then
+			   	AC_DEFINE(XF86DRM_MODE,1,[DRM kernel modesetting])
+				AC_DEFINE(RADEON_DRI2, 1,[Enable DRI2 code])
+                        else
+                                DRM_MODE=no
+			fi
+        	fi
+	fi
+	CFLAGS="$save_CFLAGS"
+else
+	DRM_MODE=no
 fi
+AM_CONDITIONAL(DRM_MODE, test x$DRM_MODE = xyes)
 
 save_CFLAGS="$CFLAGS"
 CFLAGS="$XORG_CFLAGS"
@@ -247,6 +282,8 @@ CPPFLAGS="$SAVE_CPPFLAGS"
 
 AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)
 
+AM_CONDITIONAL(XF86DRM_MODE, test "x$LIBDRM_RADEON" = xyes)
+
 if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
@@ -320,13 +357,13 @@ esac
 
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([DRI_CFLAGS])
+AC_SUBST([LIBDRM_RADEON_CFLAGS])
+AC_SUBST([LIBDRM_RADEON_LIBS])
 AC_SUBST([moduledir])
 
 DRIVER_NAME=ati
 AC_SUBST([DRIVER_NAME])
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 XORG_CHECK_LINUXDOC
 
 AC_MSG_NOTICE(
@@ -346,3 +383,25 @@ AC_OUTPUT([
 	src/Makefile
 	man/Makefile
 ])
+
+dnl
+dnl Output some configuration info for the user
+dnl
+echo ""
+echo "        prefix:              $prefix"
+echo "        exec_prefix:         $exec_prefix"
+echo "        libdir:              $libdir"
+echo "        includedir:          $includedir"
+
+
+echo ""
+echo "        Kernel modesetting:  $DRM_MODE"
+
+echo ""
+echo "        CFLAGS:              $CFLAGS"
+echo "        CXXFLAGS:            $CXXFLAGS"
+echo "        Macros:              $DEFINES"
+
+echo ""
+echo "        Run '${MAKE-make}' to build xf86-video-ati"
+echo ""

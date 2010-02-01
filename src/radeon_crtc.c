@@ -137,16 +137,22 @@ RADEONComputePLL(RADEONPLLPtr pll,
 		 unsigned long freq,
 		 uint32_t *chosen_dot_clock_freq,
 		 uint32_t *chosen_feedback_div,
+		 uint32_t *chosen_frac_feedback_div,
 		 uint32_t *chosen_reference_div,
 		 uint32_t *chosen_post_div,
 		 int flags)
 {
     uint32_t min_ref_div = pll->min_ref_div;
     uint32_t max_ref_div = pll->max_ref_div;
+    uint32_t min_post_div = pll->min_post_div;
+    uint32_t max_post_div = pll->max_post_div;
+    uint32_t min_fractional_feed_div = 0;
+    uint32_t max_fractional_feed_div = 0;
     uint32_t best_vco = pll->best_vco;
     uint32_t best_post_div = 1;
     uint32_t best_ref_div = 1;
     uint32_t best_feedback_div = 1;
+    uint32_t best_frac_feedback_div = 0;
     uint32_t best_freq = -1;
     uint32_t best_error = 0xffffffff;
     uint32_t best_vco_diff = 1;
@@ -170,7 +176,15 @@ RADEONComputePLL(RADEONPLLPtr pll,
 	}
     }
 
-    for (post_div = pll->min_post_div; post_div <= pll->max_post_div; ++post_div) {
+    if (flags & RADEON_PLL_USE_POST_DIV)
+	min_post_div = max_post_div = pll->post_div;
+
+    if (flags & RADEON_PLL_USE_FRAC_FB_DIV) {
+	min_fractional_feed_div = pll->min_frac_feedback_div;
+	max_fractional_feed_div = pll->max_frac_feedback_div;
+    }
+
+    for (post_div = min_post_div; post_div <= max_post_div; ++post_div) {
 	uint32_t ref_div;
 
 	if ((flags & RADEON_PLL_NO_ODD_POST_DIV) && (post_div & 1))
@@ -187,7 +201,7 @@ RADEONComputePLL(RADEONPLLPtr pll,
 	}
 
 	for (ref_div = min_ref_div; ref_div <= max_ref_div; ++ref_div) {
-	    uint32_t feedback_div, current_freq, error, vco_diff;
+	    uint32_t feedback_div, current_freq = 0, error, vco_diff;
 	    uint32_t pll_in = pll->reference_freq / ref_div;
 	    uint32_t min_feed_div = pll->min_feedback_div;
 	    uint32_t max_feed_div = pll->max_feedback_div+1;
@@ -197,11 +211,15 @@ RADEONComputePLL(RADEONPLLPtr pll,
 
 	    while (min_feed_div < max_feed_div) {
 		uint32_t vco;
+		uint32_t min_frac_feed_div = min_fractional_feed_div;
+		uint32_t max_frac_feed_div = max_fractional_feed_div+1;
+		uint32_t frac_feedback_div;
+		CARD64 tmp;
 
 		feedback_div = (min_feed_div+max_feed_div)/2;
 
-		vco = RADEONDiv((CARD64)pll->reference_freq * feedback_div,
-				ref_div);
+		tmp = (CARD64)pll->reference_freq * feedback_div;
+		vco = RADEONDiv(tmp, ref_div);
 
 		if (vco < pll->pll_out_min) {
 		    min_feed_div = feedback_div+1;
@@ -211,45 +229,59 @@ RADEONComputePLL(RADEONPLLPtr pll,
 		    continue;
 		}
 
-		current_freq = RADEONDiv((CARD64)pll->reference_freq * 10000 * feedback_div,
-					 ref_div * post_div);
+		while (min_frac_feed_div < max_frac_feed_div) {
+		    frac_feedback_div = (min_frac_feed_div+max_frac_feed_div)/2;
+		    tmp = (CARD64)pll->reference_freq * 10000 * feedback_div;
+		    tmp += (CARD64)pll->reference_freq * 1000 * frac_feedback_div;
+		    current_freq = RADEONDiv(tmp, ref_div * post_div);
 
-		error = abs(current_freq - freq);
-		vco_diff = abs(vco - best_vco);
+		    if (flags & RADEON_PLL_PREFER_CLOSEST_LOWER) {
+			error = freq - current_freq;
+			error = error < 0 ? 0xffffffff : error;
+		    } else
+			error = abs(current_freq - freq);
+		    vco_diff = abs(vco - best_vco);
 
-		if ((best_vco == 0 && error < best_error) ||
-		    (best_vco != 0 &&
-		     (error < best_error - 100 ||
-		      (abs(error - best_error) < 100 && vco_diff < best_vco_diff )))) {
-		    best_post_div = post_div;
-		    best_ref_div = ref_div;
-		    best_feedback_div = feedback_div;
-		    best_freq = current_freq;
-		    best_error = error;
-		    best_vco_diff = vco_diff;
-		} else if (current_freq == freq) {
-		    if (best_freq == -1) {
+		    if ((best_vco == 0 && error < best_error) ||
+			(best_vco != 0 &&
+			 (error < best_error - 100 ||
+			  (abs(error - best_error) < 100 && vco_diff < best_vco_diff )))) {
 			best_post_div = post_div;
 			best_ref_div = ref_div;
 			best_feedback_div = feedback_div;
+			best_frac_feedback_div = frac_feedback_div;
 			best_freq = current_freq;
 			best_error = error;
 			best_vco_diff = vco_diff;
-		    } else if (((flags & RADEON_PLL_PREFER_LOW_REF_DIV) && (ref_div < best_ref_div)) ||
-			       ((flags & RADEON_PLL_PREFER_HIGH_REF_DIV) && (ref_div > best_ref_div)) ||
-			       ((flags & RADEON_PLL_PREFER_LOW_FB_DIV) && (feedback_div < best_feedback_div)) ||
-			       ((flags & RADEON_PLL_PREFER_HIGH_FB_DIV) && (feedback_div > best_feedback_div)) ||
-			       ((flags & RADEON_PLL_PREFER_LOW_POST_DIV) && (post_div < best_post_div)) ||
-			       ((flags & RADEON_PLL_PREFER_HIGH_POST_DIV) && (post_div > best_post_div))) {
-			best_post_div = post_div;
-			best_ref_div = ref_div;
-			best_feedback_div = feedback_div;
-			best_freq = current_freq;
-			best_error = error;
-			best_vco_diff = vco_diff;
+		    } else if (current_freq == freq) {
+			if (best_freq == -1) {
+			    best_post_div = post_div;
+			    best_ref_div = ref_div;
+			    best_feedback_div = feedback_div;
+			    best_frac_feedback_div = frac_feedback_div;
+			    best_freq = current_freq;
+			    best_error = error;
+			    best_vco_diff = vco_diff;
+			} else if (((flags & RADEON_PLL_PREFER_LOW_REF_DIV) && (ref_div < best_ref_div)) ||
+				   ((flags & RADEON_PLL_PREFER_HIGH_REF_DIV) && (ref_div > best_ref_div)) ||
+				   ((flags & RADEON_PLL_PREFER_LOW_FB_DIV) && (feedback_div < best_feedback_div)) ||
+				   ((flags & RADEON_PLL_PREFER_HIGH_FB_DIV) && (feedback_div > best_feedback_div)) ||
+				   ((flags & RADEON_PLL_PREFER_LOW_POST_DIV) && (post_div < best_post_div)) ||
+				   ((flags & RADEON_PLL_PREFER_HIGH_POST_DIV) && (post_div > best_post_div))) {
+			    best_post_div = post_div;
+			    best_ref_div = ref_div;
+			    best_feedback_div = feedback_div;
+			    best_frac_feedback_div = frac_feedback_div;
+			    best_freq = current_freq;
+			    best_error = error;
+			    best_vco_diff = vco_diff;
+			}
 		    }
+		    if (current_freq < freq)
+			min_frac_feed_div = frac_feedback_div+1;
+		    else
+			max_frac_feed_div = frac_feedback_div;
 		}
-
 		if (current_freq < freq)
 		    min_feed_div = feedback_div+1;
 		else
@@ -260,6 +292,7 @@ RADEONComputePLL(RADEONPLLPtr pll,
 
     ErrorF("best_freq: %u\n", (unsigned int)best_freq);
     ErrorF("best_feedback_div: %u\n", (unsigned int)best_feedback_div);
+    ErrorF("best_frac_feedback_div: %u\n", (unsigned int)best_frac_feedback_div);
     ErrorF("best_ref_div: %u\n", (unsigned int)best_ref_div);
     ErrorF("best_post_div: %u\n", (unsigned int)best_post_div);
 
@@ -267,8 +300,84 @@ RADEONComputePLL(RADEONPLLPtr pll,
 	FatalError("Couldn't find valid PLL dividers\n");
     *chosen_dot_clock_freq = best_freq / 10000;
     *chosen_feedback_div = best_feedback_div;
+    *chosen_frac_feedback_div = best_frac_feedback_div;
     *chosen_reference_div = best_ref_div;
     *chosen_post_div = best_post_div;
+
+}
+
+void
+RADEONComputePLL_AVIVO(RADEONPLLPtr pll,
+		       unsigned long freq,
+		       uint32_t *chosen_dot_clock_freq,
+		       uint32_t *chosen_feedback_div,
+		       uint32_t *chosen_frac_feedback_div,
+		       uint32_t *chosen_reference_div,
+		       uint32_t *chosen_post_div,
+		       int flags)
+{
+    float m, n, frac_n, p, f_vco, f_pclk, best_freq;
+    float pll_out_max = pll->pll_out_max;
+    float pll_out_min = pll->pll_out_min;
+    float reference_freq = pll->reference_freq;
+    float pll_in_max = pll->pll_in_max;
+    float pll_in_min = pll->pll_in_min;
+    float ffreq = freq / 10;
+    float error = 100;
+
+    ErrorF("ffreq: %f\n", ffreq * 10);
+
+    /* 1 - max p */
+    p = floor(pll_out_max / ffreq);
+
+    /* 2 - min m */
+    m = ceil(reference_freq / pll_in_max);
+
+    while (error > 0.25) {
+	/* 3 - n */
+	n = (ffreq / reference_freq) * m * p;
+
+	/* 4 - vco out freq */
+	f_vco = (n / m) * reference_freq;
+
+	/* 5 - pclk freq */
+	f_pclk = f_vco / p;
+
+	/* 6 - error */
+	error = (abs(f_pclk - ffreq) / f_pclk) * 100;
+
+	best_freq = reference_freq * (n / (m * p));
+
+	/* min error 0.25% */
+	if (error < 0.25)
+	    break;
+
+	/* 7 - check m */
+	m++;
+	if ((reference_freq / m) >= pll_in_min)
+	    continue;
+
+	/* 8 - check p */
+	m = ceil(reference_freq / pll_in_max);
+	p--;
+	if ((p * ffreq) >= pll_out_min)
+	    continue;
+	else
+	    FatalError("Couldn't find valid PLL dividers\n");
+    }
+
+    frac_n = (n - (int)n) * 10;
+
+    ErrorF("best_freq: %u\n", (unsigned int)best_freq * 10);
+    ErrorF("best_feedback_div: %d.%d\n", (int)n, (int)frac_n);
+    ErrorF("best_ref_div: %d\n", (int)m);
+    ErrorF("best_post_div: %d\n", (int)p);
+
+    *chosen_dot_clock_freq = best_freq;
+    *chosen_feedback_div = (uint32_t)n;
+    *chosen_frac_feedback_div = (uint32_t)frac_n;
+    *chosen_reference_div = (uint32_t)m;
+    *chosen_post_div = (uint32_t)p;
 
 }
 
@@ -305,35 +414,56 @@ radeon_crtc_load_lut(xf86CrtcPtr crtc)
     if (!crtc->enabled)
 	return;
 
-    if (IS_AVIVO_VARIANT) {
-	OUTREG(AVIVO_DC_LUTA_CONTROL + radeon_crtc->crtc_offset, 0);
+    if (IS_DCE4_VARIANT) {
+	OUTREG(EVERGREEN_DC_LUT_CONTROL + radeon_crtc->crtc_offset, 0);
 
-	OUTREG(AVIVO_DC_LUTA_BLACK_OFFSET_BLUE + radeon_crtc->crtc_offset, 0);
-	OUTREG(AVIVO_DC_LUTA_BLACK_OFFSET_GREEN + radeon_crtc->crtc_offset, 0);
-	OUTREG(AVIVO_DC_LUTA_BLACK_OFFSET_RED + radeon_crtc->crtc_offset, 0);
+	OUTREG(EVERGREEN_DC_LUT_BLACK_OFFSET_BLUE + radeon_crtc->crtc_offset, 0);
+	OUTREG(EVERGREEN_DC_LUT_BLACK_OFFSET_GREEN + radeon_crtc->crtc_offset, 0);
+	OUTREG(EVERGREEN_DC_LUT_BLACK_OFFSET_RED + radeon_crtc->crtc_offset, 0);
 
-	OUTREG(AVIVO_DC_LUTA_WHITE_OFFSET_BLUE + radeon_crtc->crtc_offset, 0x0000ffff);
-	OUTREG(AVIVO_DC_LUTA_WHITE_OFFSET_GREEN + radeon_crtc->crtc_offset, 0x0000ffff);
-	OUTREG(AVIVO_DC_LUTA_WHITE_OFFSET_RED + radeon_crtc->crtc_offset, 0x0000ffff);
-    }
+	OUTREG(EVERGREEN_DC_LUT_WHITE_OFFSET_BLUE + radeon_crtc->crtc_offset, 0x0000ffff);
+	OUTREG(EVERGREEN_DC_LUT_WHITE_OFFSET_GREEN + radeon_crtc->crtc_offset, 0x0000ffff);
+	OUTREG(EVERGREEN_DC_LUT_WHITE_OFFSET_RED + radeon_crtc->crtc_offset, 0x0000ffff);
 
-    PAL_SELECT(radeon_crtc->crtc_id);
+	OUTREG(EVERGREEN_DC_LUT_RW_MODE + radeon_crtc->crtc_offset, 0);
+	OUTREG(EVERGREEN_DC_LUT_WRITE_EN_MASK + radeon_crtc->crtc_offset, 0x00000007);
 
-    if (IS_AVIVO_VARIANT) {
-	OUTREG(AVIVO_DC_LUT_RW_MODE, 0);
-	OUTREG(AVIVO_DC_LUT_WRITE_EN_MASK, 0x0000003f);
-    }
+	for (i = 0; i < 256; i++) {
+	    OUTREG(EVERGREEN_DC_LUT_RW_INDEX + radeon_crtc->crtc_offset, i);
+	    OUTREG(EVERGREEN_DC_LUT_30_COLOR + radeon_crtc->crtc_offset,
+		   (((radeon_crtc->lut_r[i]) << 20) |
+		    ((radeon_crtc->lut_g[i]) << 10) |
+		    (radeon_crtc->lut_b[i])));
+	}
+    } else {
+	if (IS_AVIVO_VARIANT) {
+	    OUTREG(AVIVO_DC_LUTA_CONTROL + radeon_crtc->crtc_offset, 0);
 
-    for (i = 0; i < 256; i++) {
-	OUTPAL(i, radeon_crtc->lut_r[i], radeon_crtc->lut_g[i], radeon_crtc->lut_b[i]);
-    }
+	    OUTREG(AVIVO_DC_LUTA_BLACK_OFFSET_BLUE + radeon_crtc->crtc_offset, 0);
+	    OUTREG(AVIVO_DC_LUTA_BLACK_OFFSET_GREEN + radeon_crtc->crtc_offset, 0);
+	    OUTREG(AVIVO_DC_LUTA_BLACK_OFFSET_RED + radeon_crtc->crtc_offset, 0);
 
-    if (IS_AVIVO_VARIANT) {
-	OUTREG(AVIVO_D1GRPH_LUT_SEL + radeon_crtc->crtc_offset, radeon_crtc->crtc_id);
+	    OUTREG(AVIVO_DC_LUTA_WHITE_OFFSET_BLUE + radeon_crtc->crtc_offset, 0x0000ffff);
+	    OUTREG(AVIVO_DC_LUTA_WHITE_OFFSET_GREEN + radeon_crtc->crtc_offset, 0x0000ffff);
+	    OUTREG(AVIVO_DC_LUTA_WHITE_OFFSET_RED + radeon_crtc->crtc_offset, 0x0000ffff);
+	}
+
+	PAL_SELECT(radeon_crtc->crtc_id);
+
+	if (IS_AVIVO_VARIANT) {
+	    OUTREG(AVIVO_DC_LUT_RW_MODE, 0);
+	    OUTREG(AVIVO_DC_LUT_WRITE_EN_MASK, 0x0000003f);
+	}
+
+	for (i = 0; i < 256; i++) {
+	    OUTPAL(i, radeon_crtc->lut_r[i], radeon_crtc->lut_g[i], radeon_crtc->lut_b[i]);
+	}
+
+	if (IS_AVIVO_VARIANT)
+	    OUTREG(AVIVO_D1GRPH_LUT_SEL + radeon_crtc->crtc_offset, radeon_crtc->crtc_id);
     }
 
 }
-
 
 static void
 radeon_crtc_gamma_set(xf86CrtcPtr crtc, uint16_t *red, uint16_t *green,
@@ -514,7 +644,14 @@ radeon_crtc_set_origin(xf86CrtcPtr crtc, int x, int y)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
-    if (IS_AVIVO_VARIANT) {
+
+    if (IS_DCE4_VARIANT) {
+	x &= ~3;
+	y &= ~1;
+	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 1);
+	OUTREG(EVERGREEN_VIEWPORT_START + radeon_crtc->crtc_offset, (x << 16) | y);
+	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 0);
+    } else if (IS_AVIVO_VARIANT) {
 	x &= ~3;
 	y &= ~1;
 	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 1);
@@ -572,6 +709,10 @@ RADEONInitDispBandwidth(ScrnInfoPtr pScrn)
     int pixel_bytes1 = info->CurrentLayout.pixel_bytes;
     int pixel_bytes2 = info->CurrentLayout.pixel_bytes;
 
+    /* XXX fix me */
+    if (IS_DCE4_VARIANT)
+	return;
+
     if (xf86_config->num_crtc == 2) {
 	if (xf86_config->crtc[1]->enabled &&
 	    xf86_config->crtc[0]->enabled) {
@@ -604,6 +745,7 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 {
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    int i;
 
     if (!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
 	radeon_crtc_funcs.shadow_create = radeon_crtc_shadow_create;
@@ -631,6 +773,7 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 	    pRADEONEnt->Controller[0]->can_tile = 1;
 	else
 	    pRADEONEnt->Controller[0]->can_tile = 0;
+	pRADEONEnt->Controller[0]->pll_id = -1;
     }
 
     if (mask & 2) {
@@ -650,12 +793,61 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 
 	pRADEONEnt->pCrtc[1]->driver_private = pRADEONEnt->Controller[1];
 	pRADEONEnt->Controller[1]->crtc_id = 1;
-	pRADEONEnt->Controller[1]->crtc_offset = AVIVO_D2CRTC_H_TOTAL - AVIVO_D1CRTC_H_TOTAL;
+	if (IS_DCE4_VARIANT)
+	    pRADEONEnt->Controller[1]->crtc_offset = EVERGREEN_CRTC1_REGISTER_OFFSET;
+	else
+	    pRADEONEnt->Controller[1]->crtc_offset = AVIVO_D2CRTC_H_TOTAL - AVIVO_D1CRTC_H_TOTAL;
 	pRADEONEnt->Controller[1]->initialized = FALSE;
 	if (info->allowColorTiling)
 	    pRADEONEnt->Controller[1]->can_tile = 1;
 	else
 	    pRADEONEnt->Controller[1]->can_tile = 0;
+	pRADEONEnt->Controller[1]->pll_id = -1;
+    }
+
+    /* 6 crtcs on DCE4 chips */
+    if (IS_DCE4_VARIANT && ((mask & 3) == 3)) {
+	for (i = 2; i < RADEON_MAX_CRTC; i++) {
+	    pRADEONEnt->pCrtc[i] = xf86CrtcCreate(pScrn, &radeon_crtc_funcs);
+	    if (!pRADEONEnt->pCrtc[i])
+		return FALSE;
+
+	    pRADEONEnt->Controller[i] = xnfcalloc(sizeof(RADEONCrtcPrivateRec), 1);
+	    if (!pRADEONEnt->Controller[i])
+	    {
+		xfree(pRADEONEnt->Controller[i]);
+		return FALSE;
+	    }
+
+	    pRADEONEnt->pCrtc[i]->driver_private = pRADEONEnt->Controller[i];
+	    pRADEONEnt->Controller[i]->crtc_id = i;
+	    switch (i) {
+	    case 0:
+		pRADEONEnt->Controller[i]->crtc_offset = EVERGREEN_CRTC0_REGISTER_OFFSET;
+		break;
+	    case 1:
+		pRADEONEnt->Controller[i]->crtc_offset = EVERGREEN_CRTC1_REGISTER_OFFSET;
+		break;
+	    case 2:
+		pRADEONEnt->Controller[i]->crtc_offset = EVERGREEN_CRTC2_REGISTER_OFFSET;
+		break;
+	    case 3:
+		pRADEONEnt->Controller[i]->crtc_offset = EVERGREEN_CRTC3_REGISTER_OFFSET;
+		break;
+	    case 4:
+		pRADEONEnt->Controller[i]->crtc_offset = EVERGREEN_CRTC4_REGISTER_OFFSET;
+		break;
+	    case 5:
+		pRADEONEnt->Controller[i]->crtc_offset = EVERGREEN_CRTC5_REGISTER_OFFSET;
+		break;
+	    }
+	    pRADEONEnt->Controller[i]->initialized = FALSE;
+	    if (info->allowColorTiling)
+		pRADEONEnt->Controller[i]->can_tile = 1;
+	    else
+		pRADEONEnt->Controller[i]->can_tile = 0;
+	    pRADEONEnt->Controller[i]->pll_id = -1;
+	}
     }
 
     return TRUE;
