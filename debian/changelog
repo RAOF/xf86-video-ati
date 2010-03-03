@@ -9,6 +9,12 @@ xserver-xorg-video-ati (1:6.12.99+git20100201.a887818f-1) experimental; urgency=
 
  -- Brice Goglin <bgoglin@debian.org>  Mon, 01 Feb 2010 23:54:34 +0100
 
+xserver-xorg-video-ati (1:6.12.5-1) unstable; urgency=low
+
+  * New upstream release, closes: #572306.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 03 Mar 2010 07:29:24 +0100
+
 xserver-xorg-video-ati (1:6.12.4-3) unstable; urgency=low
 
   [ Julien Cristau ]
