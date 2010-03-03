@@ -216,7 +216,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 
 	txsize = (((((pPriv->w + 1 ) >> 1) - 1) & 0x7ff) |
 		  (((((pPriv->h + 1 ) >> 1) - 1) & 0x7ff) << RADEON_TEX_VSIZE_SHIFT));
-	txpitch = ((pPriv->src_pitch >> 1) + 63) & ~63;
+	txpitch = RADEON_ALIGN(pPriv->src_pitch >> 1, 64);
 	txpitch -= 32;
 
 	BEGIN_ACCEL_RELOC(23, 3);
@@ -360,11 +360,11 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_xv_pick_best_crtc(pScrn,
-					    pPriv->drw_x,
-					    pPriv->drw_x + pPriv->dst_w,
-					    pPriv->drw_y,
-					    pPriv->drw_y + pPriv->dst_h);
+	    crtc = radeon_pick_best_crtc(pScrn,
+					 pPriv->drw_x,
+					 pPriv->drw_x + pPriv->dst_w,
+					 pPriv->drw_y,
+					 pPriv->drw_y + pPriv->dst_h);
 	if (crtc)
 	    FUNC_NAME(RADEONWaitForVLine)(pScrn, pPixmap,
 					  crtc,
@@ -648,7 +648,7 @@ FUNC_NAME(R200DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	txsize = (((((pPriv->w + 1 ) >> 1) - 1) & 0x7ff) |
 		  (((((pPriv->h + 1 ) >> 1) - 1) & 0x7ff) << RADEON_TEX_VSIZE_SHIFT));
-	txpitch = ((pPriv->src_pitch >> 1) + 63) & ~63;
+	txpitch = RADEON_ALIGN(pPriv->src_pitch >> 1, 64);
 	txpitch -= 32;
 
 	BEGIN_ACCEL_RELOC(36, 3);
@@ -928,11 +928,11 @@ FUNC_NAME(R200DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_xv_pick_best_crtc(pScrn,
-					    pPriv->drw_x,
-					    pPriv->drw_x + pPriv->dst_w,
-					    pPriv->drw_y,
-					    pPriv->drw_y + pPriv->dst_h);
+	    crtc = radeon_pick_best_crtc(pScrn,
+					 pPriv->drw_x,
+					 pPriv->drw_x + pPriv->dst_w,
+					 pPriv->drw_y,
+					 pPriv->drw_y + pPriv->dst_h);
 	if (crtc)
 	    FUNC_NAME(RADEONWaitForVLine)(pScrn, pPixmap,
 					  crtc,
@@ -1191,7 +1191,7 @@ FUNC_NAME(R300DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	txformat0 = ((((((pPriv->w + 1 ) >> 1) - 1) & 0x7ff) << R300_TXWIDTH_SHIFT) |
 		     (((((pPriv->h + 1 ) >> 1 ) - 1) & 0x7ff) << R300_TXHEIGHT_SHIFT) |
 		     R300_TXPITCH_EN);
-	txpitch = ((pPriv->src_pitch >> 1) + 63) & ~63;
+	txpitch = RADEON_ALIGN(pPriv->src_pitch >> 1, 64);
 	txpitch -= 1;
 	txfilter = (R300_TX_CLAMP_S(R300_TX_CLAMP_CLAMP_LAST) |
 		    R300_TX_CLAMP_T(R300_TX_CLAMP_CLAMP_LAST) |
@@ -2304,11 +2304,11 @@ FUNC_NAME(R300DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_xv_pick_best_crtc(pScrn,
-					    pPriv->drw_x,
-					    pPriv->drw_x + pPriv->dst_w,
-					    pPriv->drw_y,
-					    pPriv->drw_y + pPriv->dst_h);
+	    crtc = radeon_pick_best_crtc(pScrn,
+					 pPriv->drw_x,
+					 pPriv->drw_x + pPriv->dst_w,
+					 pPriv->drw_y,
+					 pPriv->drw_y + pPriv->dst_h);
 	if (crtc)
 	    FUNC_NAME(RADEONWaitForVLine)(pScrn, pPixmap,
 					  crtc,
@@ -2652,26 +2652,26 @@ FUNC_NAME(R500DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	txformat0 = ((((((pPriv->w + 1 ) >> 1) - 1) & 0x7ff) << R300_TXWIDTH_SHIFT) |
 		     (((((pPriv->h + 1 ) >> 1 ) - 1) & 0x7ff) << R300_TXHEIGHT_SHIFT) |
 		     R300_TXPITCH_EN);
-	txpitch = ((pPriv->src_pitch >> 1) + 63) & ~63;
+	txpitch = RADEON_ALIGN(pPriv->src_pitch >> 1, 64);
 	txpitch -= 1;
 	txfilter = (R300_TX_CLAMP_S(R300_TX_CLAMP_CLAMP_LAST) |
 		    R300_TX_CLAMP_T(R300_TX_CLAMP_CLAMP_LAST) |
 		    R300_TX_MIN_FILTER_LINEAR |
 		    R300_TX_MAG_FILTER_LINEAR);
 
-	BEGIN_ACCEL(12);
+	BEGIN_ACCEL_RELOC(12, 2);
 	OUT_ACCEL_REG(R300_TX_FILTER0_1, txfilter | (1 << R300_TX_ID_SHIFT));
 	OUT_ACCEL_REG(R300_TX_FILTER1_1, 0);
 	OUT_ACCEL_REG(R300_TX_FORMAT0_1, txformat0);
 	OUT_ACCEL_REG(R300_TX_FORMAT1_1, R300_TX_FORMAT_X8);
 	OUT_ACCEL_REG(R300_TX_FORMAT2_1, txpitch);
-	OUT_ACCEL_REG(R300_TX_OFFSET_1, txoffset + pPriv->planeu_offset);
+	OUT_TEXTURE_REG(R300_TX_OFFSET_1, txoffset + pPriv->planeu_offset, src_bo);
 	OUT_ACCEL_REG(R300_TX_FILTER0_2, txfilter | (2 << R300_TX_ID_SHIFT));
 	OUT_ACCEL_REG(R300_TX_FILTER1_2, 0);
 	OUT_ACCEL_REG(R300_TX_FORMAT0_2, txformat0);
 	OUT_ACCEL_REG(R300_TX_FORMAT1_2, R300_TX_FORMAT_X8);
 	OUT_ACCEL_REG(R300_TX_FORMAT2_2, txpitch);
-	OUT_ACCEL_REG(R300_TX_OFFSET_2, txoffset + pPriv->planev_offset);
+	OUT_TEXTURE_REG(R300_TX_OFFSET_2, txoffset + pPriv->planev_offset, src_bo);
 	FINISH_ACCEL();
 	txenable |= R300_TEX_1_ENABLE | R300_TEX_2_ENABLE;
     }
@@ -3888,11 +3888,11 @@ FUNC_NAME(R500DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_xv_pick_best_crtc(pScrn,
-					    pPriv->drw_x,
-					    pPriv->drw_x + pPriv->dst_w,
-					    pPriv->drw_y,
-					    pPriv->drw_y + pPriv->dst_h);
+	    crtc = radeon_pick_best_crtc(pScrn,
+					 pPriv->drw_x,
+					 pPriv->drw_x + pPriv->dst_w,
+					 pPriv->drw_y,
+					 pPriv->drw_y + pPriv->dst_h);
 	if (crtc)
 	    FUNC_NAME(RADEONWaitForVLine)(pScrn, pPixmap,
 					  crtc,

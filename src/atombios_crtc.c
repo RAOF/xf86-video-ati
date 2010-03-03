@@ -324,12 +324,15 @@ atombios_pick_pll(xf86CrtcPtr crtc)
 		}
 	    }
 	}
+	/* DP clock comes from DCPLL, DP PHY CLK comes from ext source
+	 * setting ATOM_PPLL_INVALID skips the PPLL programming for DP
+	 */
 	if (is_dp)
-	    radeon_crtc->pll_id = 2;
+	    radeon_crtc->pll_id = ATOM_PPLL_INVALID;
 	else if (!(pll_use_mask & 1))
-	    radeon_crtc->pll_id = 0;
+	    radeon_crtc->pll_id = ATOM_PPLL1;
 	else
-	    radeon_crtc->pll_id = 1;
+	    radeon_crtc->pll_id = ATOM_PPLL2;
     } else
 	radeon_crtc->pll_id = radeon_crtc->crtc_id;
 
@@ -388,6 +391,7 @@ atombios_crtc_set_dcpll(xf86CrtcPtr crtc)
 	switch(minor) {
 	case 5:
 	    args.ucCRTC = ATOM_CRTC_INVALID;
+	    /* XXX: get this from the firmwareinfo table */
 	    args.usPixelClock = 60000; // 600 Mhz
 	    args.ucPostDiv = info->pll.pll_out_max / 60000;
 	    if (info->pll.reference_freq == 10000) {
@@ -433,7 +437,8 @@ static void
 atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 {
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
-    RADEONInfoPtr  info = RADEONPTR(crtc->scrn);
+    ScrnInfoPtr pScrn = crtc->scrn;
+    RADEONInfoPtr  info = RADEONPTR(pScrn);
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
     unsigned char *RADEONMMIO = info->MMIO;
     int index;
@@ -451,9 +456,6 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
     uint32_t temp;
     AtomBiosArgRec data;
     unsigned char *space;
-
-    if (IS_DCE4_VARIANT)
-	atombios_crtc_set_dcpll(crtc);
 
     memset(&spc_param, 0, sizeof(spc_param));
     if (IS_AVIVO_VARIANT) {
@@ -482,12 +484,15 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 	/* disable spread spectrum clocking for now -- thanks Hedy Lamarr */
 	if (IS_DCE4_VARIANT) {
 	    /* XXX 6 crtcs, but only 2 plls */
-	    if (radeon_crtc->crtc_id == 0) {
+	    switch (radeon_crtc->pll_id) {
+	    case ATOM_PPLL1:
 		temp = INREG(EVERGREEN_P1PLL_SS_CNTL);
 		OUTREG(EVERGREEN_P1PLL_SS_CNTL, temp & ~EVERGREEN_PxPLL_SS_EN);
-	    } else {
+		break;
+	    case ATOM_PPLL2:
 		temp = INREG(EVERGREEN_P2PLL_SS_CNTL);
 		OUTREG(EVERGREEN_P2PLL_SS_CNTL, temp & ~EVERGREEN_PxPLL_SS_EN);
+		break;
 	    }
 	} else {
 	    if (radeon_crtc->crtc_id == 0) {
@@ -531,11 +536,6 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 	    if (output->crtc == crtc) {
 		radeon_output = output->driver_private;
 		radeon_encoder = radeon_get_encoder(output);
-		/* no need to set pll for DP */
-		if (IS_DCE4_VARIANT) {
-		    if (atombios_get_encoder_mode(output) == ATOM_ENCODER_MODE_DP)
-			return;
-		}
 		break;
 	    }
 	}
@@ -581,7 +581,7 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 		adp3_ptr->sInput.ucTransmitterID = radeon_encoder->encoder_id;
 		adp3_ptr->sInput.ucEncodeMode = atombios_get_encoder_mode(output);
 		adp3_ptr->sInput.ucDispPllConfig = 0;
-		if (radeon_output->coherent_mode)
+		if (radeon_output->coherent_mode || (adp3_ptr->sInput.ucEncodeMode == ATOM_ENCODER_MODE_DP))
 		    adp3_ptr->sInput.ucDispPllConfig |= DISPPLL_CONFIG_COHERENT_MODE;
 		if (sclock > 165000)
 		    adp3_ptr->sInput.ucDispPllConfig |= DISPPLL_CONFIG_DUAL_LINK;
@@ -614,13 +614,7 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 	}
     }
 
-    if (IS_AVIVO_VARIANT) {
-	if (xf86ReturnOptValBool(info->Options, OPTION_NEW_PLL, TRUE))
-	    RADEONComputePLL_AVIVO(&info->pll, sclock, &temp, &fb_div, &frac_fb_div, &ref_div, &post_div, pll_flags);
-	else
-	    RADEONComputePLL(&info->pll, sclock, &temp, &fb_div, &frac_fb_div, &ref_div, &post_div, pll_flags);
-    } else
-	RADEONComputePLL(&info->pll, sclock, &temp, &fb_div, &frac_fb_div, &ref_div, &post_div, pll_flags);
+    RADEONComputePLL(pScrn, &info->pll, sclock, &temp, &fb_div, &frac_fb_div, &ref_div, &post_div, pll_flags);
     sclock = temp; /* 10 khz */
 
     xf86DrvMsg(crtc->scrn->scrnIndex, X_INFO,
@@ -668,7 +662,7 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
 	    spc5_ptr->usPixelClock = cpu_to_le16(mode->Clock / 10);
 	    spc5_ptr->ucRefDiv = ref_div;
 	    spc5_ptr->usFbDiv = cpu_to_le16(fb_div);
-	    spc5_ptr->ulFbDivDecFrac = cpu_to_le32(frac_fb_div);
+	    spc5_ptr->ulFbDivDecFrac = cpu_to_le32(frac_fb_div * 100000);
 	    spc5_ptr->ucPostDiv = post_div;
 	    spc5_ptr->ucPpll = radeon_crtc->pll_id;
 	    spc5_ptr->ucMiscInfo = 0; //HDMI depth
@@ -973,6 +967,8 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
     RADEONInitMemMapRegisters(pScrn, info->ModeReg, info);
     RADEONRestoreMemMapRegisters(pScrn, info->ModeReg);
 
+    if (IS_DCE4_VARIANT)
+	atombios_crtc_set_dcpll(crtc);
     atombios_pick_pll(crtc);
     atombios_crtc_set_pll(crtc, adjusted_mode);
     if (IS_DCE4_VARIANT)

@@ -263,7 +263,7 @@ static Bool RADEONPitchMatches(PixmapPtr pPix)
     int h = pPix->drawable.height;
     uint32_t txpitch = exaGetPixmapPitch(pPix);
 
-    if (h > 1 && ((w * pPix->drawable.bitsPerPixel / 8 + 31) & ~31) != txpitch)
+    if (h > 1 && (RADEON_ALIGN(w * pPix->drawable.bitsPerPixel / 8, 32)) != txpitch)
 	return FALSE;
 
     return TRUE;
@@ -2255,7 +2255,9 @@ static void FUNC_NAME(RadeonCompositeTile)(ScrnInfoPtr pScrn,
 	vtx_count = 4;
 
     if (info->accel_state->vsync)
-	FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), dstY, dstY + h);
+	FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst,
+				      radeon_pick_best_crtc(pScrn, dstX, dstX + w, dstY, dstY + h),
+				      dstY, dstY + h);
 
 #ifdef ACCEL_CP
     if (info->ChipFamily < CHIP_FAMILY_R200) {

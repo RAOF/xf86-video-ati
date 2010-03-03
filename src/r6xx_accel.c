@@ -109,6 +109,10 @@ void R600IBDiscard(ScrnInfoPtr pScrn, drmBufPtr ib)
 	ret = radeon_cs_space_check(info->cs);
 	if (ret)
 	    ErrorF("space check failed in flush\n");
+	if (info->dri2.enabled) {
+		info->accel_state->XInited3D = FALSE;
+		info->accel_state->engineMode = EXA_ENGINEMODE_UNKNOWN;
+	}
     }
 #endif
     if (!ib) return;
@@ -159,7 +163,6 @@ start_3d(ScrnInfoPtr pScrn, drmBufPtr ib)
     E32(ib, 0x80000000);
     END_BATCH();
 
-    wait_3d_idle_clean (pScrn, ib);
 }
 
 /*
@@ -251,7 +254,7 @@ set_render_target(ScrnInfoPtr pScrn, drmBufPtr ib, cb_config_t *cb_conf)
 	cb_color_info |= SOURCE_FORMAT_bit;
 
     pitch = (cb_conf->w / 8) - 1;
-    h = (cb_conf->h + 7) & ~7;
+    h = RADEON_ALIGN(cb_conf->h, 8);
     slice = ((cb_conf->w * h) / 64) - 1;
 
     BEGIN_BATCH(3 + 2);
@@ -1279,14 +1282,13 @@ void r600_finish_op(ScrnInfoPtr pScrn, int vtx_size)
 
     draw_auto(pScrn, accel_state->ib, &draw_conf);
 
+    /* XXX drm should handle this in fence submit */
     wait_3d_idle_clean(pScrn, accel_state->ib);
 
     /* sync dst surface */
     cp_set_surface_sync(pScrn, accel_state->ib, (CB_ACTION_ENA_bit | CB0_DEST_BASE_ENA_bit),
 			accel_state->dst_size, accel_state->dst_mc_addr,
 			accel_state->dst_bo, RADEON_GEM_DOMAIN_VRAM, 0);
-
-    wait_3d_idle_clean(pScrn, accel_state->ib);
 
     accel_state->vb_start_op = -1;
     accel_state->ib_reset_op = 0;

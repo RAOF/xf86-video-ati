@@ -205,34 +205,6 @@ Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, uint32_t *pitch_offset)
 	return RADEONGetOffsetPitch(pPix, bpp, pitch_offset, offset, pitch);
 }
 
-/*
- * Used for vblank render stalling.
- * Ideally we'd have one pixmap per crtc.
- * syncing per-blit is unrealistic so,
- * we sync to whichever crtc has a larger area.
- */
-xf86CrtcPtr RADEONBiggerCrtcArea(PixmapPtr pPix)
-{
-    ScrnInfoPtr pScrn =  xf86Screens[pPix->drawable.pScreen->myNum];
-    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    int c, area = 0;
-    xf86CrtcPtr ret_crtc = NULL;
-
-    for (c = 0; c < xf86_config->num_crtc; c++) {
-	xf86CrtcPtr crtc = xf86_config->crtc[c];
-
-	if (!crtc->enabled)
-	    continue;
-
-	if ((crtc->mode.HDisplay * crtc->mode.VDisplay) > area) {
-	    area = crtc->mode.HDisplay * crtc->mode.VDisplay;
-	    ret_crtc = crtc;
-	}
-    }
-
-    return ret_crtc;
-}
-
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 
 static unsigned long swapper_surfaces[6];
@@ -260,7 +232,7 @@ static Bool RADEONPrepareAccess_BE(PixmapPtr pPix, int index)
      * surface. We need to align the size first
      */
     size = exaGetPixmapSize(pPix);
-    size = (size + RADEON_BUFFER_ALIGN) & ~(RADEON_BUFFER_ALIGN);
+    size = RADEON_ALIGN(size, RADEON_GPU_PAGE_SIZE);
 
     /* Set surface to tiling disabled with appropriate swapper */
     switch (bpp) {
@@ -429,7 +401,7 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
     int padded_width;
     uint32_t size;
     uint32_t tiling = 0;
-    int pixmap_align = 0;
+    int pixmap_align;
 
 #ifdef EXA_MIXED_PIXMAPS
     if (info->accel_state->exa->flags & EXA_MIXED_PIXMAPS) {
@@ -449,13 +421,13 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
     }
 
     if (tiling) {
-	height = (height + 15) & ~15;
-	pixmap_align = 255;
+	height = RADEON_ALIGN(height, 16);
+	pixmap_align = 256;
     } else
-	pixmap_align = 63;
+	pixmap_align = 64;
 
     padded_width = ((width * bitsPerPixel + FB_MASK) >> FB_SHIFT) * sizeof(FbBits);
-    padded_width = (padded_width + pixmap_align) & ~pixmap_align;
+    padded_width = RADEON_ALIGN(padded_width, pixmap_align);
     size = height * padded_width;
 
     new_priv = xcalloc(1, sizeof(struct radeon_exa_pixmap_priv));
@@ -663,7 +635,7 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	 * offscreen locations does.
 	 */
 	info->dri->backPitch = pScrn->displayWidth;
-	next = RADEON_ALIGN(info->accel_state->exa->offScreenBase, RADEON_BUFFER_ALIGN);
+	next = RADEON_ALIGN(info->accel_state->exa->offScreenBase, RADEON_GPU_PAGE_SIZE);
 	if (!info->dri->noBackBuffer &&
 	    next + screen_size <= info->accel_state->exa->memorySize)
 	{
@@ -679,7 +651,7 @@ Bool RADEONSetupMemEXA (ScreenPtr pScreen)
 	 */
 	info->dri->depthPitch = RADEON_ALIGN(pScrn->displayWidth, 32);
 	depth_size = RADEON_ALIGN(pScrn->virtualY, 16) * info->dri->depthPitch * depthCpp;
-	next = RADEON_ALIGN(info->accel_state->exa->offScreenBase, RADEON_BUFFER_ALIGN);
+	next = RADEON_ALIGN(info->accel_state->exa->offScreenBase, RADEON_GPU_PAGE_SIZE);
 	if (next + depth_size <= info->accel_state->exa->memorySize)
 	{
 	    info->dri->depthOffset = next;

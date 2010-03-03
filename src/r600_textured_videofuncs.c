@@ -337,7 +337,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.format              = FMT_8;
 	tex_res.w                   = pPriv->w >> 1;
 	tex_res.h                   = pPriv->h >> 1;
-	tex_res.pitch               = ((accel_state->src_pitch[0] >> 1) + 255) & ~255;
+	tex_res.pitch               = RADEON_ALIGN(accel_state->src_pitch[0] >> 1, 256);
 	tex_res.dst_sel_x           = SQ_SEL_X; /* V or U */
 	tex_res.dst_sel_y           = SQ_SEL_1;
 	tex_res.dst_sel_z           = SQ_SEL_1;
@@ -362,7 +362,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.format              = FMT_8;
 	tex_res.w                   = pPriv->w >> 1;
 	tex_res.h                   = pPriv->h >> 1;
-	tex_res.pitch               = ((accel_state->src_pitch[0] >> 1) + 255) & ~255;
+	tex_res.pitch               = RADEON_ALIGN(accel_state->src_pitch[0] >> 1, 256);
 	tex_res.dst_sel_x           = SQ_SEL_X; /* V or U */
 	tex_res.dst_sel_y           = SQ_SEL_1;
 	tex_res.dst_sel_z           = SQ_SEL_1;
@@ -520,11 +520,11 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_xv_pick_best_crtc(pScrn,
-					    pPriv->drw_x,
-					    pPriv->drw_x + pPriv->dst_w,
-					    pPriv->drw_y,
-					    pPriv->drw_y + pPriv->dst_h);
+	    crtc = radeon_pick_best_crtc(pScrn,
+					 pPriv->drw_x,
+					 pPriv->drw_x + pPriv->dst_w,
+					 pPriv->drw_y,
+					 pPriv->drw_y + pPriv->dst_h);
 	if (crtc)
 	    cp_wait_vline_sync(pScrn, accel_state->ib, pPixmap,
 			       crtc,

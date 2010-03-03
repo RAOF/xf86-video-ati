@@ -95,6 +95,30 @@ uint32_t RADEON_ROP[16] = {
     RADEON_ROP3_ONE,  /* GXset          */
 };
 
+static void R600VlineHelperClear(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
+
+    accel_state->vline_crtc = NULL;
+    accel_state->vline_y1 = -1;
+    accel_state->vline_y2 = 0;
+}
+
+static void R600VlineHelperSet(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
+
+    accel_state->vline_crtc = radeon_pick_best_crtc(pScrn, x1, x2, y1, y2);
+    if (accel_state->vline_y1 == -1)
+	accel_state->vline_y1 = y1;
+    if (y1 < accel_state->vline_y1)
+	accel_state->vline_y1 = y1;
+    if (y2 > accel_state->vline_y2)
+	accel_state->vline_y2 = y2;
+}
+
 static Bool R600ValidPM(uint32_t pm, int bpp)
 {
     uint8_t r, g, b, a;
@@ -353,6 +377,9 @@ R600PrepareSolid(PixmapPtr pPix, int alu, Pixel pm, Pixel fg)
     ErrorF("PM: 0x%08x\n", pm);
 #endif
 
+    if (accel_state->vsync)
+	R600VlineHelperClear(pScrn);
+
     return TRUE;
 }
 
@@ -361,7 +388,12 @@ static void
 R600Solid(PixmapPtr pPix, int x1, int y1, int x2, int y2)
 {
     ScrnInfoPtr pScrn = xf86Screens[pPix->drawable.pScreen->myNum];
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
     float *vb;
+
+    if (accel_state->vsync)
+	R600VlineHelperSet(pScrn, x1, y1, x2, y2);
 
     vb = radeon_vbo_space(pScrn, 8);
 
@@ -381,6 +413,14 @@ static void
 R600DoneSolid(PixmapPtr pPix)
 {
     ScrnInfoPtr pScrn = xf86Screens[pPix->drawable.pScreen->myNum];
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
+
+    if (accel_state->vsync)
+	cp_wait_vline_sync(pScrn, accel_state->ib, pPix,
+			   accel_state->vline_crtc,
+			   accel_state->vline_y1,
+			   accel_state->vline_y2);
 
     r600_finish_op(pScrn, 8);
 }
@@ -587,6 +627,22 @@ R600DoCopy(ScrnInfoPtr pScrn)
 }
 
 static void
+R600DoCopyVline(PixmapPtr pPix)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pPix->drawable.pScreen->myNum];
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
+
+    if (accel_state->vsync)
+	cp_wait_vline_sync(pScrn, accel_state->ib, pPix,
+			   accel_state->vline_crtc,
+			   accel_state->vline_y1,
+			   accel_state->vline_y2);
+
+    r600_finish_op(pScrn, 16);
+}
+
+static void
 R600AppendCopyVertex(ScrnInfoPtr pScrn,
 		     int srcX, int srcY,
 		     int dstX, int dstY,
@@ -739,6 +795,9 @@ R600PrepareCopy(PixmapPtr pSrc,   PixmapPtr pDst,
 			  accel_state->dst_mc_addr, accel_state->dst_bo, pDst->drawable.bitsPerPixel,
 			  rop, planemask);
 
+    if (accel_state->vsync)
+	R600VlineHelperClear(pScrn);
+
     return TRUE;
 }
 
@@ -798,7 +857,7 @@ R600OverlapCopy(PixmapPtr pDst,
 				      dst_offset, dst_bo, pDst->drawable.bitsPerPixel,
                                       accel_state->rop, accel_state->planemask);
                     R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, w, vchunk);
-                    R600DoCopy(pScrn);
+                    R600DoCopyVline(pDst);
 
                     srcY = srcY + vchunk;
                     dstY = dstY + vchunk;
@@ -810,7 +869,7 @@ R600OverlapCopy(PixmapPtr pDst,
 				      dst_offset, dst_bo, pDst->drawable.bitsPerPixel,
                                       accel_state->rop, accel_state->planemask);
                     R600AppendCopyVertex(pScrn, srcX, srcY + h - vchunk, dstX, dstY + h - vchunk, w, vchunk);
-                    R600DoCopy(pScrn);
+                    R600DoCopyVline(pDst);
                 }
                 h = h - vchunk;
                 vchunk = 0;
@@ -823,7 +882,7 @@ R600OverlapCopy(PixmapPtr pDst,
 				      dst_offset, dst_bo, pDst->drawable.bitsPerPixel,
                                       accel_state->rop, accel_state->planemask);
                     R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, hchunk, h);
-                    R600DoCopy(pScrn);
+                    R600DoCopyVline(pDst);
 
                     srcX = srcX + hchunk;
                     dstX = dstX + hchunk;
@@ -835,7 +894,7 @@ R600OverlapCopy(PixmapPtr pDst,
 				      dst_offset, dst_bo, pDst->drawable.bitsPerPixel,
                                       accel_state->rop, accel_state->planemask);
                     R600AppendCopyVertex(pScrn, srcX + w - hchunk, srcY, dstX + w - hchunk, dstY, hchunk, h);
-                    R600DoCopy(pScrn);
+                    R600DoCopyVline(pDst);
                 }
                 w = w - hchunk;
                 hchunk = 0;
@@ -853,7 +912,7 @@ R600OverlapCopy(PixmapPtr pDst,
 				      dst_offset, dst_bo, pDst->drawable.bitsPerPixel,
 				      accel_state->rop, accel_state->planemask);
 		    R600AppendCopyVertex(pScrn, srcX + i - hchunk, srcY, dstX + i - hchunk, dstY, hchunk, h);
-		    R600DoCopy(pScrn);
+		    R600DoCopyVline(pDst);
 		}
 	    } else { /* left */
 		/* copy left to right */
@@ -866,7 +925,7 @@ R600OverlapCopy(PixmapPtr pDst,
 				      accel_state->rop, accel_state->planemask);
 
 		    R600AppendCopyVertex(pScrn, srcX + i, srcY, dstX + i, dstY, hchunk, h);
-		    R600DoCopy(pScrn);
+		    R600DoCopyVline(pDst);
 		}
 	    }
 	} else { /* up/down */
@@ -882,7 +941,7 @@ R600OverlapCopy(PixmapPtr pDst,
 
                     if (vchunk > h - i) vchunk = h - i;
                     R600AppendCopyVertex(pScrn, srcX, srcY + i, dstX, dstY + i, w, vchunk);
-                    R600DoCopy(pScrn);
+                    R600DoCopyVline(pDst);
                 }
 	    } else { /* down */
 		/* copy bottom to top */
@@ -896,7 +955,7 @@ R600OverlapCopy(PixmapPtr pDst,
 
                     if (vchunk > i) vchunk = i;
                     R600AppendCopyVertex(pScrn, srcX, srcY + i - vchunk, dstX, dstY + i - vchunk, w, vchunk);
-                    R600DoCopy(pScrn);
+                    R600DoCopyVline(pDst);
                 }
             }
 	}
@@ -909,7 +968,7 @@ R600OverlapCopy(PixmapPtr pDst,
 			  accel_state->rop, accel_state->planemask);
 
 	R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, w, h);
-	R600DoCopy(pScrn);
+	R600DoCopyVline(pDst);
     }
 }
 
@@ -926,6 +985,9 @@ R600Copy(PixmapPtr pDst,
 
     if (accel_state->same_surface && (srcX == dstX) && (srcY == dstY))
 	return;
+
+    if (accel_state->vsync)
+	R600VlineHelperSet(pScrn, dstX, dstY, dstX + w, dstY + h);
 
 #if defined(XF86DRM_MODE)
     if (info->cs)
@@ -964,7 +1026,7 @@ R600Copy(PixmapPtr pDst,
 			      orig_offset, bo, pDst->drawable.bitsPerPixel,
 			      accel_state->rop, accel_state->planemask);
 	    R600AppendCopyVertex(pScrn, dstX, dstY, dstX, dstY, w, h);
-	    R600DoCopy(pScrn);
+	    R600DoCopyVline(pDst);
 	} else
 	    R600OverlapCopy(pDst, srcX, srcY, dstX, dstY, w, h);
     } else if (accel_state->same_surface) {
@@ -985,7 +1047,7 @@ R600Copy(PixmapPtr pDst,
 			  offset, bo, pDst->drawable.bitsPerPixel,
 			  accel_state->rop, accel_state->planemask);
 	R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, w, h);
-	R600DoCopy(pScrn);
+	R600DoCopyVline(pDst);
     } else {
 	R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, w, h);
     }
@@ -1000,7 +1062,7 @@ R600DoneCopy(PixmapPtr pDst)
     struct radeon_accel_state *accel_state = info->accel_state;
 
     if (!accel_state->same_surface)
-	R600DoCopy(pScrn);
+	R600DoCopyVline(pDst);
 
     if (accel_state->copy_area) {
 	if (!info->cs)
@@ -1752,6 +1814,9 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     EREG(accel_state->ib, SPI_INTERP_CONTROL_0,                0);
     END_BATCH();
 
+    if (accel_state->vsync)
+	R600VlineHelperClear(pScrn);
+
     return TRUE;
 }
 
@@ -1768,6 +1833,9 @@ static void R600Composite(PixmapPtr pDst,
 
     /* ErrorF("R600Composite (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",
        srcX, srcY, maskX, maskY,dstX, dstY, w, h); */
+
+    if (accel_state->vsync)
+	R600VlineHelperSet(pScrn, dstX, dstY, dstX + w, dstY + h);
 
     if (accel_state->msk_pic) {
 
@@ -1795,7 +1863,7 @@ static void R600Composite(PixmapPtr pDst,
 	vb[17] = (float)(maskY + h);
 
 	radeon_vbo_commit(pScrn);
-		       
+
     } else {
 
 	vb = radeon_vbo_space(pScrn, 16);
@@ -1828,6 +1896,12 @@ static void R600DoneComposite(PixmapPtr pDst)
     struct radeon_accel_state *accel_state = info->accel_state;
     int vtx_size;
 
+    if (accel_state->vsync)
+	cp_wait_vline_sync(pScrn, accel_state->ib, pDst,
+			   accel_state->vline_crtc,
+			   accel_state->vline_y1,
+			   accel_state->vline_y2);
+
     vtx_size = accel_state->msk_pic ? 24 : 16;
 
     r600_finish_op(pScrn, vtx_size);
@@ -1842,7 +1916,7 @@ R600CopyToVRAM(ScrnInfoPtr pScrn,
     RADEONInfoPtr info = RADEONPTR(pScrn);
     uint32_t scratch_mc_addr;
     int wpass = w * (bpp/8);
-    int scratch_pitch_bytes = (wpass + 255) & ~255;
+    int scratch_pitch_bytes = RADEON_ALIGN(wpass, 256);
     uint32_t scratch_pitch = scratch_pitch_bytes / (bpp / 8);
     int scratch_offset = 0, hpass, temph;
     char *dst;
@@ -1934,16 +2008,18 @@ R600DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
     uint32_t src_height = pSrc->drawable.height;
     int bpp = pSrc->drawable.bitsPerPixel;
     uint32_t scratch_mc_addr;
-    int scratch_pitch_bytes = (dst_pitch + 255) & ~255;
+    int scratch_pitch_bytes = RADEON_ALIGN(dst_pitch, 256);
     int scratch_offset = 0, hpass;
     uint32_t scratch_pitch = scratch_pitch_bytes / (bpp / 8);
     int wpass = w * (bpp/8);
     drmBufPtr scratch;
     struct radeon_bo *bo = NULL;
 
-    /* RV740 seems to be particularly problematic with small xfers */
-    if ((info->ChipFamily == CHIP_FAMILY_RV740) && (w < 32 || h < 32))
-	return FALSE;
+    /* bad pipe setup in drm prior to 1.32 */
+    if (info->dri->pKernelDRMVersion->version_minor < 32) {
+	    if ((info->ChipFamily == CHIP_FAMILY_RV740) && (w < 32 || h < 32))
+		    return FALSE;
+    }
 
     if (src_pitch & 7)
 	return FALSE;
@@ -2015,7 +2091,7 @@ R600UploadToScreenCS(PixmapPtr pDst, int x, int y, int w, int h,
     unsigned size;
     uint32_t dst_domain;
     int bpp = pDst->drawable.bitsPerPixel;
-    uint32_t scratch_pitch = (w * bpp / 8 + 255) & ~255;
+    uint32_t scratch_pitch = RADEON_ALIGN(w * bpp / 8, 256);
     uint32_t src_pitch_hw = scratch_pitch / (bpp / 8);
     uint32_t dst_pitch_hw = exaGetPixmapPitch(pDst) / (bpp / 8);
     Bool r;
@@ -2060,6 +2136,9 @@ R600UploadToScreenCS(PixmapPtr pDst, int x, int y, int w, int h,
     }
     radeon_bo_unmap(scratch);
 
+    if (info->accel_state->vsync)
+	R600VlineHelperSet(pScrn, x, y, x + w, y + h);
+
     /* blit from gart to vram */
     R600DoPrepareCopy(pScrn,
 		      src_pitch_hw, w, h,
@@ -2068,7 +2147,7 @@ R600UploadToScreenCS(PixmapPtr pDst, int x, int y, int w, int h,
 		      0, radeon_get_pixmap_bo(pDst), bpp,
 		      3, 0xffffffff);
     R600AppendCopyVertex(pScrn, 0, 0, x, y, w, h);
-    R600DoCopy(pScrn);
+    R600DoCopyVline(pDst);
 
 out:
     radeon_bo_unref(scratch);
@@ -2086,7 +2165,7 @@ R600DownloadFromScreenCS(PixmapPtr pSrc, int x, int y, int w,
     unsigned size;
     uint32_t src_domain = 0;
     int bpp = pSrc->drawable.bitsPerPixel;
-    uint32_t scratch_pitch = (w * bpp / 8 + 255) & ~255;
+    uint32_t scratch_pitch = RADEON_ALIGN(w * bpp / 8, 256);
     uint32_t dst_pitch_hw = scratch_pitch / (bpp / 8);
     uint32_t src_pitch_hw = exaGetPixmapPitch(pSrc) / (bpp / 8);
     Bool r;
@@ -2135,7 +2214,7 @@ R600DownloadFromScreenCS(PixmapPtr pSrc, int x, int y, int w,
 		      3, 0xffffffff);
     R600AppendCopyVertex(pScrn, x, y, 0, 0, w, h);
     R600DoCopy(pScrn);
-    
+
     if (info->cs)
 	radeon_cs_flush_indirect(pScrn);
 
@@ -2402,7 +2481,11 @@ R600DrawInit(ScreenPtr pScreen)
     info->accel_state->exa->maxY = 8192;
 
     /* not supported yet */
-    info->accel_state->vsync = FALSE;
+    if (xf86ReturnOptValBool(info->Options, OPTION_EXA_VSYNC, FALSE)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "EXA VSync enabled\n");
+	info->accel_state->vsync = TRUE;
+    } else
+	info->accel_state->vsync = FALSE;
 
     if (!exaDriverInit(pScreen, info->accel_state->exa)) {
 	xfree(info->accel_state->exa);
@@ -2424,6 +2507,7 @@ R600DrawInit(ScreenPtr pScreen)
     info->accel_state->dst_bo = NULL;
     info->accel_state->copy_area_bo = NULL;
     info->accel_state->vb_start_op = -1;
+    R600VlineHelperClear(pScrn);
 
 #ifdef XF86DRM_MODE
     radeon_vbo_init_lists(pScrn);

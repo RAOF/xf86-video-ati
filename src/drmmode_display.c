@@ -425,7 +425,7 @@ drmmode_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 	int ret;
 	unsigned long rotate_pitch;
 
-	width = RADEON_ALIGN(width, 63);
+	width = RADEON_ALIGN(width, 64);
 	rotate_pitch = width * drmmode->cpp;
 
 	size = rotate_pitch * height;
@@ -460,7 +460,7 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 	if (!data)
 		data = drmmode_crtc_shadow_allocate (crtc, width, height);
 
-	rotate_pitch = RADEON_ALIGN(width, 63) * drmmode->cpp;
+	rotate_pitch = RADEON_ALIGN(width, 64) * drmmode->cpp;
 
 	rotate_pixmap = drmmode_create_bo_pixmap(pScrn->pScreen,
 						 width, height,
@@ -854,6 +854,7 @@ const char *output_names[] = { "None",
 static void
 drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num)
 {
+	RADEONInfoPtr info = RADEONPTR(pScrn);
 	xf86OutputPtr output;
 	drmModeConnectorPtr koutput;
 	drmModeEncoderPtr *kencoders = NULL;
@@ -861,6 +862,7 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num)
 	drmModePropertyPtr props;
 	char name[32];
 	int i;
+	const char *s;
 
 	koutput = drmModeGetConnector(drmmode->fd, drmmode->mode_res->connectors[num]);
 	if (!koutput)
@@ -870,7 +872,7 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num)
 	if (!kencoders) {
 		goto out_free_encoders;
 	}
-		
+
 	for (i = 0; i < koutput->count_encoders; i++) {
 		kencoders[i] = drmModeGetEncoder(drmmode->fd, koutput->encoders[i]);
 		if (!kencoders[i]) {
@@ -895,6 +897,18 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num)
 	    }
 	} else {
 	    snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
+	}
+
+	if (xf86IsEntityShared(pScrn->entityList[0])) {
+		if ((s = xf86GetOptValString(info->Options, OPTION_ZAPHOD_HEADS))) {
+			if (!RADEONZaphodStringMatches(pScrn, s, name))
+				goto out_free_encoders;
+		} else {
+			if (info->IsPrimary && (num != 0))
+				goto out_free_encoders;
+			else if (info->IsSecondary && (num != 1))
+				goto out_free_encoders;
+		}
 	}
 
 	output = xf86OutputCreate (pScrn, &drmmode_output_funcs, name);
@@ -1034,7 +1048,7 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 	if (front_bo)
 		radeon_bo_wait(front_bo);
 
-	pitch = RADEON_ALIGN(width, 63);
+	pitch = RADEON_ALIGN(width, 64);
 	height = RADEON_ALIGN(height, 16);
 
 	screen_size = pitch * height * cpp;
@@ -1136,7 +1150,7 @@ static const xf86CrtcConfigFuncsRec drmmode_xf86crtc_config_funcs = {
 };
 
 
-Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, char *busId, char *driver_name, int cpp, int zaphod_mask)
+Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, char *busId, char *driver_name, int cpp)
 {
 	xf86CrtcConfigPtr   xf86_config;
 	RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
@@ -1171,12 +1185,11 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, char *busId, char 
 
 	xf86CrtcSetSizeRange(pScrn, 320, 200, drmmode->mode_res->max_width, drmmode->mode_res->max_height);
 	for (i = 0; i < drmmode->mode_res->count_crtcs; i++)
-		if (zaphod_mask & (1 << i))
+		if (!xf86IsEntityShared(pScrn->entityList[0]) || pScrn->confScreen->device->screen == i)
 			drmmode_crtc_init(pScrn, drmmode, i);
 
 	for (i = 0; i < drmmode->mode_res->count_connectors; i++)
-		if (zaphod_mask & (1 << i))
-			drmmode_output_init(pScrn, drmmode, i);
+		drmmode_output_init(pScrn, drmmode, i);
 
 	/* workout clones */
 	drmmode_clones_init(pScrn, drmmode);

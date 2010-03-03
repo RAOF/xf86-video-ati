@@ -66,9 +66,10 @@ const OptionInfoRec RADEONOptions_KMS[] = {
     { OPTION_SUBPIXEL_ORDER, "SubPixelOrder",    OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_ACCELMETHOD,    "AccelMethod",      OPTV_STRING,  {0}, FALSE },
     { OPTION_DRI,            "DRI",       	 OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_TVSTD,          "TVStandard",         OPTV_STRING,  {0}, FALSE },
-    { OPTION_EXA_VSYNC,         "EXAVSync",        OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_EXA_PIXMAPS,   "EXAPixmaps",	OPTV_BOOLEAN,   {0}, FALSE },
+    { OPTION_TVSTD,          "TVStandard",       OPTV_STRING,  {0}, FALSE },
+    { OPTION_EXA_VSYNC,      "EXAVSync",         OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_EXA_PIXMAPS,    "EXAPixmaps",	 OPTV_BOOLEAN,   {0}, FALSE },
+    { OPTION_ZAPHOD_HEADS,   "ZaphodHeads",      OPTV_STRING,  {0}, FALSE },
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -366,7 +367,6 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     RADEONInfoPtr     info;
     RADEONEntPtr pRADEONEnt;
     DevUnion* pPriv;
-    int zaphod_mask = 0;
     char *bus_id;
     Gamma  zeros = { 0.0, 0.0, 0.0 };
 
@@ -425,12 +425,6 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     if (!radeon_alloc_dri(pScrn))
 	return FALSE;
 
-    zaphod_mask = 0xf;
-    if (info->IsPrimary)
-	zaphod_mask = 0xd;
-    if (info->IsSecondary)
-	zaphod_mask = 0x2;
-
     info->allowColorTiling = xf86ReturnOptValBool(info->Options,
                                         OPTION_COLOR_TILING, FALSE);
     if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -441,7 +435,7 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	 "KMS Color Tiling: %sabled\n", info->allowColorTiling ? "en" : "dis");
 
     bus_id = DRICreatePCIBusID(info->PciInfo);
-    if (drmmode_pre_init(pScrn, &info->drmmode, bus_id, "radeon", pScrn->bitsPerPixel / 8, zaphod_mask) == FALSE) {
+    if (drmmode_pre_init(pScrn, &info->drmmode, bus_id, "radeon", pScrn->bitsPerPixel / 8) == FALSE) {
 	xfree(bus_id);
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
 	goto fail;
@@ -898,7 +892,6 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     int screen_size;
     int stride = pScrn->displayWidth * cpp;
     int total_size_bytes = 0, remain_size_bytes;
-    int pagesize = 4096;
 
     if (info->accel_state->exa != NULL) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR, "Memory map already initialized\n");
@@ -915,7 +908,7 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
 	int cursor_size = 64 * 4 * 64;
 	int c;
 
-	cursor_size = RADEON_ALIGN(cursor_size, pagesize);
+	cursor_size = RADEON_ALIGN(cursor_size, RADEON_GPU_PAGE_SIZE);
 	for (c = 0; c < xf86_config->num_crtc; c++) {
 	    /* cursor objects */
             if (info->cursor_bo[c] == NULL) {
@@ -941,7 +934,7 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
         }
     }
 
-    screen_size = RADEON_ALIGN(screen_size, pagesize);
+    screen_size = RADEON_ALIGN(screen_size, RADEON_GPU_PAGE_SIZE);
     /* keep area front front buffer - but don't allocate it yet */
     total_size_bytes += screen_size;
 

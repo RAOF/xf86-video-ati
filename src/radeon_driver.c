@@ -206,6 +206,7 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_FORCE_LOW_POWER,	"ForceLowPowerMode", OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_DYNAMIC_PM,	"DynamicPM",       OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_NEW_PLL,	        "NewPLL",        OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_ZAPHOD_HEADS,      "ZaphodHeads",     OPTV_STRING,  {0}, FALSE },
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -769,6 +770,12 @@ static Bool radeon_get_mc_idle(ScrnInfoPtr pScrn)
 	    return FALSE;
     } else if (info->ChipFamily >= CHIP_FAMILY_R520) {
 	if (INMC(pScrn, R520_MC_STATUS) & R520_MC_STATUS_IDLE)
+	    return TRUE;
+	else
+	    return FALSE;
+    } else if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	       (info->ChipFamily == CHIP_FAMILY_RS480)) {
+	if (INREG(RADEON_MC_STATUS) & RADEON_MC_IDLE)
 	    return TRUE;
 	else
 	    return FALSE;
@@ -2785,19 +2792,61 @@ RADEONPreInitBIOS(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     return TRUE;
 }
 
+Bool
+RADEONZaphodStringMatches(ScrnInfoPtr pScrn, const char *s, char *output_name)
+{
+    int i = 0;
+    char s1[20];
+
+    do {
+	switch(*s) {
+	case ',':
+	    s1[i] = '\0';
+	    i = 0;
+	    if (strcmp(s1, output_name) == 0)
+		return TRUE;
+	    break;
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+	    break;
+	default:
+	    s1[i] = *s;
+	    i++;
+	    break;
+	}
+    } while(*s++);
+
+    s1[i] = '\0';
+    if (strcmp(s1, output_name) == 0)
+	return TRUE;
+
+    return FALSE;
+}
+
 static void RADEONFixZaphodOutputs(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
     xf86CrtcConfigPtr   config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int o;
+    char *s;
 
-    if (info->IsPrimary) {
-	xf86OutputDestroy(config->output[0]);
-	while(config->num_output > 1) {
-	    xf86OutputDestroy(config->output[1]);
+    if ((s = xf86GetOptValString(info->Options, OPTION_ZAPHOD_HEADS))) {
+	for (o = config->num_output; o > 0; o--) {
+	    if (!RADEONZaphodStringMatches(pScrn, s, config->output[o - 1]->name))
+		xf86OutputDestroy(config->output[o - 1]);
 	}
     } else {
-	while(config->num_output > 1) {
-	    xf86OutputDestroy(config->output[1]);
+	if (info->IsPrimary) {
+	    xf86OutputDestroy(config->output[0]);
+	    while (config->num_output > 1) {
+		xf86OutputDestroy(config->output[1]);
+	    }
+	} else {
+	    while (config->num_output > 1) {
+		xf86OutputDestroy(config->output[1]);
+	    }
 	}
     }
 }
@@ -2810,12 +2859,14 @@ static Bool RADEONPreInitControllers(ScrnInfoPtr pScrn)
     int mask;
     int found = 0;
 
-    if (!info->IsPrimary && !info->IsSecondary)
-	mask = 3;
-    else if (info->IsPrimary)
+    if (info->IsPrimary)
 	mask = 1;
-    else
+    else if (info->IsSecondary)
 	mask = 2;
+    else
+	mask = 3;
+
+    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "mask: %d\n", mask);
 
     if (!RADEONAllocateControllers(pScrn, mask))
 	return FALSE;
@@ -3108,9 +3159,6 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 
     if (!RADEONPreInitControllers(pScrn))
        goto fail;
-
-
-    ErrorF("before xf86InitialConfiguration\n");
 
     if (!xf86InitialConfiguration (pScrn, FALSE))
    {
@@ -4228,8 +4276,8 @@ void RADEONChangeSurfaces(ScrnInfoPtr pScrn)
     int cpp = info->CurrentLayout.pixel_bytes;
     /* depth/front/back pitch must be identical (and the same as displayWidth) */
     int width_bytes = pScrn->displayWidth * cpp;
-    int bufferSize = ((((pScrn->virtualY + 15) & ~15) * width_bytes
-        + RADEON_BUFFER_ALIGN) & ~RADEON_BUFFER_ALIGN);
+    int bufferSize = RADEON_ALIGN((RADEON_ALIGN(pScrn->virtualY, 16)) * width_bytes,
+        RADEON_GPU_PAGE_SIZE);
     unsigned int color_pattern, swap_pattern;
 
     if (!info->allowColorTiling)
@@ -4261,8 +4309,8 @@ void RADEONChangeSurfaces(ScrnInfoPtr pScrn)
 	int retvalue;
 	int depthCpp = (info->dri->depthBits - 8) / 4;
 	int depth_width_bytes = pScrn->displayWidth * depthCpp;
-	int depthBufferSize = ((((pScrn->virtualY + 15) & ~15) * depth_width_bytes
-				+ RADEON_BUFFER_ALIGN) & ~RADEON_BUFFER_ALIGN);
+	int depthBufferSize = RADEON_ALIGN((RADEON_ALIGN(pScrn->virtualY, 16)) * depth_width_bytes,
+				RADEON_GPU_PAGE_SIZE);
 	unsigned int depth_pattern;
 
 	drmsurffree.address = info->dri->frontOffset;

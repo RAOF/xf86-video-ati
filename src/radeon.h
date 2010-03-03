@@ -223,7 +223,8 @@ typedef enum {
     OPTION_R4XX_ATOM,
     OPTION_FORCE_LOW_POWER,
     OPTION_DYNAMIC_PM,
-    OPTION_NEW_PLL
+    OPTION_NEW_PLL,
+    OPTION_ZAPHOD_HEADS
 } RADEONOpts;
 
 
@@ -233,7 +234,8 @@ typedef enum {
 #define RADEON_VSYNC_TIMEOUT	20000 /* Maximum wait for VSYNC (in usecs) */
 
 /* Buffer are aligned on 4096 byte boundaries */
-#define RADEON_BUFFER_ALIGN 0x00000fff
+#define RADEON_GPU_PAGE_SIZE 4096
+#define RADEON_BUFFER_ALIGN (RADEON_GPU_PAGE_SIZE - 1)
 #define RADEON_VBIOS_SIZE 0x00010000
 #define RADEON_USE_RMX 0x80000000 /* mode flag for using RMX
 				   * Need to comfirm this is not used
@@ -784,6 +786,10 @@ struct radeon_accel_state {
     // composite
     Bool              component_alpha;
     Bool              src_alpha;
+    // vline
+    xf86CrtcPtr       vline_crtc;
+    int               vline_y1;
+    int               vline_y2;
 #endif
 
 #ifdef USE_XAA
@@ -1168,20 +1174,13 @@ extern void radeon_crtc_load_lut(xf86CrtcPtr crtc);
 extern void radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post);
 extern Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask);
 extern void RADEONBlank(ScrnInfoPtr pScrn);
-extern void RADEONComputePLL(RADEONPLLPtr pll, unsigned long freq,
+extern void RADEONComputePLL(ScrnInfoPtr pScrn,
+			     RADEONPLLPtr pll, unsigned long freq,
 			     uint32_t *chosen_dot_clock_freq,
 			     uint32_t *chosen_feedback_div,
 			     uint32_t *chosen_frac_feedback_div,
 			     uint32_t *chosen_reference_div,
 			     uint32_t *chosen_post_div, int flags);
-extern void RADEONComputePLL_AVIVO(RADEONPLLPtr pll,
-				   unsigned long freq,
-				   uint32_t *chosen_dot_clock_freq,
-				   uint32_t *chosen_feedback_div,
-				   uint32_t *chosen_frac_feedback_div,
-				   uint32_t *chosen_reference_div,
-				   uint32_t *chosen_post_div,
-				   int flags);
 extern DisplayModePtr RADEONCrtcFindClosestMode(xf86CrtcPtr crtc,
 						DisplayModePtr pMode);
 extern void RADEONUnblank(ScrnInfoPtr pScrn);
@@ -1232,6 +1231,8 @@ extern void RADEONInitMemMapRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
 				      RADEONInfoPtr info);
 extern void RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
 					 RADEONSavePtr restore);
+extern Bool
+RADEONZaphodStringMatches(ScrnInfoPtr pScrn, const char *s, char *output_name);
 
 Bool RADEONGetRec(ScrnInfoPtr pScrn);
 void RADEONFreeRec(ScrnInfoPtr pScrn);
@@ -1319,13 +1320,16 @@ extern void RADEONUpdateHVPosition(xf86OutputPtr output, DisplayModePtr mode);
 extern void RADEONInitVideo(ScreenPtr pScreen);
 extern void RADEONResetVideo(ScrnInfoPtr pScrn);
 extern Bool radeon_load_bicubic_texture(ScrnInfoPtr pScrn);
+extern xf86CrtcPtr radeon_pick_best_crtc(ScrnInfoPtr pScrn,
+					 int x1, int x2, int y1, int y2);
 
 /* radeon_legacy_memory.c */
 extern uint32_t
 radeon_legacy_allocate_memory(ScrnInfoPtr pScrn,
 			      void **mem_struct,
 			      int size,
-			      int align);
+			      int align,
+			      int domain);
 extern void
 radeon_legacy_free_memory(ScrnInfoPtr pScrn,
 		          void *mem_struct);

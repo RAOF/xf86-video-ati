@@ -281,34 +281,34 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
     }
 
     if (info->ChipFamily >= CHIP_FAMILY_R600)
-	hw_align = 255;
+	hw_align = 256;
     else
-	hw_align = 63;
+	hw_align = 64;
 
     switch(id) {
     case FOURCC_YV12:
     case FOURCC_I420:
-	srcPitch = (width + 3) & ~3;
-	srcPitch2 = ((width >> 1) + 3) & ~3;
+	srcPitch = RADEON_ALIGN(width, 4);
+	srcPitch2 = RADEON_ALIGN(width >> 1, 4);
         if (pPriv->bicubic_state != BICUBIC_OFF) {
-	    dstPitch = ((dst_width << 1) + hw_align) & ~hw_align;
+	    dstPitch = RADEON_ALIGN(dst_width << 1, hw_align);
 	    dstPitch2 = 0;
 	} else {
-	    dstPitch = (dst_width + hw_align) & ~hw_align;
-	    dstPitch2 = ((dstPitch >> 1) + hw_align) & ~hw_align;
+	    dstPitch = RADEON_ALIGN(dst_width, hw_align);
+	    dstPitch2 = RADEON_ALIGN(dstPitch >> 1, hw_align);
 	}
 	break;
     case FOURCC_UYVY:
     case FOURCC_YUY2:
     default:
-	dstPitch = ((dst_width << 1) + hw_align) & ~hw_align;
+	dstPitch = RADEON_ALIGN(dst_width << 1, hw_align);
 	srcPitch = (width << 1);
 	srcPitch2 = 0;
 	break;
     }
 
     size = dstPitch * dst_height + 2 * dstPitch2 * ((dst_height + 1) >> 1);
-    size = (size + hw_align) & ~hw_align;
+    size = RADEON_ALIGN(size, hw_align);
 
     if (pPriv->video_memory != NULL && size != pPriv->size) {
 	radeon_legacy_free_memory(pScrn, pPriv->video_memory);
@@ -318,14 +318,16 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
     if (pPriv->video_memory == NULL) {
 	pPriv->video_offset = radeon_legacy_allocate_memory(pScrn,
 							    &pPriv->video_memory,
-							    size, hw_align + 1);
+							    size, hw_align,
+							    RADEON_GEM_DOMAIN_GTT);
 	if (pPriv->video_offset == 0)
 	    return BadAlloc;
 
 	if (info->cs) {
 	    pPriv->src_bo[0] = pPriv->video_memory;
 	    radeon_legacy_allocate_memory(pScrn, (void*)&pPriv->src_bo[1], size,
-					  hw_align + 1);
+					  hw_align,
+					  RADEON_GEM_DOMAIN_GTT);
 	}
     }
 
@@ -362,7 +364,7 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
 
     /* copy data */
     top = (y1 >> 16) & ~1;
-    nlines = ((((y2 + 0xffff) >> 16) + 1) & ~1) - top;
+    nlines = RADEON_ALIGN((y2 + 0xffff) >> 16, 2) - top;
 
     pPriv->src_offset = pPriv->video_offset;
     if (info->cs) {
@@ -385,9 +387,9 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
     pPriv->src_pitch = dstPitch;
 
     pPriv->planeu_offset = dstPitch * dst_height;
-    pPriv->planeu_offset = (pPriv->planeu_offset + hw_align) & ~hw_align;
+    pPriv->planeu_offset = RADEON_ALIGN(pPriv->planeu_offset, hw_align);
     pPriv->planev_offset = pPriv->planeu_offset + dstPitch2 * ((dst_height + 1) >> 1);
-    pPriv->planev_offset = (pPriv->planev_offset + hw_align) & ~hw_align;
+    pPriv->planev_offset = RADEON_ALIGN(pPriv->planev_offset, hw_align);
 
     pPriv->size = size;
     pPriv->pDraw = pDraw;
@@ -395,7 +397,7 @@ RADEONPutImageTextured(ScrnInfoPtr pScrn,
     switch(id) {
     case FOURCC_YV12:
     case FOURCC_I420:
-	s2offset = srcPitch * ((height + 1) & ~1);
+	s2offset = srcPitch * (RADEON_ALIGN(height, 2));
 	s3offset = s2offset + (srcPitch2 * ((height + 1) >> 1));
 	s2offset += ((top >> 1) * srcPitch2);
 	s3offset += ((top >> 1) * srcPitch2);
@@ -709,7 +711,8 @@ Bool radeon_load_bicubic_texture(ScrnInfoPtr pScrn)
     /* Bicubic filter loading */
     info->bicubic_offset = radeon_legacy_allocate_memory(pScrn,
 							 &info->bicubic_memory,
-							 sizeof(bicubic_tex_512), 64);
+							 sizeof(bicubic_tex_512), 64,
+							 RADEON_GEM_DOMAIN_VRAM);
     if (info->bicubic_offset == 0)
 	return FALSE;
 

@@ -226,7 +226,9 @@ FUNC_NAME(RADEONSolid)(PixmapPtr pPix, int x1, int y1, int x2, int y2)
 #endif
 
     if (info->accel_state->vsync)
-	FUNC_NAME(RADEONWaitForVLine)(pScrn, pPix, RADEONBiggerCrtcArea(pPix), y1, y2);
+	FUNC_NAME(RADEONWaitForVLine)(pScrn, pPix,
+				      radeon_pick_best_crtc(pScrn, x1, x2, y1, y2),
+				      y1, y2);
 
     BEGIN_ACCEL(2);
     OUT_ACCEL_REG(RADEON_DST_Y_X, (y1 << 16) | x1);
@@ -345,7 +347,9 @@ FUNC_NAME(RADEONCopy)(PixmapPtr pDst,
     }
 
     if (info->accel_state->vsync)
-	FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), dstY, dstY + h);
+	FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst,
+				      radeon_pick_best_crtc(pScrn, dstX, dstX + w, dstY, dstY + h),
+				      dstY, dstY + h);
 
     BEGIN_ACCEL(3);
 
@@ -381,7 +385,9 @@ RADEONUploadToScreenCP(PixmapPtr pDst, int x, int y, int w, int h,
 	RADEON_SWITCH_TO_2D();
 
 	if (info->accel_state->vsync)
-	    FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst, RADEONBiggerCrtcArea(pDst), y, y + h);
+	    FUNC_NAME(RADEONWaitForVLine)(pScrn, pDst,
+					  radeon_pick_best_crtc(pScrn, x, x + w, y, y + h),
+					  y, y + h);
 
 	while ((buf = RADEONHostDataBlit(pScrn,
 					 cpp, w, dst_pitch_off, &buf_pitch,
@@ -460,7 +466,7 @@ RADEONUploadToScreenCS(PixmapPtr pDst, int x, int y, int w, int h,
     uint32_t dst_domain;
     uint32_t dst_pitch_offset;
     unsigned bpp = pDst->drawable.bitsPerPixel;
-    uint32_t scratch_pitch = (w * bpp / 8 + 63) & ~63;
+    uint32_t scratch_pitch = RADEON_ALIGN(w * bpp / 8, 64);
     uint32_t swap = RADEON_HOST_DATA_SWAP_NONE;
     Bool r;
     int i;
@@ -559,7 +565,7 @@ RADEONDownloadFromScreenCS(PixmapPtr pSrc, int x, int y, int w,
     uint32_t src_domain = 0;
     uint32_t src_pitch_offset;
     unsigned bpp = pSrc->drawable.bitsPerPixel;
-    uint32_t scratch_pitch = (w * bpp / 8 + 63) & ~63;
+    uint32_t scratch_pitch = RADEON_ALIGN(w * bpp / 8, 64);
     uint32_t swap = RADEON_HOST_DATA_SWAP_NONE;
     Bool r;
 
@@ -661,7 +667,7 @@ RADEONDownloadFromScreenCP(PixmapPtr pSrc, int x, int y, int w, int h,
     RINFO_FROM_SCREEN(pSrc->drawable.pScreen);
     uint8_t	  *src	     = info->FB + exaGetPixmapOffset(pSrc);
     int		   bpp	     = pSrc->drawable.bitsPerPixel;
-    uint32_t datatype, src_pitch_offset, scratch_pitch = (w * bpp/8 + 63) & ~63, scratch_off = 0;
+    uint32_t datatype, src_pitch_offset, scratch_pitch = RADEON_ALIGN(w * bpp / 8, 64), scratch_off = 0;
     drmBufPtr scratch;
 
     TRACE;
@@ -814,7 +820,7 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
     /* The 2D engine supports overlapping memory areas */
     info->accel_state->exa->flags |= EXA_SUPPORTS_OFFSCREEN_OVERLAPS;
 #endif
-    info->accel_state->exa->pixmapOffsetAlign = RADEON_BUFFER_ALIGN + 1;
+    info->accel_state->exa->pixmapOffsetAlign = RADEON_GPU_PAGE_SIZE;
     info->accel_state->exa->pixmapPitchAlign = 64;
 
 #ifdef EXA_HANDLES_PIXMAPS

@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-ati],
-        6.12.99,
+        6.12.191,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-ati)
 
@@ -363,8 +363,6 @@ AC_SUBST([moduledir])
 
 DRIVER_NAME=ati
 AC_SUBST([DRIVER_NAME])
-
-XORG_CHECK_LINUXDOC
 
 AC_MSG_NOTICE(
 [The atimisc sub-driver has been split out to xf86-video-mach64:]
