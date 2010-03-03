@@ -1,3 +1,37 @@
+commit 802073aea2cadc446778902b344221ad2484dc34
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 2 20:46:06 2010 -0500
+
+    radeon: bump version for release
+
+commit 58738d5abb5e6f0622747cb6cdc8d09d4c5b0ade
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Feb 27 16:47:19 2010 +1000
+
+    pciids: hopefully fix HP
+
+commit af13ce94d8631fa3d111de8fdf8765c65fba6bf7
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Feb 26 19:17:28 2010 +1000
+
+    pci: add HP vendor id
+
+commit 890ea858b3228e2d519c57b8775f0009aaa2bac4
+Author: Cooper Yuan <cooperyuan@gmail.com>
+Date:   Fri Feb 26 16:14:12 2010 +0800
+
+    add more triple-head server ID
+
+commit 89e87dcb8ffb8a1ffdd55b9b63c8efef5f42e603
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Feb 18 14:02:00 2010 -0500
+
+    RS600: add connector quirk
+    
+    System lists DVI port as HDMI.
+    
+    fixes fdo bug 26605
+
 commit 712ac98af7cd862e802a8f735318dfb9c6a7ad28
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Tue Jan 19 11:59:38 2010 -0500
