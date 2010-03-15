@@ -1,3 +1,52 @@
+commit 94202762f97d0cc8f2d0109e4f424f70a5460120
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 15 13:37:08 2010 -0400
+
+    bump version for release
+
+commit 54f69be224105d22fdae8df101efcefe0a1efee0
+Author: Michael Cree <mcree@orcon.net.nz>
+Date:   Fri Mar 12 22:23:31 2010 +1300
+
+    Fix some word accesses in AtomBios to work on all architectures.
+    
+    The UINT16LE_TO_CPU(), etc., macros are used in the AtomBios code to
+    fix up endian issues but they do not address bad alignment or assist
+    architectures that cannot perform hardware byte or word accesses.
+    This patch inserts use of the ldw_u(), etc., interface of the Xserver
+    into certain AtomBios accesses to address alignment issues.
+    
+    This resolves Debian bug 572311, namely that the driver when compiled
+    for generic Alpha architecture (i.e. doesn't use the byte-word extension)
+    resulted in no display output on certain Radeon cards.
+    
+    Signed-off-by: Michael Cree <mcree@orcon.net.nz>
+
+commit d0bed11bb596200711b635d8b0b4ac7d9c5c7fd2
+Author: Andrzej Hajda <andrzej.hajda@wp.pl>
+Date:   Wed Mar 10 18:19:35 2010 -0500
+
+    radeon: add support for pal on legacy IGP chips
+    
+    Based on my initial non-working patch.
+    
+    Fixes some element of fdo bug 12007
+
+commit 999e088689ca3a60ad8e1f3953a6ddace4b12624
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 9 09:53:18 2010 -0500
+
+    atom: i2c gpio fixes
+    
+    Basically a port of my kms patch. This allows us
+    to remove some quirks.
+
+commit 1df25c639dc494940f43b699dbe45ff7385d8a23
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 3 13:35:55 2010 -0500
+
+    radeon: add new RS880 pci id
+
 commit 802073aea2cadc446778902b344221ad2484dc34
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Tue Mar 2 20:46:06 2010 -0500
