@@ -11,7 +11,6 @@ Build-Depends:
  x11proto-xext-dev,
  x11proto-core-dev,
  x11proto-video-dev,
- x11proto-xinerama-dev,
  libgl1-mesa-dev | libgl-dev,
  x11proto-fonts-dev,
  x11proto-randr-dev (>= 1.2),
