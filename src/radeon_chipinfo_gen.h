@@ -373,4 +373,5 @@ RADEONCardInfo RADEONCards[] = {
  { 0x9712, CHIP_FAMILY_RS880, 1, 1, 0, 0, 1 },
  { 0x9713, CHIP_FAMILY_RS880, 1, 1, 0, 0, 1 },
  { 0x9714, CHIP_FAMILY_RS880, 0, 1, 0, 0, 1 },
+ { 0x9715, CHIP_FAMILY_RS880, 0, 1, 0, 0, 1 },
 };

@@ -373,5 +373,6 @@ static const struct pci_id_match radeon_device_match[] = {
  ATI_DEVICE_MATCH( PCI_CHIP_RS880_9712, 0 ),
  ATI_DEVICE_MATCH( PCI_CHIP_RS880_9713, 0 ),
  ATI_DEVICE_MATCH( PCI_CHIP_RS880_9714, 0 ),
+ ATI_DEVICE_MATCH( PCI_CHIP_RS880_9715, 0 ),
  { 0, 0, 0 }
 };
