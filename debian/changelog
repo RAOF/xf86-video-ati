@@ -1,10 +1,10 @@
-xserver-xorg-video-ati (1:6.12.6-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.12.6-1) unstable; urgency=low
 
   * New upstream release.
     + Fix some word accesses in AtomBios to work on all architectures,
       closes: #572311.
 
- -- Brice Goglin <bgoglin@debian.org>  Mon, 15 Mar 2010 18:50:41 +0100
+ -- Brice Goglin <bgoglin@debian.org>  Mon, 15 Mar 2010 18:53:23 +0100
 
 xserver-xorg-video-ati (1:6.12.5-1) unstable; urgency=low
 
