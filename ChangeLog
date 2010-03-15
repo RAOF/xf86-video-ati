@@ -1,3 +1,89 @@
+commit 819b4015349b5d8c5ffa5f979097599774fce5bb
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 15 13:47:29 2010 -0400
+
+    dump version for rc release
+
+commit d3482a947e3731be4ed0b00b4e3079470700dc4c
+Author: Michael Cree <mcree@orcon.net.nz>
+Date:   Fri Mar 12 22:23:31 2010 +1300
+
+    Fix some word accesses in AtomBios to work on all architectures.
+    
+    The UINT16LE_TO_CPU(), etc., macros are used in the AtomBios code to
+    fix up endian issues but they do not address bad alignment or assist
+    architectures that cannot perform hardware byte or word accesses.
+    This patch inserts use of the ldw_u(), etc., interface of the Xserver
+    into certain AtomBios accesses to address alignment issues.
+    
+    This resolves Debian bug 572311, namely that the driver when compiled
+    for generic Alpha architecture (i.e. doesn't use the byte-word extension)
+    resulted in no display output on certain Radeon cards.
+    
+    Signed-off-by: Michael Cree <mcree@orcon.net.nz>
+
+commit 488c9fd8300505cc6c0c2f8f0f00849f27cc5d63
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 15 12:25:57 2010 -0400
+
+    r6xx/r7xx: fix domain handling in accel code
+    
+    Noticed by Pauli and Michel on IRC.
+    
+    Improves GetImage performace by a factor of ~10.
+
+commit 2ace2591d92fb6d3ce7a6453edb04b36a6c49a32
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 15 12:03:58 2010 -0400
+
+    radeon: remove some leftover debugging output
+
+commit 67e81c8f17ddde6eba633d2a5aef528e1d598d89
+Author: Andrzej Hajda <andrzej.hajda@wp.pl>
+Date:   Wed Mar 10 18:19:35 2010 -0500
+
+    radeon: add support for pal on legacy IGP chips
+    
+    Based on my initial non-working patch.
+    
+    Fixes some element of fdo bug 12007
+
+commit 3a44f1cb0d2bb748692b1024003de8ee88ca77a5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 9 09:44:01 2010 -0500
+
+    atom: i2c gpio fixes
+    
+    Basically a port of my kms patch. This allows us
+    to remove some quirks.
+
+commit d85cb40f516c67305e818302bec7ee817df4144c
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Mar 7 14:24:35 2010 -0500
+
+    Don't check for Xinerama.
+    
+    It doesn't seem to be used anywhere, so don't require it.
+    
+    CC: Jerome Glisse <jglisse@redhat.com>
+    CC: Alex Deucher <alexdeucher@gmail.com>
+    CC: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit e7b41f8cb082ed462d29bf3fc440072424cbd852
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 5 19:16:11 2010 -0500
+
+    radeon: disable frac fb div with new pll code
+    
+    fixes fdo bug 26897
+
+commit 14aff767490c253cbcdd411f812e50b91673119e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 3 13:31:19 2010 -0500
+
+    radeon: add new RS880 pci id
+
 commit e6dc886634b38e4a36af7b5f0b23299d5acd7244
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Mar 2 10:25:15 2010 +1000
