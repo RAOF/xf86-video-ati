@@ -1,3 +1,15 @@
+xserver-xorg-video-radeon (1:6.12.192-2) UNRELEASED; urgency=low
+
+  * Starting with this version, the radeon driver enables kernel mode setting
+    (KMS) by default.  This comes with a framebuffer driver which enables
+    native resolution on the console.  KMS also allows faster VT switching
+    and mode changes.
+
+    In case of trouble KMS can be disabled with the 'nomodeset' kernel
+    command line parameter, or by editing /etc/modprobe.d/radeon-kms.conf.
+
+ -- Brice Goglin <bgoglin@debian.org>  Sun, 21 Mar 2010 19:46:25 +0100
+
 xserver-xorg-video-radeon (1:6.12.2-2) unstable; urgency=low
 
   * The standard linux kernels in Debian as of version 2.6.29-1 do not contain

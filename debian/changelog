@@ -1,5 +1,6 @@
 xserver-xorg-video-ati (1:6.12.192-2) UNRELEASED; urgency=low
 
+  * Enable kernel mode setting by default on Linux.
   * Bump Standards-Version to 3.8.4, no changes needed.
   * Pull from upstream master up to commit 5c256808.
   * Stop installing the NEWS file in all binary packages, only
