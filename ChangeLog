@@ -1,3 +1,29 @@
+commit 5c256808cb5fea955eea96ffe9196473715156aa
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 17 23:47:50 2010 -0400
+
+    XAA: disable render accel
+    
+    It's been reported broken for a while.  Should fix
+    fdo bug 27151, others.
+
+commit a0683be5cc082bdbdd3bc4e9b52f39f423650946
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Mar 18 12:36:25 2010 +1000
+
+    radeon: avoid using DRI1 init path on DRI2 driver.
+    
+    I was playing with multi-seat and found this code, fixed
+    it up to be sane and more DRI2 like.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 080a5414593e9b59ed923f26aa6057747b0c868f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 16 12:33:39 2010 -0400
+
+    kms: fix ums naming compat for DisplayPort
+
 commit 819b4015349b5d8c5ffa5f979097599774fce5bb
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Mon Mar 15 13:47:29 2010 -0400

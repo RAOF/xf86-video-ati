@@ -1,6 +1,7 @@
 xserver-xorg-video-ati (1:6.12.192-2) UNRELEASED; urgency=low
 
   * Bump Standards-Version to 3.8.4, no changes needed.
+  * Pull from upstream master up to commit 5c256808.
 
  -- Brice Goglin <bgoglin@debian.org>  Mon, 15 Mar 2010 19:13:14 +0100
 
