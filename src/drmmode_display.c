@@ -844,7 +844,7 @@ const char *output_names[] = { "None",
 			       "LVDS",
 			       "CTV",
 			       "DIN",
-			       "DP",
+			       "DisplayPort",
 			       "HDMI",
 			       "HDMI",
 			       "TV",
@@ -889,6 +889,7 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num)
 	    case DRM_MODE_CONNECTOR_DVIA:
 	    case DRM_MODE_CONNECTOR_HDMIA:
 	    case DRM_MODE_CONNECTOR_HDMIB:
+	    case DRM_MODE_CONNECTOR_DisplayPort:
 		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
 		break;
 	    default:
@@ -1150,31 +1151,11 @@ static const xf86CrtcConfigFuncsRec drmmode_xf86crtc_config_funcs = {
 };
 
 
-Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, char *busId, char *driver_name, int cpp)
+Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 {
 	xf86CrtcConfigPtr   xf86_config;
-	RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
 	int i;
-	Bool ret;
 
-	/* Create a bus Id */
-	/* Low level DRM open */
-	if (!pRADEONEnt->fd) {
-		ret = DRIOpenDRMMaster(pScrn, SAREA_MAX, busId, driver_name);
-		if (!ret) {
-			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-				   "[dri] DRIGetVersion failed to open the DRM\n"
-				   "[dri] Disabling DRI.\n");
-			return FALSE;
-		}
-
-		drmmode->fd = DRIMasterFD(pScrn);
-		pRADEONEnt->fd = drmmode->fd;
-	} else {
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-				" reusing fd for second head\n");
-		drmmode->fd = pRADEONEnt->fd;
-	}
 	xf86CrtcConfigInit(pScrn, &drmmode_xf86crtc_config_funcs);
 	xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
 
