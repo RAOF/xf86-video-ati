@@ -1,4 +1,4 @@
-xserver-xorg-video-radeon (1:6.12.192-2) UNRELEASED; urgency=low
+xserver-xorg-video-radeon (1:6.12.192-2) unstable; urgency=low
 
   * Starting with this version, the radeon driver enables kernel mode setting
     (KMS) by default.  This comes with a framebuffer driver which enables
