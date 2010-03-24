@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.12.192-3) UNRELEASED; urgency=low
+
+  * Specifiy in the NEWS file that KMS may break radeonhd or vesa.
+
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 24 Mar 2010 14:31:06 +0100
+
 xserver-xorg-video-ati (1:6.12.192-2) unstable; urgency=low
 
   * Enable kernel mode setting by default on Linux.

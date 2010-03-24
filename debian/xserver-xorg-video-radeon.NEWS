@@ -5,6 +5,9 @@ xserver-xorg-video-radeon (1:6.12.192-2) unstable; urgency=low
     native resolution on the console.  KMS also allows faster VT switching
     and mode changes.
 
+    Enabling KMS may break X.org drivers that are not KMS-ready, for instance
+    radeonhd or vesa.
+
     In case of trouble KMS can be disabled with the 'nomodeset' kernel
     command line parameter, or by editing /etc/modprobe.d/radeon-kms.conf.
 
