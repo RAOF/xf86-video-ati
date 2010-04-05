@@ -5,6 +5,7 @@ xserver-xorg-video-ati (1:6.13.0-1) UNRELEASED; urgency=low
 
   [ Cyril Brulebois ]
   * New upstream release.
+  * Add myself to Uploaders.
 
  -- Brice Goglin <bgoglin@debian.org>  Wed, 24 Mar 2010 14:31:06 +0100
 
