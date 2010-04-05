@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.13.0-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.13.0-1) unstable; urgency=low
 
   [ Brice Goglin ]
   * Specify in the NEWS file that KMS may break radeonhd or vesa.
@@ -7,7 +7,7 @@ xserver-xorg-video-ati (1:6.13.0-1) UNRELEASED; urgency=low
   * New upstream release.
   * Add myself to Uploaders.
 
- -- Brice Goglin <bgoglin@debian.org>  Wed, 24 Mar 2010 14:31:06 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Mon, 05 Apr 2010 19:36:21 +0200
 
 xserver-xorg-video-ati (1:6.12.192-2) unstable; urgency=low
 
