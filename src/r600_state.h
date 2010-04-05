@@ -328,6 +328,14 @@ int
 r600_cp_start(ScrnInfoPtr pScrn);
 void r600_finish_op(ScrnInfoPtr pScrn, int vtx_size);
 
+Bool
+R600SetAccelState(ScrnInfoPtr pScrn,
+		  struct r600_accel_object *src0,
+		  struct r600_accel_object *src1,
+		  struct r600_accel_object *dst,
+		  uint32_t vs_offset, uint32_t ps_offset,
+		  int rop, Pixel planemask);
+
 extern Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index);
 extern void RADEONFinishAccess_CS(PixmapPtr pPix, int index);
 extern void *RADEONEXACreatePixmap(ScreenPtr pScreen, int size, int align);

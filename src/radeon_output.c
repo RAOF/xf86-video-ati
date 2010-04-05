@@ -86,7 +86,7 @@ const char *encoder_name[34] = {
     "INTERNAL_UNIPHY2",
 };
 
-const char *ConnectorTypeName[17] = {
+const char *ConnectorTypeName[18] = {
   "None",
   "VGA",
   "DVI-I",
@@ -103,6 +103,7 @@ const char *ConnectorTypeName[17] = {
   "Unsupported",
   "DIN",
   "DisplayPort",
+  "eDP",
   "Unsupported"
 };
 
@@ -180,6 +181,10 @@ radeon_set_active_device(xf86OutputPtr output)
 	    radeon_output->active_device = ATOM_DEVICE_DFP4_SUPPORT;
 	else if (radeon_output->devices & ATOM_DEVICE_DFP5_SUPPORT)
 	    radeon_output->active_device = ATOM_DEVICE_DFP5_SUPPORT;
+	else if (radeon_output->devices & ATOM_DEVICE_LCD1_SUPPORT)
+	    radeon_output->active_device = ATOM_DEVICE_LCD1_SUPPORT;
+	else if (radeon_output->devices & ATOM_DEVICE_LCD2_SUPPORT)
+	    radeon_output->active_device = ATOM_DEVICE_LCD2_SUPPORT;
 	break;
     case MT_CRT:
 	if (radeon_output->devices & ATOM_DEVICE_CRT1_SUPPORT)
@@ -382,7 +387,8 @@ radeon_ddc_connected(xf86OutputPtr output)
 	     */
 	    ret = RADEON_DP_GetSinkType(output);
 
-	    if (ret == CONNECTOR_OBJECT_ID_DISPLAYPORT) {
+	    if ((ret == CONNECTOR_OBJECT_ID_DISPLAYPORT) ||
+		(ret == CONNECTOR_OBJECT_ID_eDP)) {
 		MonType = MT_DP;
 		RADEON_DP_GetDPCD(output);
 	    } else
@@ -2610,6 +2616,11 @@ static void RADEONSetupGenericConnectors(ScrnInfoPtr pScrn)
 
 #if defined(__powerpc__)
 
+#ifdef __OpenBSD__
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#endif
+
 /*
  * Returns RADEONMacModel or 0 based on lines 'detected as' and 'machine'
  * in /proc/cpuinfo (on Linux) */
@@ -2701,6 +2712,72 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
 		   "readable.\n");
 
 #endif /* __linux */
+
+#ifdef __OpenBSD__
+    char model[32];
+    int mib[2];
+    size_t len;
+
+    mib[0] = CTL_HW;
+    mib[1] = HW_PRODUCT;
+    len = sizeof(model);
+    if (sysctl(mib, 2, model, &len, NULL, 0) >= 0) {
+	if (strcmp(model, "PowerBook5,1") == 0 ||
+	    strcmp(model, "PowerBook5,2") == 0 ||
+	    strcmp(model, "PowerBook5,3") == 0 ||
+	    strcmp(model, "PowerBook5,4") == 0 ||
+	    strcmp(model, "PowerBook5,5") == 0) {
+	    ret = RADEON_MAC_POWERBOOK_EXTERNAL; /* single link */
+	    info->ext_tmds_chip = RADEON_SIL_164; /* works on 5,2 */
+	}
+
+	if (strcmp(model, "PowerBook5,6") == 0) {
+	    ret = RADEON_MAC_POWERBOOK_EXTERNAL; /* dual or single link */
+	}
+
+	if (strcmp(model, "PowerBook5,7") ||
+	    strcmp(model, "PowerBook5,8") == 0 ||
+	    strcmp(model, "PowerBook5,9") == 0) {
+	    ret = RADEON_MAC_POWERBOOK_EXTERNAL; /* dual link */
+	    info->ext_tmds_chip = RADEON_SIL_1178; /* guess */
+	}
+
+	if (strcmp(model, "PowerBook3,3") == 0) {
+	    ret = RADEON_MAC_POWERBOOK_VGA; /* vga rather than dvi */
+	}
+
+	if (strcmp(model, "PowerMac10,1") == 0) {
+	    ret = RADEON_MAC_MINI_INTERNAL; /* internal tmds */
+	}
+
+	if (strcmp(model, "PowerMac10,2") == 0) {
+	    ret = RADEON_MAC_MINI_EXTERNAL; /* external tmds */
+	}
+
+	if (strcmp(model, "PowerBook2,1") == 0 ||
+	    strcmp(model, "PowerBook2,2") == 0 ||
+	    strcmp(model, "PowerBook4,1") == 0 ||
+	    strcmp(model, "PowerBook4,2") == 0 ||
+	    strcmp(model, "PowerBook4,3") == 0 ||
+	    strcmp(model, "PowerBook6,3") == 0 ||
+	    strcmp(model, "PowerBook6,5") == 0 ||
+	    strcmp(model, "PowerBook6,7") == 0) {
+	    ret = RADEON_MAC_IBOOK;
+	}
+
+	if (strcmp(model, "PowerBook1,1") == 0 ||
+	    strcmp(model, "PowerBook3,1") == 0 ||
+	    strcmp(model, "PowerBook3,2") == 0 ||
+	    strcmp(model, "PowerBook3,4") == 0 ||
+	    strcmp(model, "PowerBook3,5") == 0) {
+	    ret = RADEON_MAC_POWERBOOK_INTERNAL;
+	}
+
+	if (strcmp(model, "PowerMac12,1") == 0) {
+	    ret = RADEON_MAC_IMAC_G5_ISIGHT;
+	}
+    }
+#endif /* __OpenBSD__ */
 
     if (ret) {
 	xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT, "Detected %s.\n",
