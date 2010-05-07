@@ -45,8 +45,6 @@ Description: X.Org X server -- AMD/ATI display driver wrapper
  .
  More information about X.Org can be found at:
  <URL:http://www.X.org>
- <URL:http://xorg.freedesktop.org>
- <URL:http://lists.freedesktop.org/mailman/listinfo/xorg>
  .
  This package is built from the X.org xf86-video-ati driver module.
 
@@ -89,8 +87,6 @@ Description: X.Org X server -- AMD/ATI Radeon display driver
  .
  More information about X.Org can be found at:
  <URL:http://www.X.org>
- <URL:http://xorg.freedesktop.org>
- <URL:http://lists.freedesktop.org/mailman/listinfo/xorg>
  .
  This package is built from the X.org xf86-video-ati driver module.
 
