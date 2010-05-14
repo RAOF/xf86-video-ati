@@ -6,7 +6,7 @@ Uploaders: David Nusinow <dnusinow@debian.org>, Drew Parsons <dparsons@debian.or
 Build-Depends:
  debhelper (>= 5),
  pkg-config,
- xserver-xorg-dev (>= 2:1.7),
+ xserver-xorg-dev (>= 2:1.7.6.901),
  x11proto-gl-dev,
  x11proto-xext-dev,
  x11proto-core-dev,
@@ -31,7 +31,7 @@ Architecture: any
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
- ${xserver:Depends},
+ ${xviddriver:Depends},
  xserver-xorg-video-r128,
  xserver-xorg-video-mach64,
  xserver-xorg-video-radeon
@@ -73,7 +73,7 @@ Architecture: any
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
- ${xserver:Depends}
+ ${xviddriver:Depends}
 Provides: ${xviddriver:Provides}
 Replaces: xserver-xorg-video-ati (<= 1:6.8.191-1)
 Suggests: firmware-linux
