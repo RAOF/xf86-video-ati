@@ -1,0 +1,12 @@
+0001-Revert-r600-exa-further-cleanup-use-the-object-struc.patch
+0002-Revert-r600-cleanup-wasteful-variables.patch
+0003-Revert-r600-reduce-function-call-overhead.patch
+0004-Revert-r6xx-EXA-fix-swapped-domains-in-kms-UTS.patch
+0005-Revert-r6xx-EXA-Xv-add-a-R600SetAccelState-function.patch
+0006-Revert-r6xx-EXA-always-use-a-temp-surface-for-overla.patch
+0007-Revert-r6xx-EXA-always-use-the-accel_state-state-in-.patch
+0008-Revert-r6xx-EXA-Xv-track-src-dst-domains.patch
+100_radeon-6.9.0-bgnr-enable.patch
+101_man_no_pm_options_with_kms.patch
+102-no-xv-rn50.patch
+103_new_pci_ids.patch
