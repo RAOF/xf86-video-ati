@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.13.0-2ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.13.0-2ubuntu1) maverick; urgency=low
 
   * Merge from Debian Unstable.  Remaining Ubuntu changes:
     + debian/control:
