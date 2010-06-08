@@ -3,6 +3,13 @@ xserver-xorg-video-ati (1:6.13.0-2ubuntu1) maverick; urgency=low
   * Merge from Debian Unstable.  Remaining Ubuntu changes:
     + debian/control:
       - Add quilt to build-depends for Ubuntu patches
+    + debian/patches/103_new_pci_ids.patch:
+      - Add PCI IDs for some new RV7xx a Redwood
+    + debian/patches/102-no-xv-rn50.patch:
+      - Upstream backport: disable Xv on rn50 chips which have no 3D engine
+        or overlay.
+    + debian/patches/100_radeon-6.9.0-bgnr-enable.patch:
+      - Smooth plymouth transition enablement patch
     + debian/rules:
       - Add xsfbs patchsys
       - Drop /etc/modprobe.d/radeon-kms.conf install.
