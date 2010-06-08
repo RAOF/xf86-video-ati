@@ -1,0 +1,18 @@
+Description: Turn on option to allow xserver to skip drawing the root background
+ window for the radeon driver.  This will make the boot up sequence smoother by
+ eliminating one flicker.
+ TESTERS: Watch for corruption or other ill effects during boot up.
+Author: Bryce Harrington <bryce@ubuntu.com>
+
+--- xserver-xorg-video-ati-6.12.191.orig/src/radeon_kms.c	2010-03-02 01:24:11.000000000 +0100
++++ xserver-xorg-video-ati-6.12.191/src/radeon_kms.c	2010-03-07 22:33:18.244660337 +0100
+@@ -375,6 +375,9 @@
+     if (pScrn->numEntities != 1) return FALSE;
+     if (!RADEONGetRec(pScrn)) return FALSE;
+ 
++    /* kms bg root enable */
++    pScrn->canDoBGNoneRoot = 1;
++
+     info               = RADEONPTR(pScrn);
+     info->MMIO         = NULL;
+     info->IsSecondary  = FALSE;
