@@ -23,7 +23,7 @@ Build-Depends:
  automake,
  libtool,
  xutils-dev
-Standards-Version: 3.8.4
+Standards-Version: 3.9.0
 Vcs-Git: git://git.debian.org/git/pkg-xorg/driver/xserver-xorg-video-ati
 Vcs-Browser: http://git.debian.org/?p=pkg-xorg/driver/xserver-xorg-video-ati.git
 

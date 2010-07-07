@@ -2,8 +2,9 @@ xserver-xorg-video-ati (1:6.13.1-1) UNRELEASED; urgency=low
 
   * New upstream release.
     + Add libudev-dev to build dependencies.
+  * Bump Standards-Version to 3.9.0, no changes needed.
 
- -- Brice Goglin <bgoglin@debian.org>  Wed, 07 Jul 2010 20:30:49 +0200
+ -- Brice Goglin <bgoglin@debian.org>  Wed, 07 Jul 2010 20:43:12 +0200
 
 xserver-xorg-video-ati (1:6.13.0-2) unstable; urgency=medium
 
