@@ -1,3 +1,676 @@
+commit ad999e633ff41d27eed9d2c6535e163a7181b0bd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jul 7 10:49:22 2010 +1000
+
+    set version for release
+
+commit 37b348059b1c15d7b381cd3df3db52bd9ee6613e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jun 30 12:56:48 2010 -0400
+
+    remove rv100 quirk
+    
+    Some RV100 cards with 2 VGA ports show up with DVI+VGA, however
+    some boards with DVI+VGA have the same subsystem ids. Better
+    to have a VGA port show up as DVI than having a non-useable
+    DVI port.
+    
+    reported by DHR in irc.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit c8ea942bd0e9d1c055d50b94440aa4dae425f20b
+Author: Cooper Yuan <cooperyuan@gmail.com>
+Date:   Tue Jun 29 20:34:57 2010 +0800
+
+    Remove HDP_SOFT_RESET function, there is no need to reset HDP block.
+    
+    This commit can fix an issue reported on DELL server, system gets hang
+    during soft resetting while another application tries to access PCI
+    configuration space.
+
+commit 139b38bf67ec10d876cc56df833541d497ae4fa4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 24 14:55:09 2010 -0400
+
+    r6xx shader: use ADDR() for CF_DWORD0
+    
+    no change in functionality
+
+commit 801e83227a59a29eea425ea612083bbf2b536c30
+Author: Wolfram <bugzilla1@malloc.de>
+Date:   Mon Jun 21 18:59:19 2010 -0400
+
+    r6xx/r7xx: fix ums cmd buffer leak
+    
+    Fixes:
+    https://bugs.freedesktop.org/show_bug.cgi?id=27957
+
+commit b13d719080b75fc6db4d15d2d323b8fce8b7ad06
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jun 21 18:49:44 2010 -0400
+
+    r6xx/r7xx: fix miscount in state emit
+
+commit c3c5c8e2cc91b51a24effdffb85281216eed731d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jun 21 14:30:17 2010 -0400
+
+    r6xx/r7xx accel: add back some additional default state
+    
+    This adds back everything removed in c29157bbf5b0dd26857675282ab094082fbaed0d
+    except CB_FOG_*, CB_CLEAR_* and the VPORT transforms.  Those shouldn't
+    be needed as we aren't using fog or viewport transforms.  We probably don't
+    need all the state that was added back either but I can't reproduce any
+    problems here, so it's hard to say which parts are problematic.
+    
+    Should fix:
+    https://bugs.freedesktop.org/show_bug.cgi?id=28629
+    and several corruption reports on #radeon.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 800cb2088fec698d0626063a9ab198ff534938c0
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Mon Jun 21 08:15:14 2010 +0200
+
+    DRI2: Fix up confusion between windows and pixmaps.
+    
+    Fixes crashes with xserver master, where looking up a pixmap private on a
+    window no longer happens to work.
+
+commit f7a91ece264af9f3fd2fc18e99aefcda93ce9f5c
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Mon Jun 14 08:52:16 2010 +0200
+
+    Convert x(c)alloc/xfree to m/calloc/free.
+    
+    Fixes deprecation warnings with xserver master and should also work with older
+    xservers.
+
+commit ea37d24b1b6d4cbcf73e680846de25b72af216e3
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jun 21 13:55:15 2010 +1000
+
+    radeon: fix support for 1.9 server master.
+    
+    This moves pixmap and mode set into CSR where its allowed. Should work fine on
+    old servers also.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit fdd8ecafd054f65842351aee6ee6fba7af6613b2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jun 16 19:02:10 2010 -0400
+
+    r6xx/r7xx: macro safety fixes
+
+commit 4651d77211b508cb6b76931807780e317f232220
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jun 16 12:28:36 2010 -0400
+
+    radeon: fix depth 16 with ums
+    
+    Fixes:
+    https://bugs.freedesktop.org/show_bug.cgi?id=28494
+    https://bugzilla.redhat.com/show_bug.cgi?id=554967
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 1e1d6a515428b6884fea586d180346fc74ef75a1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jun 16 12:20:03 2010 -0400
+
+    r3xx-r5xx Xv: disable bicubic filtering by default
+    
+    - makes Xv more consistent with r1xx/r2xx/r6xx/r7xx
+    - Xv attributes like brightness, contrast, hue, etc. only work
+    when bicubic is disabled.
+    - avoids performance issues on some systems when sampling from textures
+    in GART with kms.
+    - It can be re-enabled with using xvattr
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit c29157bbf5b0dd26857675282ab094082fbaed0d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jun 15 19:39:42 2010 -0400
+
+    r6xx/r7xx: remove unnecessary state emit
+    
+    No need to emit state that doesn't impact that we use for EXA/Xv.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 35280545fcfb911f189d7657bd1040a28450fe7b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jun 15 19:21:32 2010 -0400
+
+    r6xx/r7xx: reorg default and clipping state emit
+    
+    Group ordered registers to save command buffer space.
+    Reduces the default and clipping state from 256 to 160 dwords.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit a2528a734c1d4e8639c49e5d222e3630a93ffbfd
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jun 15 17:00:34 2010 -0400
+
+    r6xx/r7xx accel: remove some duplicate emits and minor clean up
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 5f093357f18eb9bea641394ab86a92a1766d8f2e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 15:11:46 2010 -0400
+
+    COPYING: replace stub file with actual copyright notices
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0c2118586d3edeecc2473b5d685472df4b5e70fa
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 11 15:53:18 2010 +1000
+
+    radeon: fixup last fix, use CURSOR_WIDTH not RADEON_CURSOR_WIDTH.
+
+commit 9a117f768cb8261327fd3c324da9c98875785cc1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 11 14:28:24 2010 +1000
+
+    radeon: set proper stride for cursor in tiling flags.
+    
+    definitely incorrect, but hope it doesn't break anything.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b6346ede94f0d0b11ee04770cf52508cb0a5e6c6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jun 10 20:13:58 2010 -0400
+
+    drmmode: fix big endian issue with properties.
+    
+    On a power machine with an rn50, this was causing load detection to be turned off after the first X run, subsequent X runs would find nothing connected.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 1971dc6d758dea13b9fb6d1c8f516c165628b5e5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jun 8 11:18:28 2010 -0400
+
+    radeon: fix rn50 cloning with kms
+    
+    Since they only have one crtc sometimes the xserver doesn't assign
+    a crtc to one of the outputs even though both outputs have common modes
+    which results in only one monitor being enabled. Assign a crtc in
+    preinit so that both outputs light up.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 426114b4a99d37b394efe3336968bb0ab9b6e9ae
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jun 8 11:34:35 2010 +1000
+
+    xv: fix Xv on M6/RV100 under KMS.
+    
+    pRADEONEnt->HasCRTC2 wasn't setup under KMS.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f64bf0de8e2de7c1bf9cc0c614603dd23c9060ad
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 3 14:48:21 2010 -0400
+
+    evergreen: explicitly disable accel on evergreen
+    
+    Previously we relied on the drm not having accel enabled
+    to make sure evergreen used shadowfb, now we when we enable
+    accel in the drm, we need to make sure the ddx doesn't try
+    and use it until it's implemented.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 428125c095b18c2a2864c1aef24ac0f384b6be54
+Author: Marek Olšák <maraeo@gmail.com>
+Date:   Sun May 16 20:11:17 2010 +0000
+
+    r3xx-r5xx: enable color tiling by default on KMS
+    
+    Signed-off-by: Marek Olšák <maraeo@gmail.com>
+
+commit 6712ce4f4715c8ce7c2fcddb52ca9b103bdd634c
+Author: Marek Olšák <maraeo@gmail.com>
+Date:   Sun May 16 20:09:31 2010 +0000
+
+    rs740: follow macro-switch too
+    
+    Signed-off-by: Marek Olšák <maraeo@gmail.com>
+
+commit 842fa162e9d3bbad2bc44d3732bbc8e5a54402ea
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue May 18 11:21:01 2010 -0400
+
+    dri2: use radeon_pick_best_crtc()
+    
+    It's already exposed and used by exa and Xv and has
+    the same functionality.  radeon_covering_crtc() can
+    be dropped eventually.
+
+commit 64e6858aaf5d0e39ecc9f9804689012f3a38660a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 17 12:50:44 2010 -0400
+
+    r2xx exa: fix typo in 27c3326863deae36bc35e2c3b73fffd400208ff1
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 27c3326863deae36bc35e2c3b73fffd400208ff1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 17 09:53:32 2010 -0400
+
+    r1xx/r2xx EXA: handle RepeatNone properly with transforms
+    
+    Fallback with unsupported ops like r3xx, r6xx.
+    
+    Should fix fdo bug 28142.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 30591320ec46e491ba20904cc64f3405b51c6505
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Fri May 7 17:35:09 2010 +0200
+
+    kms: add support for the MSC swap & sync API
+    
+    This patch is mostly a port over of Intel ddx code for
+    MSC support. It needs a radeon KMS module with version
+    2.4 which has the query for hw crtc id.
+    
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+
+commit 766024dcc61c83490540910ce752f9bfe6dddba4
+Author: Marek Olšák <maraeo@gmail.com>
+Date:   Mon May 3 22:56:27 2010 +0200
+
+    r3xx-r5xx: fix texturing with small macrotiled pixmaps
+    
+    Pixmaps smaller than a macrotile cannot be used as textures because hardware
+    automatically switches to macro-linear and therefore sampled pixels are
+    messed up. This behavior is known as MACRO_SWITCH.
+    
+    The only sane workaround seems to be not using macrotiling for small pixmaps.
+    
+    The function RADEONMacroSwitch has been ported from r300g and implements
+    MACRO_SWITCH the same way it's implemented in hardware. It's been well tested
+    in r300g.
+    
+    This commit also fixes blit-based framebuffer reads, which are used for tiled
+    surfaces in r300g, when ColorTiling is enabled.
+    
+    Signed-off-by: Marek Olšák <maraeo@gmail.com>
+
+commit 6aedd57f6c2f08d0151a8bd1c5893d40d3db709a
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue May 4 14:30:52 2010 -0400
+
+    radeon: fix pll_out_min default for pre-avivo
+    
+    Fixes fdo bug 27960
+
+commit b2ecd1bb507ed4e0d9ba6ebd498c51da2e8136fa
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Fri Apr 23 18:28:22 2010 +0200
+
+    FB/MMIO_cnt should be ints, not pointers.
+    
+    Pointed out by compiler warnings.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=27817
+
+commit 1ad41054989f7c3edec373ccf09dceda6d7c94b4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 22 16:48:21 2010 -0400
+
+    r3xx: fix gb pipe setup for SE cards
+    
+    Noticed by Tormod Volden
+
+commit 59e287d7c484b4addd4a06d013670577639c7ae2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 22 02:05:40 2010 -0400
+
+    r3xx-r5xx: fix vertex units
+    
+    Noticed by Tormod Volden.
+    
+    RV3xx is 2, RV560,RV570 is 8
+
+commit 2a6b409496f26da0436972b5feae6ea035dde08d
+Author: Owain Ainsworth <zerooa@googlemail.com>
+Date:   Mon Apr 19 14:37:33 2010 +0100
+
+    Reference count shared driver mappings.
+    
+    With MMIO it wasn't *such* a bit deal if we leaked the smallish mapping.
+    with FB it could be a larger deal. So instead of worrying about this,
+    reference count the mappings in the entity structure and unmap them when
+    no one cares anymore.
+    
+    Prompted by a discussion with airlied
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 761f0de5556e46f166280476185977f720efe586
+Author: Owain G. Ainsworth <zerooa@googlemail.com>
+Date:   Mon Apr 19 04:05:36 2010 +0100
+
+    Make consistent use of fbOffset and share fb mappings.
+    
+    What we were doing previously was mapping the framebuffer for zaphod for
+    only this driver instances chunk, however, fbOffset was (rightly) set to
+    the offset into the whole framebuffer we were using.
+    
+    Since in some cases we did operations on the FB virtual address +
+    fbOffset (for example zeroing the framebuffer on entervt) we were
+    actually pissing all over ourselves in those cases.
+    
+    Fix this by implementing shared fb mappings like we do for MMIO already,
+    and whenever we wish to refer to our area of FB space we always use
+    fbOffset. Fixes zaphod for some users on r600 chipsets, my 4870 is still
+    behaving strangely on screen 0, but I suspect that is another bug.
+    
+    Once calculation (in PreInitAccel) is now wrong because of this, however
+    dri on zaphod does now happen so this is irrelavent, add a comment to
+    that effect.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 2059d628c5fb03222a62502cc1b5724bf296a7b3
+Author: Owain G. Ainsworth <zerooa@googlemail.com>
+Date:   Mon Apr 19 04:05:35 2010 +0100
+
+    Kill per-context SAREA support.
+    
+    It has never been used, and since the world is changing it almost
+    certainly never will be. Good riddance.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit c4b46f56279cc18c8114235ca41cfb41ffede67f
+Author: Owain G. Ainsworth <zerooa@googlemail.com>
+Date:   Mon Apr 19 04:05:34 2010 +0100
+
+    Remove remnants of the ShowCache option.
+    
+    The rest of it died a long time ago.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 03b34c5fb12c4df180d4df113d2b654f6afd7230
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Apr 19 17:58:07 2010 +1000
+
+    radeon: add FireMV 2400 pci id.
+    
+    From RH#581927 - thanks to Carsten Clasohm
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 6c07816025f70e522986614c29c300ea13e5d932
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 18:50:17 2010 -0400
+
+    r5xx texvid: deal with large numbers of verts
+    
+    should fix fdo bug 25884
+
+commit 5ee320a6b1b4c65fe592c8ac4d1981799242d59e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 18:42:56 2010 -0400
+
+    r3xx texvid: deal with large numbers of verts
+    
+    should fix fdo bug 25884
+
+commit 47af3f4f266232517486238917d82fc5ca9c82e6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 20:50:18 2010 -0400
+
+    r2xx texvid: deal with large numbers of verts
+    
+    should fix fdo bug 25884
+
+commit 57577d5cd0641b7cad02242478699bcfece59227
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 20:40:56 2010 -0400
+
+    r1xx texvid: deal with large numbers of verts
+    
+    should fix fdo bug 25884
+
+commit 31a888e78fa403f2bddacee098a29f36eaa969cb
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 15:52:59 2010 -0400
+
+    r5xx textured video: split into prepare and draw functions
+
+commit f7ebe4a127965bb9e46d20c60331bcc4dab76fc5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 15:46:24 2010 -0400
+
+    r3xx textured video: split into prepare and draw functions
+
+commit 10799b4ce0c18c5a7d92d688549e8e777344f111
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 15:38:49 2010 -0400
+
+    r2xx textured video: split into prepare and draw functions
+
+commit bd1cf42201a1f918080bf34786a6de327cb31b5f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 15:31:40 2010 -0400
+
+    r1xx textured video: split into prepare and draw functions
+
+commit c1136f94b80346065893f8a43c0fbf60c8c9b057
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 15:23:14 2010 -0400
+
+    Xv: track vtx_count, is_planar in port priv
+
+commit 2f680b631357661511456f07b7b4ba1aa2cbf30c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 13:43:41 2010 -0400
+
+    radeon/kms: fix possible crtc mask for evergreen
+
+commit 4656f5dff1ed72fa2c7a1484305f2aef7b65ff2b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 16 13:36:25 2010 -0400
+
+    radeon/kms: fix crash when using more than two heads
+    
+    fixes fdo bug 27692
+
+commit a69e749d0562887af6bd236c38802472e54640c4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Apr 16 13:58:54 2010 +1000
+
+    kms: add uevent support.
+    
+    When we get a hotplug event from the kernel we should notify the client side to reconfigure displays.
+    
+    based on work by ajax in intel driver.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 22a46dddd375b2b9399e12fdf168fa5292ff17a4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Apr 13 11:08:59 2010 -0400
+
+    radeon: add support for pll algo selection
+    
+    tv-out on atom systems is very particular about it's
+    dividers.  force it to use the old algo.
+    
+    Should fix fdo bug 27593.
+
+commit c1b817c45477c21234abaaebe78feb7ea4fd92b1
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 12 16:32:04 2010 -0400
+
+    atom: disable TV encoder when VGA is in use
+    
+    Switching between TV and VGA caused problems on some
+    systems since the TV encoder was left enabled.
+    
+    Should fix fdo bug 25520.
+
+commit 878814aeab7031ff6169fcaf2be869b7595c8699
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 12 11:16:14 2010 -0400
+
+    Xv overlay: set scalerwidth to 1920 on r3xx/r4xx chips
+    
+    reported on phoronix forums.
+
+commit 276fe739f1caa95778213054375a65288b80f320
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Apr 9 20:03:09 2010 -0400
+
+    radeon: add some new pci ids
+
+commit eb5665688ef9b52f03f61546351d0848cab54740
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 8 00:31:52 2010 -0400
+
+    radeon: don't setup Xv on rn50
+    
+    It has no overlay or 3D engine.
+    
+    fixes fdo bug 27528
+
+commit 3c6c6afcbfc6f2c582e13a7c37fe2014b0875b22
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 5 12:12:56 2010 -0400
+
+    change version post release
+
+commit fb7911912e60b2cdbc2152b96847775b767ca3ef
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 5 11:59:24 2010 -0400
+
+    bump version for release
+
+commit 476a1c6e8b42807b897b8c6f8550ec42b2d5c10e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Apr 1 12:42:56 2010 -0400
+
+    radeon: fix possible gpio i2c table overrun
+    
+    GPIO_I2C_INFO does not always have ATOM_MAX_SUPPORTED_DEVICE
+    entries.  Should fix Novell bug 589022.
+
+commit 6baa96c44ca93b88acf5233335cee233e59d5af4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Apr 1 11:24:32 2010 +1000
+
+    r600/exa: further cleanup, use the object struct in the accel state.
+    
+    This cleans up the accel state objects as well.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 87f49a24019967552c5478d6af89ba438b4261c8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Apr 1 10:52:58 2010 +1000
+
+    r600: cleanup wasteful variables.
+    
+    Just assign directly to the structs.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 478319e55d52fce241d040912fea952071e3b742
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Apr 1 10:45:52 2010 +1000
+
+    r600: reduce function call overhead.
+    
+    Create a small accel object that can be used to reduce the amount
+    of parameters passed to SetAccelState. This can be cleaned up a lot more.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit bc93395b3eb5e3511c1b62af90693269f4fa6e13
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 31 22:30:24 2010 -0400
+
+    r6xx+ EXA: fix swapped domains in kms UTS
+    
+    Noticed by Dave.
+    
+    Should fix fdo bug 27284
+
+commit 3a33b1a92c328b690bdc1aafa0011e4326109815
+Author: Owain G. Ainsworth <zerooa@googlemail.com>
+Date:   Tue Mar 30 17:14:02 2010 +0100
+
+    Add support for MacModel autodetection on OpenBSD.
+    
+    This allows radeon-equipped macs to work without an xorg.conf on openbsd.
+    Patch originally written by Mark Kettenis (kettenis@openbsd.org)
+
+commit c7eeda8c3f3514ba95ebf2893fbe124bf526b3df
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 26 01:38:36 2010 -0400
+
+    radeon: add support eDP connectors with and LCD device tag
+    
+    should fix fdo bug 27322
+
+commit ff323e11485fa5030ac278c836bf80a535c22249
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Mar 26 01:24:16 2010 -0400
+
+    radeon: fix name string for eDP
+
+commit 53ac06161eb2b8cffb1b88e24a9a21cfd12e5883
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 23 13:34:38 2010 -0400
+
+    r6xx+ EXA/Xv: add a R600SetAccelState function
+    
+    This moves CS bo checking and alignment checks into
+    a central location.  It also cleans up the code.
+
+commit 7a044472dfea7cf05ba4c2b87be30e94e2ae0b62
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 23 01:27:22 2010 -0400
+
+    r6xx+ EXA: always use a temp surface for overlapping copies
+    
+    The scanline based fallback code was complex and added a lot of
+    overhead. It also didn't work with kms.
+
+commit d33bddaedae81126ab7f0023af1c6443bb0b4c4f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 22 18:15:23 2010 -0400
+
+    r6xx+ EXA: always use the accel_state state in DoPrepareCopy
+
+commit dda3f5a99e7a2dc5d57860f4d07df3498e1e21df
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Mar 22 18:05:36 2010 -0400
+
+    r6xx EXA/Xv: track src/dst domains
+    
+    Much of the code is shared, so track the src/dst
+    domains so we make sure the uses consistent domains
+    for each bo.
+
 commit 5c256808cb5fea955eea96ffe9196473715156aa
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Mar 17 23:47:50 2010 -0400
