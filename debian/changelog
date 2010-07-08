@@ -1,3 +1,24 @@
+xserver-xorg-video-ati (1:6.13.1-1ubuntu1) maverick; urgency=low
+
+  * Merge from Debian Unstable. Remainning Ubuntu changes:
+    + debian/control:
+      - Add quilt to build-depends for Ubuntu patches
+    + debian/patches/100_radeon-6.9.0-bgnr-enable.patch:
+      - Smooth plymouth transition enablement patch
+    + debian/rules:
+      - Add xsfbs patchsys
+      - Drop /etc/modprobe.d/radeon-kms.conf install.
+    + debian/xserver-xorg-video-ati.{pre,post}inst.in:
+      - Clean existing /etc/modprobe.d/radeon-kms.conf on install.
+        At best this does nothing (KMS is the default for our kernel)
+        and at worst it makes it harder to disable KMS.
+  * Add debian/gbp.conf pointing to Ubuntu branch to make git-buildpackage
+    less narky.
+  * Drop 102-no-xv-rn50.patch and 103_new_pci_ids.patch from previous
+    Ubuntu releases, they are upstream now.
+
+ -- Robert Hooker <sarvatt@ubuntu.com>  Thu, 08 Jul 2010 16:45:59 -0400
+
 xserver-xorg-video-ati (1:6.13.1-1) unstable; urgency=low
 
   * New upstream release.
