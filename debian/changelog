@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.13.1-1ubuntu3) UNRELEASED; urgency=low
+
+  * debian/rules:
+    + Drop the upstream ChangeLog from the packages, saving precious CD
+      space.
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Tue, 17 Aug 2010 14:57:29 +1000
+
 xserver-xorg-video-ati (1:6.13.1-1ubuntu2) maverick; urgency=low
 
   * No-change rebuild against new Xserver 1.9 ABI
