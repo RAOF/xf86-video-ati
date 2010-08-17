@@ -1,0 +1,135 @@
+commit 823232d79211832e770c72b027b229950740605d
+Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+Date:   Tue Aug 17 12:13:09 2010 +1000
+
+    dri2: Reference-count DRI2 buffers.
+    
+    When a client calls ScheduleSwap we set up a kernel callback when the
+    relevent vblank event occurs.  However, it's possible for the client
+    to go away between calling ScheduleSwap and the vblank event,
+    resulting in the buffers being destroyed before they're passed to
+    radeon_dri2_frame_event_handler.
+    
+    Add reference-counting to the buffers and take a reference in
+    radeon_dri2_schedule_swap to ensure the buffers won't be destroyed
+    before the vblank event is dealt with.
+    
+    Fixes: http://bugs.freedesktop.org/show_bug.cgi?id=29065
+    Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+
+diff --git a/src/radeon_dri2.c b/src/radeon_dri2.c
+index 6356711..00b5712 100644
+--- a/src/radeon_dri2.c
++++ b/src/radeon_dri2.c
+@@ -55,6 +55,7 @@ typedef DRI2Buffer2Ptr BufferPtr;
+ struct dri2_buffer_priv {
+     PixmapPtr   pixmap;
+     unsigned int attachment;
++    unsigned int refcnt;
+ };
+ 
+ 
+@@ -236,6 +237,7 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
+     buffers->flags = 0; /* not tiled */
+     privates->pixmap = pixmap;
+     privates->attachment = attachment;
++    privates->refcnt = 1;
+ 
+     return buffers;
+ }
+@@ -267,13 +269,26 @@ radeon_dri2_destroy_buffer(DrawablePtr drawable, BufferPtr buffers)
+     if(buffers)
+     {
+         ScreenPtr pScreen = drawable->pScreen;
+-        struct dri2_buffer_priv *private;
++        struct dri2_buffer_priv *private = buffers->driverPrivate;
+ 
+-        private = buffers->driverPrivate;
+-        (*pScreen->DestroyPixmap)(private->pixmap);
++        /* Trying to free an already freed buffer is unlikely to end well */
++        if (private->refcnt == 0) {
++            ScrnInfoPtr scrn = xf86Screens[pScreen->myNum];
+ 
+-        free(buffers->driverPrivate);
+-        free(buffers);
++            xf86DrvMsg(scrn->scrnIndex, X_WARNING, 
++                       "Attempted to destroy previously destroyed buffer.\
++ This is a programming error\n");
++            return;
++	}
++
++        private->refcnt--;
++        if (private->refcnt == 0)
++        {
++            (*pScreen->DestroyPixmap)(private->pixmap);
++
++            free(buffers->driverPrivate);
++            free(buffers);
++        }
+     }
+ }
+ #endif
+@@ -364,6 +379,20 @@ typedef struct _DRI2FrameEvent {
+     DRI2BufferPtr back;
+ } DRI2FrameEventRec, *DRI2FrameEventPtr;
+ 
++static void
++radeon_dri2_ref_buffer(BufferPtr buffer)
++{
++    struct dri2_buffer_priv *private = buffer->driverPrivate;
++    private->refcnt++;
++}
++
++static void
++radeon_dri2_unref_buffer(BufferPtr buffer)
++{
++    struct dri2_buffer_priv *private = buffer->driverPrivate;
++    radeon_dri2_destroy_buffer(&(private->pixmap->drawable), buffer);
++}
++
+ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
+                                      unsigned int tv_usec, void *event_data)
+ {
+@@ -379,6 +408,8 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
+     status = dixLookupDrawable(&drawable, event->drawable_id, serverClient,
+                                M_ANY, DixWriteAccess);
+     if (status != Success) {
++        radeon_dri2_unref_buffer(event->front);
++        radeon_dri2_unref_buffer(event->back);
+         free(event);
+         return;
+     }
+@@ -410,6 +441,8 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
+         break;
+     }
+ 
++    radeon_dri2_unref_buffer(event->front);
++    radeon_dri2_unref_buffer(event->back);
+     free(event);
+ }
+ 
+@@ -645,6 +678,13 @@ static int radeon_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
+     swap_info->front = front;
+     swap_info->back = back;
+ 
++    /* radeon_dri2_frame_event_handler will get called some unknown time in the
++     * future with these buffers.  Take a reference to ensure that they won't
++     * get destroyed before then. 
++     */
++    radeon_dri2_ref_buffer(front);
++    radeon_dri2_ref_buffer(back);
++
+     /* Get current count */
+     vbl.request.type = DRM_VBLANK_RELATIVE;
+     if (crtc > 0)
+@@ -768,6 +808,10 @@ blit_fallback:
+     DRI2SwapComplete(client, draw, 0, 0, 0, DRI2_BLIT_COMPLETE, func, data);
+     if (swap_info)
+         free(swap_info);
++
++    radeon_dri2_unref_buffer(front);
++    radeon_dri2_unref_buffer(back);
++
+     *target_msc = 0; /* offscreen, so zero out target vblank count */
+     return TRUE;
+ }

@@ -3,6 +3,11 @@ xserver-xorg-video-ati (1:6.13.1-1ubuntu3) UNRELEASED; urgency=low
   * debian/rules:
     + Drop the upstream ChangeLog from the packages, saving precious CD
       space.
+  * debian/patches/101_ref-count-dri2-buffers.patch:
+    + Add reference-counting to DRI2 buffers, and take a reference in
+      ScheduleSwap.  Prevents the buffers from being destroyed on client
+      quit between calling ScheduleSwap and the associated vblank event.
+      Fixes Xserver segfault when a GL client quits (LP: #617201).
 
  -- Christopher James Halse Rogers <raof@ubuntu.com>  Tue, 17 Aug 2010 14:57:29 +1000
 

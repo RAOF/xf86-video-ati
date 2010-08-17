@@ -1,1 +1,2 @@
 100_radeon-6.9.0-bgnr-enable.patch
+101_ref-count-dri2-buffers.patch
