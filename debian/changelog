@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.13.1-1ubuntu3) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.13.1-1ubuntu3) maverick; urgency=low
 
   * debian/rules:
     + Drop the upstream ChangeLog from the packages, saving precious CD
@@ -9,7 +9,7 @@ xserver-xorg-video-ati (1:6.13.1-1ubuntu3) UNRELEASED; urgency=low
       quit between calling ScheduleSwap and the associated vblank event.
       Fixes Xserver segfault when a GL client quits (LP: #617201).
 
- -- Christopher James Halse Rogers <raof@ubuntu.com>  Tue, 17 Aug 2010 14:57:29 +1000
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Tue, 24 Aug 2010 16:56:47 +1000
 
 xserver-xorg-video-ati (1:6.13.1-1ubuntu2) maverick; urgency=low
 
