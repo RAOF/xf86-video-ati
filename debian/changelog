@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.13.1-1ubuntu4) UNRELEASED; urgency=low
+
+  * debian/patches/101_ref-count-dri2-buffers.patch:
+    + Fix Xserver crash when scheduling a swap on an offscreen Drawable,
+      most easily triggered by some Wine apps
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 26 Aug 2010 13:03:36 +1000
+
 xserver-xorg-video-ati (1:6.13.1-1ubuntu3) maverick; urgency=low
 
   * debian/rules:
