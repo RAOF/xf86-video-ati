@@ -1,8 +1,8 @@
-commit 823232d79211832e770c72b027b229950740605d
+commit 6a2c8587a4e05a8be2a2e975a6660942cfe115d6
 Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
-Date:   Tue Aug 17 12:13:09 2010 +1000
+Date:   Fri Aug 27 13:14:33 2010 +1000
 
-    dri2: Reference-count DRI2 buffers.
+    dri2: Reference count DRI2 buffers
     
     When a client calls ScheduleSwap we set up a kernel callback when the
     relevent vblank event occurs.  However, it's possible for the client
@@ -14,14 +14,24 @@ Date:   Tue Aug 17 12:13:09 2010 +1000
     radeon_dri2_schedule_swap to ensure the buffers won't be destroyed
     before the vblank event is dealt with.
     
+    This parallels the approach taken by the Intel DDX in commit
+    0d2392d44aae95d6b571d98f7ec323cf672a687f.
+    
     Fixes: http://bugs.freedesktop.org/show_bug.cgi?id=29065
+    
+    v2: Don't write completion events to the client if it has quit.
+    v3: Don't try to unref the NULL buffers from a DRI2_WAITMSC event.
+        Take a ref in schedule_swap earlier, so the offscreen fallback
+        doesn't incorrectly destroy the buffers.
+    
     Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
 
-Index: xserver-xorg-video-ati/src/radeon_dri2.c
-===================================================================
---- xserver-xorg-video-ati.orig/src/radeon_dri2.c	2010-08-26 12:58:57.886218003 +1000
-+++ xserver-xorg-video-ati/src/radeon_dri2.c	2010-08-26 12:59:46.000000000 +1000
-@@ -55,6 +55,7 @@
+diff --git a/src/radeon_dri2.c b/src/radeon_dri2.c
+index 4ded9dc..ed7fdd6 100644
+--- a/src/radeon_dri2.c
++++ b/src/radeon_dri2.c
+@@ -55,6 +55,7 @@ typedef DRI2Buffer2Ptr BufferPtr;
  struct dri2_buffer_priv {
      PixmapPtr   pixmap;
      unsigned int attachment;
@@ -29,7 +39,7 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
  };
  
  
-@@ -220,6 +221,7 @@
+@@ -244,6 +245,7 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
      buffers->flags = 0; /* not tiled */
      privates->pixmap = pixmap;
      privates->attachment = attachment;
@@ -37,7 +47,7 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
  
      return buffers;
  }
-@@ -251,13 +253,26 @@
+@@ -275,13 +277,26 @@ radeon_dri2_destroy_buffer(DrawablePtr drawable, BufferPtr buffers)
      if(buffers)
      {
          ScreenPtr pScreen = drawable->pScreen;
@@ -52,11 +62,11 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
  
 -        free(buffers->driverPrivate);
 -        free(buffers);
-+            xf86DrvMsg(scrn->scrnIndex, X_WARNING,
++            xf86DrvMsg(scrn->scrnIndex, X_WARNING, 
 +                       "Attempted to destroy previously destroyed buffer.\
 + This is a programming error\n");
 +            return;
-+	}
++        }
 +
 +        private->refcnt--;
 +        if (private->refcnt == 0)
@@ -69,7 +79,15 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
      }
  }
  #endif
-@@ -348,6 +363,20 @@
+@@ -361,6 +376,7 @@ enum DRI2FrameEventType {
+ typedef struct _DRI2FrameEvent {
+     XID drawable_id;
+     ClientPtr client;
++    int client_index;
+     enum DRI2FrameEventType type;
+     int frame;
+ 
+@@ -371,11 +387,28 @@ typedef struct _DRI2FrameEvent {
      DRI2BufferPtr back;
  } DRI2FrameEventRec, *DRI2FrameEventPtr;
  
@@ -83,14 +101,22 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
 +static void
 +radeon_dri2_unref_buffer(BufferPtr buffer)
 +{
-+    struct dri2_buffer_priv *private = buffer->driverPrivate;
-+    radeon_dri2_destroy_buffer(&(private->pixmap->drawable), buffer);
++    if (buffer) {
++        struct dri2_buffer_priv *private = buffer->driverPrivate;
++        radeon_dri2_destroy_buffer(&(private->pixmap->drawable), buffer);
++    }
 +}
 +
  void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
                                       unsigned int tv_usec, void *event_data)
  {
-@@ -363,6 +392,8 @@
+     DRI2FrameEventPtr event = event_data;
+     DrawablePtr drawable;
++    ClientPtr client;
+     ScreenPtr screen;
+     ScrnInfoPtr scrn;
+     int status;
+@@ -386,6 +419,8 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
      status = dixLookupDrawable(&drawable, event->drawable_id, serverClient,
                                 M_ANY, DixWriteAccess);
      if (status != Success) {
@@ -99,22 +125,56 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
          free(event);
          return;
      }
-@@ -394,6 +425,8 @@
+@@ -393,6 +428,17 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
+     screen = drawable->pScreen;
+     scrn = xf86Screens[screen->myNum];
+ 
++    /* event->client may have quit between submitting a request
++     * and this callback being triggered.
++     *
++     * Check our saved client pointer against the client in the saved client
++     * slot.  This will catch almost all cases where the client that requested
++     * SwapBuffers has gone away, and will guarantee that there is at least a 
++     * valid client to write the BufferSwapComplete event to.
++     */
++    client = event->client == clients[event->client_index] ? 
++            event->client : NULL;
++
+     switch (event->type) {
+     case DRI2_FLIP:
+     case DRI2_SWAP:
+@@ -404,11 +450,14 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
+         radeon_dri2_copy_region(drawable, &region, event->front, event->back);
+         swap_type = DRI2_BLIT_COMPLETE;
+ 
+-        DRI2SwapComplete(event->client, drawable, frame, tv_sec, tv_usec,
++        DRI2SwapComplete(client, drawable, frame, tv_sec, tv_usec,
+                 swap_type, event->event_complete, event->event_data);
++
++        radeon_dri2_unref_buffer(event->front);
++        radeon_dri2_unref_buffer(event->back);
          break;
-     }
+     case DRI2_WAITMSC:
+-        DRI2WaitMSCComplete(event->client, drawable, frame, tv_sec, tv_usec);
++        DRI2WaitMSCComplete(client, drawable, frame, tv_sec, tv_usec);
+         break;
+     default:
+         /* Unknown type */
+@@ -511,6 +560,7 @@ static int radeon_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw,
  
-+    radeon_dri2_unref_buffer(event->front);
-+    radeon_dri2_unref_buffer(event->back);
-     free(event);
- }
+     wait_info->drawable_id = draw->id;
+     wait_info->client = client;
++    wait_info->client_index = client->index;
+     wait_info->type = DRI2_WAITMSC;
  
-@@ -618,6 +651,13 @@
+     /* Get current count */
+@@ -641,12 +691,20 @@ static int radeon_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
  
      swap_info = calloc(1, sizeof(DRI2FrameEventRec));
  
 +    /* radeon_dri2_frame_event_handler will get called some unknown time in the
 +     * future with these buffers.  Take a reference to ensure that they won't
-+     * get destroyed before then.
++     * get destroyed before then. 
 +     */
 +    radeon_dri2_ref_buffer(front);
 +    radeon_dri2_ref_buffer(back);
@@ -122,7 +182,14 @@ Index: xserver-xorg-video-ati/src/radeon_dri2.c
      /* Drawable not displayed... just complete the swap */
      if (crtc == -1 || !swap_info)
          goto blit_fallback;
-@@ -752,6 +792,10 @@
+ 
+     swap_info->drawable_id = draw->id;
+     swap_info->client = client;
++    swap_info->client_index = client->index;
+     swap_info->event_complete = func;
+     swap_info->event_data = data;
+     swap_info->front = front;
+@@ -775,6 +833,10 @@ blit_fallback:
      DRI2SwapComplete(client, draw, 0, 0, 0, DRI2_BLIT_COMPLETE, func, data);
      if (swap_info)
          free(swap_info);

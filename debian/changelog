@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.13.1-1ubuntu5) maverick; urgency=low
+
+  * debian/patches/101_ref-count-dri2-buffers.patch:
+    + Replace with version that got applied upstream.  Resolves another X crash
+      in an edge-case.
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Mon, 06 Sep 2010 19:36:02 +1000
+
 xserver-xorg-video-ati (1:6.13.1-1ubuntu4) maverick; urgency=low
 
   * debian/patches/101_ref-count-dri2-buffers.patch:
