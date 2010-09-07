@@ -3,8 +3,11 @@ xserver-xorg-video-ati (1:6.13.1-1ubuntu5) maverick; urgency=low
   * debian/patches/101_ref-count-dri2-buffers.patch:
     + Replace with version that got applied upstream.  Resolves another X crash
       in an edge-case (LP #626743).
+  * Git does not contain src/modes; this is a copy of the X modes code somewhere
+    between Xserver 1.2 and 1.3 to enable building against Xserver 1.2.  This
+    is also removed upstream, and was never been actually used.
 
- -- Christopher James Halse Rogers <raof@ubuntu.com>  Mon, 06 Sep 2010 19:36:02 +1000
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Tue, 07 Sep 2010 21:41:53 +1000
 
 xserver-xorg-video-ati (1:6.13.1-1ubuntu4) maverick; urgency=low
 
