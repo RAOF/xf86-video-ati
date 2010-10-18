@@ -1,8 +1,9 @@
 xserver-xorg-video-ati (1:6.13.2-1) UNRELEASED; urgency=low
 
   * New upstream version.
+  * Bump xutils-dev requirement for new util-macros.
 
- -- Robert Hooker <sarvatt@ubuntu.com>  Mon, 18 Oct 2010 16:18:22 -0400
+ -- Robert Hooker <sarvatt@ubuntu.com>  Mon, 18 Oct 2010 16:19:39 -0400
 
 xserver-xorg-video-ati (1:6.13.1-3) experimental; urgency=low
 
