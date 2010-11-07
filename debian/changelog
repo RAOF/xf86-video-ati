@@ -3,6 +3,9 @@ xserver-xorg-video-ati (1:6.13.1-2+squeeze1) UNRELEASED; urgency=low
   * Cherry-pick upstream commit 91f707d3 to fix pixel column ordering with
     Xv on big endian systems (without KMS, without DRI). Thanks to Ulrich
     Eckhardt for the report (Closes: #587999).
+  * Apply patch by Julien Cristau: Only enable KMS on x86. At least on
+    powerpc, KMS in squeeze means no suspend/resume, and no backlight
+    control, so delay this to wheezy.
 
  -- Cyril Brulebois <kibi@debian.org>  Sun, 07 Nov 2010 10:40:53 +0100
 
