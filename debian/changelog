@@ -1,3 +1,22 @@
+xserver-xorg-video-ati (1:6.13.2-1ubuntu1) natty; urgency=low
+
+  * Merge from Debian Experimental. Remaining Ubuntu changes:
+    + debian/control:
+      - Add quilt to build-depends for Ubuntu patches
+    + debian/patches/100_radeon-6.9.0-bgnr-enable.patch:
+      - Smooth plymouth transition enablement patch
+    + debian/rules:
+      - Add xsfbs patchsys
+      - Drop /etc/modprobe.d/radeon-kms.conf install.
+    + debian/xserver-xorg-video-ati.{pre,post}inst.in:
+      - Clean existing /etc/modprobe.d/radeon-kms.conf on install.
+        At best this does nothing (KMS is the default for our kernel)
+        and at worst it makes it harder to disable KMS.
+  * Add debian/gbp.conf pointing to Ubuntu branch to make git-buildpackage
+    less narky.
+
+ -- Robert Hooker <sarvatt@ubuntu.com>  Mon, 08 Nov 2010 11:42:17 -0500
+
 xserver-xorg-video-ati (1:6.13.2-1) experimental; urgency=low
 
   [ Robert Hooker ]
