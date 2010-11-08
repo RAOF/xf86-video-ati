@@ -14,6 +14,8 @@ xserver-xorg-video-ati (1:6.13.2-1ubuntu1) natty; urgency=low
         and at worst it makes it harder to disable KMS.
   * Add debian/gbp.conf pointing to Ubuntu branch to make git-buildpackage
     less narky.
+  * Dropped Patch:
+    - 101_ref-count-dri2-buffers.patch: Upstream
 
  -- Robert Hooker <sarvatt@ubuntu.com>  Mon, 08 Nov 2010 11:42:17 -0500
 
