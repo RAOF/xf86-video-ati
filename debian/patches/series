@@ -1,1 +1,2 @@
 100_radeon-6.9.0-bgnr-enable.patch
+101_select_between_classic_and_gallium_dri.patch

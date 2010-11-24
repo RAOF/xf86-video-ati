@@ -1,0 +1,167 @@
+From 36fb1f38e8ab0f26f2788e53f5ecbdf763595bc5 Mon Sep 17 00:00:00 2001
+From: Robert Hooker <sarvatt@ubuntu.com>
+Date: Sun, 13 Jun 2010 15:30:12 -0400
+Subject: [PATCH] Add Gallium support via an xorg.conf option, enabled by default for r300.
+
+Signed-off-by: Robert Hooker <sarvatt@ubuntu.com>
+
+Index: xserver-xorg-video-ati/src/radeon.h
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon.h	2010-11-24 18:28:01.127021001 +1100
++++ xserver-xorg-video-ati/src/radeon.h	2010-11-24 21:34:44.289167001 +1100
+@@ -224,6 +224,7 @@
+     OPTION_FORCE_LOW_POWER,
+     OPTION_DYNAMIC_PM,
+     OPTION_NEW_PLL,
++    OPTION_FORCE_GALLIUM,
+     OPTION_ZAPHOD_HEADS
+ } RADEONOpts;
+ 
+@@ -918,6 +919,7 @@
+ 
+     /* accel */
+     Bool              RenderAccel; /* Render */
++    Bool              useGallium;  /* Gallium */
+     Bool              allowColorTiling;
+     Bool              tilingEnabled; /* mirror of sarea->tiling_enabled */
+     struct radeon_accel_state *accel_state;
+Index: xserver-xorg-video-ati/src/radeon_dri2.c
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon_dri2.c	2010-11-24 18:28:01.647021001 +1100
++++ xserver-xorg-video-ati/src/radeon_dri2.c	2010-11-24 21:34:44.319167001 +1100
+@@ -862,9 +862,11 @@
+     info->dri2.device_name = drmGetDeviceNameFromFd(info->dri2.drm_fd);
+ 
+     if ( (info->ChipFamily >= CHIP_FAMILY_R600) ) {
+-        dri2_info.driverName = R600_DRIVER_NAME;
+-    } else if ( (info->ChipFamily >= CHIP_FAMILY_R300) ) {
+-        dri2_info.driverName = R300_DRIVER_NAME;
++        dri2_info.driverName = info->useGallium ? \
++	  R600_GALLIUM_DRIVER_NAME : R600_CLASSIC_DRIVER_NAME;
++    } else if ( info->ChipFamily >= CHIP_FAMILY_R300 ) {
++        dri2_info.driverName = info->useGallium ? \
++	  R300_GALLIUM_DRIVER_NAME : R300_CLASSIC_DRIVER_NAME;
+     } else if ( info->ChipFamily >= CHIP_FAMILY_R200 ) {
+         dri2_info.driverName = R200_DRIVER_NAME;
+     } else {
+Index: xserver-xorg-video-ati/src/radeon_driver.c
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon_driver.c	2010-11-24 18:28:01.657021001 +1100
++++ xserver-xorg-video-ati/src/radeon_driver.c	2010-11-24 21:34:44.479167001 +1100
+@@ -205,6 +205,7 @@
+     { OPTION_FORCE_LOW_POWER,	"ForceLowPowerMode", OPTV_BOOLEAN, {0}, FALSE },
+     { OPTION_DYNAMIC_PM,	"DynamicPM",       OPTV_BOOLEAN, {0}, FALSE },
+     { OPTION_NEW_PLL,	        "NewPLL",        OPTV_BOOLEAN, {0}, FALSE },
++    { OPTION_FORCE_GALLIUM,     "ForceGallium",       OPTV_BOOLEAN, {0}, FALSE },
+     { OPTION_ZAPHOD_HEADS,      "ZaphodHeads",     OPTV_STRING,  {0}, FALSE },
+     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
+ };
+@@ -3163,6 +3164,15 @@
+ 	}
+     }
+ 
++    if (xf86GetOptValBool(info->Options, OPTION_FORCE_GALLIUM, &info->useGallium)) {
++	if (info->useGallium) {
++	    info->useGallium = FALSE;
++	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
++		       "Gallium DRI requires kernel-modesetting.  Ignoring \
++ForceGallium option\n");
++	}
++    }
++
+     if (!RADEONPreInitVRAM(pScrn))
+ 	goto fail;
+ 
+Index: xserver-xorg-video-ati/src/radeon_kms.c
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon_kms.c	2010-11-24 21:34:42.759167001 +1100
++++ xserver-xorg-video-ati/src/radeon_kms.c	2010-11-24 21:36:11.000000000 +1100
+@@ -69,6 +69,7 @@
+     { OPTION_TVSTD,          "TVStandard",       OPTV_STRING,  {0}, FALSE },
+     { OPTION_EXA_VSYNC,      "EXAVSync",         OPTV_BOOLEAN, {0}, FALSE },
+     { OPTION_EXA_PIXMAPS,    "EXAPixmaps",	 OPTV_BOOLEAN,   {0}, FALSE },
++    { OPTION_FORCE_GALLIUM,  "ForceGallium",     OPTV_BOOLEAN, {0}, FALSE },
+     { OPTION_ZAPHOD_HEADS,   "ZaphodHeads",      OPTV_STRING,  {0}, FALSE },
+     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
+ };
+@@ -577,6 +578,19 @@
+ 	goto fail;
+     }
+ 
++    if (xf86GetOptValBool(info->Options, OPTION_FORCE_GALLIUM, &info->useGallium)) {
++	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
++		   "Overriding default DRI driver selection.  %s selected.\n",
++		   info->useGallium ? "Gallium" : "Classic");
++    } else {
++	/* Default for r600+ is classic, for r300 is gallium */
++	if (info->ChipFamily >= CHIP_FAMILY_R600) {
++	    info->useGallium = FALSE;
++	} else if (info->ChipFamily >= CHIP_FAMILY_R300) {
++	    info->useGallium = TRUE;
++	}
++    }
++
+     colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
+                          info->ChipFamily <= CHIP_FAMILY_RS740;
+ 
+Index: xserver-xorg-video-ati/src/radeon_version.h
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon_version.h	2010-11-24 10:59:22.207021000 +1100
++++ xserver-xorg-video-ati/src/radeon_version.h	2010-11-24 21:34:45.409167001 +1100
+@@ -34,11 +34,13 @@
+ #undef  RADEON_VERSION_STRINGIFY
+ #undef  RADEON_VERSION_NAME
+ 
+-#define RADEON_NAME          "RADEON"
+-#define RADEON_DRIVER_NAME   "radeon"
+-#define R200_DRIVER_NAME     "r200"
+-#define R300_DRIVER_NAME     "r300"
+-#define R600_DRIVER_NAME     "r600"
++#define RADEON_NAME               "RADEON"
++#define RADEON_DRIVER_NAME        "radeon"
++#define R200_DRIVER_NAME          "r200"
++#define R300_CLASSIC_DRIVER_NAME  "r300c"
++#define R300_GALLIUM_DRIVER_NAME  "r300"
++#define R600_CLASSIC_DRIVER_NAME  "r600"
++#define R600_GALLIUM_DRIVER_NAME  "r600g"
+ 
+ #define RADEON_VERSION_MAJOR PACKAGE_VERSION_MAJOR
+ #define RADEON_VERSION_MINOR PACKAGE_VERSION_MINOR
+Index: xserver-xorg-video-ati/src/radeon_dri.c
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon_dri.c	2010-11-24 10:59:22.217021000 +1100
++++ xserver-xorg-video-ati/src/radeon_dri.c	2010-11-24 21:34:45.539167001 +1100
+@@ -1546,9 +1546,9 @@
+     pDRIInfo->drmDriverName              = RADEON_DRIVER_NAME;
+ 
+     if ( (info->ChipFamily >= CHIP_FAMILY_R600) )
+-       pDRIInfo->clientDriverName        = R600_DRIVER_NAME;
++       pDRIInfo->clientDriverName        = R600_CLASSIC_DRIVER_NAME;
+     else if ( (info->ChipFamily >= CHIP_FAMILY_R300) )
+-       pDRIInfo->clientDriverName        = R300_DRIVER_NAME;
++       pDRIInfo->clientDriverName        = R300_CLASSIC_DRIVER_NAME;
+     else if ( info->ChipFamily >= CHIP_FAMILY_R200 )
+        pDRIInfo->clientDriverName	 = R200_DRIVER_NAME;
+     else
+Index: xserver-xorg-video-ati/man/radeon.man
+===================================================================
+--- xserver-xorg-video-ati.orig/man/radeon.man	2010-11-24 18:27:58.147021001 +1100
++++ xserver-xorg-video-ati/man/radeon.man	2010-11-24 21:34:45.569167001 +1100
+@@ -615,6 +615,17 @@
+ The default is
+ .B on with > 32MB VRAM, off with < 32MB.
+ .TP
++.BI "Option \*qForceGallium\*q \*q" boolean \*q
++(KMS Only) Explicitly select whether to use the Gallium or Classic DRI drivers.
++Setting this option to
++.B true
++will select the Gallium driver regardless of the
++default driver for your card.  Setting this option to
++.B false
++will select the
++Classic driver regardless of the default driver for your card.
++The default is card-specific.
++.TP
+ .BI "Option \*qZaphodHeads\*q \*q" string \*q
+ Specify the randr output(s) to use with zaphod mode for a particular driver
+ instance.  If you use this option you most use this option for all instances
