@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.13.2-1ubuntu2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.13.2-1ubuntu2) natty; urgency=low
 
   * debian/patches/101_select_between_classic_and_gallium_dri.patch
     + Select between r300c/r300g and r600c/r600g as the DRI driver.  Classic
