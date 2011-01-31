@@ -1,12 +1,13 @@
-diff -Nurp patched//src/radeon_kms.c working//src/radeon_kms.c
---- patched//src/radeon_kms.c	2011-01-27 19:20:35.454881380 -0800
-+++ working//src/radeon_kms.c	2011-01-27 19:54:54.411057080 -0800
-@@ -840,6 +840,11 @@ Bool RADEONScreenInit_KMS(int scrnIndex,
+Index: xserver-xorg-video-ati/src/radeon_kms.c
+===================================================================
+--- xserver-xorg-video-ati.orig/src/radeon_kms.c	2011-01-31 19:05:30.008994413 +1100
++++ xserver-xorg-video-ati/src/radeon_kms.c	2011-01-31 19:18:22.550127483 +1100
+@@ -826,6 +826,11 @@
      int ret;
  
      pScrn->fbOffset = 0;
 +#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 9
-+    pScrn->pScreen->canDoBGNoneRoot = TRUE
++    pScreen->canDoBGNoneRoot = TRUE;
 +#else
 +    pScrn->canDoBGNoneRoot = TRUE;
 +#endif
