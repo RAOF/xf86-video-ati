@@ -14,9 +14,9 @@ Index: xserver-xorg-video-ati/src/radeon.h
      OPTION_DYNAMIC_PM,
      OPTION_NEW_PLL,
 +    OPTION_FORCE_GALLIUM,
-     OPTION_ZAPHOD_HEADS
- } RADEONOpts;
- 
+     OPTION_ZAPHOD_HEADS,
+     OPTION_SWAPBUFFERS_WAIT
+ } RADEONOpts; 
 @@ -918,6 +919,7 @@
  
      /* accel */

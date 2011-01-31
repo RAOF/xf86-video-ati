@@ -1,12 +1,22 @@
-xserver-xorg-video-ati (1:6.13.2-1ubuntu2) natty; urgency=low
+xserver-xorg-video-ati (1:6.13.2+git20110124.fadee040-0ubuntu1) natty; urgency=low
 
-  * debian/patches/101_select_between_classic_and_gallium_dri.patch
-    + Select between r300c/r300g and r600c/r600g as the DRI driver.  Classic
-      drivers are selected when KMS is unavailable.  Gallium is default for
-      r300, classic for r600.  This also adds a ForceGallium xorg.conf option
-      to select between the two DRI drivers.
+  * Checkout from git 20110124 (master branch) up to commit
+    fadee0409a8e13b78bbccb83dd70f590fee23d57
+    - Enable 3D support for HD5670 and other late model cards
 
- -- Christopher James Halse Rogers <raof@ubuntu.com>  Wed, 24 Nov 2010 11:00:48 +1100
+  [Bryce Harrington]
+  * debian/control: Drop 'linux-any' qualifier for libdrm dependency.  Causes FTBS
+    in pbuilder.  (see deb bug 600823)
+  * Refresh 100_radeon-6.9.0-bgnr-enable.patch and address ABI change.
+
+  [Christopher James Halse Rogers]
+  * Add debian/patches/101_select_between_classic_and_gallium_dri.patch:
+    Select between r300c/r300g and r600c/r600g as the DRI driver.  Classic
+    drivers are selected when KMS is unavailable.  Gallium is default for
+    r300, classic for r600.  This also adds a ForceGallium xorg.conf
+    option to select between the two DRI drivers.
+
+ -- Bryce Harrington <bryce@ubuntu.com>  Thu, 27 Jan 2011 16:23:33 -0800
 
 xserver-xorg-video-ati (1:6.13.2-1ubuntu1) natty; urgency=low
 
