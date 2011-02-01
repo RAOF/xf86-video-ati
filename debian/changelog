@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.13.2+git20110124.fadee040-0ubuntu3) natty; urgency=low
+
+  * Rebuild against Xserver 1.10
+
+ -- Bryce Harrington <bryce@ubuntu.com>  Mon, 31 Jan 2011 18:56:01 -0800
+
 xserver-xorg-video-ati (1:6.13.2+git20110124.fadee040-0ubuntu2) natty; urgency=low
 
   * debian/patches/100_radeon-6.9.0-bgnr-enable.patch: Fix typo in Xserver 1.10
