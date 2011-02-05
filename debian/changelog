@@ -2,6 +2,12 @@ xserver-xorg-video-ati (1:6.13.2-2) UNRELEASED; urgency=low
 
   * Stop building with -fvisibility=hidden. That was introduced to avoid
     symbol name clashes with radeonhd, which is gone now.
+  * Switch to dh:
+    - Use debhelper 8.
+    - Use dh-autoreconf.
+    - Bump xserver-xorg-dev build-dep for dh_xsf_substvars and xsf
+      debhelper sequence.
+    - Ship manpages through .install, remove .manpages accordingly.
 
  -- Cyril Brulebois <kibi@debian.org>  Sat, 05 Feb 2011 08:22:01 +0100
 
