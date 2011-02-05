@@ -75,7 +75,6 @@ Depends:
  ${misc:Depends},
  ${xviddriver:Depends}
 Provides: ${xviddriver:Provides}
-Replaces: xserver-xorg-video-ati (<= 1:6.8.191-1)
 Suggests: firmware-linux
 Description: X.Org X server -- AMD/ATI Radeon display driver
  This package provides the 'radeon' driver for the AMD/ATI Radeon, FireGL,
@@ -95,7 +94,6 @@ Architecture: any
 Depends:
  ${misc:Depends},
  xserver-xorg-video-radeon (= ${binary:Version})
-Replaces: xserver-xorg-video-ati-dbg (<= 1:6.8.191-1)
 Section: debug
 Priority: extra
 Description: X.Org X server -- AMD/ATI Radeon display driver (debugging symbols)
