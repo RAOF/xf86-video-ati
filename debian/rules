@@ -9,7 +9,7 @@
 
 include debian/xsfbs/xsfbs.mk
 
-CFLAGS = -Wall -g -fvisibility=hidden
+CFLAGS = -Wall -g
 ifneq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
