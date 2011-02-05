@@ -8,6 +8,9 @@ xserver-xorg-video-ati (1:6.13.2-2) UNRELEASED; urgency=low
     - Bump xserver-xorg-dev build-dep for dh_xsf_substvars and xsf
       debhelper sequence.
     - Ship manpages through .install, remove .manpages accordingly.
+  * Get rid of maintainer scripts, since they were only used to handle
+    switching between versions with or without KMS. Packages in squeeze
+    have KMS, so stop worrying about that.
   * Add quilt build-dep for future use.
   * Update Uploaders list. Thanks, David & Brice!
   * Remove long obsolete Replaces.
