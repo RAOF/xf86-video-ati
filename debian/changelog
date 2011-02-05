@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.13.2-2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.13.2-2) unstable; urgency=low
 
   * Stop building with -fvisibility=hidden. That was introduced to avoid
     symbol name clashes with radeonhd, which is gone now.
@@ -16,7 +16,7 @@ xserver-xorg-video-ati (1:6.13.2-2) UNRELEASED; urgency=low
   * Update Uploaders list. Thanks, David & Brice!
   * Remove long obsolete Replaces.
 
- -- Cyril Brulebois <kibi@debian.org>  Sat, 05 Feb 2011 08:22:01 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Sat, 05 Feb 2011 14:42:29 +0100
 
 xserver-xorg-video-ati (1:6.13.2-1) experimental; urgency=low
 
