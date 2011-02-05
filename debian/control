@@ -6,6 +6,7 @@ Uploaders: David Nusinow <dnusinow@debian.org>, Drew Parsons <dparsons@debian.or
 Build-Depends:
  debhelper (>= 8),
  dh-autoreconf,
+ quilt,
  pkg-config,
  xserver-xorg-dev (>= 2:1.9.4),
  x11proto-gl-dev,

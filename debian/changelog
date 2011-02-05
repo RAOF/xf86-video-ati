@@ -8,6 +8,7 @@ xserver-xorg-video-ati (1:6.13.2-2) UNRELEASED; urgency=low
     - Bump xserver-xorg-dev build-dep for dh_xsf_substvars and xsf
       debhelper sequence.
     - Ship manpages through .install, remove .manpages accordingly.
+  * Add quilt build-dep for future use.
 
  -- Cyril Brulebois <kibi@debian.org>  Sat, 05 Feb 2011 08:22:01 +0100
 
