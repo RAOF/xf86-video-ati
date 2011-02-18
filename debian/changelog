@@ -1,5 +1,6 @@
-xserver-xorg-video-ati (1:6.13.2+git20110124.fadee040-0ubuntu5) natty; urgency=low
+xserver-xorg-video-ati (1:6.14.0-0ubuntu1) natty; urgency=low
 
+  * New upstream release
   * Drop 101_select_between_classic_and_gallium_dri.patch.  Default to gallium
     everywhere, and rely on libGL and the Xserver to fallback when necessary
     (LP: #715939)
