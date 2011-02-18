@@ -1,11 +1,11 @@
-xserver-xorg-video-ati (1:6.14.0-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.14.0-1) unstable; urgency=low
 
   * New upstream release:
     - Many bug fixes.
     - Improved Evergreen support.
     - Added Ontario support.
 
- -- Cyril Brulebois <kibi@debian.org>  Thu, 17 Feb 2011 13:57:01 +0100
+ -- Cyril Brulebois <kibi@debian.org>  Thu, 17 Feb 2011 14:50:50 +0100
 
 xserver-xorg-video-ati (1:6.13.2-2) unstable; urgency=low
 
