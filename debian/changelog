@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.13.2+git20110124.fadee040-0ubuntu5) natty; urgency=low
+
+  * Drop 101_select_between_classic_and_gallium_dri.patch.  Default to gallium
+    everywhere, and rely on libGL and the Xserver to fallback when necessary
+    (LP: #715939)
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Fri, 18 Feb 2011 13:32:01 +1100
+
 xserver-xorg-video-ati (1:6.13.2+git20110124.fadee040-0ubuntu4) natty; urgency=low
 
   * debian/control: Bump build-depends on xserver-xorg-dev to really,
