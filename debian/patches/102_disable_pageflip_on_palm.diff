@@ -1,0 +1,13 @@
+diff --git a/src/radeon_kms.c b/src/radeon_kms.c
+index 125a132..e05f2aa 100644
+--- a/src/radeon_kms.c
++++ b/src/radeon_kms.c
+@@ -660,7 +660,7 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
+     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+ 	 "KMS Color Tiling: %sabled\n", info->allowColorTiling ? "en" : "dis");
+ 
+-    if (info->dri->pKernelDRMVersion->version_minor >= 8) {
++    if (info->dri->pKernelDRMVersion->version_minor >= 8 && info->ChipFamily != CHIP_FAMILY_PALM) {
+ 	info->allowPageFlip = xf86ReturnOptValBool(info->Options,
+ 						   OPTION_PAGE_FLIP, TRUE);
+ 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,

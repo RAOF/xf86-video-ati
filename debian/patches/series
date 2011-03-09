@@ -1,2 +1,3 @@
 100_radeon-6.9.0-bgnr-enable.patch
 101_fix_build_aginst_1.10rc3.diff
+102_disable_pageflip_on_palm.diff
