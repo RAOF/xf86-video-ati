@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.14.0-0ubuntu2) natty; urgency=low
+xserver-xorg-video-ati (1:6.14.0-0ubuntu3) natty; urgency=low
 
   * Rebuild against final Xserver 1.10 ABI
   * debian/patches/101_fix_build_aginst_1.10rc3.diff:
@@ -9,6 +9,12 @@ xserver-xorg-video-ati (1:6.14.0-0ubuntu2) natty; urgency=low
 
  -- Christopher James Halse Rogers <raof@ubuntu.com>  Wed, 09 Mar 2011 18:45:43 +1100
 
+xserver-xorg-video-ati (1:6.14.0-0ubuntu2) natty; urgency=low
+  
+  * Rebuild to pick up new Xserver dependencies
+  
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Wed, 23 Feb 2011 17:52:57 +1100
+  
 xserver-xorg-video-ati (1:6.14.0-0ubuntu1) natty; urgency=low
 
   * New upstream release
