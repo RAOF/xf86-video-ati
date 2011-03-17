@@ -3,9 +3,6 @@ xserver-xorg-video-ati (1:6.14.0-0ubuntu3) natty; urgency=low
   * Rebuild against final Xserver 1.10 ABI
   * debian/patches/101_fix_build_aginst_1.10rc3.diff:
     - Cherry-pick build-fix against xserver 1.10rc3 and later.
-  * debian/patches/102_disable_pageflip_on_palm.diff:
-    - Disable page-flipping on Palm.  This doesn't work, causing the desktop
-      to freeze on compiz start up.  (LP: #715330)
 
  -- Christopher James Halse Rogers <raof@ubuntu.com>  Wed, 09 Mar 2011 18:45:43 +1100
 
