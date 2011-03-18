@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.14.0-0ubuntu4) natty; urgency=low
+
+  * Bump the build-dep on xserver-xorg-dev.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Fri, 18 Mar 2011 17:00:02 +0200
+
 xserver-xorg-video-ati (1:6.14.0-0ubuntu3) natty; urgency=low
 
   * Rebuild against final Xserver 1.10 ABI
