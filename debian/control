@@ -43,6 +43,10 @@ Description: X.Org X server -- AMD/ATI display driver wrapper
  sub-drivers depending on the hardware.
  These sub-drivers are brought through package dependencies.
  .
+ Users of Rage, Mach, or Radeon boards may remove this package only if
+ they use Driver "r128", "mach64", or "radeon" in /etc/X11/xorg.conf
+ instead of relying on autodetection.
+ .
  More information about X.Org can be found at:
  <URL:http://www.X.org>
  .

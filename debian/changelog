@@ -1,6 +1,10 @@
 xserver-xorg-video-ati (1:6.14.2-1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Mention the need for an explicit configuration if r128, mach64, or
+    radeon is to be used without the ati package installed, since it's a
+    meta package, but also a wrapper (Closes: #626500). Thanks, Jonathan
+    Nieder!
 
  -- Cyril Brulebois <kibi@debian.org>  Thu, 26 May 2011 11:40:34 +0200
 
