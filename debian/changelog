@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.14.2-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.14.2-1) unstable; urgency=low
 
   * New upstream release.
   * Mention the need for an explicit configuration if r128, mach64, or
@@ -6,7 +6,7 @@ xserver-xorg-video-ati (1:6.14.2-1) UNRELEASED; urgency=low
     meta package, but also a wrapper (Closes: #626500). Thanks, Jonathan
     Nieder!
 
- -- Cyril Brulebois <kibi@debian.org>  Thu, 26 May 2011 11:40:34 +0200
+ -- Cyril Brulebois <kibi@debian.org>  Thu, 26 May 2011 11:52:58 +0200
 
 xserver-xorg-video-ati (1:6.14.1-1) unstable; urgency=low
 
