@@ -1,3 +1,13 @@
+xserver-xorg-video-ati (1:6.14.0-0ubuntu5) oneiric; urgency=low
+
+  * 102_disable_pageflipping_for_transformed_displays.patch:
+    Add cherrypick patch to not enable pageflipping if display has been
+    rotated.  Fixes issue where garbage appears on rotated screens
+    while rotated.
+    (LP: #772111)
+
+ -- Bryce Harrington <bryce@ubuntu.com>  Tue, 21 Jun 2011 12:41:28 -0700
+
 xserver-xorg-video-ati (1:6.14.0-0ubuntu4) natty; urgency=low
 
   * Bump the build-dep on xserver-xorg-dev.
