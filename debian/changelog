@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:6.14.2-1ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.14.2-1ubuntu1) oneiric; urgency=low
 
   * Merged with Debian unstable, remaining changes:
     + debian/patches/100_radeon-6.9.0-bgnr-enable.patch:
@@ -13,7 +13,7 @@ xserver-xorg-video-ati (1:6.14.2-1ubuntu1) UNRELEASED; urgency=low
     - included upstream
   * Drop the change removing radeon-kms.conf, obsolete since 10.04 final.
 
- -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 30 Jun 2011 18:00:40 +0300
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 30 Jun 2011 18:41:32 +0300
 
 xserver-xorg-video-ati (1:6.14.2-1) unstable; urgency=low
 
