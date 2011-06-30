@@ -1,3 +1,20 @@
+xserver-xorg-video-ati (1:6.14.2-1ubuntu1) UNRELEASED; urgency=low
+
+  * Merged with Debian unstable, remaining changes:
+    + debian/patches/100_radeon-6.9.0-bgnr-enable.patch:
+      - Smooth plymouth transition enablement patch
+    + debian/rules:
+      - Drop /etc/modprobe.d/radeon-kms.conf install.
+    + Add debian/gbp.conf pointing to Ubuntu branch to make
+      git-buildpackage less narky.
+  * Dropped patches
+    101_fix_build_aginst_1.10rc3.diff
+    102_disable_pageflipping_for_transformed_displays.patch
+    - included upstream
+  * Drop the change removing radeon-kms.conf, obsolete since 10.04 final.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 30 Jun 2011 18:00:40 +0300
+
 xserver-xorg-video-ati (1:6.14.2-1) unstable; urgency=low
 
   * New upstream release.
@@ -68,11 +85,11 @@ xserver-xorg-video-ati (1:6.14.0-0ubuntu3) natty; urgency=low
  -- Christopher James Halse Rogers <raof@ubuntu.com>  Wed, 09 Mar 2011 18:45:43 +1100
 
 xserver-xorg-video-ati (1:6.14.0-0ubuntu2) natty; urgency=low
-  
+
   * Rebuild to pick up new Xserver dependencies
-  
+
  -- Christopher James Halse Rogers <raof@ubuntu.com>  Wed, 23 Feb 2011 17:52:57 +1100
-  
+
 xserver-xorg-video-ati (1:6.14.0-0ubuntu1) natty; urgency=low
 
   * New upstream release

@@ -1,4 +1,2 @@
 # placeholder
 100_radeon-6.9.0-bgnr-enable.patch
-101_fix_build_aginst_1.10rc3.diff
-102_disable_pageflipping_for_transformed_displays.patch
