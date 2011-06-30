@@ -1,7 +1,7 @@
 /*
- * Evergeen Register documentation
+ * Cayman Register documentation
  *
- * Copyright (C) 2010  Advanced Micro Devices, Inc.
+ * Copyright (C) 2011  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,14 +21,14 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _EVERGREEN_REG_H_
-#define _EVERGREEN_REG_H_
+#ifndef _CAYMAN_REG_H_
+#define _CAYMAN_REG_H_
 
 /*
  * Register definitions
  */
 
-#include "evergreen_reg_auto.h"
+#include "cayman_reg_auto.h"
 
 enum {
     SHADER_TYPE_PS,
@@ -110,23 +110,10 @@ enum {
 
 #define IT_WAIT_ADDR(x)         ((x) >> 2)
 
-/* IT_INDEX_TYPE */
-#define IT_INDEX_TYPE_SWAP_MODE(x) ((x) << 2)
-
 enum {
 
     SQ_LDS_ALLOC_PS                                       = 0x288ec,
-    SQ_DYN_GPR_RESOURCE_LIMIT_1                           = 0x28838,
     SQ_DYN_GPR_CNTL_PS_FLUSH_REQ                          = 0x8d8c,
-
-    WAIT_UNTIL                                            = 0x8040,
-	WAIT_CP_DMA_IDLE_bit                              = 1 << 8,
-	WAIT_CMDFIFO_bit                                  = 1 << 10,
-	WAIT_3D_IDLE_bit                                  = 1 << 15,
-	WAIT_3D_IDLECLEAN_bit                             = 1 << 17,
-	WAIT_EXTERN_SIG_bit                               = 1 << 19,
-	CMDFIFO_ENTRIES_mask                              = 0xf << 20,
-	CMDFIFO_ENTRIES_shift                             = 20,
 
     CP_COHER_CNTL                                         = 0x85f0,
 	DEST_BASE_0_ENA_bit                               = 1 << 0,
@@ -150,7 +137,6 @@ enum {
 	CB11_DEST_BASE_ENA_bit                            = 1 << 18,
 	FULL_CACHE_ENA_bit                                = 1 << 20,
 	TC_ACTION_ENA_bit                                 = 1 << 23,
-	VC_ACTION_ENA_bit                                 = 1 << 24,
 	CB_ACTION_ENA_bit                                 = 1 << 25,
 	DB_ACTION_ENA_bit                                 = 1 << 26,
 	SH_ACTION_ENA_bit                                 = 1 << 27,

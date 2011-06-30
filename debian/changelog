@@ -1,3 +1,48 @@
+xserver-xorg-video-ati (1:6.14.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * Mention the need for an explicit configuration if r128, mach64, or
+    radeon is to be used without the ati package installed, since it's a
+    meta package, but also a wrapper (Closes: #626500). Thanks, Jonathan
+    Nieder!
+
+ -- Cyril Brulebois <kibi@debian.org>  Thu, 26 May 2011 11:52:58 +0200
+
+xserver-xorg-video-ati (1:6.14.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sun, 10 Apr 2011 23:25:09 +0200
+
+xserver-xorg-video-ati (1:6.14.0-1) unstable; urgency=low
+
+  * New upstream release:
+    - Many bug fixes.
+    - Improved Evergreen support.
+    - Added Ontario support.
+
+ -- Cyril Brulebois <kibi@debian.org>  Thu, 17 Feb 2011 14:50:50 +0100
+
+xserver-xorg-video-ati (1:6.13.2-2) unstable; urgency=low
+
+  * Stop building with -fvisibility=hidden. That was introduced to avoid
+    symbol name clashes with radeonhd, which is gone now.
+  * Switch to dh:
+    - Use debhelper 8.
+    - Use dh-autoreconf.
+    - Bump xserver-xorg-dev build-dep for dh_xsf_substvars and xsf
+      debhelper sequence.
+    - Ship manpages through .install, remove .manpages accordingly.
+  * Get rid of maintainer scripts, since they were only used to handle
+    switching between versions with or without KMS. Packages in squeeze
+    have KMS, so stop worrying about that.
+  * Remove xsfbs accordingly.
+  * Add quilt build-dep for future use.
+  * Update Uploaders list. Thanks, David & Brice!
+  * Remove long obsolete Replaces.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sat, 05 Feb 2011 14:42:29 +0100
+
 xserver-xorg-video-ati (1:6.14.0-0ubuntu5) oneiric; urgency=low
 
   * 102_disable_pageflipping_for_transformed_displays.patch:
@@ -111,6 +156,17 @@ xserver-xorg-video-ati (1:6.13.1-3) experimental; urgency=low
   * Build against Xserver 1.9.1 rc1.
 
  -- Cyril Brulebois <kibi@debian.org>  Sun, 17 Oct 2010 03:08:54 +0200
+
+xserver-xorg-video-ati (1:6.13.1-2+squeeze1) unstable; urgency=low
+
+  * Cherry-pick upstream commit 91f707d3 to fix pixel column ordering with
+    Xv on big endian systems (without KMS, without DRI). Thanks to Ulrich
+    Eckhardt for the report (Closes: #587999).
+  * Apply patch by Julien Cristau: Only enable KMS on x86. At least on
+    powerpc, KMS in squeeze means no suspend/resume, and no backlight
+    control, so delay this to wheezy.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sun, 07 Nov 2010 11:22:20 +0100
 
 xserver-xorg-video-ati (1:6.13.1-2) unstable; urgency=low
 

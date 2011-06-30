@@ -213,6 +213,28 @@ radeon_flush_callback(CallbackListPtr *list,
     }
 }
 
+static Bool RADEONIsFusionGARTWorking(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct drm_radeon_info ginfo;
+    int r;
+    uint32_t tmp;
+
+#ifndef RADEON_INFO_FUSION_GART_WORKING
+#define RADEON_INFO_FUSION_GART_WORKING 0x0c
+#endif
+    memset(&ginfo, 0, sizeof(ginfo));
+    ginfo.request = RADEON_INFO_FUSION_GART_WORKING;
+    ginfo.value = (uintptr_t)&tmp;
+    r = drmCommandWriteRead(info->dri->drmFD, DRM_RADEON_INFO, &ginfo, sizeof(ginfo));
+    if (r) {
+	return FALSE;
+    }
+    if (tmp == 1)
+	return TRUE;
+    return FALSE;
+}
+
 static Bool RADEONIsAccelWorking(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
@@ -266,6 +288,11 @@ static Bool RADEONPreInitAccel_KMS(ScrnInfoPtr pScrn)
 	    info->r600_shadow_fb = FALSE;
 	return TRUE;
     }
+
+    if (info->ChipFamily == CHIP_FAMILY_PALM) {
+	info->accel_state->allowHWDFS = RADEONIsFusionGARTWorking(pScrn);
+    } else
+	info->accel_state->allowHWDFS = TRUE;
 
     if ((info->ChipFamily == CHIP_FAMILY_RS100) ||
 	(info->ChipFamily == CHIP_FAMILY_RS200) ||
@@ -409,8 +436,13 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
 	goto out;
     }
 
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,9,99,901,0)
+    XNFasprintf(&busid, "pci:%04x:%02x:%02x.%d",
+                dev->domain, dev->bus, dev->dev, dev->func);
+#else
     busid = XNFprintf("pci:%04x:%02x:%02x.%d",
 		      dev->domain, dev->bus, dev->dev, dev->func);
+#endif
 
     info->dri2.drm_fd = drmOpen("radeon", busid);
     if (info->dri2.drm_fd == -1) {
@@ -472,8 +504,38 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
     info->tile_config = tmp;
     info->r7xx_bank_op = 0;
     if (info->ChipFamily >= CHIP_FAMILY_CEDAR) {
-	/* for now */
-	return FALSE;
+	if (info->dri->pKernelDRMVersion->version_minor >= 7) {
+	    switch (info->tile_config & 0xf) {
+	    case 0:
+                info->num_channels = 1;
+                break;
+	    case 1:
+                info->num_channels = 2;
+                break;
+	    case 2:
+                info->num_channels = 4;
+                break;
+	    case 3:
+                info->num_channels = 8;
+                break;
+	    default:
+                return FALSE;
+	    }
+
+	    info->num_banks = (info->tile_config & 0xf0) >> 4;
+
+	    switch ((info->tile_config & 0xf00) >> 8) {
+	    case 0:
+                info->group_bytes = 256;
+                break;
+	    case 1:
+                info->group_bytes = 512;
+                break;
+	    default:
+                return FALSE;
+	    }
+	} else
+	    return FALSE;
     } else {
 	switch((info->tile_config & 0xe) >> 1) {
 	case 0:
@@ -513,6 +575,7 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
 	}
     }
 
+    info->have_tiling_info = TRUE;
     return TRUE;
 }
 
@@ -594,23 +657,35 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	goto fail;
     }
 
-    colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
-                         info->ChipFamily <= CHIP_FAMILY_RS740;
+    if (!RADEONPreInitAccel_KMS(pScrn))              goto fail;
 
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
-	/* set default group bytes, overridden by kernel info below */
-	info->group_bytes = 256;
-	if (info->dri->pKernelDRMVersion->version_minor >= 6) {
+    /* don't enable tiling if accel is not enabled */
+    if (!info->r600_shadow_fb) {
+	colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
+	    info->ChipFamily <= CHIP_FAMILY_RS740;
+
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+	    /* set default group bytes, overridden by kernel info below */
+	    info->group_bytes = 256;
+	    info->have_tiling_info = FALSE;
+	    if (info->dri->pKernelDRMVersion->version_minor >= 6) {
+		if (r600_get_tile_config(pScrn)) {
+		    info->allowColorTiling = xf86ReturnOptValBool(info->Options,
+								  OPTION_COLOR_TILING, colorTilingDefault);
+		    /* need working DFS for tiling */
+		    if ((info->ChipFamily == CHIP_FAMILY_PALM) &&
+			(!info->accel_state->allowHWDFS))
+			info->allowColorTiling = FALSE;
+		} else
+		    info->allowColorTiling = FALSE;
+	    } else
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			   "R6xx+ KMS Color Tiling requires radeon drm 2.6.0 or newer\n");
+	} else
 	    info->allowColorTiling = xf86ReturnOptValBool(info->Options,
 							  OPTION_COLOR_TILING, colorTilingDefault);
-	    if (info->allowColorTiling)
-		info->allowColorTiling = r600_get_tile_config(pScrn);
-	} else
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		       "R6xx+ KMS Color Tiling requires radeon drm 2.6.0 or newer\n");
     } else
-	info->allowColorTiling = xf86ReturnOptValBool(info->Options,
-						      OPTION_COLOR_TILING, colorTilingDefault);
+	info->allowColorTiling = FALSE;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	 "KMS Color Tiling: %sabled\n", info->allowColorTiling ? "en" : "dis");
@@ -706,8 +781,6 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     if (!xf86ReturnOptValBool(info->Options, OPTION_SW_CURSOR, FALSE)) {
 	if (!xf86LoadSubModule(pScrn, "ramdac")) return FALSE;
     }
-
-    if (!RADEONPreInitAccel_KMS(pScrn))              goto fail;
 
     if (pScrn->modes == NULL) {
       xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No modes.\n");
@@ -1148,11 +1221,6 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
                     return FALSE;
                 }
 
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-		radeon_bo_set_tiling(info->cursor_bo[c], RADEON_TILING_SWAP_32BIT |
-				     RADEON_TILING_SURFACE, CURSOR_WIDTH);
-#endif
-
                 if (radeon_bo_map(info->cursor_bo[c], 1)) {
                     ErrorF("Failed to map cursor buffer memory\n");
                 }
@@ -1190,10 +1258,8 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
 	    break;
 	}
 #endif
-	if (tiling_flags) {
-            radeon_bo_set_tiling(info->front_bo,
-				 tiling_flags | RADEON_TILING_SURFACE, pitch);
-	}
+	if (tiling_flags)
+            radeon_bo_set_tiling(info->front_bo, tiling_flags, pitch);
     }
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Front buffer size: %dK\n", info->front_bo->size/1024);

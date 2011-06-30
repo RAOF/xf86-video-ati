@@ -1,7 +1,7 @@
 /*
- * Evergreen shaders
+ * Cayman shaders
  *
- * Copyright (C) 2010  Advanced Micro Devices, Inc.
+ * Copyright (C) 2011  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -48,8 +48,6 @@
 #define I_COUNT(x)        ((x) ? ((x) - 1) : 0)
 // vpm
 #define VALID_PIXEL_MODE(x) (x)
-// eop
-#define END_OF_PROGRAM(x)   (x)
 // cf inst
 #define CF_INST(x)        (x)		// SQ_CF_INST_*
 // wqm
@@ -105,9 +103,9 @@
 #define SRC_SEL_W(x)    (x)
 
 #define CF_DWORD0(addr, jmptbl) cpu_to_le32(((addr) | ((jmptbl) << 24)))
-#define CF_DWORD1(pc, cf_const, cond, count, vpm, eop, cf_inst, wqm, b) \
+#define CF_DWORD1(pc, cf_const, cond, count, vpm, cf_inst, b) \
     cpu_to_le32((((pc) << 0) | ((cf_const) << 3) | ((cond) << 8) | ((count) << 10) | \
-		 ((vpm) << 20) | ((eop) << 21) | ((cf_inst) << 22) | ((wqm) << 30) | ((b) << 31)))
+		 ((vpm) << 20) | ((cf_inst) << 22) | ((b) << 31)))
 
 #define CF_ALU_DWORD0(addr, kb0, kb1, km0) cpu_to_le32((((addr) << 0) | ((kb0) << 22) | ((kb1) << 26) | ((km0) << 30)))
 #define CF_ALU_DWORD1(km1, kcache_addr0, kcache_addr1, count, alt_const, cf_inst, wqm, b) \
@@ -117,10 +115,9 @@
 #define CF_ALLOC_IMP_EXP_DWORD0(array_base, type, rw_gpr, rr, index_gpr, es) \
     cpu_to_le32((((array_base) << 0) | ((type) << 13) | ((rw_gpr) << 15) | ((rr) << 22) | \
 		 ((index_gpr) << 23) | ((es) << 30)))
-#define CF_ALLOC_IMP_EXP_DWORD1_SWIZ(sel_x, sel_y, sel_z, sel_w, bc, vpm, eop, cf_inst, m, b) \
+#define CF_ALLOC_IMP_EXP_DWORD1_SWIZ(sel_x, sel_y, sel_z, sel_w, bc, vpm, cf_inst, m, b) \
     cpu_to_le32((((sel_x) << 0) | ((sel_y) << 3) | ((sel_z) << 6) | ((sel_w) << 9) | \
-		 ((bc) << 16) | ((vpm) << 20) | ((eop) << 21) | ((cf_inst) << 22) | \
-		 ((m) << 30) | ((b) << 31)))
+		 ((bc) << 16) | ((vpm) << 20) | ((cf_inst) << 22) | ((m) << 30) | ((b) << 31)))
 
 // ALU clause insts
 #define SRC0_SEL(x)        (x)
@@ -210,7 +207,10 @@
 #define BUFFER_ID(x)        (x)
 #define SRC_GPR(x)          (x)
 #define SRC_REL(x)          (x)
-#define MEGA_FETCH_COUNT(x)        ((x) ? ((x) - 1) : 0)
+
+#define STRUCTURED_READ(x)    (x)
+#define LDS_REQ(x)            (x)
+#define COALESCED_READ(x)     (x)
 
 #define DST_SEL_X(x)          (x)
 #define DST_SEL_Y(x)          (x)
@@ -230,18 +230,17 @@
 // endian swap
 #define ENDIAN_SWAP(x)     (x)		// SQ_ENDIAN_*
 #define CONST_BUF_NO_STRIDE(x)     (x)
-// mf
-#define MEGA_FETCH(x)     (x)
 #define BUFFER_INDEX_MODE(x) (x)
 
-#define VTX_DWORD0(vtx_inst, ft, fwq, buffer_id, src_gpr, sr, ssx, mfc) \
+#define VTX_DWORD0(vtx_inst, ft, fwq, buffer_id, src_gpr, sr, ssx, ssy, str, ldsr, cr) \
     cpu_to_le32((((vtx_inst) << 0) | ((ft) << 5) | ((fwq) << 7) | ((buffer_id) << 8) | \
-		 ((src_gpr) << 16) | ((sr) << 23) | ((ssx) << 24) | ((mfc) << 26)))
+		 ((src_gpr) << 16) | ((sr) << 23) | ((ssx) << 24) | ((ssy) << 26) | \
+		 ((str) << 28) | ((ldsr) << 30) | ((cr) << 31)))
 #define VTX_DWORD1_GPR(dst_gpr, dr, dsx, dsy, dsz, dsw, ucf, data_format, nfa, fca, sma) \
     cpu_to_le32((((dst_gpr) << 0) | ((dr) << 7) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
 		 ((ucf) << 21) | ((data_format) << 22) | ((nfa) << 28) | ((fca) << 30) | ((sma) << 31)))
-#define VTX_DWORD2(offset, es, cbns, mf, alt_const, bim)			\
-    cpu_to_le32((((offset) << 0) | ((es) << 16) | ((cbns) << 18) | ((mf) << 19) | ((alt_const) << 20) | ((bim) << 21)))
+#define VTX_DWORD2(offset, es, cbns, alt_const, bim)			\
+    cpu_to_le32((((offset) << 0) | ((es) << 16) | ((cbns) << 18) | ((alt_const) << 20) | ((bim) << 21)))
 #define VTX_DWORD_PAD cpu_to_le32(0x00000000)
 
 // TEX clause insts
@@ -276,17 +275,5 @@
     cpu_to_le32((((offset_x) << 0) | ((offset_y) << 5) | ((offset_z) << 10) | ((sampler_id) << 15) | \
 		 ((ssx) << 20) | ((ssy) << 23) | ((ssz) << 26) | ((ssw) << 29)))
 #define TEX_DWORD_PAD cpu_to_le32(0x00000000)
-
-extern int evergreen_solid_vs(RADEONChipFamily ChipSet, uint32_t* vs);
-extern int evergreen_solid_ps(RADEONChipFamily ChipSet, uint32_t* ps);
-
-extern int evergreen_copy_vs(RADEONChipFamily ChipSet, uint32_t* vs);
-extern int evergreen_copy_ps(RADEONChipFamily ChipSet, uint32_t* ps);
-
-extern int evergreen_xv_vs(RADEONChipFamily ChipSet, uint32_t* shader);
-extern int evergreen_xv_ps(RADEONChipFamily ChipSet, uint32_t* shader);
-
-extern int evergreen_comp_vs(RADEONChipFamily ChipSet, uint32_t* vs);
-extern int evergreen_comp_ps(RADEONChipFamily ChipSet, uint32_t* ps);
 
 #endif

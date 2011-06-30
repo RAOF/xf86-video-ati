@@ -130,6 +130,13 @@ static Bool RADEONPixmapIsColortiled(PixmapPtr pPix)
 {
     RINFO_FROM_SCREEN(pPix->drawable.pScreen);
 
+#ifdef XF86DRM_MODE
+    if (info->cs) {
+	/* Taken care of by the kernel relocation handling */
+	return FALSE;
+    }
+#endif
+
     /* This doesn't account for the back buffer, which we may want to wrap in
      * a pixmap at some point for the purposes of DRI buffer moves.
      */
@@ -179,11 +186,12 @@ Bool RADEONGetPixmapOffsetPitch(PixmapPtr pPix, uint32_t *pitch_offset)
  *
  * transform may be null.
  */
-Bool radeon_transform_is_affine(PictTransformPtr t)
+Bool radeon_transform_is_affine_or_scaled(PictTransformPtr t)
 {
 	if (t == NULL)
 		return TRUE;
-	return t->matrix[2][0] == 0 && t->matrix[2][1] == 0;
+	/* the shaders don't handle scaling either */
+	return t->matrix[2][0] == 0 && t->matrix[2][1] == 0 && t->matrix[2][2] == IntToxFixed(1);
 }
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
@@ -307,7 +315,6 @@ Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index)
 #endif
     Bool flush = FALSE;
     int ret;
-    uint32_t tiling_flags = 0, pitch = 0;
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     /* May need to handle byte swapping in DownloadFrom/UploadToScreen */
@@ -319,12 +326,8 @@ Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index)
     if (!driver_priv)
       return FALSE;
 
-    /* check if we are tiled */
-    ret = radeon_bo_get_tiling(driver_priv->bo, &tiling_flags, &pitch);
-    if (ret)
-	return FALSE;
     /* untile in DFS/UTS */
-    if (tiling_flags & (RADEON_TILING_MACRO | RADEON_TILING_MICRO))
+    if (driver_priv->tiling_flags & (RADEON_TILING_MACRO | RADEON_TILING_MICRO))
 	return FALSE;
 
     /* if we have more refs than just the BO then flush */
@@ -504,8 +507,8 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 	return NULL;
     }
 
-    if (tiling)
-	radeon_bo_set_tiling(new_priv->bo, tiling, *new_pitch);
+    if (tiling && !radeon_bo_set_tiling(new_priv->bo, tiling, *new_pitch))
+	new_priv->tiling_flags = tiling;
 
     return new_priv;
 }
@@ -529,17 +532,28 @@ struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix)
     return driver_priv->bo;
 }
 
+uint32_t radeon_get_pixmap_tiling(PixmapPtr pPix)
+{
+    struct radeon_exa_pixmap_priv *driver_priv;
+    driver_priv = exaGetPixmapDriverPrivate(pPix);
+    return driver_priv->tiling_flags;
+}
+
 void radeon_set_pixmap_bo(PixmapPtr pPix, struct radeon_bo *bo)
 {
     struct radeon_exa_pixmap_priv *driver_priv;
 
     driver_priv = exaGetPixmapDriverPrivate(pPix);
     if (driver_priv) {
+	uint32_t pitch;
+
 	if (driver_priv->bo)
 	    radeon_bo_unref(driver_priv->bo);
 
 	radeon_bo_ref(bo);
 	driver_priv->bo = bo;
+
+	radeon_bo_get_tiling(bo, &driver_priv->tiling_flags, &pitch);
     }
 }
 
