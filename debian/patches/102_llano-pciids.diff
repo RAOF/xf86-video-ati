@@ -1,0 +1,140 @@
+commit cbcc57b0fa6f581be777bef648f2bf3efe7443ee
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 4 12:52:00 2011 -0400
+
+    radeon: add llano pci ids
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+diff --git a/src/ati_pciids_gen.h b/src/ati_pciids_gen.h
+index 9e1e086..566e34a 100644
+--- a/src/ati_pciids_gen.h
++++ b/src/ati_pciids_gen.h
+@@ -451,6 +451,17 @@
+ #define PCI_CHIP_RS780_9614 0x9614
+ #define PCI_CHIP_RS780_9615 0x9615
+ #define PCI_CHIP_RS780_9616 0x9616
++#define PCI_CHIP_SUMO_9640 0x9640
++#define PCI_CHIP_SUMO_9641 0x9641
++#define PCI_CHIP_SUMO2_9642 0x9642
++#define PCI_CHIP_SUMO2_9643 0x9643
++#define PCI_CHIP_SUMO2_9644 0x9644
++#define PCI_CHIP_SUMO2_9645 0x9645
++#define PCI_CHIP_SUMO_9647 0x9647
++#define PCI_CHIP_SUMO_9648 0x9648
++#define PCI_CHIP_SUMO_964A 0x964A
++#define PCI_CHIP_SUMO_964E 0x964E
++#define PCI_CHIP_SUMO_964F 0x964F
+ #define PCI_CHIP_RS880_9710 0x9710
+ #define PCI_CHIP_RS880_9711 0x9711
+ #define PCI_CHIP_RS880_9712 0x9712
+diff --git a/src/pcidb/ati_pciids.csv b/src/pcidb/ati_pciids.csv
+index 04c204f..2d63029 100644
+--- a/src/pcidb/ati_pciids.csv
++++ b/src/pcidb/ati_pciids.csv
+@@ -452,6 +452,17 @@
+ "0x9614","RS780_9614","RS780",,1,,,1,"ATI Radeon HD 3300 Graphics"
+ "0x9615","RS780_9615","RS780",,1,,,1,"ATI Radeon HD 3200 Graphics"
+ "0x9616","RS780_9616","RS780",,1,,,1,"ATI Radeon 3000 Graphics"
++"0x9640","SUMO_9640","SUMO",,1,,,1,"SUMO"
++"0x9641","SUMO_9641","SUMO",1,1,,,1,"SUMO"
++"0x9642","SUMO2_9642","SUMO2",,1,,,1,"SUMO2"
++"0x9643","SUMO2_9643","SUMO2",1,1,,,1,"SUMO2"
++"0x9644","SUMO2_9644","SUMO2",,1,,,1,"SUMO2"
++"0x9645","SUMO2_9645","SUMO2",1,1,,,1,"SUMO2"
++"0x9647","SUMO_9647","SUMO",1,1,,,1,"SUMO"
++"0x9648","SUMO_9648","SUMO",1,1,,,1,"SUMO"
++"0x964A","SUMO_964A","SUMO",,1,,,1,"SUMO"
++"0x964E","SUMO_964E","SUMO",1,1,,,1,"SUMO"
++"0x964F","SUMO_964F","SUMO",1,1,,,1,"SUMO"
+ "0x9710","RS880_9710","RS880",,1,,,1,"ATI Radeon HD 4200"
+ "0x9711","RS880_9711","RS880",,1,,,1,"ATI Radeon 4100"
+ "0x9712","RS880_9712","RS880",1,1,,,1,"ATI Mobility Radeon HD 4200"
+diff --git a/src/radeon_chipinfo_gen.h b/src/radeon_chipinfo_gen.h
+index 23c1697..9c9295e 100644
+--- a/src/radeon_chipinfo_gen.h
++++ b/src/radeon_chipinfo_gen.h
+@@ -371,6 +371,17 @@ static RADEONCardInfo RADEONCards[] = {
+  { 0x9614, CHIP_FAMILY_RS780, 0, 1, 0, 0, 1 },
+  { 0x9615, CHIP_FAMILY_RS780, 0, 1, 0, 0, 1 },
+  { 0x9616, CHIP_FAMILY_RS780, 0, 1, 0, 0, 1 },
++ { 0x9640, CHIP_FAMILY_SUMO, 0, 1, 0, 0, 1 },
++ { 0x9641, CHIP_FAMILY_SUMO, 1, 1, 0, 0, 1 },
++ { 0x9642, CHIP_FAMILY_SUMO2, 0, 1, 0, 0, 1 },
++ { 0x9643, CHIP_FAMILY_SUMO2, 1, 1, 0, 0, 1 },
++ { 0x9644, CHIP_FAMILY_SUMO2, 0, 1, 0, 0, 1 },
++ { 0x9645, CHIP_FAMILY_SUMO2, 1, 1, 0, 0, 1 },
++ { 0x9647, CHIP_FAMILY_SUMO, 1, 1, 0, 0, 1 },
++ { 0x9648, CHIP_FAMILY_SUMO, 1, 1, 0, 0, 1 },
++ { 0x964A, CHIP_FAMILY_SUMO, 0, 1, 0, 0, 1 },
++ { 0x964E, CHIP_FAMILY_SUMO, 1, 1, 0, 0, 1 },
++ { 0x964F, CHIP_FAMILY_SUMO, 1, 1, 0, 0, 1 },
+  { 0x9710, CHIP_FAMILY_RS880, 0, 1, 0, 0, 1 },
+  { 0x9711, CHIP_FAMILY_RS880, 0, 1, 0, 0, 1 },
+  { 0x9712, CHIP_FAMILY_RS880, 1, 1, 0, 0, 1 },
+diff --git a/src/radeon_chipset_gen.h b/src/radeon_chipset_gen.h
+index fb86211..6b5018d 100644
+--- a/src/radeon_chipset_gen.h
++++ b/src/radeon_chipset_gen.h
+@@ -371,6 +371,17 @@ static SymTabRec RADEONChipsets[] = {
+   { PCI_CHIP_RS780_9614, "ATI Radeon HD 3300 Graphics" },
+   { PCI_CHIP_RS780_9615, "ATI Radeon HD 3200 Graphics" },
+   { PCI_CHIP_RS780_9616, "ATI Radeon 3000 Graphics" },
++  { PCI_CHIP_SUMO_9640, "SUMO" },
++  { PCI_CHIP_SUMO_9641, "SUMO" },
++  { PCI_CHIP_SUMO2_9642, "SUMO2" },
++  { PCI_CHIP_SUMO2_9643, "SUMO2" },
++  { PCI_CHIP_SUMO2_9644, "SUMO2" },
++  { PCI_CHIP_SUMO2_9645, "SUMO2" },
++  { PCI_CHIP_SUMO_9647, "SUMO" },
++  { PCI_CHIP_SUMO_9648, "SUMO" },
++  { PCI_CHIP_SUMO_964A, "SUMO" },
++  { PCI_CHIP_SUMO_964E, "SUMO" },
++  { PCI_CHIP_SUMO_964F, "SUMO" },
+   { PCI_CHIP_RS880_9710, "ATI Radeon HD 4200" },
+   { PCI_CHIP_RS880_9711, "ATI Radeon 4100" },
+   { PCI_CHIP_RS880_9712, "ATI Mobility Radeon HD 4200" },
+diff --git a/src/radeon_pci_chipset_gen.h b/src/radeon_pci_chipset_gen.h
+index 64af176..dca2c0c 100644
+--- a/src/radeon_pci_chipset_gen.h
++++ b/src/radeon_pci_chipset_gen.h
+@@ -371,6 +371,17 @@ PciChipsets RADEONPciChipsets[] = {
+  { PCI_CHIP_RS780_9614, PCI_CHIP_RS780_9614, RES_SHARED_VGA },
+  { PCI_CHIP_RS780_9615, PCI_CHIP_RS780_9615, RES_SHARED_VGA },
+  { PCI_CHIP_RS780_9616, PCI_CHIP_RS780_9616, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_9640, PCI_CHIP_SUMO_9640, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_9641, PCI_CHIP_SUMO_9641, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO2_9642, PCI_CHIP_SUMO2_9642, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO2_9643, PCI_CHIP_SUMO2_9643, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO2_9644, PCI_CHIP_SUMO2_9644, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO2_9645, PCI_CHIP_SUMO2_9645, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_9647, PCI_CHIP_SUMO_9647, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_9648, PCI_CHIP_SUMO_9648, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_964A, PCI_CHIP_SUMO_964A, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_964E, PCI_CHIP_SUMO_964E, RES_SHARED_VGA },
++ { PCI_CHIP_SUMO_964F, PCI_CHIP_SUMO_964F, RES_SHARED_VGA },
+  { PCI_CHIP_RS880_9710, PCI_CHIP_RS880_9710, RES_SHARED_VGA },
+  { PCI_CHIP_RS880_9711, PCI_CHIP_RS880_9711, RES_SHARED_VGA },
+  { PCI_CHIP_RS880_9712, PCI_CHIP_RS880_9712, RES_SHARED_VGA },
+diff --git a/src/radeon_pci_device_match_gen.h b/src/radeon_pci_device_match_gen.h
+index e09daae..bf192c4 100644
+--- a/src/radeon_pci_device_match_gen.h
++++ b/src/radeon_pci_device_match_gen.h
+@@ -371,6 +371,17 @@ static const struct pci_id_match radeon_device_match[] = {
+  ATI_DEVICE_MATCH( PCI_CHIP_RS780_9614, 0 ),
+  ATI_DEVICE_MATCH( PCI_CHIP_RS780_9615, 0 ),
+  ATI_DEVICE_MATCH( PCI_CHIP_RS780_9616, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_9640, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_9641, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO2_9642, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO2_9643, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO2_9644, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO2_9645, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_9647, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_9648, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_964A, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_964E, 0 ),
++ ATI_DEVICE_MATCH( PCI_CHIP_SUMO_964F, 0 ),
+  ATI_DEVICE_MATCH( PCI_CHIP_RS880_9710, 0 ),
+  ATI_DEVICE_MATCH( PCI_CHIP_RS880_9711, 0 ),
+  ATI_DEVICE_MATCH( PCI_CHIP_RS880_9712, 0 ),

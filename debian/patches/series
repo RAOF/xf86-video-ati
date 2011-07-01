@@ -1,2 +1,4 @@
 # placeholder
 100_radeon-6.9.0-bgnr-enable.patch
+101_llano-support.diff
+102_llano-pciids.diff

@@ -1,3 +1,10 @@
+xserver-xorg-video-ati (1:6.14.2-1ubuntu2) oneiric; urgency=low
+
+  * 101_llano-support.diff, 102_llano-pciids.diff:
+    - Add patches from upstream to suppor Llano chips.
+
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Fri, 01 Jul 2011 12:54:27 +0300
+
 xserver-xorg-video-ati (1:6.14.2-1ubuntu1) oneiric; urgency=low
 
   * Merged with Debian unstable, remaining changes:
