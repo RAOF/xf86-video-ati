@@ -4,6 +4,8 @@ xserver-xorg-video-ati (1:6.14.99~git20110811.g93fc084-0ubuntu1) UNRELEASED; urg
     - DRI2 fixes.
     - Pageflipping and vsync fixes.
     - More PCIIDs supported
+  * 101_llano-support.diff, 102_llano-pciids.diff:
+    - Drop; in new upstream snapshot.
 
  -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 11 Aug 2011 10:02:19 +1000
 
