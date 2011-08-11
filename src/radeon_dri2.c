@@ -83,6 +83,7 @@ radeon_dri2_create_buffers(DrawablePtr drawable,
     int i, r, need_enlarge = 0;
     int flags = 0;
     unsigned front_width;
+    uint32_t tiling = 0;
 
     pixmap = screen->GetScreenPixmap(screen);
     front_width = pixmap->drawable.width;
@@ -148,20 +149,37 @@ radeon_dri2_create_buffers(DrawablePtr drawable,
 		flags = 0;
 	    }
 
+	    if (flags & RADEON_CREATE_PIXMAP_TILING_MICRO)
+		tiling |= RADEON_TILING_MICRO;
+	    if (flags & RADEON_CREATE_PIXMAP_TILING_MACRO)
+		tiling |= RADEON_TILING_MACRO;
+
 	    if (need_enlarge) {
 		/* evergreen uses separate allocations for depth and stencil
 		 * so we make an extra large depth buffer to cover stencil
 		 * as well.
 		 */
-		int pitch = drawable->width * (drawable->depth / 8);
-		int aligned_height = (drawable->height + 7) & ~7;
-		int size = pitch * aligned_height;
-		size = (size + 255) & ~255;
-		size += drawable->width * aligned_height;
-		aligned_height = ((size / pitch) + 7) & ~7;
+		unsigned aligned_width = drawable->width;
+		unsigned width_align = drmmode_get_pitch_align(pScrn, drawable->depth / 8, tiling);
+		unsigned aligned_height;
+		unsigned height_align = drmmode_get_height_align(pScrn, tiling);
+		unsigned base_align = drmmode_get_base_align(pScrn, drawable->depth / 8, tiling);
+		unsigned pitch_bytes;
+		unsigned size;
+
+		if (aligned_width == front_width)
+		    aligned_width = pScrn->virtualX;
+		aligned_width = RADEON_ALIGN(aligned_width, width_align);
+		pitch_bytes = aligned_width * (drawable->depth / 8);
+		aligned_height = RADEON_ALIGN(drawable->height, height_align);
+		size = pitch_bytes * aligned_height;
+		size = RADEON_ALIGN(size, base_align);
+		/* add additional size for stencil */
+		size += aligned_width * aligned_height;
+		aligned_height = RADEON_ALIGN(size / pitch_bytes, height_align);
 
 		pixmap = (*pScreen->CreatePixmap)(pScreen,
-						  drawable->width,
+						  aligned_width,
 						  aligned_height,
 						  drawable->depth,
 						  flags);
@@ -217,6 +235,7 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
     int r, need_enlarge = 0;
     int flags;
     unsigned front_width;
+    uint32_t tiling = 0;
 
     pixmap = pScreen->GetScreenPixmap(pScreen);
     front_width = pixmap->drawable.width;
@@ -282,21 +301,38 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
 	    flags = 0;
 	}
 
+	if (flags & RADEON_CREATE_PIXMAP_TILING_MICRO)
+	    tiling |= RADEON_TILING_MICRO;
+	if (flags & RADEON_CREATE_PIXMAP_TILING_MACRO)
+	    tiling |= RADEON_TILING_MACRO;
+
 	if (need_enlarge) {
 	    /* evergreen uses separate allocations for depth and stencil
 	     * so we make an extra large depth buffer to cover stencil
 	     * as well.
 	     */
 	    int depth = (format != 0) ? format : drawable->depth;
-	    int pitch = drawable->width * (depth / 8);
-	    int aligned_height = (drawable->height + 7) & ~7;
-	    int size = pitch * aligned_height;
-	    size = (size + 255) & ~255;
-	    size += drawable->width * aligned_height;
-	    aligned_height = ((size / pitch) + 7) & ~7;
+	    unsigned aligned_width = drawable->width;
+	    unsigned width_align = drmmode_get_pitch_align(pScrn, drawable->depth / 8, tiling);
+	    unsigned aligned_height;
+	    unsigned height_align = drmmode_get_height_align(pScrn, tiling);
+	    unsigned base_align = drmmode_get_base_align(pScrn, drawable->depth / 8, tiling);
+	    unsigned pitch_bytes;
+	    unsigned size;
+
+	    if (aligned_width == front_width)
+		aligned_width = pScrn->virtualX;
+	    aligned_width = RADEON_ALIGN(aligned_width, width_align);
+	    pitch_bytes = aligned_width * (depth / 8);
+	    aligned_height = RADEON_ALIGN(drawable->height, height_align);
+	    size = pitch_bytes * aligned_height;
+	    size = RADEON_ALIGN(size, base_align);
+	    /* add additional size for stencil */
+	    size += aligned_width * aligned_height;
+	    aligned_height = RADEON_ALIGN(size / pitch_bytes, height_align);
 
 	    pixmap = (*pScreen->CreatePixmap)(pScreen,
-					      drawable->width,
+					      aligned_width,
 					      aligned_height,
 					      (format != 0)?format:drawable->depth,
 					      flags);
@@ -626,12 +662,42 @@ radeon_dri2_schedule_flip(ScrnInfoPtr scrn, ClientPtr client,
 }
 
 static Bool
-can_exchange(ScrnInfoPtr pScrn,
+update_front(DrawablePtr draw, DRI2BufferPtr front)
+{
+    int r;
+    PixmapPtr pixmap;
+    struct dri2_buffer_priv *priv = front->driverPrivate;
+    struct radeon_exa_pixmap_priv *driver_priv;
+
+    if (draw->type == DRAWABLE_PIXMAP)
+	pixmap = (PixmapPtr)draw;
+    else
+	pixmap = (*draw->pScreen->GetWindowPixmap)((WindowPtr)draw);
+
+    pixmap->refcnt++;
+
+    exaMoveInPixmap(pixmap);
+    driver_priv = exaGetPixmapDriverPrivate(pixmap);
+    r = radeon_gem_get_kernel_name(driver_priv->bo, &front->name);
+    if (r) {
+	(*draw->pScreen->DestroyPixmap)(pixmap);
+	return FALSE;
+    }
+    (*draw->pScreen->DestroyPixmap)(priv->pixmap);
+    front->pitch = pixmap->devKind;
+    front->cpp = pixmap->drawable.bitsPerPixel / 8;
+    priv->pixmap = pixmap;
+
+    return TRUE;
+}
+
+static Bool
+can_exchange(ScrnInfoPtr pScrn, DrawablePtr draw,
 	     DRI2BufferPtr front, DRI2BufferPtr back)
 {
     struct dri2_buffer_priv *front_priv = front->driverPrivate;
     struct dri2_buffer_priv *back_priv = back->driverPrivate;
-    PixmapPtr front_pixmap = front_priv->pixmap;
+    PixmapPtr front_pixmap;
     PixmapPtr back_pixmap = back_priv->pixmap;
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int i;
@@ -641,6 +707,11 @@ can_exchange(ScrnInfoPtr pScrn,
 	if (crtc->enabled && crtc->rotatedData)
 	    return FALSE;
     }
+
+    if (!update_front(draw, front))
+	return FALSE;
+
+    front_pixmap = front_priv->pixmap;
 
     if (front_pixmap->drawable.width != back_pixmap->drawable.width)
 	return FALSE;
@@ -721,7 +792,7 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
     case DRI2_FLIP:
 	if (info->allowPageFlip &&
 	    DRI2CanFlip(drawable) &&
-	    can_exchange(scrn, event->front, event->back) &&
+	    can_exchange(scrn, drawable, event->front, event->back) &&
 	    radeon_dri2_schedule_flip(scrn,
 				      event->client,
 				      drawable,
@@ -736,7 +807,7 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
 	/* else fall through to exchange/blit */
     case DRI2_SWAP:
 	if (DRI2CanExchange(drawable) &&
-	    can_exchange(scrn, event->front, event->back)) {
+	    can_exchange(scrn, drawable, event->front, event->back)) {
 	    radeon_dri2_exchange_buffers(drawable, event->front, event->back);
 	    swap_type = DRI2_EXCHANGE_COMPLETE;
 	} else {
@@ -1098,7 +1169,7 @@ static int radeon_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
     /* Flips need to be submitted one frame before */
     if (info->allowPageFlip &&
 	DRI2CanFlip(draw) &&
-	can_exchange(scrn, front, back)) {
+	can_exchange(scrn, draw, front, back)) {
 	swap_type = DRI2_FLIP;
 	flip = 1;
     }

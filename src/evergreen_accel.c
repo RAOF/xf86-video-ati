@@ -90,6 +90,8 @@ evergreen_sq_setup(ScrnInfoPtr pScrn, sq_config_t *sq_conf)
 
     if ((info->ChipFamily == CHIP_FAMILY_CEDAR) ||
 	(info->ChipFamily == CHIP_FAMILY_PALM) ||
+	(info->ChipFamily == CHIP_FAMILY_SUMO) ||
+	(info->ChipFamily == CHIP_FAMILY_SUMO2) ||
 	(info->ChipFamily == CHIP_FAMILY_CAICOS))
 	sq_config = 0;
     else
@@ -309,6 +311,10 @@ void evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix,
 
     if (start > crtc->mode.VDisplay)
         return;
+
+    /* on r5xx+ vline starts at viewport_y */
+    start += crtc->y;
+    stop += crtc->y;
 
     BEGIN_BATCH(11);
     /* set the VLINE range */
@@ -554,6 +560,8 @@ evergreen_set_vtx_resource(ScrnInfoPtr pScrn, vtx_resource_t *res, uint32_t doma
     /* flush vertex cache */
     if ((info->ChipFamily == CHIP_FAMILY_CEDAR) ||
 	(info->ChipFamily == CHIP_FAMILY_PALM) ||
+	(info->ChipFamily == CHIP_FAMILY_SUMO) ||
+	(info->ChipFamily == CHIP_FAMILY_SUMO2) ||
 	(info->ChipFamily == CHIP_FAMILY_CAICOS) ||
 	(info->ChipFamily == CHIP_FAMILY_CAYMAN))
 	evergreen_cp_set_surface_sync(pScrn, TC_ACTION_ENA_bit,
@@ -955,6 +963,48 @@ evergreen_set_default_state(ScrnInfoPtr pScrn)
 	sq_conf.num_hs_stack_entries = 42;
 	sq_conf.num_ls_stack_entries = 42;
 	break;
+    case CHIP_FAMILY_SUMO:
+	sq_conf.num_ps_gprs = 93;
+	sq_conf.num_vs_gprs = 46;
+	sq_conf.num_temp_gprs = 4;
+	sq_conf.num_gs_gprs = 31;
+	sq_conf.num_es_gprs = 31;
+	sq_conf.num_hs_gprs = 23;
+	sq_conf.num_ls_gprs = 23;
+	sq_conf.num_ps_threads = 96;
+	sq_conf.num_vs_threads = 25;
+	sq_conf.num_gs_threads = 25;
+	sq_conf.num_es_threads = 25;
+	sq_conf.num_hs_threads = 25;
+	sq_conf.num_ls_threads = 25;
+	sq_conf.num_ps_stack_entries = 42;
+	sq_conf.num_vs_stack_entries = 42;
+	sq_conf.num_gs_stack_entries = 42;
+	sq_conf.num_es_stack_entries = 42;
+	sq_conf.num_hs_stack_entries = 42;
+	sq_conf.num_ls_stack_entries = 42;
+	break;
+    case CHIP_FAMILY_SUMO2:
+	sq_conf.num_ps_gprs = 93;
+	sq_conf.num_vs_gprs = 46;
+	sq_conf.num_temp_gprs = 4;
+	sq_conf.num_gs_gprs = 31;
+	sq_conf.num_es_gprs = 31;
+	sq_conf.num_hs_gprs = 23;
+	sq_conf.num_ls_gprs = 23;
+	sq_conf.num_ps_threads = 96;
+	sq_conf.num_vs_threads = 25;
+	sq_conf.num_gs_threads = 25;
+	sq_conf.num_es_threads = 25;
+	sq_conf.num_hs_threads = 25;
+	sq_conf.num_ls_threads = 25;
+	sq_conf.num_ps_stack_entries = 85;
+	sq_conf.num_vs_stack_entries = 85;
+	sq_conf.num_gs_stack_entries = 85;
+	sq_conf.num_es_stack_entries = 85;
+	sq_conf.num_hs_stack_entries = 85;
+	sq_conf.num_ls_stack_entries = 85;
+	break;
     case CHIP_FAMILY_BARTS:
 	sq_conf.num_ps_gprs = 93;
 	sq_conf.num_vs_gprs = 46;
@@ -1022,8 +1072,9 @@ evergreen_set_default_state(ScrnInfoPtr pScrn)
 
     evergreen_sq_setup(pScrn, &sq_conf);
 
-    BEGIN_BATCH(24);
+    BEGIN_BATCH(27);
     EREG(SQ_LDS_ALLOC_PS, 0);
+    EREG(SQ_LDS_RESOURCE_MGMT, 0x10001000);
     EREG(SQ_DYN_GPR_RESOURCE_LIMIT_1, 0);
 
     PACK0(SQ_ESGS_RING_ITEMSIZE, 6);
