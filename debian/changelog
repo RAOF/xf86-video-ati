@@ -1,5 +1,6 @@
-xserver-xorg-video-ati (1:6.14.99~git20110811.g93fc084-0ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.14.99~git20110811.g93fc084-0ubuntu1) oneiric; urgency=low
 
+  [ Christopher James Halse Rogers ]
   * New upstream snapshot:
     - DRI2 fixes.
     - Pageflipping and vsync fixes.
@@ -7,7 +8,7 @@ xserver-xorg-video-ati (1:6.14.99~git20110811.g93fc084-0ubuntu1) UNRELEASED; urg
   * 101_llano-support.diff, 102_llano-pciids.diff:
     - Drop; in new upstream snapshot.
 
- -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 11 Aug 2011 10:02:19 +1000
+ -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 11 Aug 2011 22:43:25 +0300
 
 xserver-xorg-video-ati (1:6.14.2-1ubuntu2) oneiric; urgency=low
 
