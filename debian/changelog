@@ -1,6 +1,14 @@
 xserver-xorg-video-ati (1:6.14.3-1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release. Some highlights follow:
+    - Add support for llano APUs.
+    - “video: Don't round up bottom/right edge for clipping source
+      width/height” (Closes: #637258).
+    - “Bail if we're trying to start up in UMS mode on KMS.” According to
+      a comment in the code, this can happen if the radeon kernel module
+      wasn't loaded before X starts.
+    - “EXA >= R6xx / KMS: Avoid running out of CS space at inconvenient
+      times” (Closes: #645007).
 
  -- Cyril Brulebois <kibi@debian.org>  Thu, 03 Nov 2011 00:26:53 +0100
 
