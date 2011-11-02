@@ -1475,7 +1475,9 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
 	(info->ChipFamily != CHIP_FAMILY_RS740) &&
 	(info->ChipFamily != CHIP_FAMILY_RS780) &&
 	(info->ChipFamily != CHIP_FAMILY_RS880) &&
-	(info->ChipFamily != CHIP_FAMILY_PALM)) {
+	(info->ChipFamily != CHIP_FAMILY_PALM) &&
+	(info->ChipFamily != CHIP_FAMILY_SUMO) &&
+	(info->ChipFamily != CHIP_FAMILY_SUMO2)) {
 	if (info->IsIGP)
 	    info->mc_fb_location = INREG(RADEON_NB_TOM);
 	else
@@ -1894,7 +1896,7 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	}
     }
 
-    if (IS_DCE5_VARIANT) {
+    if (info->ChipFamily >= CHIP_FAMILY_SUMO) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Chipset: \"%s\" (ChipID = 0x%04x) requires KMS\n",
 		   pScrn->chipset,
@@ -2334,6 +2336,7 @@ static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    Bool           ret;
     MessageType    from;
     char          *reason;
 
@@ -2400,8 +2403,9 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
     info->dri->pLibDRMVersion = NULL;
     info->dri->pKernelDRMVersion = NULL;
 
-    if (!RADEONDRIGetVersion(pScrn))
-	return FALSE;
+    ret = RADEONDRIGetVersion(pScrn);
+    if (ret <= 0)
+	return ret;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "[dri] Found DRI library version %d.%d.%d and kernel"
@@ -3164,6 +3168,8 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
      * memory map
      */
     info->directRenderingEnabled = RADEONPreInitDRI(pScrn);
+    if (info->directRenderingEnabled < 0)
+	goto fail;
 #endif
     if (!info->directRenderingEnabled) {
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {

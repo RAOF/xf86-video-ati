@@ -480,6 +480,8 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
+#ifdef EXA_MIXED_PIXMAPS
+
 static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
@@ -522,7 +524,19 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
                 return FALSE;
 	    }
 
-	    info->num_banks = (info->tile_config & 0xf0) >> 4;
+	    switch((info->tile_config & 0xf0) >> 4) {
+	    case 0:
+		info->num_banks = 4;
+		break;
+	    case 1:
+		info->num_banks = 8;
+		break;
+	    case 2:
+		info->num_banks = 16;
+		break;
+	    default:
+		return FALSE;
+	    }
 
 	    switch ((info->tile_config & 0xf00) >> 8) {
 	    case 0:
@@ -579,13 +593,14 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
+#endif /* EXA_MIXED_PIXMAPS */
+
 Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 {
     RADEONInfoPtr     info;
     RADEONEntPtr pRADEONEnt;
     DevUnion* pPriv;
     Gamma  zeros = { 0.0, 0.0, 0.0 };
-    Bool colorTilingDefault;
     uint32_t tiling = 0;
     int cpp;
 
@@ -659,10 +674,11 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
     if (!RADEONPreInitAccel_KMS(pScrn))              goto fail;
 
+#ifdef EXA_MIXED_PIXMAPS
     /* don't enable tiling if accel is not enabled */
     if (!info->r600_shadow_fb) {
-	colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
-	    info->ChipFamily <= CHIP_FAMILY_RS740;
+	Bool colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
+	    info->ChipFamily <= CHIP_FAMILY_CAYMAN;
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	    /* set default group bytes, overridden by kernel info below */
@@ -685,6 +701,10 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	    info->allowColorTiling = xf86ReturnOptValBool(info->Options,
 							  OPTION_COLOR_TILING, colorTilingDefault);
     } else
+#else
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	       "KMS Color Tiling requires xserver which supports EXA_MIXED_PIXMAPS\n");
+#endif
 	info->allowColorTiling = FALSE;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -856,7 +876,8 @@ static Bool RADEONCloseScreen_KMS(int scrnIndex, ScreenPtr pScreen)
     if (info->cursor) xf86DestroyCursorInfoRec(info->cursor);
     info->cursor = NULL;
 
-    radeon_dri2_close_screen(pScreen);
+    if (info->dri2.enabled)
+	radeon_dri2_close_screen(pScreen);
 
     pScrn->vtSema = FALSE;
     xf86ClearPrimInitDone(info->pEnt->index);
@@ -1184,7 +1205,7 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     int cpp = info->CurrentLayout.pixel_bytes;
     int screen_size;
     int pitch, base_align;
-    int total_size_bytes = 0, remain_size_bytes;
+    int total_size_bytes = 0;
     uint32_t tiling_flags = 0;
 
     if (info->accel_state->exa != NULL) {
@@ -1234,9 +1255,6 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     screen_size = RADEON_ALIGN(screen_size, RADEON_GPU_PAGE_SIZE);
     /* keep area front front buffer - but don't allocate it yet */
     total_size_bytes += screen_size;
-
-    /* work out from the mm size what the exa / tex sizes need to be */
-    remain_size_bytes = info->vram_size - total_size_bytes;
 
     info->dri->textureSize = 0;
 
