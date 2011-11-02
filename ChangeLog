@@ -1,3 +1,383 @@
+commit 93459f842c2d8dc178a1954b8e05150fcb96ac9a
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Nov 2 12:51:15 2011 +0100
+
+    Bump version for 6.14.3 release.
+
+commit fe3ce559b7f07d39ded39abb38576846d6eb185b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 20:27:03 2011 -0700
+
+    Build fix for -Werror=int-to-pointer-cast
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d3d6a5da07aaec5961e51c9a8f90c1490ee101b6
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sat Oct 29 23:08:46 2011 +0200
+
+    radeon: do not include xf86PciInfo.h
+    
+    We already use atipciids.h instead most places.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 70da7001e81363ed6ef2c4727c512daf53ae29fe
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 20:15:09 2011 -0700
+
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a3bb07efb1757c33d70e2e1928219d12a4dd6498
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Oct 25 17:43:58 2011 +0200
+
+    EXA >= R6xx / KMS: Avoid running out of CS space at inconvenient times.
+    
+    Otherwise we may end up with things not properly set up at the beginning of the
+    next CS.
+    
+    Fixes http://bugs.debian.org/645007 .
+    
+    In contrast to the Composite code for < R6xx, this isn't necessary with UMS,
+    as the draw packet only uses constant space in the indirect buffer, and nothing
+    else can mess with the 3D state between indirect buffers.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 23788c4a5e3b6affb9b183e1393edd0e5ca4550e
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Oct 27 19:12:22 2011 +0200
+
+    EXA < R6xx: Make sure 2D state is re-emitted after running out of CS space.
+    
+    Otherwise it's basically luck what the 2D state ends up being at the beginning
+    of the next CS.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 6e0e1a821accc6ca95f4134e49b66a6b168c1934
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Oct 25 17:39:57 2011 +0200
+
+    Make radeon_dri2_create_buffer(s) more robust. (Bug #30047)
+    
+    In particular, handle and propagate failure to allocate GPU accessible memory,
+    instead of crashing. Fixes https://bugs.freedesktop.org/show_bug.cgi?id=30047 .
+    
+    Also take care not to leak resources in error paths.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 856583dbca9319c77fed40daa9956e81a0068f9e
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Thu Oct 20 14:17:14 2011 -0400
+
+    radeon/kms: fallback to vesa if GPU is not supported by UMS
+    
+    For GPU not supported by UMS, test in probe so that we properly
+    fallback to vesa.
+    
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f6f1b4f7789cfef763c063e671b76b60be8bdd8e
+Author: Maarten Lankhorst <m.b.lankhorst@gmail.com>
+Date:   Tue Oct 18 14:30:39 2011 +0200
+
+    dri2: Add vdpau driver name entry
+    
+    libvdpau has a driver loading mechanism that looks for a dri2 driver
+    first before falling back to nvidia, so lets use that.
+    
+    Allows use of libvdpau_rx00 without having to set things up separately,
+    similar to the patch to xf86-video-nouveau.
+    
+    Signed-off-by: Maarten Lankhorst <m.b.lankhorst@gmail.com>
+    Reviewed-by: Christian König <deathsimple@vodafone.de>
+    Reviewed-by: Michel Dänzer <michel@daenzer.net>
+    Tested-by: Michel Dänzer <michel@daenzer.net>
+
+commit a6b2bd2d184f10d4c56c4ee17186aedb238a36ec
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Sep 21 17:00:16 2011 -0400
+
+    UMS: fix DDIA enable on some rs690 systems
+    
+    DVOOutputControl checks the value of of bios scratch reg 3
+    on some tables and assumes the encoder is already enabled
+    if the DFP2_ACTIVE bit is set.  Clear that bit so the table
+    sets the DDIA enable bit properly.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit d78860ba53d9bfcf6c28e1cfd2d970709b5e20fa
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Aug 12 11:21:33 2011 +0200
+
+    Only call radeon_dri2_close_screen() if DRI2 was enabled.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 11330ca5dc61a70fe4507e63230f9133ca22d891
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Aug 12 11:21:32 2011 +0200
+
+    Remove dead variable remain_size_bytes.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit fcf0cca9c0ab0f692b222f619aee8f1cdad3b519
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Sep 20 12:34:05 2011 +0200
+
+    KMS Color Tiling requires xserver which supports EXA_MIXED_PIXMAPS.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit c96e6fb8a5f5be2319fdb4c431c1ba5279997fe8
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Sat Sep 17 08:26:12 2011 -0400
+
+    man: note that the list of marketing names is non-exhaustive
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 1a51fce6f6ab169c882a86b936909c0820f27a68
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Sep 15 17:52:25 2011 -0400
+
+    update man page with new marking names
+    
+    Note that the driver support all currently
+    shipping asics and the names in the man page
+    are just a sampling.
+    
+    Fixes:
+    https://bugs.freedesktop.org/show_bug.cgi?id=40808
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 64f237a4cf3ef5bcb3163e88e1447ff275a1eefa
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Aug 18 19:11:08 2011 +0200
+
+    Convert register ranges for >= r6xx from enums to defines.
+    
+    Avoids lots of "comparison between 'enum <anonymous>' and 'enum <anonymous>'"
+    warnings with newer versions of gcc. See
+    https://bugs.freedesktop.org/show_bug.cgi?id=38238 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 95991fcce45f0dd904f76b9f98f9c7ed5708e4fa
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Aug 17 11:10:34 2011 +0200
+
+    Bail if we're trying to start up in UMS mode on KMS.
+    
+    Ideally, the display manager will start the X server again, and everything
+    will be fine and dandy. But in the worst case, at least we won't hit the
+    hardware behind the KMS driver's back.
+    
+    (This change intentionally makes (ab)use of the fact that Bool is defined as
+    int).
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f95a41b7851565c282d22f8d679db1377428f165
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Aug 11 11:22:57 2011 +0200
+
+    video: Don't round up bottom/right edge for clipping source width/height.
+    
+    It's not necessary: If the top/left edge was rounded down, this will be
+    compensated by the subtraction.
+    
+    Worse, if the original source width/height is odd, rounding up may result in
+    reading past the end of the source data.
+    
+    Fixes http://bugs.debian.org/637258 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 93fc0843a1e31dc9237433bc2bf17df79e956d26
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Aug 10 17:44:37 2011 +0200
+
+    Change my e-mail address to something that still works, and always will, I hope.
+
+commit 9151f3b1c2ebcc34e63195888ba696f2183ba5e2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Aug 9 19:13:26 2011 +0200
+
+    Prefer the CRTC of the primary output for synchronization.
+    
+    See https://bugs.freedesktop.org/show_bug.cgi?id=39696 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 3b9fdc807dd7e52af0576299cefba596040f6f2f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Aug 3 16:20:13 2011 -0400
+
+    r5xx+: Fix vline setup with crtc offsets
+    
+    On r5xx+, vline is relative to to the viewport, not
+    the scanlines.  Based on initial patch and investigation
+    from Herbert Pötzl (Bertl) on IRC.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 104b2d7c071f29266b1bc4184a74e9714d14febc
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Aug 1 10:05:30 2011 -0400
+
+    kms: fix possible leak in pageflip code
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit d29bab632e9ecccba518d4107d52620bf75eb1cf
+Author: Ville Syrjala <syrjala@sci.fi>
+Date:   Wed May 4 23:51:27 2011 +0300
+
+    kms: Move flip_count and co. to a per swap structure
+    
+    If multiple drawables are doing page flipping, the global drmmode
+    structure can't be used to keep per swap information. For example
+    flip_count can increase prematurely due to another swap request,
+    and then the previous swap request never gets completed, leading to a
+    stuck client. Move the relevant pieces of data to a strucuture that
+    gets allocated once per swap request and shared by all involved CRTCs.
+    
+    Signed-off-by: Ville Syrjala <syrjala@sci.fi>
+
+commit 9493563c1ef4b51af0ee8a44cb4e7c5bb280347e
+Author: Ville Syrjala <syrjala@sci.fi>
+Date:   Wed May 4 23:51:26 2011 +0300
+
+    dri2: Update front buffer pixmap and name before exchanging buffers
+    
+    Buffer exchange assumes that the front buffer pixmap and name
+    information is accurate. That may not be the case eg. if the window
+    has been (un)redirected since the buffer was created.
+    
+    Signed-off-by: Ville Syrjala <syrjala@sci.fi>
+
+commit 8c9266ed2da22a510243f9a952c14d4423f48a2b
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Jul 15 10:44:57 2011 -0400
+
+    radeon: add some new NI pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f59c3b294b0f715fc96e2bbe25893f2b31aa488b
+Author: Christian König <deathsimple@vodafone.de>
+Date:   Thu Jul 14 11:49:06 2011 +0200
+
+    Register XvMC video decoding acceleration
+
+commit e8d0d437957b15252dfad775796a3949ed50dbcf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 12 11:43:25 2011 -0400
+
+    evergreen: Emit SQ_LDS_RESOURCE_MGMT
+    
+    Avoids rendering problems when compute changes this reg.
+    
+    Fixes:
+    https://bugs.freedesktop.org/show_bug.cgi?id=39119
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 9bb31158466e6168116d841d12c8b4303f11c4a6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Jun 22 12:24:28 2011 -0400
+
+    evergreen: fix num_banks for 2D tiling config
+    
+    The field is encoded.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 122b471f734aa07427b01d4bec35ff1ac28290b5
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Jun 17 04:02:16 2011 -0400
+
+    dri2: fix copy pasto in a6154c00c64932332e8f6e334661ffd579cfd894
+    
+    Reported-by: Nils Wallménius <nils.wallmenius@gmail.com>
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 122bedcbcf45cb583cf51b2fd04ed2805e0ca60b
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 16 12:57:11 2011 -0400
+
+    dri2: missing bit from a6154c00c64932332e8f6e334661ffd579cfd894
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit a6154c00c64932332e8f6e334661ffd579cfd894
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 16 12:48:43 2011 -0400
+
+    dri2/eg+: fix size and alignment of depth/stencil buffers
+    
+    Base alignment may be 256B or 512B depending on the group
+    size.  Also need to check against front size for virtualX.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 41eb1fbb3d9da64feb4a96df7c575e44136b1538
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jun 13 12:50:39 2011 -0400
+
+    kms/man: update ColorTiling info
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 481baa5c74271cd7ce38bae3965d2bc4b8809058
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Jun 13 12:44:07 2011 -0400
+
+    kms: enable ColorTiling by default on r6xx-cayman asics
+    
+    Currently only 1D tiling as 2D tiling still has some corner
+    cases to fix up.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit cbcc57b0fa6f581be777bef648f2bf3efe7443ee
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Apr 4 12:52:00 2011 -0400
+
+    radeon: add llano pci ids
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 36afd1e1055eeadb2396dadcc68b214655bd90a9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue May 31 16:03:36 2011 -0400
+
+    radeon: add support for llano APUs
+    
+    - KMS only
+    - Includes full EXA/Xv support
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 557f46dc2f18734ecf1f18dee7e951e0bf062e63
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri May 27 07:22:08 2011 +1000
+
+    bump version after release
+
 commit 2fca40ea65d9f2a6f8451c324bb4b82786f34f76
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu May 26 12:52:21 2011 +1000
