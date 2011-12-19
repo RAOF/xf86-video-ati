@@ -1,3 +1,16 @@
+xserver-xorg-video-ati (1:6.14.99~git20111219.aacbd629-0ubuntu1) precise; urgency=low
+
+  * Merge from Debian.  Remaining Ubuntu changes:
+    - debian/rules:
+    - debian/radeon-kms.conf:
+      + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
+  * New upstream snapshot:
+    - More PCIIDs.
+    - Endianness fixes.
+  * Drop 100_radeon-6.9.0-bgnr-enable.patch; merged upstream.
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Mon, 19 Dec 2011 18:57:23 +1100
+
 xserver-xorg-video-ati (1:6.14.99~git20110811.g93fc084-0ubuntu1) oneiric; urgency=low
 
   [ Christopher James Halse Rogers ]
