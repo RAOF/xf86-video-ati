@@ -142,7 +142,7 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int			coverage, best_coverage, c;
     BoxRec		box, crtc_box, cover_box;
-    RROutputPtr         primary_output;
+    RROutputPtr         primary_output = NULL;
     xf86CrtcPtr         best_crtc = NULL, primary_crtc = NULL;
 
     box.x1 = x1;
@@ -152,7 +152,9 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
     best_coverage = 0;
 
     /* Prefer the CRTC of the primary output */
-    primary_output = RRFirstOutput(pScrn->pScreen);
+    if (dixPrivateKeyRegistered(rrPrivKey)) {
+	primary_output = RRFirstOutput(pScrn->pScreen);
+    }
     if (primary_output && primary_output->crtc)
 	primary_crtc = primary_output->crtc->devPrivate;
 
@@ -2996,7 +2998,7 @@ RADEONPutImage(
     /* copy data */
    top = ya >> 16;
    left = (xa >> 16) & ~1;
-   npixels = (RADEON_ALIGN((xb + 0xffff) >> 16, 2)) - left;
+   npixels = ((xb + 0xffff) >> 16) - left;
 
    offset = (pPriv->video_offset) + (top * dstPitch);
 
@@ -3055,7 +3057,7 @@ RADEONPutImage(
 		s2offset = s3offset;
 		s3offset = tmp;
 	    }
-	    nlines = (RADEON_ALIGN((yb + 0xffff) >> 16, 2)) - top;
+	    nlines = ((yb + 0xffff) >> 16) - top;
 	    RADEONCopyMungedData(pScrn, buf + (top * srcPitch) + left,
 				 buf + s2offset, buf + s3offset, dst_start,
 				 srcPitch, srcPitch2, dstPitch, nlines, npixels);
