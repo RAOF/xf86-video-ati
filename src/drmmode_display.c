@@ -251,6 +251,9 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	info->accel_state->exa->DoneCopy (dst);
 	radeon_cs_flush_indirect(pScrn);
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 10
+	pScreen->canDoBGNoneRoot = TRUE;
+#endif
 	drmmode_destroy_bo_pixmap(dst);
  out_free_src:
 	drmmode_destroy_bo_pixmap(src);
@@ -1011,7 +1014,7 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dv
 	output->doubleScanAllowed = TRUE;
 	output->driver_private = drmmode_output;
 	
-	output->possible_crtcs = 0x7f;
+	output->possible_crtcs = 0xffffffff;
 	for (i = 0; i < koutput->count_encoders; i++) {
 		output->possible_crtcs &= kencoders[i]->possible_crtcs;
 	}

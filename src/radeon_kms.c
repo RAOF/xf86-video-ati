@@ -677,7 +677,9 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 #ifdef EXA_MIXED_PIXMAPS
     /* don't enable tiling if accel is not enabled */
     if (!info->r600_shadow_fb) {
-	Bool colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
+	Bool colorTilingDefault =
+	    xorgGetVersion() >= XORG_VERSION_NUMERIC(1,9,4,901,0) &&
+	    info->ChipFamily >= CHIP_FAMILY_R300 &&
 	    info->ChipFamily <= CHIP_FAMILY_CAYMAN;
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {

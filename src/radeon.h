@@ -792,7 +792,9 @@ struct radeon_accel_state {
 typedef struct {
     EntityInfoPtr     pEnt;
     pciVideoPtr       PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG            PciTag;
+#endif
     int               Chipset;
     RADEONChipFamily  ChipFamily;
     RADEONErrata      ChipErrata;
@@ -1001,7 +1003,7 @@ typedef struct {
     struct radeon_cs_manager *csm;
     struct radeon_cs *cs;
 
-    struct radeon_bo *cursor_bo[6];
+    struct radeon_bo *cursor_bo[32];
     uint64_t vram_size;
     uint64_t gart_size;
     drmmode_rec drmmode;
@@ -1665,6 +1667,7 @@ static __inline__ int radeon_timedout(const struct timeval *endtime)
 enum {
     RADEON_CREATE_PIXMAP_TILING_MACRO = 0x10000000,
     RADEON_CREATE_PIXMAP_TILING_MICRO = 0x20000000,
+    RADEON_CREATE_PIXMAP_DEPTH = 0x40000000, /* for r200 */
 };
 
 #endif /* _RADEON_H_ */
