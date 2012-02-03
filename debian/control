@@ -80,7 +80,7 @@ Depends:
  ${misc:Depends},
  ${xviddriver:Depends}
 Provides: ${xviddriver:Provides}
-Suggests: firmware-linux
+Suggests: linux-firmware
 Description: X.Org X server -- AMD/ATI Radeon display driver
  This package provides the 'radeon' driver for the AMD/ATI Radeon, FireGL,
  FireMV, FirePro and FireStream series.
