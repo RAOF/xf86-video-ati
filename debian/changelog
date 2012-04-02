@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.14.4-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Cyril Brulebois <kibi@debian.org>  Mon, 02 Apr 2012 20:10:07 +0000
+
 xserver-xorg-video-ati (1:6.14.3-2) unstable; urgency=low
 
   * Fix xinerama by cherry-picking:
