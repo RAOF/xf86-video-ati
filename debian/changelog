@@ -1,6 +1,10 @@
 xserver-xorg-video-ati (1:6.14.4-1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - Add support for Trinity APUs.
+    - 2D tiling support on R6xx+ asics.
+    - KMS tiling support for r1xx-r2xx.
+    - Lots of bug fixes.
   * Bump libdrm-dev build-dep.
 
  -- Cyril Brulebois <kibi@debian.org>  Mon, 02 Apr 2012 20:10:07 +0000
