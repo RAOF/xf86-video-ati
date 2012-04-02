@@ -17,7 +17,7 @@ Build-Depends:
  x11proto-fonts-dev,
  x11proto-randr-dev (>= 1.2),
  x11proto-render-dev,
- libdrm-dev (>= 2.4.17) [!hurd-i386],
+ libdrm-dev (>= 2.4.33) [!hurd-i386],
  x11proto-dri2-dev,
  x11proto-xf86dri-dev,
  libudev-dev [linux-any],
