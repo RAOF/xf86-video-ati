@@ -1,3 +1,11 @@
+xserver-xorg-video-ati (1:6.14.4-3) UNRELEASED; urgency=low
+
+  * Fix uninstallability issues on ia64 by dropping mach64 and r128 from
+    dependencies on this architecture, since those were removed (the ia64
+    domain I/O support code is gone in xserver 1.12).
+
+ -- Cyril Brulebois <kibi@debian.org>  Fri, 18 May 2012 11:31:46 +0200
+
 xserver-xorg-video-ati (1:6.14.4-2) unstable; urgency=medium
 
   * Cherry-picks from upstream git:

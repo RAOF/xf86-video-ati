@@ -32,8 +32,8 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  ${xviddriver:Depends},
- xserver-xorg-video-r128,
- xserver-xorg-video-mach64,
+ xserver-xorg-video-r128 [!ia64],
+ xserver-xorg-video-mach64 [!ia64],
  xserver-xorg-video-radeon
 Provides: ${xviddriver:Provides}
 Description: X.Org X server -- AMD/ATI display driver wrapper
@@ -57,8 +57,8 @@ Architecture: any
 Depends:
  ${misc:Depends},
  xserver-xorg-video-ati (= ${binary:Version}),
- xserver-xorg-video-mach64-dbg,
- xserver-xorg-video-r128-dbg,
+ xserver-xorg-video-mach64-dbg [!ia64],
+ xserver-xorg-video-r128-dbg [!ia64],
  xserver-xorg-video-radeon-dbg
 Section: debug
 Priority: extra
