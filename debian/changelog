@@ -1,3 +1,12 @@
+xserver-xorg-video-ati (1:6.14.4-4) UNRELEASED; urgency=low
+
+  * Cherry-pick from upstream to fix regression on UMS (Closes: #670570):
+    - EXA: Attempt to fix solid picture acceleration with UMS.
+    - EXA/UMS: Synchronize to the GPU before writing solid colour to scratch pixmap.
+    - UMS/EXA: Add reminder for potential solid picture performance issue.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sat, 19 May 2012 20:32:19 +0000
+
 xserver-xorg-video-ati (1:6.14.4-3) unstable; urgency=low
 
   * Fix uninstallability issues on ia64 by dropping mach64 and r128 from
