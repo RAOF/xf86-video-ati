@@ -18,7 +18,7 @@ Build-Depends:
  x11proto-fonts-dev,
  x11proto-randr-dev (>= 1.2),
  x11proto-render-dev,
- libdrm-dev (>= 2.4.17) [!hurd-i386],
+ libdrm-dev (>= 2.4.33) [!hurd-i386],
  x11proto-dri2-dev,
  x11proto-xf86dri-dev,
  libudev-dev [linux-any],
@@ -33,8 +33,8 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  ${xviddriver:Depends},
- xserver-xorg-video-r128,
- xserver-xorg-video-mach64,
+ xserver-xorg-video-r128 [!ia64],
+ xserver-xorg-video-mach64 [!ia64],
  xserver-xorg-video-radeon
 Provides: ${xviddriver:Provides}
 Description: X.Org X server -- AMD/ATI display driver wrapper
@@ -58,8 +58,8 @@ Architecture: any
 Depends:
  ${misc:Depends},
  xserver-xorg-video-ati (= ${binary:Version}),
- xserver-xorg-video-mach64-dbg,
- xserver-xorg-video-r128-dbg,
+ xserver-xorg-video-mach64-dbg [!ia64],
+ xserver-xorg-video-r128-dbg [!ia64],
  xserver-xorg-video-radeon-dbg
 Section: debug
 Priority: extra
