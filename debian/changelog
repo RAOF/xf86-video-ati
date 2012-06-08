@@ -1,3 +1,17 @@
+xserver-xorg-video-ati (1:6.14.99~git20111219.aacbd629-0ubuntu3) UNRELEASED; urgency=low
+
+  [ Maarten Lankhorst ]
+  * Merge from Debian. Remaining Ubuntu changes:
+    - debian/control:
+      + firmware-linux -> linux-firmware
+    - debian/rules:
+      + Remove reference to radeon-kms.conf
+    - debian/radeon-kms.conf:
+      + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
+    - Re-added missing src/bicubic_table.py
+
+ -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Fri, 08 Jun 2012 14:23:31 +0200
+
 xserver-xorg-video-ati (1:6.14.99~git20111219.aacbd629-0ubuntu2) precise; urgency=low
 
   * debian/control: Suggest linux-firmware rather than firmware-linux.
