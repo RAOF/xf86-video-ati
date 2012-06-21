@@ -1,6 +1,5 @@
-xserver-xorg-video-ati (1:6.14.99~git20120608.9425c50e-0ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.14.99~git20120608.9425c50e-0ubuntu1) quantal; urgency=low
 
-  [ Maarten Lankhorst ]
   * Merge from Debian. Remaining Ubuntu changes:
     - debian/control:
       + firmware-linux -> linux-firmware
