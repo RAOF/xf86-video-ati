@@ -45,6 +45,13 @@ xserver-xorg-video-ati (1:6.14.99~git20110811.g93fc084-0ubuntu1) oneiric; urgenc
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Thu, 11 Aug 2011 22:43:25 +0300
 
+xserver-xorg-video-ati (1:6.14.4-5) unstable; urgency=low
+
+  * Update radeon's long description to list the chips mentioned in the
+    radeon manpage. Also drop fglrx from there (Closes: #677412).
+
+ -- Cyril Brulebois <kibi@debian.org>  Wed, 13 Jun 2012 22:58:36 +0200
+
 xserver-xorg-video-ati (1:6.14.4-4) unstable; urgency=low
 
   * Cherry-pick from upstream to fix regression on UMS (Closes: #670570):
