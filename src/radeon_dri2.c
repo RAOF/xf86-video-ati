@@ -38,6 +38,10 @@
 #include "radeon_dri2.h"
 #include "radeon_version.h"
 
+#ifdef XORG_WAYLAND
+#include "xf86Priv.h"
+#endif
+
 #if HAVE_LIST_H
 #include "list.h"
 #if !HAVE_XORG_LIST
@@ -1307,6 +1311,21 @@ blit_fallback:
 #endif /* USE_DRI2_SCHEDULING */
 
 
+#ifdef XORG_WAYLAND
+static int radeon_auth_magic(ScreenPtr pScreen, uint32_t magic)
+{
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
+	RADEONInfoPtr info = RADEONPTR(scrn);
+
+	/* Not wayland, go stragight to drm */
+	if (!xorgWayland)
+		return drmAuthMagic(info->dri2.drm_fd, magic);
+
+	/* Forward the request to our host */
+	return xwl_drm_authenticate(info->xwl_screen, magic);
+}
+#endif
+
 Bool
 radeon_dri2_screen_init(ScreenPtr pScreen)
 {
@@ -1408,6 +1427,10 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
     }
 #endif
 
+#if defined(XORG_WAYLAND)
+	dri2_info.AuthMagic2 = radeon_auth_magic;
+#endif
+	
     info->dri2.enabled = DRI2ScreenInit(pScreen, &dri2_info);
     return info->dri2.enabled;
 }

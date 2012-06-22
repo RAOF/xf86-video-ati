@@ -40,6 +40,9 @@
 
 #include "atipciids.h"
 
+#ifdef XORG_WAYLAND
+#include "xf86Priv.h"
+#endif
 
 #ifdef XF86DRM_MODE
 
@@ -52,6 +55,28 @@
 #include "radeon_bo_gem.h"
 #include "radeon_cs_gem.h"
 #include "radeon_vbo.h"
+
+#ifdef XORG_WAYLAND
+int radeon_create_window_buffer(struct xwl_window *xwl_window, PixmapPtr pixmap)
+{
+    uint32_t name;
+    struct radeon_bo *bo;
+
+    bo = radeon_get_pixmap_bo(pixmap);
+    if (bo == NULL || radeon_gem_get_kernel_name(bo, &name) != 0)
+	return BadDrawable;
+
+    return xwl_create_window_buffer_drm(xwl_window, pixmap, name);
+}
+
+static struct xwl_driver xwl_driver = {
+	.version = 1,
+	.use_drm = 1,
+	.create_window_buffer = radeon_create_window_buffer
+};
+#endif
+
+
 
 static Bool radeon_setup_kernel_mem(ScreenPtr pScreen);
 
@@ -166,6 +191,10 @@ static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
 	return FALSE;
     pScreen->CreateScreenResources = RADEONCreateScreenResources_KMS;
 
+#ifdef XORG_WAYLAND
+    if (info->xwl_screen)
+	xwl_screen_init(info->xwl_screen, pScreen);
+#endif
     if (!drmmode_set_desired_modes(pScrn, &info->drmmode))
 	return FALSE;
 
@@ -205,6 +234,11 @@ static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
     if (info->VideoTimerCallback)
 	(*info->VideoTimerCallback)(pScrn, currentTime.milliseconds);
     radeon_cs_flush_indirect(pScrn);
+
+#ifdef XORG_WAYLAND
+    if (info->xwl_screen)
+	xwl_screen_post_damage(info->xwl_screen);
+#endif
 }
 
 static void
@@ -212,9 +246,14 @@ radeon_flush_callback(CallbackListPtr *list,
 		      pointer user_data, pointer call_data)
 {
     ScrnInfoPtr pScrn = user_data;
+    RADEONInfoPtr  info    = RADEONPTR(pScrn);
 
     if (pScrn->vtSema) {
         radeon_cs_flush_indirect(pScrn);
+#ifdef XORG_WAYLAND
+	if (info->xwl_screen) 
+	    xwl_screen_post_damage(info->xwl_screen);
+#endif
     }
 }
 
@@ -432,6 +471,13 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
     char *busid;
     drmSetVersion sv;
     int err;
+
+#ifdef XORG_WAYLAND
+    if (info->xwl_screen) {
+	info->dri2.drm_fd = xwl_screen_get_drm_fd(info->xwl_screen);
+	goto out;
+    }
+#endif
 
     if (pRADEONEnt->fd) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -664,6 +710,20 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     if (!radeon_alloc_dri(pScrn))
 	return FALSE;
 
+#ifdef XORG_WAYLAND
+    if (xorgWayland) {
+	info->xwl_screen = xwl_screen_create ();
+	if (!info->xwl_screen) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to allocate xwayland screen.\n");
+	    goto fail;
+	}
+	if (!xwl_screen_pre_init(pScrn, info->xwl_screen, 0, &xwl_driver)) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to initialise xwayland.\n");
+	    goto fail;
+	}
+    }
+#endif
+
     if (radeon_open_drm_master(pScrn) == FALSE) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
 	goto fail;
@@ -736,7 +796,10 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "SwapBuffers wait for vsync: %sabled\n", info->swapBuffersWait ? "en" : "dis");
 
-    if (drmmode_pre_init(pScrn, &info->drmmode, pScrn->bitsPerPixel / 8) == FALSE) {
+    if (info->xwl_screen) {
+	info->drmmode.mode_res = drmModeGetResources(info->drmmode.fd);
+    }
+    else if (drmmode_pre_init(pScrn, &info->drmmode, pScrn->bitsPerPixel / 8) == FALSE) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
 	goto fail;
     }

@@ -107,6 +107,12 @@
 #include "simple_list.h"
 #include "atipcirename.h"
 
+
+#ifdef XORG_WAYLAND
+#include <xwayland.h>
+#endif
+
+
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
@@ -1043,6 +1049,9 @@ typedef struct {
 
     /* Perform vsync'ed SwapBuffers? */
     Bool swapBuffersWait;
+
+    struct xwl_screen *xwl_screen;
+
 } RADEONInfoRec, *RADEONInfoPtr;
 
 #define RADEONWaitForFifo(pScrn, entries)				\

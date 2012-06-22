@@ -50,6 +50,10 @@
 #include "xf86Resources.h"
 #endif
 
+#ifdef XORG_WAYLAND
+#include "xf86Priv.h"
+#endif
+
 #ifdef XF86DRM_MODE
 #include "xf86drmMode.h"
 #include "dri.h"
@@ -152,6 +156,11 @@ radeon_get_scrninfo(int entity_num, void *pci_dev)
     if (!pScrn)
         return FALSE;
 
+#ifdef XORG_WAYLAND
+    if (xorgWayland)
+	kms = 1;
+    else
+#endif	
     if (pci_dev) {
       if (radeon_kernel_mode_enabled(pScrn, pci_dev)) {
 	kms = 1;
@@ -288,6 +297,34 @@ radeon_pci_probe(
 
 #endif /* XSERVER_LIBPCIACCESS */
 
+
+static Bool RADEON_driver_func(ScrnInfoPtr pScrn,
+			      xorgDriverFuncOp op,
+			      pointer ptr)
+{
+	xorgHWFlags *flag;
+
+	switch (op) {
+	case GET_REQUIRED_HW_INTERFACES:
+		flag = (CARD32*)ptr;
+#ifdef KMS_ONLY
+		(*flag) = 0;
+#else
+		(*flag) = HW_IO | HW_MMIO;
+#endif
+
+#ifdef XORG_WAYLAND
+		if (xorgWayland)
+		    (*flag) = HW_SKIP_CONSOLE;
+#endif
+		return TRUE;
+	default:
+		/* Unknown or deprecated function */
+		return FALSE;
+	}
+}
+
+
 _X_EXPORT DriverRec RADEON =
 {
     RADEON_VERSION_CURRENT,
@@ -301,7 +338,7 @@ _X_EXPORT DriverRec RADEON =
     RADEONAvailableOptions,
     NULL,
     0,
-    NULL,
+    RADEON_driver_func,
 #ifdef XSERVER_LIBPCIACCESS
     radeon_device_match,
     radeon_pci_probe
