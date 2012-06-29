@@ -233,6 +233,11 @@ AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
 	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
 	      [#include "xorg-server.h"])
 
+AC_CHECK_DECL(XORG_WAYLAND,
+	      [XORG_WAYLAND=yes],[XORG_WAYLAND=no],
+	      [#include "xorg-server.h"])
+
+
 AC_CHECK_HEADERS([list.h],
 		 [have_list_h="yes"], [have_list_h="no"],
 		 [#include <X11/Xdefs.h>
@@ -359,6 +364,7 @@ echo "        includedir:          $includedir"
 
 echo ""
 echo "        Kernel modesetting:  $DRM_MODE"
+echo "        xwayland support:    $XORG_WAYLAND"
 
 echo ""
 echo "        CFLAGS:              $CFLAGS"
