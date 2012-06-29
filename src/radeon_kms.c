@@ -370,6 +370,8 @@ static Bool RADEONPreInitAccel_KMS(ScrnInfoPtr pScrn)
 static Bool RADEONPreInitChipType_KMS(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
+    drm_radeon_getparam_t gp = { 0 };
+    int err;
     uint32_t cmd_stat;
     int i;
 
@@ -401,26 +403,38 @@ static Bool RADEONPreInitChipType_KMS(ScrnInfoPtr pScrn)
 	}
     }
 
-    info->cardType = CARD_PCI;
+    info->cardType = CARD_PCIE;
 
-    PCI_READ_LONG(info->PciInfo, &cmd_stat, PCI_CMD_STAT_REG);
-    if (cmd_stat & RADEON_CAP_LIST) {
-	uint32_t cap_ptr, cap_id;
+    gp.param = RADEON_PARAM_CARD_TYPE;
+    err = drmCommandWriteRead(info->dri2.drm_fd, DRM_RADEON_GETPARAM,
+			      &gp, sizeof(gp));
+    if (err == 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Detected card %i via DRM_RADEON_GETPARAM\n", *(int *)gp.value);
+	info->cardType = *(int *)gp.value;
+    }
+    else {
+	/* RADEON_PARAM_CARD_TYPE was added in drm interface version 1.8
+	 * Fallback to PCI prodding if it fails
+	 */
+	PCI_READ_LONG(info->PciInfo, &cmd_stat, PCI_CMD_STAT_REG);
+	if (cmd_stat & RADEON_CAP_LIST) {
+	    uint32_t cap_ptr, cap_id;
 
-	PCI_READ_LONG(info->PciInfo, &cap_ptr, RADEON_CAPABILITIES_PTR_PCI_CONFIG);
-	cap_ptr &= RADEON_CAP_PTR_MASK;
+	    PCI_READ_LONG(info->PciInfo, &cap_ptr, RADEON_CAPABILITIES_PTR_PCI_CONFIG);
+	    cap_ptr &= RADEON_CAP_PTR_MASK;
 
-	while(cap_ptr != RADEON_CAP_ID_NULL) {
-	    PCI_READ_LONG(info->PciInfo, &cap_id, cap_ptr);
-	    if ((cap_id & 0xff)== RADEON_CAP_ID_AGP) {
-		info->cardType = CARD_AGP;
-		break;
+	    while(cap_ptr != RADEON_CAP_ID_NULL) {
+		PCI_READ_LONG(info->PciInfo, &cap_id, cap_ptr);
+		if ((cap_id & 0xff)== RADEON_CAP_ID_AGP) {
+		    info->cardType = CARD_AGP;
+		    break;
+		}
+		if ((cap_id & 0xff)== RADEON_CAP_ID_EXP) {
+		    info->cardType = CARD_PCIE;
+		    break;
+		}
+		cap_ptr = (cap_id >> 8) & RADEON_CAP_PTR_MASK;
 	    }
-	    if ((cap_id & 0xff)== RADEON_CAP_ID_EXP) {
-		info->cardType = CARD_PCIE;
-		break;
-	    }
-	    cap_ptr = (cap_id >> 8) & RADEON_CAP_PTR_MASK;
 	}
     }
 
@@ -704,9 +718,6 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     if (!RADEONPreInitWeight(pScrn))
 	goto fail;
 
-    if (!RADEONPreInitChipType_KMS(pScrn))
-        goto fail;
-
     if (!radeon_alloc_dri(pScrn))
 	return FALSE;
 
@@ -728,6 +739,9 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
 	goto fail;
     }
+
+    if (!RADEONPreInitChipType_KMS(pScrn))
+        goto fail;
 
     info->dri2.enabled = FALSE;
     info->dri->pKernelDRMVersion = drmGetVersion(info->dri->drmFD);
@@ -798,13 +812,14 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
     if (info->xwl_screen) {
 	info->drmmode.mode_res = drmModeGetResources(info->drmmode.fd);
+	drmmode_pre_init_vblank(pScrn, &info->drmmode);
     }
     else if (drmmode_pre_init(pScrn, &info->drmmode, pScrn->bitsPerPixel / 8) == FALSE) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
 	goto fail;
     }
 
-    if (info->drmmode.mode_res->count_crtcs == 1)
+    if (info->xwl_screen || (info->drmmode.mode_res->count_crtcs == 1))
         pRADEONEnt->HasCRTC2 = FALSE;
     else
         pRADEONEnt->HasCRTC2 = TRUE;
@@ -985,7 +1000,6 @@ Bool RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL)
     int            subPixelOrder = SubPixelUnknown;
     char*          s;
     void *front_ptr;
-    int ret;
 
     pScrn->fbOffset = 0;
 
@@ -996,11 +1010,6 @@ Bool RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL)
 			  pScrn->defaultVisual)) return FALSE;
     miSetPixmapDepths ();
 
-    ret = drmSetMaster(info->dri->drmFD);
-    if (ret) {
-        ErrorF("Unable to retrieve master\n");
-        return FALSE;
-    }
     info->directRenderingEnabled = FALSE;
     if (info->r600_shadow_fb == FALSE)
         info->directRenderingEnabled = radeon_dri2_screen_init(pScreen);
@@ -1220,8 +1229,10 @@ Bool RADEONEnterVT_KMS(VT_FUNC_ARGS_DECL)
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONEnterVT_KMS\n");
 
-
-    ret = drmSetMaster(info->dri->drmFD);
+    if (xorgWayland)
+	ret = 0;
+    else
+	ret = drmSetMaster(info->dri->drmFD);
     if (ret)
 	ErrorF("Unable to retrieve master\n");
     info->accel_state->XInited3D = FALSE;

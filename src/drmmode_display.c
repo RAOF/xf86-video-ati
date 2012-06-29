@@ -1488,6 +1488,15 @@ drm_wakeup_handler(pointer data, int err, pointer p)
 	}
 }
 
+Bool drmmode_pre_init_vblank(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
+{
+	drmmode->event_context.version = DRM_EVENT_CONTEXT_VERSION;
+	drmmode->event_context.vblank_handler = drmmode_vblank_handler;
+	drmmode->event_context.page_flip_handler = drmmode_flip_handler;
+
+	return TRUE;
+}
+
 Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 {
 	xf86CrtcConfigPtr xf86_config;
@@ -1515,11 +1524,7 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 
 	xf86InitialConfiguration(pScrn, TRUE);
 
-	drmmode->event_context.version = DRM_EVENT_CONTEXT_VERSION;
-	drmmode->event_context.vblank_handler = drmmode_vblank_handler;
-	drmmode->event_context.page_flip_handler = drmmode_flip_handler;
-
-	return TRUE;
+	return drmmode_pre_init_vblank(pScrn, drmmode);
 }
 
 void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
