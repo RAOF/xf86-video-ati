@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.14.4-6) UNRELEASED; urgency=low
+
+  * Bump to build against xserver 1.13rc1
+
+ -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
+
 xserver-xorg-video-ati (1:6.14.4-5) unstable; urgency=low
 
   * Update radeon's long description to list the chips mentioned in the
