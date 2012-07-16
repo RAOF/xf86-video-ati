@@ -1,6 +1,6 @@
-xserver-xorg-video-ati (1:6.14.6-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.99.99-1) UNRELEASED; urgency=low
 
-  * New upstream release, last one with UMS support.
+  * KMS-only release, only works with linux-any now.
   * Bump to build against xserver 1.13rc1
 
  -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
