@@ -17,7 +17,7 @@ Build-Depends:
  x11proto-fonts-dev,
  x11proto-randr-dev (>= 1.2),
  x11proto-render-dev,
- libdrm-dev (>= 2.4.17) [!hurd-i386],
+ libdrm-dev (>= 2.4.33) [!hurd-i386],
  x11proto-dri2-dev,
  x11proto-xf86dri-dev,
  libudev-dev [linux-any],
@@ -32,8 +32,8 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  ${xviddriver:Depends},
- xserver-xorg-video-r128,
- xserver-xorg-video-mach64,
+ xserver-xorg-video-r128 [!ia64],
+ xserver-xorg-video-mach64 [!ia64],
  xserver-xorg-video-radeon
 Provides: ${xviddriver:Provides}
 Description: X.Org X server -- AMD/ATI display driver wrapper
@@ -57,8 +57,8 @@ Architecture: any
 Depends:
  ${misc:Depends},
  xserver-xorg-video-ati (= ${binary:Version}),
- xserver-xorg-video-mach64-dbg,
- xserver-xorg-video-r128-dbg,
+ xserver-xorg-video-mach64-dbg [!ia64],
+ xserver-xorg-video-r128-dbg [!ia64],
  xserver-xorg-video-radeon-dbg
 Section: debug
 Priority: extra
@@ -81,12 +81,14 @@ Depends:
 Provides: ${xviddriver:Provides}
 Suggests: firmware-linux
 Description: X.Org X server -- AMD/ATI Radeon display driver
- This package provides the 'radeon' driver for the AMD/ATI Radeon, FireGL,
- FireMV, FirePro and FireStream series.
- .
- Note that this is not the same as the ATI-provided, binary-only, 'fglrx'
- driver, which provides additional 3D functionality for some newer Radeon
- cards, but is not supported.
+ This package provides the 'radeon' driver for the AMD/ATI cards. The
+ following chips should be supported: R100, RV100, RS100, RV200, RS200,
+ RS250, R200, RV250, RV280, RS300, RS350, RS400/RS480, R300, R350, R360,
+ RV350, RV360, RV370, RV380, RV410, R420, R423/R430, R480/R481,
+ RV505/RV515/RV516/RV550, R520, RV530/RV560, RV570/R580,
+ RS600/RS690/RS740, R600, RV610/RV630, RV620/RV635, RV670, RS780/RS880,
+ RV710/RV730, RV740/RV770/RV790, CEDAR, REDWOOD, JUNIPER, CYPRESS,
+ HEMLOCK, PALM, SUMO/SUMO2, BARTS, TURKS, CAICOS, CAYMAN, ARUBA.
  .
  More information about X.Org can be found at:
  <URL:http://www.X.org>
@@ -101,7 +103,6 @@ Depends:
 Section: debug
 Priority: extra
 Description: X.Org X server -- AMD/ATI Radeon display driver (debugging symbols)
- This package provides the 'radeon' driver for the AMD/ATI Radeon, FireGL,
- FireMV, FirePro and FireStream series.
+ This package provides the 'radeon' driver for many AMD/ATI cards.
  .
  This package provides debugging symbols for this X.org X driver.

@@ -1,3 +1,53 @@
+xserver-xorg-video-ati (1:6.14.4-5) unstable; urgency=low
+
+  * Update radeon's long description to list the chips mentioned in the
+    radeon manpage. Also drop fglrx from there (Closes: #677412).
+
+ -- Cyril Brulebois <kibi@debian.org>  Wed, 13 Jun 2012 22:58:36 +0200
+
+xserver-xorg-video-ati (1:6.14.4-4) unstable; urgency=low
+
+  * Cherry-pick from upstream to fix regression on UMS (Closes: #670570):
+    - EXA: Attempt to fix solid picture acceleration with UMS.
+    - EXA/UMS: Synchronize to the GPU before writing solid colour to scratch pixmap.
+    - UMS/EXA: Add reminder for potential solid picture performance issue.
+
+ -- Cyril Brulebois <kibi@debian.org>  Sat, 19 May 2012 21:00:45 +0000
+
+xserver-xorg-video-ati (1:6.14.4-3) unstable; urgency=low
+
+  * Fix uninstallability issues on ia64 by dropping mach64 and r128 from
+    dependencies on this architecture, since those were removed (the ia64
+    domain I/O support code is gone in xserver 1.12).
+
+ -- Cyril Brulebois <kibi@debian.org>  Fri, 18 May 2012 11:39:03 +0200
+
+xserver-xorg-video-ati (1:6.14.4-2) unstable; urgency=medium
+
+  * Cherry-picks from upstream git:
+    - r6xx-r9xx: force 1D tiling for buffer with height < 64
+    - Make radeon_setup_kernel_mem failures more graceful and verbose
+    - RADEONCopySwap: Fix RADEON_HOST_DATA_SWAP_16BIT case
+    - EXA: Support acceleration of solid pictures on R3xx-R7xx
+    - EXA: Support acceleration of solid pictures on Evergreen/NI
+    - EXA: Support acceleration of solid pictures on R1xx
+    - EXA: Support acceleration of solid pictures on R2xx
+  * The solid picture acceleration should fix the rendering mess people have
+    been seeing with cairo 1.12, and thus closes: #666982.
+
+ -- Julien Cristau <jcristau@debian.org>  Mon, 16 Apr 2012 20:03:31 +0200
+
+xserver-xorg-video-ati (1:6.14.4-1) unstable; urgency=low
+
+  * New upstream release:
+    - Add support for Trinity APUs.
+    - 2D tiling support on R6xx+ asics.
+    - KMS tiling support for r1xx-r2xx.
+    - Lots of bug fixes.
+  * Bump libdrm-dev build-dep.
+
+ -- Cyril Brulebois <kibi@debian.org>  Mon, 02 Apr 2012 20:21:35 +0000
+
 xserver-xorg-video-ati (1:6.14.3-2+exp1) experimental; urgency=low
 
   * Build against Xserver 1.12 RC1.
