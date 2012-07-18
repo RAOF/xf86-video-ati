@@ -30,7 +30,6 @@
 #endif
 
 #include <errno.h>
-#ifdef XF86DRM_MODE
 #include <sys/ioctl.h>
 #include "micmap.h"
 #include "xf86cmap.h"
@@ -49,11 +48,44 @@
 #include <X11/extensions/dpms.h>
 #endif
 
+static Bool
+RADEONZaphodStringMatches(ScrnInfoPtr pScrn, const char *s, char *output_name)
+{
+    int i = 0;
+    char s1[20];
+
+    do {
+	switch(*s) {
+	case ',':
+  	    s1[i] = '\0';
+	    i = 0;
+	    if (strcmp(s1, output_name) == 0)
+		return TRUE;
+	    break;
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+	    break;
+	default:
+	    s1[i] = *s;
+	    i++;
+	    break;
+	}
+    } while(*s++);
+
+    s1[i] = '\0';
+    if (strcmp(s1, output_name) == 0)
+	return TRUE;
+
+    return FALSE;
+}
+
 static PixmapPtr drmmode_create_bo_pixmap(ScrnInfoPtr pScrn,
 					  int width, int height,
 					  int depth, int bpp,
 					  int pitch, int tiling,
-					  struct radeon_bo *bo)
+					  struct radeon_bo *bo, struct radeon_surface *psurf)
 {
 	RADEONInfoPtr info = RADEONPTR(pScrn);
 	ScreenPtr pScreen = pScrn->pScreen;
@@ -69,11 +101,14 @@ static PixmapPtr drmmode_create_bo_pixmap(ScrnInfoPtr pScrn,
 		return NULL;
 	}
 
-	exaMoveInPixmap(pixmap);
+	if (!info->use_glamor)
+		exaMoveInPixmap(pixmap);
 	radeon_set_pixmap_bo(pixmap, bo);
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 		surface = radeon_get_pixmap_surface(pixmap);
-		if (surface) {
+		if (surface && psurf) 
+			*surface = *psurf;
+		else if (surface) {
 			memset(surface, 0, sizeof(struct radeon_surface));
 			surface->npix_x = width;
 			surface->npix_y = height;
@@ -177,11 +212,12 @@ drmmode_ConvertToKMode(ScrnInfoPtr	scrn,
 static void
 drmmode_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
-#if 0
-	xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
-//	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 //	drmmode_ptr drmmode = drmmode_crtc->drmmode;
 
+	drmmode_crtc->dpms_mode = mode;
+
+#if 0
 	/* bonghits in the randr 1.2 - uses dpms to disable crtc - bad buzz */
 	if (mode == DPMSModeOff) {
 //		drmModeSetCrtc(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id,
@@ -192,42 +228,41 @@ drmmode_crtc_dpms(xf86CrtcPtr crtc, int mode)
 
 static PixmapPtr
 create_pixmap_for_fbcon(drmmode_ptr drmmode,
-			ScrnInfoPtr pScrn, int crtc_id)
+			ScrnInfoPtr pScrn, int fbcon_id)
 {
-	xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-	drmmode_crtc_private_ptr drmmode_crtc;
-	PixmapPtr pixmap;
+	PixmapPtr pixmap = NULL;
 	struct radeon_bo *bo;
 	drmModeFBPtr fbcon;
 	struct drm_gem_flink flink;
 
-	drmmode_crtc = xf86_config->crtc[crtc_id]->driver_private;
-
-	fbcon = drmModeGetFB(drmmode->fd, drmmode_crtc->mode_crtc->buffer_id);
+	fbcon = drmModeGetFB(drmmode->fd, fbcon_id);
 	if (fbcon == NULL)
 		return NULL;
+
+	if (fbcon->depth != pScrn->depth ||
+	    fbcon->width != pScrn->virtualX ||
+	    fbcon->height != pScrn->virtualY)
+		goto out_free_fb;
 
 	flink.handle = fbcon->handle;
 	if (ioctl(drmmode->fd, DRM_IOCTL_GEM_FLINK, &flink) < 0) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "Couldn't flink fbcon handle\n");
-		return NULL;
+		goto out_free_fb;
 	}
 
 	bo = radeon_bo_open(drmmode->bufmgr, flink.name, 0, 0, 0, 0);
 	if (bo == NULL) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "Couldn't allocate bo for fbcon handle\n");
-		return NULL;
+		goto out_free_fb;
 	}
 
 	pixmap = drmmode_create_bo_pixmap(pScrn, fbcon->width, fbcon->height,
 					  fbcon->depth, fbcon->bpp,
-					  fbcon->pitch, 0, bo);
-	if (!pixmap) 
-		return NULL;
-
+					  fbcon->pitch, 0, bo, NULL);
 	radeon_bo_unref(bo);
+out_free_fb:
 	drmModeFreeFB(fbcon);
 	return pixmap;
 }
@@ -238,27 +273,28 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	RADEONInfoPtr info = RADEONPTR(pScrn);
 	PixmapPtr src, dst;
 	ScreenPtr pScreen = pScrn->pScreen;
-	int crtc_id = 0;
+	int fbcon_id = 0;
 	int i;
 	int pitch;
 	uint32_t tiling_flags = 0;
 	Bool ret;
 
-	if (info->accelOn == FALSE)
-		return;
+	if (info->accelOn == FALSE || info->use_glamor)
+		goto fallback;
 
 	for (i = 0; i < xf86_config->num_crtc; i++) {
-		xf86CrtcPtr crtc = xf86_config->crtc[i];
-		drmmode_crtc_private_ptr drmmode_crtc;
+		drmmode_crtc_private_ptr drmmode_crtc = xf86_config->crtc[i]->driver_private;
 
-		drmmode_crtc = crtc->driver_private;
 		if (drmmode_crtc->mode_crtc->buffer_id)
-			crtc_id = i;
+			fbcon_id = drmmode_crtc->mode_crtc->buffer_id;
 	}
 
-	src = create_pixmap_for_fbcon(drmmode, pScrn, crtc_id);
+	if (!fbcon_id)
+		goto fallback;
+
+	src = create_pixmap_for_fbcon(drmmode, pScrn, fbcon_id);
 	if (!src)
-		return;
+		goto fallback;
 
 	if (info->allowColorTiling) {
 		if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -272,13 +308,13 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	}
 
 	pitch = RADEON_ALIGN(pScrn->displayWidth,
-			     drmmode_get_pitch_align(pScrn, info->CurrentLayout.pixel_bytes, tiling_flags)) *
-		info->CurrentLayout.pixel_bytes;
+			     drmmode_get_pitch_align(pScrn, info->pixel_bytes, tiling_flags)) *
+		info->pixel_bytes;
 
 	dst = drmmode_create_bo_pixmap(pScrn, pScrn->virtualX,
 				       pScrn->virtualY, pScrn->depth,
 				       pScrn->bitsPerPixel, pitch,
-				       tiling_flags, info->front_bo);
+				       tiling_flags, info->front_bo, &info->front_surface);
 	if (!dst)
 		goto out_free_src;
 
@@ -297,7 +333,15 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	drmmode_destroy_bo_pixmap(dst);
  out_free_src:
 	drmmode_destroy_bo_pixmap(src);
+	return;
 
+fallback:
+	/* map and memset the bo */
+	if (radeon_bo_map(info->front_bo, 1))
+		return;
+
+	memset(info->front_bo->ptr, 0x00, info->front_bo->size);
+	radeon_bo_unmap(info->front_bo);
 }
 
 static Bool
@@ -329,8 +373,8 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 			tiling_flags |= RADEON_TILING_MACRO;
 	}
 
-	pitch = RADEON_ALIGN(pScrn->displayWidth, drmmode_get_pitch_align(pScrn, info->CurrentLayout.pixel_bytes, tiling_flags)) *
-		info->CurrentLayout.pixel_bytes;
+	pitch = RADEON_ALIGN(pScrn->displayWidth, drmmode_get_pitch_align(pScrn, info->pixel_bytes, tiling_flags)) *
+		info->pixel_bytes;
 	height = RADEON_ALIGN(pScrn->virtualY, drmmode_get_height_align(pScrn, tiling_flags));
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 		pitch = info->front_surface.level[0].pitch_bytes;
@@ -551,7 +595,7 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 						 pScrn->depth,
 						 pScrn->bitsPerPixel,
 						 rotate_pitch,
-						 0, drmmode_crtc->rotate_bo);
+						 0, drmmode_crtc->rotate_bo, NULL);
 	if (rotate_pixmap == NULL) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "Couldn't allocate shadow pixmap for rotated CRTC\n");
@@ -625,7 +669,7 @@ void drmmode_crtc_hw_id(xf86CrtcPtr crtc)
 	ginfo.request = 0x4;
 	tmp = drmmode_crtc->mode_crtc->crtc_id;
 	ginfo.value = (uintptr_t)&tmp;
-	r = drmCommandWriteRead(info->dri->drmFD, DRM_RADEON_INFO, &ginfo, sizeof(ginfo));
+	r = drmCommandWriteRead(info->dri2.drm_fd, DRM_RADEON_INFO, &ginfo, sizeof(ginfo));
 	if (r) {
 		drmmode_crtc->hw_id = -1;
 		return;
@@ -1243,11 +1287,11 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 	RADEONInfoPtr info = RADEONPTR(scrn);
 	struct radeon_bo *old_front = NULL;
 	Bool	    ret;
-	ScreenPtr   screen = screenInfo.screens[scrn->scrnIndex];
+	ScreenPtr   screen = xf86ScrnToScreen(scrn);
 	uint32_t    old_fb_id;
 	int	    i, pitch, old_width, old_height, old_pitch;
 	int screen_size;
-	int cpp = info->CurrentLayout.pixel_bytes;
+	int cpp = info->pixel_bytes;
 	struct radeon_bo *front_bo;
 	struct radeon_surface surface;
 	struct radeon_surface *psurface;
@@ -1399,6 +1443,9 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 				       crtc->rotation, crtc->x, crtc->y);
 	}
 
+	if (info->use_glamor)
+		radeon_glamor_create_screen_resources(scrn->pScreen);
+
 	if (old_fb_id)
 		drmModeRmFB(drmmode->fd, old_fb_id);
 	if (old_front)
@@ -1517,7 +1564,7 @@ void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	RADEONInfoPtr info = RADEONPTR(pScrn);
 
 	if (pRADEONEnt->fd_wakeup_registered != serverGeneration &&
-	    info->dri->pKernelDRMVersion->version_minor >= 4) {
+	    info->dri2.pKernelDRMVersion->version_minor >= 4) {
 		AddGeneralSocket(drmmode->fd);
 		RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
 				drm_wakeup_handler, drmmode);
@@ -1542,7 +1589,7 @@ void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, struct ra
 	drmmode_crtc->cursor_bo = bo;
 }
 
-void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y, int flags)
+void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y)
 {
 	xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(pScrn);
 	xf86OutputPtr  output = config->output[config->compat_output];
@@ -1704,7 +1751,7 @@ drmmode_handle_uevents(int fd, void *closure)
 	if (!dev)
 		return;
 
-	RRGetInfo(screenInfo.screens[scrn->scrnIndex], TRUE);
+	RRGetInfo(xf86ScrnToScreen(scrn), TRUE);
 	udev_device_unref(dev);
 }
 #endif
@@ -1775,8 +1822,8 @@ Bool radeon_do_pageflip(ScrnInfoPtr scrn, struct radeon_bo *new_front, void *dat
 			tiling_flags |= RADEON_TILING_MACRO;
 	}
 
-	pitch = RADEON_ALIGN(scrn->displayWidth, drmmode_get_pitch_align(scrn, info->CurrentLayout.pixel_bytes, tiling_flags)) *
-		info->CurrentLayout.pixel_bytes;
+	pitch = RADEON_ALIGN(scrn->displayWidth, drmmode_get_pitch_align(scrn, info->pixel_bytes, tiling_flags)) *
+		info->pixel_bytes;
 	height = RADEON_ALIGN(scrn->virtualY, drmmode_get_height_align(scrn, tiling_flags));
 	if (info->ChipFamily >= CHIP_FAMILY_R600 && info->surf_man) {
 		pitch = info->front_surface.level[0].pitch_bytes;
@@ -1857,4 +1904,3 @@ error_out:
 	return FALSE;
 }
 
-#endif
