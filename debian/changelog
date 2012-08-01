@@ -1,8 +1,15 @@
-xserver-xorg-video-ati (1:6.99.99-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:6.99.99~git20120713.6ef1ad6a-0ubuntu1) UNRELEASED; urgency=low
 
   * KMS-only release, only works with linux-any now.
   * Bump to build against xserver 1.13rc1
   * Require libdrm 2.6.36
+  * Merge from debian-experimental. Remaining Ubuntu changes:
+    - debian/control:
+      + firmware-linux -> linux-firmware
+    - debian/rules:
+      + Remove reference to radeon-kms.conf
+    - debian/radeon-kms.conf:
+      + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
 
  -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
 
