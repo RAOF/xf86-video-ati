@@ -241,6 +241,40 @@ static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
     return TRUE;
 }
 
+#ifdef RADEON_PIXMAP_SHARING
+static void
+redisplay_dirty(ScreenPtr screen, PixmapDirtyUpdatePtr dirty)
+{
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(screen);
+	RegionRec pixregion;
+
+	PixmapRegionInit(&pixregion, dirty->slave_dst->master_pixmap);
+	PixmapSyncDirtyHelper(dirty, &pixregion);
+
+	radeon_cs_flush_indirect(pScrn);
+	DamageRegionAppend(&dirty->slave_dst->drawable, &pixregion);
+	RegionUninit(&pixregion);
+}
+
+static void
+radeon_dirty_update(ScreenPtr screen)
+{
+	RegionPtr region;
+	PixmapDirtyUpdatePtr ent;
+
+	if (xorg_list_is_empty(&screen->pixmap_dirty_list))
+		return;
+
+	xorg_list_for_each_entry(ent, &screen->pixmap_dirty_list, ent) {
+		region = DamageRegion(ent->damage);
+		if (RegionNotEmpty(region)) {
+			redisplay_dirty(screen, ent);
+			DamageEmpty(ent->damage);
+		}
+	}
+}
+#endif
+
 static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
 {
     SCREEN_PTR(arg);
@@ -255,6 +289,9 @@ static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
 	radeon_glamor_flush(pScrn);
 
     radeon_cs_flush_indirect(pScrn);
+#ifdef RADEON_PIXMAP_SHARING
+    radeon_dirty_update(pScreen);
+#endif
 }
 
 static void
@@ -680,6 +717,24 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
 
 #endif /* EXA_MIXED_PIXMAPS */
 
+static void RADEONSetupCapabilities(ScrnInfoPtr pScrn)
+{
+#ifdef RADEON_PIXMAP_SHARING
+    RADEONInfoPtr  info = RADEONPTR(pScrn);
+    uint64_t value;
+    int ret;
+
+    pScrn->capabilities = 0;
+    ret = drmGetCap(info->dri2.drm_fd, DRM_CAP_PRIME, &value);
+    if (ret == 0) {
+	if (value & DRM_PRIME_CAP_EXPORT)
+	    pScrn->capabilities |= RR_Capability_SourceOutput | RR_Capability_SinkOffload;
+	if (value & DRM_PRIME_CAP_IMPORT)
+	    pScrn->capabilities |= RR_Capability_SourceOffload;
+    }
+#endif
+}
+
 Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 {
     RADEONInfoPtr     info;
@@ -698,7 +753,12 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     info->IsSecondary  = FALSE;
     info->IsPrimary = FALSE;
     info->pEnt         = xf86GetEntityInfo(pScrn->entityList[pScrn->numEntities - 1]);
-    if (info->pEnt->location.type != BUS_PCI) goto fail;
+    if (info->pEnt->location.type != BUS_PCI
+#ifdef XSERVER_PLATFORM_BUS
+        && info->pEnt->location.type != BUS_PLATFORM
+#endif
+        )
+        goto fail;
 
     pPriv = xf86GetEntityPrivate(pScrn->entityList[0],
 				 getRADEONEntityIndex());
@@ -757,6 +817,7 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
     info->allowColorTiling2D = FALSE;
 
+    RADEONSetupCapabilities(pScrn);
 #ifdef EXA_MIXED_PIXMAPS
     /* don't enable tiling if accel is not enabled */
     if (!info->r600_shadow_fb) {
@@ -893,7 +954,11 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	if (!xf86LoadSubModule(pScrn, "ramdac")) return FALSE;
     }
 
-    if (pScrn->modes == NULL) {
+    if (pScrn->modes == NULL
+#ifdef XSERVER_PLATFORM_BUS
+        && !pScrn->is_gpu
+#endif
+        ) {
       xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No modes.\n");
       goto fail;
    }
@@ -1236,6 +1301,11 @@ Bool RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL)
 
     info->CreateScreenResources = pScreen->CreateScreenResources;
     pScreen->CreateScreenResources = RADEONCreateScreenResources_KMS;
+
+#ifdef RADEON_PIXMAP_SHARING
+    pScreen->StartPixmapTracking = PixmapStartDirtyTracking;
+    pScreen->StopPixmapTracking = PixmapStopDirtyTracking;
+#endif
 
    if (!xf86CrtcScreenInit (pScreen))
        return FALSE;
