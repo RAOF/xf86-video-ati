@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:6.99.99~git20120913.8637f772-0ubuntu1) quantal; urgency=low
+
+  * New upstream snapshot. Adds hybrid graphics support, FFe (LP: #1053250)
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Fri, 21 Sep 2012 10:05:46 +1000
+
 xserver-xorg-video-ati (1:6.99.99~git20120713.6ef1ad6a-0ubuntu1) quantal-proposed; urgency=low
 
   [ Maarten Lankhorst ]
