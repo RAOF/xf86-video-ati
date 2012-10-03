@@ -1,7 +1,7 @@
 xserver-xorg-video-ati (1:6.99.99~git20120926.e8cb0b72-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream snapshot, with fixes for hybrid graphics support and other goodies.
-  * require libdrm 2.4.39
+  * remove mibstore.h include
+  * officially require libdrm 2.4.39
 
  -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Wed, 03 Oct 2012 11:14:38 +0200
 
