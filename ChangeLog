@@ -1,3 +1,196 @@
+commit e8cb0b721e6ea251f85c799ca0563bfa59a2d37c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Sep 26 09:27:54 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8637f772347c958fa3beea6c0dc9c22255db70e5
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Sep 13 19:50:35 2012 +0200
+
+    glamor: Force acceleration for DRI2 copies.
+    
+    Improves performance of non-pageflipped 3D apps on SI.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 40b87f0e9db2642ca8a70e994fb4d3742e199640
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Sep 12 18:44:10 2012 +0200
+
+    glamor: Fix DRI2 crash introduced by PRIME changes.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 646ffd49d2cf0d3130301e8ad2f49f620bd9ef1b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 10 15:31:06 2012 +1000
+
+    radeon: fix build against old servers
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=54711
+    
+    Reported-by: wolput@onsneteindhoven.nl
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7c7f2775604da61537c24c249884aaa220e06e13
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 10 11:27:45 2012 +1000
+
+    radeon: don't fail to load if we have no modes and gpu driver.
+    
+    This ensures radeon loads on output less GPUs as a GPU driver.
+    
+    There are server bugs that also need to be fixed.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7fe16dd037ac688726869816888bd77fe4356f8e
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Wed Sep 5 10:41:51 2012 +1000
+
+    radeon: fix typo in glamor paths
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=54519
+    
+    Reported-By: scaty@dcinformatique.com
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit cdc985e9190ce54dc6274ebc0e87ab954b15bb0d
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Tue Sep 4 18:18:50 2012 +1000
+
+    radeon: fix build against older servers
+    
+    Another silly one.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit bd0e9c51407cb99f1fe4f0acfedc37ee0c354040
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Tue Sep 4 18:17:06 2012 +1000
+
+    radeon/dri2: fix build against older servers.
+    
+    Older servers won't have DRI2UpdatePrime, so fix build.
+    
+    bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=54433
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 75c1f62f44d7b3709c1fa103d59733866967b841
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 3 13:09:02 2012 +1000
+
+    radeon: add capability and provider support
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit ca8b61e916998458203dfa4b9d0c997fa7d90ba9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 3 13:08:37 2012 +1000
+
+    radeon: allocated shared pixmaps as untiled gtt.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 8c1bf9d8fe3948b72795984e625ef46b2f0bf654
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 3 13:08:05 2012 +1000
+
+    radeon: add pixmap sharing hooks.
+    
+    This hooks into EXA and the dirty tracking to add sharing and output
+    offload support.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 3add8df8122697acfe126d4857f3946ce44b8305
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 3 13:07:07 2012 +1000
+
+    radeon: add dri2 offload support.
+    
+    This adds the new dri2 interfaces required for radeon to be offloaded to.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f7502a11c8ef9c453ceb40d26109977116df88c2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 3 12:56:56 2012 +1000
+
+    radeon: add shared support to pixmaps.
+    
+    this just adds the interface and shared support to the pixmap.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f71139a2afe8fffb628331402bf829a6d67c9fff
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 3 12:37:22 2012 +1000
+
+    radeon: add platform bus loading support.
+    
+    This allows the radeon driver to be loaded via the platform bus mechanism.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 9911e72ea79e000ee0492d19a434aa98b83b5066
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Aug 17 17:02:51 2012 +1000
+
+    radeon: damage full screen after pageflip
+    
+    in order for offload to work we need to cause a full
+    screen damage to be registered after pageflip.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 0873b8cef21abf1e7286731758f0db1e7f2e7c97
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Aug 3 16:45:50 2012 +1000
+
+    ati: fix stub driver loader to load all drivers properly
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit cdf522f5992adf7b76f9153c777e6dddcf7758a6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Aug 15 13:38:28 2012 -0400
+
+    Implement ->driverFunc
+    
+    Copied from fbdev, makes it so we can run without iopl.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 763f387ccac2399f1d58ec112c8bed45196bea5e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Aug 15 12:49:10 2012 -0400
+
+    Don't bother to include vbe.h
+    
+    The only VBE code here went away when we dropped UMS.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit aabcf5ea30195274c79ae94c0fe6edc965f5c123
+Author: Tomas Chvatal <tchvatal@suse.cz>
+Date:   Mon Aug 13 22:58:18 2012 +0200
+
+    Add switch for udev to disable automagic detection.
+    
+    Signed-off-by: Tomas Chvatal <tchvatal@suse.cz>
+
+commit aef90993621331f01d17b95a751d4924d77eed0c
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Aug 6 11:00:45 2012 -0400
+
+    radeon: add some new SI pci ids
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
 commit 6ef1ad6a46348d3aecd8d1f5e94431ca2298853c
 Author: Michel Dänzer <michel.daenzer@amd.com>
 Date:   Fri Jul 13 11:15:25 2012 +0200
