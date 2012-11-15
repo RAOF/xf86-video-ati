@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:7.0.0-0ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:7.0.0-0ubuntu1) raring; urgency=low
 
   * New upstream release:
     - KMS-only release, only works with linux-any now.
@@ -12,7 +12,7 @@ xserver-xorg-video-ati (1:7.0.0-0ubuntu1) UNRELEASED; urgency=low
     - debian/radeon-kms.conf:
       + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
 
- -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Thu, 15 Nov 2012 11:44:38 +0100
 
 xserver-xorg-video-ati (1:6.99.99~git20120926.e8cb0b72-0ubuntu1) UNRELEASED; urgency=low
 
