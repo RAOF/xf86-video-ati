@@ -1,3 +1,143 @@
+commit cf377c991f4c1cd4eee1a8530ba9fdf6f9f63301
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Nov 6 09:12:39 2012 -0500
+
+    radeon: bump version for release
+    
+    7.0.0, RIP UMS
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 20bfc652ce40008ea561db2984bccf137409c7fd
+Author: Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date:   Mon Sep 24 17:19:09 2012 -0400
+
+    radeon/radeon_platform_probe: fix Zaphod mode breakage
+    
+    Using radeon_platform_probe function breaks the Zaphod mode because
+    it attempts to call xf86AddEntityToScreen multiple times, but nobody
+    calls xf86SetEntityShared prior to that. Consequently, calls for all
+    but first device instance fail.
+    
+    Prior to introduction of platform bus, the logic was that the Probe
+    function would make the entity sharable, which would cause Xserver
+    to later make it shared prior to adding it to screen. With the
+    platform bus loading, add to screen happens in the probe
+    function so we have to make it shared there.
+    
+    v2: do not make the entity shared if it was not previously marked
+        sharable. Should fix:
+    
+        https://bugs.freedesktop.org/show_bug.cgi?id=56680
+        https://bugs.freedesktop.org/show_bug.cgi?id=56663
+    
+    Signed-off-by: Ilija Hadzic <ihadzic@research.bell-labs.com>
+
+commit b2807b53083af5db0b85645666b0127be16623c7
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Nov 2 17:57:18 2012 -0400
+
+    man: note that 2D tiling requires Mesa 9.0 or newer
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 1038e29162d869e2ce37f9b8f5f7c8ea37c3e53d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Nov 2 10:04:46 2012 -0400
+
+    Revert "radeon/radeon_platform_probe: fix Zaphod mode breakage"
+    
+    This reverts commit 39eac3104c2f08b4d78aab3f88fd104301eb4711.
+    
+    This breaks non-zaphod configurations with xserver 1.13.
+    See:
+    https://bugs.freedesktop.org/show_bug.cgi?id=56680
+    https://bugs.freedesktop.org/show_bug.cgi?id=56663
+
+commit d748894c84e891662cde6d7a5748f74a5aa5175e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Nov 2 08:50:16 2012 -0400
+
+    man: update man pages for trinity (ARUBA)
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 6740e8e90b934611c3bb0f9e8732d66e25b8c727
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Fri Nov 2 13:30:44 2012 +0100
+
+    radeon/man: ColorTiling2D is by default on for r6xx-cayman
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit 39eac3104c2f08b4d78aab3f88fd104301eb4711
+Author: Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date:   Mon Sep 24 17:41:32 2012 -0400
+
+    radeon/radeon_platform_probe: fix Zaphod mode breakage
+    
+    Using radeon_platform_probe function breaks the Zaphod mode because
+    it attempts to call xf86AddEntityToScreen multiple times, but nobody
+    calls xf86SetEntityShared prior to that. Consequently, calls for all
+    but first device instance fail.
+    
+    Prior to introduction of platform bus, the logic was that the Probe
+    function would make the entity sharable, which would cause Xserver
+    to later make it shared prior to adding it to screen. With the
+    platform bus loading, add to screen happens in the probe
+    function so we have to make it shared there.
+    
+    Signed-off-by: Ilija Hadzic <ihadzic@research.bell-labs.com>
+
+commit 2e96aa641bc8a5c263a5b643961383cdf530d044
+Author: Marek Olšák <maraeo@gmail.com>
+Date:   Sun Oct 28 12:50:49 2012 -0400
+
+    radeon: turn on 2D tiling by default on r6xx-cayman
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit e830c039479539735d0836082abef24f6841c803
+Author: Marek Olšák <maraeo@gmail.com>
+Date:   Sun Oct 28 12:49:15 2012 -0400
+
+    radeon: log if 2D tiling is enabled
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit ce1b745dcb60dc516ad999756240b78e72a7aa54
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Oct 16 13:05:46 2012 -0400
+
+    radeon: add new pci ids for SI
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e3519be285bdab50ef2193f98826a351a4414fae
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Oct 16 16:09:23 2012 +1000
+
+    radeon/dri2: fix the window->pixmap math properly.
+    
+    Okay kwin did things different, and I really hope this time this is the
+    correct transformation operation. It works here with gears under kwin
+    and under mutter and under xcompmgr.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit bd9e2c064d93afbe4ab84febb2a43ae6a95ab17b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Oct 11 14:36:11 2012 +1000
+
+    radeon/dri2: fix damage reporting on pageflip
+    
+    when you use MPX or slave usb devices, the damage posting was incorrect,
+    and resulted in misrendered boxes on the screen.
+    
+    Fix it by reporting damage correctly.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit e8cb0b721e6ea251f85c799ca0563bfa59a2d37c
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Sep 26 09:27:54 2012 -0400

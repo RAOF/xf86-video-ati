@@ -1,3 +1,19 @@
+xserver-xorg-video-ati (1:7.0.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - KMS-only release, only works with linux-any now.
+  * Bump to build against xserver 1.13rc1
+  * Require libdrm 2.4.39
+  * Merge from debian-experimental. Remaining Ubuntu changes:
+    - debian/control:
+      + firmware-linux -> linux-firmware
+    - debian/rules:
+      + Remove reference to radeon-kms.conf
+    - debian/radeon-kms.conf:
+      + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
+
+ -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
+
 xserver-xorg-video-ati (1:6.99.99~git20120926.e8cb0b72-0ubuntu1) UNRELEASED; urgency=low
 
   * remove mibstore.h include
@@ -23,21 +39,6 @@ xserver-xorg-video-ati (1:6.99.99~git20120713.6ef1ad6a-0ubuntu1) quantal-propose
       + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
 
  -- Timo Aaltonen <tjaalton@ubuntu.com>  Wed, 01 Aug 2012 17:15:12 +0300
-
-xserver-xorg-video-ati (1:6.99.99-1) UNRELEASED; urgency=low
-
-  * KMS-only release, only works with linux-any now.
-  * Bump to build against xserver 1.13rc1
-  * Require libdrm 2.4.39
-  * Merge from debian-experimental. Remaining Ubuntu changes:
-    - debian/control:
-      + firmware-linux -> linux-firmware
-    - debian/rules:
-      + Remove reference to radeon-kms.conf
-    - debian/radeon-kms.conf:
-      + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
-
- -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
 
 xserver-xorg-video-ati (1:6.14.99~really6.14.4-0ubuntu1) quantal; urgency=low
 

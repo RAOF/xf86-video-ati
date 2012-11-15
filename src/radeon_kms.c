@@ -828,7 +828,8 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
 	/* 2D color tiling */
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
-		info->allowColorTiling2D = xf86ReturnOptValBool(info->Options, OPTION_COLOR_TILING_2D, FALSE);
+		info->allowColorTiling2D = xf86ReturnOptValBool(info->Options, OPTION_COLOR_TILING_2D,
+                                                                info->ChipFamily <= CHIP_FAMILY_ARUBA);
 	}
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -860,6 +861,8 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	 "KMS Color Tiling: %sabled\n", info->allowColorTiling ? "en" : "dis");
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	 "KMS Color Tiling 2D: %sabled\n", info->allowColorTiling2D ? "en" : "dis");
 
     if (info->dri2.pKernelDRMVersion->version_minor >= 8) {
 	info->allowPageFlip = xf86ReturnOptValBool(info->Options,
