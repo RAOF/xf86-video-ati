@@ -1,6 +1,7 @@
-xserver-xorg-video-ati (1:6.99.99-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:7.0.0-1) UNRELEASED; urgency=low
 
-  * KMS-only release, only works with linux-any now.
+  * New upstream release:
+    - KMS-only release, only works with linux-any now.
   * Bump to build against xserver 1.13rc1
   * Require libdrm 2.4.39
 
