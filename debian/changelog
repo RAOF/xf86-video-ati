@@ -1,4 +1,4 @@
-xserver-xorg-video-ati (1:7.1.0-0ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:7.1.0-0ubuntu1) raring; urgency=low
 
   * New upstream release
   * Merge from debian-experimental. Remaining Ubuntu changes:
