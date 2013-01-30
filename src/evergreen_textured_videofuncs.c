@@ -106,7 +106,6 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     float uco[3], vco[3], off[3];
     float bright, cont, gamma;
     int ref = pPriv->transform_index;
-    Bool needgamma = FALSE;
     float *ps_alu_consts;
     const_config_t ps_const_conf;
     float *vs_alu_consts;
@@ -132,17 +131,6 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
     // XXX
     gamma = 1.0;
-
-    if (gamma != 1.0) {
-	needgamma = TRUE;
-	/* note: gamma correction is out = in ^ gamma;
-	   gpu can only do LG2/EX2 therefore we transform into
-	   in ^ gamma = 2 ^ (log2(in) * gamma).
-	   Lots of scalar ops, unfortunately (better solution?) -
-	   without gamma that's 3 inst, with gamma it's 10...
-	   could use different gamma factors per channel,
-	   if that's of any use. */
-    }
 
     CLEAR (cb_conf);
     CLEAR (tex_res);
@@ -464,7 +452,7 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_pick_best_crtc(pScrn,
+	    crtc = radeon_pick_best_crtc(pScrn, FALSE,
 					 pPriv->drw_x,
 					 pPriv->drw_x + pPriv->dst_w,
 					 pPriv->drw_y,

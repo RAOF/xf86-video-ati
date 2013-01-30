@@ -65,15 +65,11 @@ const OptionInfoRec RADEONOptions_KMS[] = {
     { OPTION_NOACCEL,        "NoAccel",          OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_SW_CURSOR,      "SWcursor",         OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_PAGE_FLIP,      "EnablePageFlip",   OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_ACCEL_DFS,      "AccelDFS",         OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_IGNORE_EDID,    "IgnoreEDID",       OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_COLOR_TILING,   "ColorTiling",      OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_COLOR_TILING_2D,"ColorTiling2D",    OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_RENDER_ACCEL,   "RenderAccel",      OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_SUBPIXEL_ORDER, "SubPixelOrder",    OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_ACCELMETHOD,    "AccelMethod",      OPTV_STRING,  {0}, FALSE },
-    { OPTION_DRI,            "DRI",       	 OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_TVSTD,          "TVStandard",       OPTV_STRING,  {0}, FALSE },
     { OPTION_EXA_VSYNC,      "EXAVSync",         OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_EXA_PIXMAPS,    "EXAPixmaps",	 OPTV_BOOLEAN,   {0}, FALSE },
     { OPTION_ZAPHOD_HEADS,   "ZaphodHeads",      OPTV_STRING,  {0}, FALSE },
@@ -249,10 +245,11 @@ redisplay_dirty(ScreenPtr screen, PixmapDirtyUpdatePtr dirty)
 	RegionRec pixregion;
 
 	PixmapRegionInit(&pixregion, dirty->slave_dst->master_pixmap);
+	DamageRegionAppend(&dirty->slave_dst->drawable, &pixregion);
 	PixmapSyncDirtyHelper(dirty, &pixregion);
 
 	radeon_cs_flush_indirect(pScrn);
-	DamageRegionAppend(&dirty->slave_dst->drawable, &pixregion);
+	DamageRegionProcessPending(&dirty->slave_dst->drawable);
 	RegionUninit(&pixregion);
 }
 
@@ -602,8 +599,6 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-#ifdef EXA_MIXED_PIXMAPS
-
 static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
@@ -715,8 +710,6 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-#endif /* EXA_MIXED_PIXMAPS */
-
 static void RADEONSetupCapabilities(ScrnInfoPtr pScrn)
 {
 #ifdef RADEON_PIXMAP_SHARING
@@ -818,7 +811,7 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     info->allowColorTiling2D = FALSE;
 
     RADEONSetupCapabilities(pScrn);
-#ifdef EXA_MIXED_PIXMAPS
+
     /* don't enable tiling if accel is not enabled */
     if (!info->r600_shadow_fb) {
 	Bool colorTilingDefault =
@@ -853,10 +846,6 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	    info->allowColorTiling = xf86ReturnOptValBool(info->Options,
 							  OPTION_COLOR_TILING, colorTilingDefault);
     } else
-#else
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "KMS Color Tiling requires xserver which supports EXA_MIXED_PIXMAPS\n");
-#endif
 	info->allowColorTiling = FALSE;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -1365,9 +1354,7 @@ void RADEONLeaveVT_KMS(VT_FUNC_ARGS_DECL)
 
     drmDropMaster(info->dri2.drm_fd);
 
-#ifdef HAVE_FREE_SHADOW
     xf86RotateFreeShadow(pScrn);
-#endif
 
     xf86_hide_cursors (pScrn);
     info->accel_state->XInited3D = FALSE;
@@ -1403,7 +1390,6 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     int cpp = info->pixel_bytes;
     int screen_size;
     int pitch, base_align;
-    int total_size_bytes = 0;
     uint32_t tiling_flags = 0;
     struct radeon_surface surface;
 
@@ -1511,14 +1497,11 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
                 }
 
                 drmmode_set_cursor(pScrn, &info->drmmode, c, info->cursor_bo[c]);
-                total_size_bytes += cursor_size;
             }
         }
     }
 
     screen_size = RADEON_ALIGN(screen_size, RADEON_GPU_PAGE_SIZE);
-    /* keep area front front buffer - but don't allocate it yet */
-    total_size_bytes += screen_size;
 
     if (info->front_bo == NULL) {
         info->front_bo = radeon_bo_open(info->bufmgr, 0, screen_size,
@@ -1554,16 +1537,14 @@ void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size)
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     int remain_size_bytes;
-    int total_size_bytes;
     int c;
 
     for (c = 0; c < xf86_config->num_crtc; c++) {
 	if (info->cursor_bo[c] != NULL) {
-	    total_size_bytes += (64 * 4 * 64);
+	    new_fb_size += (64 * 4 * 64);
 	}
     }
 
-    total_size_bytes += new_fb_size;
     remain_size_bytes = info->vram_size - new_fb_size;
     remain_size_bytes = (remain_size_bytes / 10) * 9;
     radeon_cs_set_limit(info->cs, RADEON_GEM_DOMAIN_VRAM, remain_size_bytes);
@@ -1598,24 +1579,3 @@ ModeStatus RADEONValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
    }
     return MODE_OK;
 }
-
-#ifndef HAVE_XF86MODEBANDWIDTH
-/** Calculates the memory bandwidth (in MiB/sec) of a mode. */
-_X_HIDDEN unsigned int
-xf86ModeBandwidth(DisplayModePtr mode, int depth)
-{
-    float a_active, a_total, active_percent, pixels_per_second;
-    int bytes_per_pixel = (depth + 7) / 8;
-
-    if (!mode->HTotal || !mode->VTotal || !mode->Clock)
-	return 0;
-
-    a_active = mode->HDisplay * mode->VDisplay;
-    a_total = mode->HTotal * mode->VTotal;
-    active_percent = a_active / a_total;
-    pixels_per_second = active_percent * mode->Clock * 1000.0;
-
-    return (unsigned int)(pixels_per_second * bytes_per_pixel / (1024 * 1024));
-}
-#endif
-

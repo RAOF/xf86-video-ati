@@ -134,18 +134,11 @@
 # define __FUNCTION__ __func__		/* C99 */
 #endif
 
-#ifndef HAVE_XF86MODEBANDWIDTH
-extern unsigned int xf86ModeBandwidth(DisplayModePtr mode, int depth);
-#define MODE_BANDWIDTH MODE_BAD
-#endif
-
 typedef enum {
     OPTION_NOACCEL,
     OPTION_SW_CURSOR,
     OPTION_PAGE_FLIP,
-    OPTION_ACCEL_DFS,
     OPTION_EXA_PIXMAPS,
-    OPTION_IGNORE_EDID,
     OPTION_COLOR_TILING,
     OPTION_COLOR_TILING_2D,
 #ifdef RENDER
@@ -153,8 +146,6 @@ typedef enum {
     OPTION_SUBPIXEL_ORDER,
 #endif
     OPTION_ACCELMETHOD,
-    OPTION_DRI,
-    OPTION_TVSTD,
     OPTION_EXA_VSYNC,
     OPTION_ZAPHOD_HEADS,
     OPTION_SWAPBUFFERS_WAIT
@@ -221,11 +212,11 @@ typedef enum {
 	(info->ChipFamily == CHIP_FAMILY_RV560)  ||  \
 	(info->ChipFamily == CHIP_FAMILY_RV570))
 
+/* RS6xx, RS740 are technically R4xx as well, but the
+ * clipping hardware seems to follow the r3xx restrictions
+ */
 #define IS_R400_3D ((info->ChipFamily == CHIP_FAMILY_R420)  ||  \
-	(info->ChipFamily == CHIP_FAMILY_RV410) ||  \
-	(info->ChipFamily == CHIP_FAMILY_RS690) ||  \
-	(info->ChipFamily == CHIP_FAMILY_RS600) ||  \
-	(info->ChipFamily == CHIP_FAMILY_RS740))
+	(info->ChipFamily == CHIP_FAMILY_RV410))
 
 #define IS_R300_3D ((info->ChipFamily == CHIP_FAMILY_R300)  ||  \
 	(info->ChipFamily == CHIP_FAMILY_RV350) ||  \
@@ -408,9 +399,6 @@ struct radeon_accel_state {
 typedef struct {
     EntityInfoPtr     pEnt;
     pciVideoPtr       PciInfo;
-#ifndef XSERVER_LIBPCIACCESS
-    PCITAG            PciTag;
-#endif
     int               Chipset;
     RADEONChipFamily  ChipFamily;
 
@@ -520,6 +508,7 @@ extern void RADEONInitVideo(ScreenPtr pScreen);
 extern void RADEONResetVideo(ScrnInfoPtr pScrn);
 extern Bool radeon_load_bicubic_texture(ScrnInfoPtr pScrn);
 extern xf86CrtcPtr radeon_pick_best_crtc(ScrnInfoPtr pScrn,
+					 Bool consider_disabled,
 					 int x1, int x2, int y1, int y2);
 
 extern void radeon_cs_flush_indirect(ScrnInfoPtr pScrn);
@@ -786,6 +775,7 @@ enum {
     RADEON_CREATE_PIXMAP_TILING_MICRO = 0x20000000,
     RADEON_CREATE_PIXMAP_DEPTH = 0x40000000, /* for r200 */
     RADEON_CREATE_PIXMAP_SZBUFFER = 0x80000000, /* for eg */
+    RADEON_CREATE_PIXMAP_TILING_MICRO_SQUARE = 0x8000000,
 };
 
 
