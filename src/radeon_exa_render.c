@@ -98,10 +98,8 @@ static struct formatinfo R300TexFormats[] = {
     {PICT_x8r8g8b8,	R300_EASY_TX_FORMAT(X, Y, Z, ONE, W8Z8Y8X8)},
     {PICT_a8b8g8r8,	R300_EASY_TX_FORMAT(Z, Y, X, W, W8Z8Y8X8)},
     {PICT_x8b8g8r8,	R300_EASY_TX_FORMAT(Z, Y, X, ONE, W8Z8Y8X8)},
-#ifdef PICT_TYPE_BGRA
     {PICT_b8g8r8a8,	R300_EASY_TX_FORMAT(W, Z, Y, X, W8Z8Y8X8)},
     {PICT_b8g8r8x8,	R300_EASY_TX_FORMAT(W, Z, Y, ONE, W8Z8Y8X8)},
-#endif
     {PICT_r5g6b5,	R300_EASY_TX_FORMAT(X, Y, Z, ONE, Z5Y6X5)},
     {PICT_a1r5g5b5,	R300_EASY_TX_FORMAT(X, Y, Z, W, W1Z5Y5X5)},
     {PICT_x1r5g5b5,	R300_EASY_TX_FORMAT(X, Y, Z, ONE, W1Z5Y5X5)},
@@ -142,10 +140,8 @@ static Bool R300GetDestFormat(PicturePtr pDstPicture, uint32_t *dst_format)
     case PICT_x8r8g8b8:
     case PICT_a8b8g8r8:
     case PICT_x8b8g8r8:
-#ifdef PICT_TYPE_BGRA
     case PICT_b8g8r8a8:
     case PICT_b8g8r8x8:
-#endif
 	*dst_format = R300_COLORFORMAT_ARGB8888;
 	break;
     case PICT_r5g6b5:
@@ -477,8 +473,8 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
 
     pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
 
-    if (pDstPixmap->drawable.width > 2047 ||
-	pDstPixmap->drawable.height > 2047) {
+    if (pDstPixmap->drawable.width > 2048 ||
+	pDstPixmap->drawable.height > 2048) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
 			 pDstPixmap->drawable.width,
 			 pDstPixmap->drawable.height));
@@ -490,8 +486,8 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
 	 */
 	pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
 
-	if (pSrcPixmap->drawable.width > 2047 ||
-	    pSrcPixmap->drawable.height > 2047) {
+	if (pSrcPixmap->drawable.width > 2048 ||
+	    pSrcPixmap->drawable.height > 2048) {
 	    RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
 			     pSrcPixmap->drawable.width,
 			     pSrcPixmap->drawable.height));
@@ -505,8 +501,8 @@ static Bool R100CheckComposite(int op, PicturePtr pSrcPicture,
 	if (pMaskPicture->pDrawable) {
 	    pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
-	    if (pMaskPixmap->drawable.width > 2047 ||
-		pMaskPixmap->drawable.height > 2047) {
+	    if (pMaskPixmap->drawable.width > 2048 ||
+		pMaskPixmap->drawable.height > 2048) {
 		RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
 				 pMaskPixmap->drawable.width,
 				 pMaskPixmap->drawable.height));
@@ -696,8 +692,8 @@ static Bool R100PrepareComposite(int op,
     OUT_RING_REG(RADEON_RB3D_BLENDCNTL, blendcntl);
 
     OUT_RING_REG(RADEON_RE_TOP_LEFT, 0);
-    OUT_RING_REG(RADEON_RE_WIDTH_HEIGHT, (((pDst->drawable.width) << RADEON_RE_WIDTH_SHIFT) |
-					   ((pDst->drawable.height) << RADEON_RE_HEIGHT_SHIFT)));
+    OUT_RING_REG(RADEON_RE_WIDTH_HEIGHT, (((pDst->drawable.width - 1) << RADEON_RE_WIDTH_SHIFT) |
+					   ((pDst->drawable.height - 1) << RADEON_RE_HEIGHT_SHIFT)));
     ADVANCE_RING();
 
     return TRUE;
@@ -876,8 +872,8 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 
     pDstPixmap = RADEONGetDrawablePixmap(pDstPicture->pDrawable);
 
-    if (pDstPixmap->drawable.width > 2047 ||
-	pDstPixmap->drawable.height > 2047) {
+    if (pDstPixmap->drawable.width > 2048 ||
+	pDstPixmap->drawable.height > 2048) {
 	RADEON_FALLBACK(("Dest w/h too large (%d,%d).\n",
 			 pDstPixmap->drawable.width,
 			 pDstPixmap->drawable.height));
@@ -889,8 +885,8 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 	 */
 	pSrcPixmap = RADEONGetDrawablePixmap(pSrcPicture->pDrawable);
 
-	if (pSrcPixmap->drawable.width > 2047 ||
-	    pSrcPixmap->drawable.height > 2047) {
+	if (pSrcPixmap->drawable.width > 2048 ||
+	    pSrcPixmap->drawable.height > 2048) {
 	    RADEON_FALLBACK(("Source w/h too large (%d,%d).\n",
 			     pSrcPixmap->drawable.width,
 			     pSrcPixmap->drawable.height));
@@ -904,8 +900,8 @@ static Bool R200CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskP
 	if (pMaskPicture->pDrawable) {
 	    pMaskPixmap = RADEONGetDrawablePixmap(pMaskPicture->pDrawable);
 
-	    if (pMaskPixmap->drawable.width > 2047 ||
-		pMaskPixmap->drawable.height > 2047) {
+	    if (pMaskPixmap->drawable.width > 2048 ||
+		pMaskPixmap->drawable.height > 2048) {
 		RADEON_FALLBACK(("Mask w/h too large (%d,%d).\n",
 				 pMaskPixmap->drawable.width,
 				 pMaskPixmap->drawable.height));
@@ -1067,8 +1063,8 @@ static Bool R200PrepareComposite(int op, PicturePtr pSrcPicture,
     blendcntl = RADEONGetBlendCntl(op, pMaskPicture, pDstPicture->format);
     OUT_RING_REG(RADEON_RB3D_BLENDCNTL, blendcntl);
 
-    OUT_RING_REG(RADEON_RE_WIDTH_HEIGHT, (((pDst->drawable.width) << RADEON_RE_WIDTH_SHIFT) |
-					   ((pDst->drawable.height) << RADEON_RE_HEIGHT_SHIFT)));
+    OUT_RING_REG(RADEON_RE_WIDTH_HEIGHT, (((pDst->drawable.width - 1) << RADEON_RE_WIDTH_SHIFT) |
+					   ((pDst->drawable.height - 1) << RADEON_RE_HEIGHT_SHIFT)));
 
     ADVANCE_RING();
 
@@ -1615,7 +1611,6 @@ static Bool R300PrepareComposite(int op, PicturePtr pSrcPicture,
 		      R300_OUT_FMT_C2_SEL_BLUE |
 		      R300_OUT_FMT_C3_SEL_ALPHA);
 	break;
-#ifdef PICT_TYPE_BGRA
     case PICT_b8g8r8a8:
     case PICT_b8g8r8x8:
 	output_fmt = (R300_OUT_FMT_C4_8 |
@@ -1624,7 +1619,6 @@ static Bool R300PrepareComposite(int op, PicturePtr pSrcPicture,
 		      R300_OUT_FMT_C2_SEL_GREEN |
 		      R300_OUT_FMT_C3_SEL_BLUE);
 	break;
-#endif
     case PICT_a8:
 	output_fmt = (R300_OUT_FMT_C4_8 |
 		      R300_OUT_FMT_C0_SEL_ALPHA);
@@ -2261,7 +2255,7 @@ static void RadeonCompositeTile(ScrnInfoPtr pScrn,
 
     if (info->accel_state->vsync)
         RADEONWaitForVLine(pScrn, pDst,
-			   radeon_pick_best_crtc(pScrn, dstX, dstX + w, dstY, dstY + h),
+			   radeon_pick_best_crtc(pScrn, FALSE, dstX, dstX + w, dstY, dstY + h),
 			   dstY, dstY + h);
 
     if (info->ChipFamily < CHIP_FAMILY_R200) {

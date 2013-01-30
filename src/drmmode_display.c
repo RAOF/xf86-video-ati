@@ -140,6 +140,11 @@ static PixmapPtr drmmode_create_bo_pixmap(ScrnInfoPtr pScrn,
 		}
 	}
 
+	if (!radeon_glamor_create_textured_pixmap(pixmap)) {
+		pScreen->DestroyPixmap(pixmap);
+	  	return NULL;
+	}
+
 	return pixmap;
 }
 
@@ -292,6 +297,15 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	if (!fbcon_id)
 		goto fallback;
 
+	if (fbcon_id == drmmode->fb_id) {
+		/* in some rare case there might be no fbcon and we might already
+		 * be the one with the current fb to avoid a false deadlck in
+		 * kernel ttm code just do nothing as anyway there is nothing
+		 * to do
+		 */
+		return;
+	}
+
 	src = create_pixmap_for_fbcon(drmmode, pScrn, fbcon_id);
 	if (!src)
 		goto fallback;
@@ -403,9 +417,7 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 		crtc->x = x;
 		crtc->y = y;
 		crtc->rotation = rotation;
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,5,99,0,0)
 		crtc->transformPresent = FALSE;
-#endif
 	}
 
 	output_ids = calloc(sizeof(uint32_t), xf86_config->num_output);
@@ -430,10 +442,8 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 		if (!xf86CrtcRotate(crtc)) {
 			goto done;
 		}
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,7,0,0,0)
 		crtc->funcs->gamma_set(crtc, crtc->gamma_red, crtc->gamma_green,
 				       crtc->gamma_blue, crtc->gamma_size);
-#endif
 		
 		drmmode_ConvertToKMode(crtc->scrn, &kmode, mode);
 
@@ -967,10 +977,8 @@ drmmode_output_get_property(xf86OutputPtr output, Atom property)
 static const xf86OutputFuncsRec drmmode_output_funcs = {
     .dpms = drmmode_output_dpms,
     .create_resources = drmmode_output_create_resources,
-#ifdef RANDR_12_INTERFACE
     .set_property = drmmode_output_set_property,
     .get_property = drmmode_output_get_property,
-#endif
 #if 0
 
     .save = drmmode_crt_save,
@@ -1202,7 +1210,9 @@ int drmmode_get_height_align(ScrnInfoPtr scrn, uint32_t tiling)
 		else
 			height_align = 8;
 	} else {
-		if (tiling)
+		if (tiling & RADEON_TILING_MICRO_SQUARE)
+			height_align =  32;
+		else if (tiling)
 			height_align = 16;
 		else
 			height_align = 1;
@@ -1526,11 +1536,9 @@ drm_wakeup_handler(pointer data, int err, pointer p)
 
 Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 {
-	xf86CrtcConfigPtr xf86_config;
 	int i, num_dvi = 0, num_hdmi = 0;
 
 	xf86CrtcConfigInit(pScrn, &drmmode_xf86crtc_config_funcs);
-	xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
 
 	drmmode->scrn = pScrn;
 	drmmode->cpp = cpp;
@@ -1717,11 +1725,9 @@ static void drmmode_load_palette(ScrnInfoPtr pScrn, int numColors,
           }
 
     /* Make the change through RandR */
-#ifdef RANDR_12_INTERFACE
         if (crtc->randr_crtc)
             RRCrtcGammaSet(crtc->randr_crtc, lut_r, lut_g, lut_b);
         else
-#endif
             crtc->funcs->gamma_set(crtc, lut_r, lut_g, lut_b, 256);
      }
 }

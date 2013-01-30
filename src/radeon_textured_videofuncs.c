@@ -55,8 +55,8 @@ RADEONPrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     uint32_t dst_pitch, dst_format;
     uint32_t colorpitch;
     int pixel_shift;
-    int scissor_w = MIN(pPixmap->drawable.width, 2047);
-    int scissor_h = MIN(pPixmap->drawable.height, 2047);
+    int scissor_w = MIN(pPixmap->drawable.width, 2048) - 1;
+    int scissor_h = MIN(pPixmap->drawable.height, 2048) - 1;
     int ret;
 
     radeon_cs_space_reset_bos(info->cs);
@@ -269,7 +269,7 @@ RADEONPrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_pick_best_crtc(pScrn,
+	    crtc = radeon_pick_best_crtc(pScrn, FALSE,
 					 pPriv->drw_x,
 					 pPriv->drw_x + pPriv->dst_w,
 					 pPriv->drw_y,
@@ -416,8 +416,8 @@ R200PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     uint32_t dst_pitch, dst_format;
     uint32_t colorpitch;
     int pixel_shift;
-    int scissor_w = MIN(pPixmap->drawable.width, 2047);
-    int scissor_h = MIN(pPixmap->drawable.height, 2047);
+    int scissor_w = MIN(pPixmap->drawable.width, 2048) - 1;
+    int scissor_h = MIN(pPixmap->drawable.height, 2048) - 1;
     /* note: in contrast to r300, use input biasing on uv components */
     const float Loff = -0.0627;
     float uvcosf, uvsinf;
@@ -813,7 +813,7 @@ R200PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_pick_best_crtc(pScrn,
+	    crtc = radeon_pick_best_crtc(pScrn, FALSE,
 					 pPriv->drw_x,
 					 pPriv->drw_x + pPriv->dst_w,
 					 pPriv->drw_y,
@@ -1686,7 +1686,7 @@ R300PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	}
 
 	if (pPriv->is_planar) {
-	    BEGIN_RING(2*needgamma ? 28 + 33 : 33);
+	    BEGIN_RING(2 * (needgamma ? (28 + 33) : 33));
 	    /* 2 components: same 2 for tex0/1/2 */
 	    OUT_RING_REG(R300_RS_COUNT,
 			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
@@ -1910,7 +1910,7 @@ R300PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 							  R300_ALU_ALPHA_SEL_C(R300_ALU_ALPHA_0_0)));
 	    }
 	} else {
-	    BEGIN_RING(2*needgamma ? 28 + 31 : 31);
+	    BEGIN_RING(2 * (needgamma ? (28 + 31) : 31));
 	    /* 2 components */
 	    OUT_RING_REG(R300_RS_COUNT,
 			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
@@ -2165,7 +2165,7 @@ R300PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_pick_best_crtc(pScrn,
+	    crtc = radeon_pick_best_crtc(pScrn, FALSE,
 					 pPriv->drw_x,
 					 pPriv->drw_x + pPriv->dst_w,
 					 pPriv->drw_y,
@@ -3248,7 +3248,6 @@ R500PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	float uco[3], vco[3], off[3];
 	float bright, cont, gamma;
 	int ref = pPriv->transform_index;
-	Bool needgamma = FALSE;
 
 	cont = RTFContrast(pPriv->contrast);
 	bright = RTFBrightness(pPriv->brightness);
@@ -3269,17 +3268,6 @@ R500PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	off[2] = Loff * yco + Coff * (uco[2] + vco[2]) + bright;
 
 	//XXX gamma
-
-	if (gamma != 1.0) {
-	    needgamma = TRUE;
-	    /* note: gamma correction is out = in ^ gamma;
-	       gpu can only do LG2/EX2 therefore we transform into
-	       in ^ gamma = 2 ^ (log2(in) * gamma).
-	       Lots of scalar ops, unfortunately (better solution?) -
-	       without gamma that's 3 inst, with gamma it's 10...
-	       could use different gamma factors per channel,
-	       if that's of any use. */
-	}
 
 	if (pPriv->is_planar) {
 	    BEGIN_RING(2*56);
@@ -3730,7 +3718,7 @@ R500PrepareTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	if (pPriv->desired_crtc)
 	    crtc = pPriv->desired_crtc;
 	else
-	    crtc = radeon_pick_best_crtc(pScrn,
+	    crtc = radeon_pick_best_crtc(pScrn, FALSE,
 					 pPriv->drw_x,
 					 pPriv->drw_x + pPriv->dst_w,
 					 pPriv->drw_y,
