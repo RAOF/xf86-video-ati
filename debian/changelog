@@ -1,11 +1,17 @@
-xserver-xorg-video-ati (1:7.1.0-1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:7.1.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release:
-    - KMS-only release, only works with linux-any now.
-  * Bump to build against xserver 1.13rc1
-  * Require libdrm 2.4.39
+  * New upstream release
+  * Merge from debian-experimental. Remaining Ubuntu changes:
+    - debian/control:
+      + firmware-linux -> linux-firmware
+    - debian/rules:
+      + Remove reference to radeon-kms.conf
+    - debian/radeon-kms.conf:
+      + Don't install modprobe rule for KMS; the Ubuntu kernel defaults to KMS.
+  * Add patch to enable reverse optimus support.
+    - reverse-prime.patch
 
- -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 30 Jan 2013 17:30:32 +0100
 
 xserver-xorg-video-ati (1:7.0.0-0ubuntu1) raring; urgency=low
 
