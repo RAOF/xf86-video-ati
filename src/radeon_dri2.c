@@ -1429,6 +1429,7 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
 
 #if defined(XORG_WAYLAND)
 	dri2_info.AuthMagic3 = radeon_auth_magic;
+	dri2_info.ScheduleSwap = NULL;
 #endif
 	
     info->dri2.enabled = DRI2ScreenInit(pScreen, &dri2_info);
