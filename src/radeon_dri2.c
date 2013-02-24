@@ -1312,7 +1312,7 @@ blit_fallback:
 
 
 #ifdef XORG_WAYLAND
-static int radeon_auth_magic(ScreenPtr pScreen, uint32_t magic)
+static int radeon_auth_magic(ClientPtr client, ScreenPtr pScreen, uint32_t magic)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
 	RADEONInfoPtr info = RADEONPTR(scrn);
@@ -1322,7 +1322,7 @@ static int radeon_auth_magic(ScreenPtr pScreen, uint32_t magic)
 		return drmAuthMagic(info->dri2.drm_fd, magic);
 
 	/* Forward the request to our host */
-	return xwl_drm_authenticate(info->xwl_screen, magic);
+	return xwl_drm_authenticate(client, info->xwl_screen, magic);
 }
 #endif
 
@@ -1428,7 +1428,8 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
 #endif
 
 #if defined(XORG_WAYLAND)
-	dri2_info.AuthMagic2 = radeon_auth_magic;
+	dri2_info.AuthMagic3 = radeon_auth_magic;
+	dri2_info.ScheduleSwap = NULL;
 #endif
 	
     info->dri2.enabled = DRI2ScreenInit(pScreen, &dri2_info);
