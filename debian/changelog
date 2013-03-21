@@ -1,7 +1,9 @@
-xserver-xorg-video-ati (1:7.1.0-0ubuntu2) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:7.1.0-0ubuntu2) raring; urgency=low
 
   * Fix not removing socket and block handler on close (LP: #1157614)
     - fixup-close.patch
+  * Handle drmModeGetConnector failure better.
+    - drmmode-fail.patch
 
  -- Maarten Lankhorst <mlankhorst@raring-amd64.local>  Wed, 20 Mar 2013 14:00:46 +0000
 
