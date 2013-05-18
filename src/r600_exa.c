@@ -1179,7 +1179,7 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     if (!pSrc) {
 	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
 	if (!pSrc)
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
     }
 
     dst_obj.bo = radeon_get_pixmap_bo(pDst);
@@ -1211,7 +1211,7 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
 	    if (!pMask) {
 		if (!pSrcPicture->pDrawable)
 		    pScreen->DestroyPixmap(pSrc);
-		RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+		RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
 	    }
 	}
 
