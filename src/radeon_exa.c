@@ -172,7 +172,7 @@ Bool RADEONPrepareAccess_CS(PixmapPtr pPix, int index)
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     /* May need to handle byte swapping in DownloadFrom/UploadToScreen */
-    if (can_fail && pPix->drawable.bitsPerPixel > 8)
+    if (pPix->drawable.bitsPerPixel > 8)
 	return FALSE;
 #endif
 
