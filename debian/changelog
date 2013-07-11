@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:7.1.0-0ubuntu2.1) raring; urgency=critical
+
+  * Rebuild for xserver 1.14
+
+ -- Robert Hooker <sarvatt@ubuntu.com>  Fri, 22 Mar 2013 11:27:25 -0400
+
 xserver-xorg-video-ati (1:7.1.0-0ubuntu2) raring; urgency=low
 
   * Fix not removing socket and block handler on close (LP: #1157614)
