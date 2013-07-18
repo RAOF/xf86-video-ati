@@ -777,10 +777,9 @@ static Bool EVERGREENCheckCompositeTexture(PicturePtr pPict,
     return TRUE;
 }
 
-static void EVERGREENXFormSetup(PicturePtr pPict, PixmapPtr pPix,
+static void EVERGREENXFormSetup(PicturePtr pPict, ScrnInfoPtr pScrn,
 				int unit, float *vs_alu_consts)
 {
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPix->drawable.pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     struct radeon_accel_state *accel_state = info->accel_state;
     int const_offset = unit * 8;
@@ -1118,6 +1117,134 @@ static Bool EVERGREENCheckComposite(int op, PicturePtr pSrcPicture,
 
 }
 
+static void EVERGREENSetSolidConsts(ScrnInfoPtr pScrn, float *buf, int format, uint32_t fg, int unit)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct radeon_accel_state *accel_state = info->accel_state;
+    float pix_r = 0, pix_g = 0, pix_b = 0, pix_a = 0;
+
+    uint32_t w = (fg >> 24) & 0xff;
+    uint32_t z = (fg >> 16) & 0xff;
+    uint32_t y = (fg >> 8) & 0xff;
+    uint32_t x = (fg >> 0) & 0xff;
+    float xf = (float)x / 255; /* R */
+    float yf = (float)y / 255; /* G */
+    float zf = (float)z / 255; /* B */
+    float wf = (float)w / 255; /* A */
+
+    /* component swizzles */
+    switch (format) {
+	case PICT_a1r5g5b5:
+	case PICT_a8r8g8b8:
+	    pix_r = zf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = xf; /* B */
+	    pix_a = wf; /* A */
+	    break;
+	case PICT_a8b8g8r8:
+	    pix_r = xf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = zf; /* B */
+	    pix_a = wf; /* A */
+	    break;
+	case PICT_x8b8g8r8:
+	    pix_r = xf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = zf; /* B */
+	    pix_a = 1.0; /* A */
+	    break;
+	case PICT_b8g8r8a8:
+	    pix_r = yf; /* R */
+	    pix_g = zf; /* G */
+	    pix_b = wf; /* B */
+	    pix_a = xf; /* A */
+	    break;
+	case PICT_b8g8r8x8:
+	    pix_r = yf; /* R */
+	    pix_g = zf; /* G */
+	    pix_b = wf; /* B */
+	    pix_a = 1.0; /* A */
+	    break;
+	case PICT_x1r5g5b5:
+	case PICT_x8r8g8b8:
+	case PICT_r5g6b5:
+	    pix_r = zf; /* R */
+	    pix_g = yf; /* G */
+	    pix_b = xf; /* B */
+	    pix_a = 1.0; /* A */
+	    break;
+	case PICT_a8:
+	    pix_r = 0.0; /* R */
+	    pix_g = 0.0; /* G */
+	    pix_b = 0.0; /* B */
+	    pix_a = xf; /* A */
+	    break;
+	default:
+	    ErrorF("Bad format 0x%x\n", format);
+    }
+
+    if (unit == 0) {
+	if (!accel_state->msk_pic) {
+	    if (PICT_FORMAT_RGB(format) == 0) {
+		pix_r = 0.0;
+		pix_g = 0.0;
+		pix_b = 0.0;
+	    }
+
+	    if (PICT_FORMAT_A(format) == 0)
+		pix_a = 1.0;
+	} else {
+	    if (accel_state->component_alpha) {
+		if (accel_state->src_alpha) {
+		    if (PICT_FORMAT_A(format) == 0) {
+			pix_r = 1.0;
+			pix_g = 1.0;
+			pix_b = 1.0;
+			pix_a = 1.0;
+		    } else {
+			pix_r = pix_a;
+			pix_g = pix_a;
+			pix_b = pix_a;
+		    }
+		} else {
+		    if (PICT_FORMAT_A(format) == 0)
+			pix_a = 1.0;
+		}
+	    } else {
+		if (PICT_FORMAT_RGB(format) == 0) {
+		    pix_r = 0;
+		    pix_g = 0;
+		    pix_b = 0;
+		}
+
+		if (PICT_FORMAT_A(format) == 0)
+		    pix_a = 1.0;
+	    }
+	}
+    } else {
+	if (accel_state->component_alpha) {
+	    if (PICT_FORMAT_A(format) == 0)
+		pix_a = 1.0;
+	} else {
+	    if (PICT_FORMAT_A(format) == 0) {
+		pix_r = 1.0;
+		pix_g = 1.0;
+		pix_b = 1.0;
+		pix_a = 1.0;
+	    } else {
+		pix_r = pix_a;
+		pix_g = pix_a;
+		pix_b = pix_a;
+	    }
+	}
+    }
+
+    buf[0] = pix_r;
+    buf[1] = pix_g;
+    buf[2] = pix_b;
+    buf[3] = pix_a;
+}
+
 static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 				      PicturePtr pMaskPicture, PicturePtr pDstPicture,
 				      PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
@@ -1132,30 +1259,26 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
     const_config_t vs_const_conf;
     struct r600_accel_object src_obj, mask_obj, dst_obj;
     float *cbuf;
+    uint32_t ps_bool_consts = 0;
 
     if (pDst->drawable.bitsPerPixel < 8 || (pSrc && pSrc->drawable.bitsPerPixel < 8))
 	return FALSE;
 
-    if (!pSrc) {
-	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
-	if (!pSrc)
-	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
+    if (pSrc) {
+	src_obj.bo = radeon_get_pixmap_bo(pSrc);
+	src_obj.surface = radeon_get_pixmap_surface(pSrc);
+	src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
+	src_obj.pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel / 8);
+	src_obj.width = pSrc->drawable.width;
+	src_obj.height = pSrc->drawable.height;
+	src_obj.bpp = pSrc->drawable.bitsPerPixel;
+	src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
     }
 
     dst_obj.bo = radeon_get_pixmap_bo(pDst);
-    src_obj.bo = radeon_get_pixmap_bo(pSrc);
     dst_obj.surface = radeon_get_pixmap_surface(pDst);
-    src_obj.surface = radeon_get_pixmap_surface(pSrc);
     dst_obj.tiling_flags = radeon_get_pixmap_tiling(pDst);
-    src_obj.tiling_flags = radeon_get_pixmap_tiling(pSrc);
-    src_obj.pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel / 8);
     dst_obj.pitch = exaGetPixmapPitch(pDst) / (pDst->drawable.bitsPerPixel / 8);
-
-    src_obj.width = pSrc->drawable.width;
-    src_obj.height = pSrc->drawable.height;
-    src_obj.bpp = pSrc->drawable.bitsPerPixel;
-    src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
-
     dst_obj.width = pDst->drawable.width;
     dst_obj.height = pDst->drawable.height;
     dst_obj.bpp = pDst->drawable.bitsPerPixel;
@@ -1165,30 +1288,16 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 	dst_obj.domain = RADEON_GEM_DOMAIN_VRAM;
 
     if (pMaskPicture) {
-	if (!pMask) {
-	    pMask = RADEONSolidPixmap(pScreen, pMaskPicture->pSourcePict->solidFill.color);
-	    if (!pMask) {
-		if (!pSrcPicture->pDrawable)
-		    pScreen->DestroyPixmap(pSrc);
-		RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
-	    }
+	if (pMask) {
+	    mask_obj.bo = radeon_get_pixmap_bo(pMask);
+	    mask_obj.tiling_flags = radeon_get_pixmap_tiling(pMask);
+	    mask_obj.pitch = exaGetPixmapPitch(pMask) / (pMask->drawable.bitsPerPixel / 8);
+	    mask_obj.surface = radeon_get_pixmap_surface(pMask);
+	    mask_obj.width = pMask->drawable.width;
+	    mask_obj.height = pMask->drawable.height;
+	    mask_obj.bpp = pMask->drawable.bitsPerPixel;
+	    mask_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
 	}
-	mask_obj.bo = radeon_get_pixmap_bo(pMask);
-	mask_obj.tiling_flags = radeon_get_pixmap_tiling(pMask);
-	mask_obj.pitch = exaGetPixmapPitch(pMask) / (pMask->drawable.bitsPerPixel / 8);
-	mask_obj.surface = radeon_get_pixmap_surface(pMask);
-	mask_obj.width = pMask->drawable.width;
-	mask_obj.height = pMask->drawable.height;
-	mask_obj.bpp = pMask->drawable.bitsPerPixel;
-	mask_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
-
-	if (!R600SetAccelState(pScrn,
-			       &src_obj,
-			       &mask_obj,
-			       &dst_obj,
-			       accel_state->comp_vs_offset, accel_state->comp_ps_offset,
-			       3, 0xffffffff))
-	    return FALSE;
 
 	accel_state->msk_pic = pMaskPicture;
 	if (pMaskPicture->componentAlpha) {
@@ -1202,18 +1311,18 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 	    accel_state->src_alpha = FALSE;
 	}
     } else {
-	if (!R600SetAccelState(pScrn,
-			       &src_obj,
-			       NULL,
-			       &dst_obj,
-			       accel_state->comp_vs_offset, accel_state->comp_ps_offset,
-			       3, 0xffffffff))
-	    return FALSE;
-
 	accel_state->msk_pic = NULL;
 	accel_state->component_alpha = FALSE;
 	accel_state->src_alpha = FALSE;
     }
+
+    if (!R600SetAccelState(pScrn,
+		pSrc ? &src_obj : NULL,
+		(pMaskPicture && pMask) ? &mask_obj : NULL,
+		&dst_obj,
+		accel_state->comp_vs_offset, accel_state->comp_ps_offset,
+		3, 0xffffffff))
+	return FALSE;
 
     if (!EVERGREENGetDestFormat(pDstPicture, &dst_format))
 	return FALSE;
@@ -1238,11 +1347,14 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
     evergreen_set_screen_scissor(pScrn, 0, 0, accel_state->dst_obj.width, accel_state->dst_obj.height);
     evergreen_set_window_scissor(pScrn, 0, 0, accel_state->dst_obj.width, accel_state->dst_obj.height);
 
-    if (!EVERGREENTextureSetup(pSrcPicture, pSrc, 0)) {
-        radeon_ib_discard(pScrn);
-        radeon_cs_flush_indirect(pScrn);
-        return FALSE;
-    }
+    if (pSrc) {
+	if (!EVERGREENTextureSetup(pSrcPicture, pSrc, 0)) {
+	    radeon_ib_discard(pScrn);
+	    radeon_cs_flush_indirect(pScrn);
+	    return FALSE;
+	}
+    } else
+	accel_state->is_transform[0] = FALSE;
 
     if (pMask) {
         if (!EVERGREENTextureSetup(pMaskPicture, pMask, 1)) {
@@ -1253,12 +1365,16 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
     } else
         accel_state->is_transform[1] = FALSE;
 
+    if (pSrc)
+	ps_bool_consts |= (1 << 0);
+    if (pMask)
+	ps_bool_consts |= (1 << 1);
+    evergreen_set_bool_consts(pScrn, SQ_BOOL_CONST_ps, ps_bool_consts);
+
     if (pMask) {
 	evergreen_set_bool_consts(pScrn, SQ_BOOL_CONST_vs, (1 << 0));
-	evergreen_set_bool_consts(pScrn, SQ_BOOL_CONST_ps, (1 << 0));
     } else {
 	evergreen_set_bool_consts(pScrn, SQ_BOOL_CONST_vs, (0 << 0));
-	evergreen_set_bool_consts(pScrn, SQ_BOOL_CONST_ps, (0 << 0));
     }
 
     /* Shader */
@@ -1271,7 +1387,7 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
 
     ps_conf.shader_addr         = accel_state->ps_mc_addr;
     ps_conf.shader_size         = accel_state->ps_size;
-    ps_conf.num_gprs            = 3;
+    ps_conf.num_gprs            = 2;
     ps_conf.stack_size          = 1;
     ps_conf.clamp_consts        = 0;
     ps_conf.export_mode         = 2;
@@ -1346,9 +1462,27 @@ static Bool EVERGREENPrepareComposite(int op, PicturePtr pSrcPicture,
     vs_const_conf.const_addr = accel_state->cbuf.vb_offset;
 
     vs_const_conf.cpu_ptr = (uint32_t *)(char *)cbuf;
-    EVERGREENXFormSetup(pSrcPicture, pSrc, 0, cbuf);
+    EVERGREENXFormSetup(pSrcPicture, pScrn, 0, cbuf);
     if (pMask)
-        EVERGREENXFormSetup(pMaskPicture, pMask, 1, cbuf);
+        EVERGREENXFormSetup(pMaskPicture, pScrn, 1, cbuf);
+
+    if (!pSrc) {
+	/* solid src color */
+	EVERGREENSetSolidConsts(pScrn, &cbuf[16], pSrcPicture->format,
+		pSrcPicture->pSourcePict->solidFill.color, 0);
+    }
+
+    if (!pMaskPicture) {
+	/* use identity constant if there is no mask */
+	cbuf[20] = 1.0;
+	cbuf[21] = 1.0;
+	cbuf[22] = 1.0;
+	cbuf[23] = 1.0;
+    } else if (!pMask) {
+	/* solid mask color */
+	EVERGREENSetSolidConsts(pScrn, &cbuf[20], pMaskPicture->format,
+		pMaskPicture->pSourcePict->solidFill.color, 1);
+    }
 
     radeon_vbo_commit(pScrn, &accel_state->cbuf);
     evergreen_set_alu_consts(pScrn, &vs_const_conf, RADEON_GEM_DOMAIN_GTT);
@@ -1377,7 +1511,7 @@ static void EVERGREENFinishComposite(ScrnInfoPtr pScrn, PixmapPtr pDst,
 				    accel_state->vline_y1,
 				    accel_state->vline_y2);
 
-    vtx_size = accel_state->msk_pic ? 24 : 16;
+    vtx_size = accel_state->msk_pix ? 24 : 16;
 
     evergreen_finish_op(pScrn, vtx_size);
 }
@@ -1390,12 +1524,6 @@ static void EVERGREENDoneComposite(PixmapPtr pDst)
     struct radeon_accel_state *accel_state = info->accel_state;
 
     EVERGREENFinishComposite(pScrn, pDst, accel_state);
-
-    if (!accel_state->src_pic->pDrawable)
-	pScreen->DestroyPixmap(accel_state->src_pix);
-
-    if (accel_state->msk_pic && !accel_state->msk_pic->pDrawable)
-	pScreen->DestroyPixmap(accel_state->msk_pix);
 }
 
 static void EVERGREENComposite(PixmapPtr pDst,
@@ -1424,7 +1552,7 @@ static void EVERGREENComposite(PixmapPtr pDst,
     if (accel_state->vsync)
 	RADEONVlineHelperSet(pScrn, dstX, dstY, dstX + w, dstY + h);
 
-    if (accel_state->msk_pic) {
+    if (accel_state->msk_pix) {
 
 	vb = radeon_vbo_space(pScrn, &accel_state->vbo, 24);
 
