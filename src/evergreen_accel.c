@@ -335,7 +335,19 @@ evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t do
 					       (CB_NORMAL << CB_COLOR_CONTROL__MODE_shift)));
     EREG(CB_BLEND0_CONTROL,                   cb_conf->blendcntl);
     END_BATCH();
+}
 
+void evergreen_set_blend_color(ScrnInfoPtr pScrn, float *color)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+
+    BEGIN_BATCH(2 + 4);
+    PACK0(CB_BLEND_RED, 4);
+    EFLOAT(color[0]); /* R */
+    EFLOAT(color[1]); /* G */
+    EFLOAT(color[2]); /* B */
+    EFLOAT(color[3]); /* A */
+    END_BATCH();
 }
 
 static void
