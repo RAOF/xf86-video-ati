@@ -643,7 +643,12 @@ R600Copy(PixmapPtr pDst,
     if (accel_state->vsync)
 	RADEONVlineHelperSet(pScrn, dstX, dstY, dstX + w, dstY + h);
 
-    if (accel_state->same_surface && accel_state->copy_area) {
+    if (accel_state->same_surface &&
+	    (srcX + w <= dstX || dstX + w <= srcX || srcY + h <= dstY || dstY + h <= srcY)) {
+	R600DoPrepareCopy(pScrn);
+	R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, w, h);
+	R600DoCopyVline(pDst);
+    } else if (accel_state->same_surface && accel_state->copy_area) {
 	uint32_t orig_dst_domain = accel_state->dst_obj.domain;
 	uint32_t orig_src_domain = accel_state->src_obj[0].domain;
 	uint32_t orig_src_tiling_flags = accel_state->src_obj[0].tiling_flags;
