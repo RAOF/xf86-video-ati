@@ -1111,7 +1111,7 @@ static Bool EVERGREENCheckComposite(int op, PicturePtr pSrcPicture,
 		if (EVERGREENBlendOp[op].src_alpha &&
 		    (EVERGREENBlendOp[op].blend_cntl & COLOR_SRCBLEND_mask) !=
 		    (BLEND_ZERO << COLOR_SRCBLEND_shift)) {
-		    if (pSrcPicture->pDrawable || op != 3)
+		    if (pSrcPicture->pDrawable || op != PictOpOver)
 			RADEON_FALLBACK(("Component alpha not supported with source "
 					 "alpha and source value blending.\n"));
 		}
