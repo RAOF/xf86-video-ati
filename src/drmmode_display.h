@@ -34,6 +34,10 @@
 
 #include "radeon_probe.h"
 
+#ifndef DRM_CAP_TIMESTAMP_MONOTONIC
+#define DRM_CAP_TIMESTAMP_MONOTONIC 0x6
+#endif
+
 typedef struct {
   int fd;
   unsigned fb_id;
@@ -72,6 +76,10 @@ typedef struct {
     struct radeon_bo *rotate_bo;
     unsigned rotate_fb_id;
     int dpms_mode;
+    CARD64 dpms_last_ust;
+    uint32_t dpms_last_seq;
+    int dpms_last_fps;
+    uint32_t interpolated_vblanks;
     uint16_t lut_r[256], lut_g[256], lut_b[256];
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
@@ -99,6 +107,7 @@ typedef struct {
 
 extern Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp);
 extern void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
+extern void drmmode_fini(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern Bool drmmode_set_bufmgr(ScrnInfoPtr pScrn, drmmode_ptr drmmode, struct radeon_bo_manager *bufmgr);
 extern void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, struct radeon_bo *bo);
 void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
@@ -114,6 +123,7 @@ extern int drmmode_get_pitch_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
 extern int drmmode_get_base_align(ScrnInfoPtr scrn, int bpe, uint32_t tiling);
 
 Bool radeon_do_pageflip(ScrnInfoPtr scrn, struct radeon_bo *new_front, void *data, int ref_crtc_hw_id);
+int drmmode_get_current_ust(int drm_fd, CARD64 *ust);
 
 #endif
 

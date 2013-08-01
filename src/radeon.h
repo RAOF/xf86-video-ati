@@ -235,6 +235,12 @@ typedef enum {
 	(info->ChipFamily == CHIP_FAMILY_RS300) || \
 	(info->ChipFamily == CHIP_FAMILY_R200))
 
+#define CURSOR_WIDTH	64
+#define CURSOR_HEIGHT	64
+
+#define CURSOR_WIDTH_CIK	128
+#define CURSOR_HEIGHT_CIK	128
+
 struct radeon_exa_pixmap_priv {
     struct radeon_bo *bo;
     uint32_t tiling_flags;
@@ -425,6 +431,7 @@ typedef struct {
     Bool	      exa_pixmaps;
     Bool              exa_force_create;
     XF86ModReqInfo    exaReq;
+    Bool              is_fast_fb; /* use direct mapping for fast fb access */
 
     unsigned int xv_max_width;
     unsigned int xv_max_height;
@@ -453,6 +460,7 @@ typedef struct {
     uint64_t vram_size;
     uint64_t gart_size;
     drmmode_rec drmmode;
+    Bool drmmode_inited;
     /* r6xx+ tile config */
     Bool have_tiling_info;
     uint32_t tile_config;
@@ -471,6 +479,10 @@ typedef struct {
 
     /* Perform vsync'ed SwapBuffers? */
     Bool swapBuffersWait;
+
+    /* cursor size */
+    int cursor_w;
+    int cursor_h;
 } RADEONInfoRec, *RADEONInfoPtr;
 
 /* radeon_accel.c */
@@ -517,6 +529,8 @@ extern void radeon_ddx_cs_start(ScrnInfoPtr pScrn,
 				const char *func, int line);
 void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size);
 
+drmVBlankSeqType radeon_populate_vbl_request_type(xf86CrtcPtr crtc);
+
 #if XF86_CRTC_VERSION >= 5
 #define RADEON_PIXMAP_SHARING 1
 #endif
@@ -562,16 +576,20 @@ static inline void radeon_set_pixmap_bo(PixmapPtr pPix, struct radeon_bo *bo)
 	    if (priv->bo)
 		radeon_bo_unref(priv->bo);
 
-	    free(priv);
-	    priv = NULL;
+	    if (!bo) {
+		free(priv);
+		priv = NULL;
+	    }
 	}
 
 	if (bo) {
 	    uint32_t pitch;
 
-	    priv = calloc(1, sizeof (struct radeon_pixmap));
-	    if (priv == NULL)
-		goto out;
+	    if (!priv) {
+		priv = calloc(1, sizeof (struct radeon_pixmap));
+		if (!priv)
+		    goto out;
+	    }
 
 	    radeon_bo_ref(bo);
 	    priv->bo = bo;

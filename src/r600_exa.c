@@ -643,7 +643,12 @@ R600Copy(PixmapPtr pDst,
     if (accel_state->vsync)
 	RADEONVlineHelperSet(pScrn, dstX, dstY, dstX + w, dstY + h);
 
-    if (accel_state->same_surface && accel_state->copy_area) {
+    if (accel_state->same_surface &&
+	    (srcX + w <= dstX || dstX + w <= srcX || srcY + h <= dstY || dstY + h <= srcY)) {
+	R600DoPrepareCopy(pScrn);
+	R600AppendCopyVertex(pScrn, srcX, srcY, dstX, dstY, w, h);
+	R600DoCopyVline(pDst);
+    } else if (accel_state->same_surface && accel_state->copy_area) {
 	uint32_t orig_dst_domain = accel_state->dst_obj.domain;
 	uint32_t orig_src_domain = accel_state->src_obj[0].domain;
 	uint32_t orig_src_tiling_flags = accel_state->src_obj[0].tiling_flags;
@@ -1179,7 +1184,7 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     if (!pSrc) {
 	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
 	if (!pSrc)
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
     }
 
     dst_obj.bo = radeon_get_pixmap_bo(pDst);
@@ -1211,7 +1216,7 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
 	    if (!pMask) {
 		if (!pSrcPicture->pDrawable)
 		    pScreen->DestroyPixmap(pSrc);
-		RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+		RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
 	    }
 	}
 
@@ -1542,6 +1547,9 @@ R600UploadToScreenCS(PixmapPtr pDst, int x, int y, int w, int h,
 	    if (!radeon_bo_is_busy(driver_priv->bo, &dst_domain))
 		goto copy;
 	}
+	/* use cpu copy for fast fb access */
+	if (info->is_fast_fb)
+	    goto copy;
     }
 
     scratch_pitch = RADEON_ALIGN(w, drmmode_get_pitch_align(pScrn, (bpp / 8), 0));

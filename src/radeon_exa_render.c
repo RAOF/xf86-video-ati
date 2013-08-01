@@ -602,7 +602,7 @@ static Bool R100PrepareComposite(int op,
     if (!pSrc) {
 	pSrc = RADEONSolidPixmap(pScreen, cpu_to_le32(pSrcPicture->pSourcePict->solidFill.color));
 	if (!pSrc)
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
     }
 
     if (((dst_pitch >> pixel_shift) & 0x7) != 0)
@@ -616,7 +616,7 @@ static Bool R100PrepareComposite(int op,
 	if (!pMask) {
 	    if (!pSrcPicture->pDrawable)
 		pScreen->DestroyPixmap(pSrc);
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
 	}
     }
 
@@ -967,7 +967,7 @@ static Bool R200PrepareComposite(int op, PicturePtr pSrcPicture,
     if (!pSrc) {
 	pSrc = RADEONSolidPixmap(pScreen, cpu_to_le32(pSrcPicture->pSourcePict->solidFill.color));
 	if (!pSrc)
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
     }
 
     if (!RADEONSetupSourceTile(pSrcPicture, pSrc, FALSE, TRUE))
@@ -978,7 +978,7 @@ static Bool R200PrepareComposite(int op, PicturePtr pSrcPicture,
 	if (!pMask) {
 	    if (!pSrcPicture->pDrawable)
 		pScreen->DestroyPixmap(pSrc);
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
 	}
     }
 
@@ -1459,7 +1459,7 @@ static Bool R300PrepareComposite(int op, PicturePtr pSrcPicture,
     if (!pSrc) {
 	pSrc = RADEONSolidPixmap(pScreen, cpu_to_le32(pSrcPicture->pSourcePict->solidFill.color));
 	if (!pSrc)
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
     }
 
     if (!RADEONSetupSourceTile(pSrcPicture, pSrc, TRUE, FALSE))
@@ -1470,7 +1470,7 @@ static Bool R300PrepareComposite(int op, PicturePtr pSrcPicture,
 	if (!pMask) {
 	    if (!pSrcPicture->pDrawable)
 		pScreen->DestroyPixmap(pSrc);
-	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
+	    RADEON_FALLBACK(("Failed to create solid scratch pixmap\n"));
 	}
     }
 

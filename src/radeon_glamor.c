@@ -87,11 +87,24 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 		return FALSE;
 
 	s = xf86GetOptValString(info->Options, OPTION_ACCELMETHOD);
-	if (s == NULL)
+	if (s == NULL && info->ChipFamily < CHIP_FAMILY_TAHITI)
 		return FALSE;
 
-	if (strcasecmp(s, "glamor") != 0)
+	if (s && strcasecmp(s, "glamor") != 0)
 		return FALSE;
+
+	if (scrn->depth < 24) {
+		xf86DrvMsg(scrn->scrnIndex, s ? X_ERROR : X_WARNING,
+			   "glamor requires depth >= 24, disabling.\n");
+		return FALSE;
+	}
+
+	if (!xf86LoaderCheckSymbol("glamor_egl_init")) {
+		xf86DrvMsg(scrn->scrnIndex, s ? X_ERROR : X_WARNING,
+			   "glamor requires Load \"glamoregl\" in "
+			   "Section \"Module\", disabling.\n");
+		return FALSE;
+	}
 
 	/* Load glamor module */
 	if ((glamor_module = xf86LoadSubModule(scrn, GLAMOR_EGL_MODULE_NAME))) {
@@ -146,6 +159,12 @@ Bool radeon_glamor_pixmap_is_offscreen(PixmapPtr pixmap)
 	return priv && priv->bo;
 }
 
+#ifdef CREATE_PIXMAP_USAGE_SHARED
+#define RADEON_CREATE_PIXMAP_SHARED (CREATE_PIXMAP_USAGE_SHARED | RADEON_CREATE_PIXMAP_DRI2)
+#else
+#define RADEON_CREATE_PIXMAP_SHARED RADEON_CREATE_PIXMAP_DRI2
+#endif
+
 static PixmapPtr
 radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 			unsigned usage)
@@ -154,7 +173,7 @@ radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 	struct radeon_pixmap *priv;
 	PixmapPtr pixmap, new_pixmap = NULL;
 
-	if (!(usage & RADEON_CREATE_PIXMAP_DRI2)) {
+	if (!(usage & RADEON_CREATE_PIXMAP_SHARED)) {
 		pixmap = glamor_create_pixmap(screen, w, h, depth, usage);
 		if (pixmap)
 			return pixmap;
@@ -197,13 +216,13 @@ radeon_glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 	return pixmap;
 
 fallback_glamor:
-	if (usage & RADEON_CREATE_PIXMAP_DRI2) {
+	if (usage & RADEON_CREATE_PIXMAP_SHARED) {
 	/* XXX need further work to handle the DRI2 failure case.
 	 * Glamor don't know how to handle a BO only pixmap. Put
 	 * a warning indicator here.
 	 */
 		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-			   "Failed to create textured DRI2 pixmap.");
+			   "Failed to create textured DRI2/PRIME pixmap.");
 		return pixmap;
 	}
 	/* Create textured pixmap failed means glamor failed to
@@ -237,6 +256,54 @@ static Bool radeon_glamor_destroy_pixmap(PixmapPtr pixmap)
 	return TRUE;
 }
 
+#ifdef RADEON_PIXMAP_SHARING
+
+static Bool
+radeon_glamor_share_pixmap_backing(PixmapPtr pixmap, ScreenPtr slave,
+				   void **handle_p)
+{
+	struct radeon_pixmap *priv = radeon_get_pixmap_private(pixmap);
+
+	if (!priv)
+		return FALSE;
+
+	return radeon_share_pixmap_backing(priv->bo, handle_p);
+}
+
+static Bool
+radeon_glamor_set_shared_pixmap_backing(PixmapPtr pixmap, void *handle)
+{
+	ScreenPtr screen = pixmap->drawable.pScreen;
+	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+	struct radeon_surface surface;
+	struct radeon_pixmap *priv;
+
+	if (!radeon_set_shared_pixmap_backing(pixmap, handle, &surface))
+		return FALSE;
+
+	priv = radeon_get_pixmap_private(pixmap);
+	priv->stride = pixmap->devKind;
+	priv->surface = surface;
+	priv->tiling_flags = 0;
+
+	if (!radeon_glamor_create_textured_pixmap(pixmap)) {
+		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+			   "Failed to get PRIME drawable for glamor pixmap.\n");
+		return FALSE;
+	}
+
+	screen->ModifyPixmapHeader(pixmap,
+				   pixmap->drawable.width,
+				   pixmap->drawable.height,
+				   0, 0,
+				   priv->stride,
+				   NULL);
+
+	return TRUE;
+}
+
+#endif /* RADEON_PIXMAP_SHARING */
+
 Bool
 radeon_glamor_init(ScreenPtr screen)
 {
@@ -264,6 +331,10 @@ radeon_glamor_init(ScreenPtr screen)
 
 	screen->CreatePixmap = radeon_glamor_create_pixmap;
 	screen->DestroyPixmap = radeon_glamor_destroy_pixmap;
+#ifdef RADEON_PIXMAP_SHARING
+	screen->SharePixmapBacking = radeon_glamor_share_pixmap_backing;
+	screen->SetSharedPixmapBacking = radeon_glamor_set_shared_pixmap_backing;
+#endif
 
 	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		   "Use GLAMOR acceleration.\n");
