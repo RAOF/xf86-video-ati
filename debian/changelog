@@ -1,3 +1,10 @@
+xserver-xorg-video-ati (1:7.1.0+git20130801.g2ae6bb1-0ubuntu2) saucy; urgency=low
+
+  * xmir.patch: Flush rendering before submitting to Mir. Fixes occasional missing
+    rendering.
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Fri, 02 Aug 2013 21:00:11 +1000
+
 xserver-xorg-video-ati (1:7.1.0+git20130801.g2ae6bb1-0ubuntu1) saucy; urgency=low
 
   * "In the finest traditions of the Watch"
