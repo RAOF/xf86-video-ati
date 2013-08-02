@@ -1,3 +1,15 @@
+xserver-xorg-video-ati (1:7.1.0+git20130801.g2ae6bb1-0ubuntu1) saucy; urgency=low
+
+  * "In the finest traditions of the Watch"
+  * New upstream snapshot
+    - Support for new chip families
+    - EXA optimisations
+  * Drop fixup-close.patch and drmmode-fail.patch; included upstream
+  * Add XMir support
+    - xmir.patch
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 01 Aug 2013 20:24:11 +1000
+
 xserver-xorg-video-ati (1:7.1.0-0ubuntu2.1) raring; urgency=critical
 
   * Rebuild for xserver 1.14

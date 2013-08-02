@@ -1,0 +1,622 @@
+commit 8f7b9d5d20e8fe9dd718d0ab1d82a21dbbcd215d
+Author: Christopher James Halse Rogers <raof@ubuntu.com>
+Date:   Mon Jul 22 17:02:17 2013 +1000
+
+    radeon/kms: Support running nested in a Mir compositor
+    
+    Signed-off-by: Christopher James Halse Rogers <raof@ubuntu.com>
+
+Index: xf86-video-ati/src/drmmode_display.c
+===================================================================
+--- xf86-video-ati.orig/src/drmmode_display.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/drmmode_display.c	2013-08-01 20:43:13.060922426 +1000
+@@ -1887,7 +1887,7 @@
+     if (!miCreateDefColormap(pScreen))
+         return FALSE;
+     /* all radeons support 10 bit CLUTs */
+-    if (!xf86HandleColormaps(pScreen, 256, 10,
++    if (!xorgMir && !xf86HandleColormaps(pScreen, 256, 10,
+                              drmmode_load_palette, NULL,
+                              CMAP_PALETTED_TRUECOLOR
+ #if 0 /* This option messes up text mode! (eich@suse.de) */
+Index: xf86-video-ati/src/radeon.h
+===================================================================
+--- xf86-video-ati.orig/src/radeon.h	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon.h	2013-08-01 20:43:13.060922426 +1000
+@@ -87,6 +87,13 @@
+ #include "picturestr.h"
+ #endif
+ 
++#ifdef XMIR
++#include "xmir.h"
++#include "xf86Priv.h"
++#else
++typedef struct xmir_screen xmir_screen;
++#endif
++
+ #include "compat-api.h"
+ 
+ #include "simple_list.h"
+@@ -480,9 +487,12 @@
+     /* Perform vsync'ed SwapBuffers? */
+     Bool swapBuffersWait;
+ 
++
+     /* cursor size */
+     int cursor_w;
+     int cursor_h;
++
++    xmir_screen *xmir;
+ } RADEONInfoRec, *RADEONInfoPtr;
+ 
+ /* radeon_accel.c */
+Index: xf86-video-ati/src/radeon_bo_helper.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_bo_helper.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_bo_helper.c	2013-08-01 20:43:13.060922426 +1000
+@@ -201,19 +201,25 @@
+ }
+ 
+ Bool radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
+-				      struct radeon_surface *surface)
++				      struct radeon_surface *surface,
++				      uint32_t *tiling_flags, uint32_t *pitch)
+ {
+     ScrnInfoPtr pScrn = xf86ScreenToScrn(ppix->drawable.pScreen);
+     RADEONInfoPtr info = RADEONPTR(pScrn);
+     struct radeon_bo *bo;
+     int ihandle = (int)(long)fd_handle;
+-    uint32_t size = ppix->devKind * ppix->drawable.height;
++    uint32_t size;
+ 
+-    bo = radeon_gem_bo_open_prime(info->bufmgr, ihandle, size);
++    bo = radeon_gem_bo_open_prime(info->bufmgr, ihandle, 0);
+     if (!bo)
+         return FALSE;
+ 
+     memset(surface, 0, sizeof(struct radeon_surface));
++    radeon_bo_get_tiling(bo, tiling_flags, pitch);
++    if (*tiling_flags & RADEON_TILING_MACRO)
++	bo->size = *pitch * ppix->drawable.height;
++    else
++        bo->size = ppix->devKind * ppix->drawable.height;
+ 
+     if (info->ChipFamily >= CHIP_FAMILY_R600 && info->surf_man) {
+ 
+@@ -229,7 +235,12 @@
+ 	/* we are requiring a recent enough libdrm version */
+ 	surface->flags |= RADEON_SURF_HAS_TILE_MODE_INDEX;
+ 	surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
+-	surface->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR, MODE);
++
++	if (*tiling_flags & RADEON_TILING_MACRO)
++	    surface->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
++	else
++	    surface->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR, MODE);
++
+ 	if (radeon_surface_best(info->surf_man, surface)) {
+ 	    return FALSE;
+ 	}
+@@ -238,8 +249,11 @@
+ 	}
+ 	/* we have to post hack the surface to reflect the actual size
+ 	   of the shared pixmap */
+-	surface->level[0].pitch_bytes = ppix->devKind;
+-	surface->level[0].nblk_x = ppix->devKind / surface->bpe;
++	if (*tiling_flags & RADEON_TILING_MACRO)
++		surface->level[0].pitch_bytes = *pitch;
++	else
++		surface->level[0].pitch_bytes = *pitch = ppix->devKind;
++	surface->level[0].nblk_x = surface->level[0].pitch_bytes / surface->bpe;
+     }
+     radeon_set_pixmap_bo(ppix, bo);
+ 
+Index: xf86-video-ati/src/radeon_bo_helper.h
+===================================================================
+--- xf86-video-ati.orig/src/radeon_bo_helper.h	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_bo_helper.h	2013-08-01 20:43:13.064922426 +1000
+@@ -33,6 +33,7 @@
+ 
+ extern Bool
+ radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
+-				 struct radeon_surface *surface);
++				 struct radeon_surface *surface,
++				 uint32_t *tiling_flags, uint32_t *pitch);
+ 
+ #endif /* RADEON_BO_HELPER_H */
+Index: xf86-video-ati/src/radeon_dri2.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_dri2.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_dri2.c	2013-08-01 20:43:13.064922426 +1000
+@@ -1535,6 +1535,18 @@
+ 
+ #endif /* USE_DRI2_SCHEDULING */
+ 
++#if DRI2INFOREC_VERSION >= 8 && defined(XMIR)
++static int radeon_dri2_auth_magic(ScreenPtr pScreen, uint32_t magic)
++{
++    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
++    RADEONInfoPtr info = RADEONPTR(pScrn);
++
++    if (xorgMir)
++	return xmir_auth_drm_magic(info->xmir, magic);
++    else
++	return drmAuthMagic(info->dri2.drm_fd, magic);
++}
++#endif
+ 
+ Bool
+ radeon_dri2_screen_init(ScreenPtr pScreen)
+@@ -1545,7 +1557,7 @@
+ #ifdef USE_DRI2_SCHEDULING
+     RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
+     const char *driverNames[2];
+-    Bool scheduling_works = TRUE;
++    Bool scheduling_works = !xorgMir;
+ #endif
+ 
+     if (!info->dri2.available)
+@@ -1631,6 +1643,11 @@
+     }
+ #endif
+ 
++#if DRI2INFOREC_VERSION >= 9 && defined(XMIR)
++    dri2_info.version = 8;
++    dri2_info.AuthMagic2 = radeon_dri2_auth_magic;
++#endif
++
+ #if DRI2INFOREC_VERSION >= 9
+     dri2_info.version = 9;
+     dri2_info.CreateBuffer2 = radeon_dri2_create_buffer2;
+Index: xf86-video-ati/src/radeon_exa.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_exa.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_exa.c	2013-08-01 20:43:13.064922426 +1000
+@@ -326,12 +326,12 @@
+ Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
+ {
+     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(ppix);
++    uint32_t tiling_flags, pitch;
+ 
+-    if (!radeon_set_shared_pixmap_backing(ppix, fd_handle, &driver_priv->surface))
++    if (!radeon_set_shared_pixmap_backing(ppix, fd_handle, &driver_priv->surface, &tiling_flags, &pitch))
+ 	return FALSE;
+ 
+     driver_priv->shared = TRUE;
+-    driver_priv->tiling_flags = 0;
+     return TRUE;
+ }
+ #endif
+Index: xf86-video-ati/src/radeon_glamor.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_glamor.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_glamor.c	2013-08-01 20:43:13.064922426 +1000
+@@ -277,14 +277,15 @@
+ 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+ 	struct radeon_surface surface;
+ 	struct radeon_pixmap *priv;
++	uint32_t tiling_flags, pitch;
+ 
+-	if (!radeon_set_shared_pixmap_backing(pixmap, handle, &surface))
++	if (!radeon_set_shared_pixmap_backing(pixmap, handle, &surface, &tiling_flags, &pitch))
+ 		return FALSE;
+ 
+ 	priv = radeon_get_pixmap_private(pixmap);
+-	priv->stride = pixmap->devKind;
++	priv->stride = pitch;
+ 	priv->surface = surface;
+-	priv->tiling_flags = 0;
++	priv->tiling_flags = tiling_flags;
+ 
+ 	if (!radeon_glamor_create_textured_pixmap(pixmap)) {
+ 		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+Index: xf86-video-ati/src/radeon_kms.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_kms.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_kms.c	2013-08-01 20:44:14.872922340 +1000
+@@ -220,7 +220,11 @@
+ 	return FALSE;
+     pScreen->CreateScreenResources = RADEONCreateScreenResources_KMS;
+ 
+-    if (!drmmode_set_desired_modes(pScrn, &info->drmmode))
++    if (xorgMir) {
++	if (!xf86SetDesiredModes(pScrn))
++	    return FALSE;
++    }
++    else if (!drmmode_set_desired_modes(pScrn, &info->drmmode))
+ 	return FALSE;
+ 
+     drmmode_uevent_init(pScrn, &info->drmmode);
+@@ -285,6 +289,100 @@
+ }
+ #endif
+ 
++#ifdef XMIR
++static void
++radeon_xmir_copy_pixmap_to_mir(PixmapPtr src, int prime_fd)
++{
++    ScreenPtr pScreen = src->drawable.pScreen;
++    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
++    RADEONInfoPtr info = RADEONPTR(pScrn);
++    if (info->accel_state->exa) {
++	PixmapPtr dst;
++	int ret;
++        int fd_copy = dup(prime_fd);
++	/* TODO: Create this scratch pixmap once to avoid allocation overhead */
++	dst = pScreen->CreatePixmap(pScreen, 0, 0, pScrn->depth, 0);
++	if (dst == NullPixmap)
++            return;
++
++	if (!pScreen->ModifyPixmapHeader(dst,
++					 pScrn->virtualX, pScrn->virtualY,
++					 pScrn->depth, pScrn->bitsPerPixel,
++					 src->devKind, NULL))
++		goto cleanup_dst;
++
++
++        info->accel_state->exa->SetSharedPixmapBacking(dst, (void*)(size_t)fd_copy);
++
++	ret = info->accel_state->exa->PrepareCopy (src, dst,
++						   -1, -1, GXcopy, FB_ALLONES);
++	if (!ret)
++	    goto cleanup_dst;
++	info->accel_state->exa->Copy (dst, 0, 0, 0, 0,
++				      pScrn->virtualX, pScrn->virtualY);
++	info->accel_state->exa->DoneCopy (dst);
++
++cleanup_dst:
++	pScreen->DestroyPixmap(dst);
++    } else if (0) {
++	/* TODO: glamor accel */
++    } else {
++	/* Hideously bad software copy */
++	struct radeon_bo *bo_src = radeon_get_pixmap_bo(src);
++	struct radeon_bo *bo_dst = radeon_gem_bo_open_prime(info->bufmgr, prime_fd, src->devKind * src->drawable.height);
++
++	radeon_bo_map(bo_src, FALSE);
++	radeon_bo_map(bo_dst, TRUE);
++
++	memcpy(bo_dst->ptr, bo_src->ptr, bo_dst->size);
++
++	radeon_bo_unmap(bo_src);
++	radeon_bo_unmap(bo_dst);
++
++	radeon_bo_unref(bo_dst);
++    }	
++}
++
++static void
++radeon_xmir_buffer_available(WindowPtr win)
++{
++    int window_fd;
++    PixmapPtr window_pixmap;
++
++    if(!xmir_window_is_dirty(win))
++	return;
++
++    window_fd = xmir_prime_fd_for_window(win);
++
++    window_pixmap = (*win->drawable.pScreen->GetWindowPixmap)(win);
++    radeon_xmir_copy_pixmap_to_mir(window_pixmap, window_fd);
++
++    xmir_submit_rendering_for_window(win, NULL);
++}
++
++static void
++radeon_submit_dirty_window(WindowPtr win)
++{
++    int window_fd;
++    PixmapPtr window_pixmap;
++
++    if(!xmir_window_has_free_buffer(win))
++	return;
++
++    window_fd = xmir_prime_fd_for_window(win);
++
++    window_pixmap = (*win->drawable.pScreen->GetWindowPixmap)(win);
++    radeon_xmir_copy_pixmap_to_mir(window_pixmap, window_fd);
++
++    xmir_submit_rendering_for_window(win, NULL);
++}
++
++static xmir_driver xmir_radeon_driver = {
++    XMIR_DRIVER_VERSION,
++    radeon_xmir_buffer_available
++};
++#endif
++
+ static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
+ {
+     SCREEN_PTR(arg);
+@@ -302,6 +400,8 @@
+ #ifdef RADEON_PIXMAP_SHARING
+     radeon_dirty_update(pScreen);
+ #endif
++    if(info->xmir)
++    	xmir_screen_for_each_damaged_window(info->xmir, radeon_submit_dirty_window);
+ }
+ 
+ static void
+@@ -606,6 +706,24 @@
+ 		      dev->domain, dev->bus, dev->dev, dev->func);
+ #endif
+ 
++#ifdef XMIR
++    if (xorgMir) {
++	info->dri2.drm_fd = xmir_get_drm_fd(busid);
++        
++        if (info->dri2.drm_fd < 0) {
++            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
++                       "[drm] Failed to retrieve DRM device %s from Mir\n",
++                       busid);
++            free(busid);
++            return FALSE;
++        }
++        free(busid);
++	/* TODO: Work out what to do about the crazy multihead involved in
++	   pRADEONEnt->fd */
++	goto out;
++    }
++#endif
++
+     info->dri2.drm_fd = drmOpen("radeon", busid);
+     if (info->dri2.drm_fd == -1) {
+ 
+@@ -835,6 +953,14 @@
+     if (!RADEONPreInitChipType_KMS(pScrn))
+         goto fail;
+ 
++#ifdef XMIR
++    if (xorgMir) {
++	info->xmir = xmir_screen_create(pScrn);
++	if (info->xmir == NULL)
++	    goto fail;
++    }
++#endif
++
+     if (radeon_open_drm_master(pScrn) == FALSE) {
+ 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
+ 	goto fail;
+@@ -913,6 +1039,10 @@
+     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+ 	       "SwapBuffers wait for vsync: %sabled\n", info->swapBuffersWait ? "en" : "dis");
+ 
++
++#ifdef XMIR
++    if(!info->xmir) {
++#endif    	
+     if (drmmode_pre_init(pScrn, &info->drmmode, pScrn->bitsPerPixel / 8) == FALSE) {
+ 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
+ 	goto fail;
+@@ -922,7 +1052,10 @@
+         pRADEONEnt->HasCRTC2 = FALSE;
+     else
+         pRADEONEnt->HasCRTC2 = TRUE;
+-
++#ifdef XMIR
++    } else if (!xmir_screen_pre_init(pScrn, info->xmir, &xmir_radeon_driver))
++	goto fail;
++#endif
+ 
+     /* fix up cloning on rn50 cards
+      * since they only have one crtc sometimes the xserver doesn't assign
+@@ -1122,6 +1255,11 @@
+     if (info->accel_state->use_vbos)
+         radeon_vbo_free_lists(pScrn);
+ 
++#ifdef XMIR
++    if (info->xmir) {
++/*	xmir_screen_close(pScreen, info->xmir);*/
++    } else
++#endif
+     drmDropMaster(info->dri2.drm_fd);
+ 
+     drmmode_fini(pScrn, &info->drmmode);
+@@ -1157,7 +1295,7 @@
+     int            subPixelOrder = SubPixelUnknown;
+     char*          s;
+     void *front_ptr;
+-    int ret;
++    int ret = 0;
+ 
+     pScrn->fbOffset = 0;
+ 
+@@ -1168,7 +1306,8 @@
+ 			  pScrn->defaultVisual)) return FALSE;
+     miSetPixmapDepths ();
+ 
+-    ret = drmSetMaster(info->dri2.drm_fd);
++    if (!xorgMir)
++	ret = drmSetMaster(info->dri2.drm_fd);
+     if (ret) {
+         ErrorF("Unable to retrieve master\n");
+         return FALSE;
+@@ -1185,7 +1324,8 @@
+ 		   "failed to initialise GEM buffer manager");
+ 	return FALSE;
+     }
+-    drmmode_set_bufmgr(pScrn, &info->drmmode, info->bufmgr);
++    if (!info->xmir)
++	drmmode_set_bufmgr(pScrn, &info->drmmode, info->bufmgr);
+ 
+     if (!info->csm)
+         info->csm = radeon_cs_manager_gem_ctor(info->dri2.drm_fd);
+@@ -1259,6 +1399,9 @@
+     /* Must be after RGB order fixed */
+     fbPictureInit (pScreen, 0, 0);
+ 
++    if (info->xmir)
++    	xmir_screen_init(pScreen, info->xmir);
++
+ #ifdef RENDER
+     if ((s = xf86GetOptValString(info->Options, OPTION_SUBPIXEL_ORDER))) {
+ 	if (strcmp(s, "RGB") == 0) subPixelOrder = SubPixelHorizontalRGB;
+@@ -1309,7 +1452,7 @@
+     /* Cursor setup */
+     miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
+ 
+-    if (!xf86ReturnOptValBool(info->Options, OPTION_SW_CURSOR, FALSE)) {
++    if (!info->xmir && !xf86ReturnOptValBool(info->Options, OPTION_SW_CURSOR, FALSE)) {
+ 	if (RADEONCursorInit_KMS(pScreen)) {
+ 	}
+     }
+@@ -1385,13 +1528,13 @@
+ {
+     SCRN_INFO_PTR(arg);
+     RADEONInfoPtr  info  = RADEONPTR(pScrn);
+-    int ret;
++    int ret = 0;
+ 
+     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+ 		   "RADEONEnterVT_KMS\n");
+ 
+-
+-    ret = drmSetMaster(info->dri2.drm_fd);
++    if (!xorgMir)
++	ret = drmSetMaster(info->dri2.drm_fd);
+     if (ret)
+ 	ErrorF("Unable to retrieve master\n");
+     info->accel_state->XInited3D = FALSE;
+@@ -1399,7 +1542,9 @@
+ 
+     pScrn->vtSema = TRUE;
+ 
+-    if (!drmmode_set_desired_modes(pScrn, &info->drmmode))
++    if (xorgMir)
++        return xf86SetDesiredModes(pScrn);
++    else if (!drmmode_set_desired_modes(pScrn, &info->drmmode))
+ 	return FALSE;
+ 
+     return TRUE;
+@@ -1540,6 +1685,7 @@
+ 		}
+ 		info->front_surface = surface;
+ 	}
++    if(!xorgMir)
+     {
+ 	int cursor_size;
+ 	int c;
+Index: xf86-video-ati/src/radeon_probe.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_probe.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_probe.c	2013-08-01 20:43:13.068922426 +1000
+@@ -40,6 +40,7 @@
+  * KMS support - Dave Airlie <airlied@redhat.com>
+  */
+ 
++#include "radeon.h"
+ #include "radeon_probe.h"
+ #include "radeon_version.h"
+ #include "atipciids.h"
+@@ -54,6 +55,11 @@
+ #include <xf86platformBus.h>
+ #endif
+ 
++#ifdef XMIR
++#include <xf86Priv.h>
++#include <xmir.h>
++#endif
++
+ #include "radeon_chipset_gen.h"
+ 
+ #include "radeon_pci_chipset_gen.h"
+@@ -105,6 +111,33 @@
+ }
+ 
+ static Bool
++radeon_check_mir_support(ScrnInfoPtr pScrn, struct pci_device *pci_dev)
++{
++    char *busIdString;
++    int fd;
++
++    if (!xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
++        xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 0,
++           "[XMir] No DRICreatePCIBusID symbol, unable to find Radeon device.\n");
++        return FALSE;
++    }
++
++    busIdString = DRICreatePCIBusID(pci_dev);
++    fd = xmir_get_drm_fd(busIdString);
++    free(busIdString);
++
++    if (fd < 0) {
++        xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 0,
++           "[XMir] Radeon device not managed by Mir.\n");
++        return FALSE;
++    }
++
++    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 0,
++           "[XMir] Using Radeon device from Mir.\n");
++    return TRUE;
++}
++
++static Bool
+ radeon_get_scrninfo(int entity_num, void *pci_dev)
+ {
+     ScrnInfoPtr   pScrn = NULL;
+@@ -118,7 +151,13 @@
+         return FALSE;
+ 
+     if (pci_dev) {
++#ifdef XMIR
++        if (xorgMir && !radeon_check_mir_support(pScrn, pci_dev))
++            return FALSE;
++        else if (!radeon_kernel_mode_enabled(pScrn, pci_dev)) {
++#else
+       if (!radeon_kernel_mode_enabled(pScrn, pci_dev)) {
++#endif
+ 	return FALSE;
+       }
+     }
+@@ -191,6 +230,12 @@
+ 	case GET_REQUIRED_HW_INTERFACES:
+ 	    flag = (CARD32 *)data;
+ 	    (*flag) = 0;
++
++#ifdef XMIR
++        if (xorgMir)
++            (*flag) |= HW_SKIP_CONSOLE;
++#endif
++
+ 	    return TRUE;
+ 	default:
+ 	    return FALSE;
+@@ -211,14 +256,20 @@
+     if (!dev->pdev)
+ 	return FALSE;
+ 
+-    if (flags & PLATFORM_PROBE_GPU_SCREEN)
+-	scr_flags = XF86_ALLOCATE_GPU_SCREEN;
++    if (flags & PLATFORM_PROBE_GPU_SCREEN) {
++        scr_flags = XF86_ALLOCATE_GPU_SCREEN;
++    }
++    
++
+ 
+     pScrn = xf86AllocateScreen(pDriver, scr_flags);
+     if (xf86IsEntitySharable(entity_num))
+ 	xf86SetEntityShared(entity_num);
+     xf86AddEntityToScreen(pScrn, entity_num);
+ 
++    if (xorgMir && !radeon_check_mir_support(pScrn, dev->pdev))
++        return FALSE;
++
+     if (!radeon_kernel_mode_enabled(pScrn, dev->pdev))
+ 	return FALSE;
+ 
+Index: xf86-video-ati/src/radeon_video.c
+===================================================================
+--- xf86-video-ati.orig/src/radeon_video.c	2013-08-01 20:43:13.072922426 +1000
++++ xf86-video-ati/src/radeon_video.c	2013-08-01 20:43:13.068922426 +1000
+@@ -70,7 +70,10 @@
+ Bool radeon_crtc_is_enabled(xf86CrtcPtr crtc)
+ {
+     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+-    return drmmode_crtc->dpms_mode == DPMSModeOn;
++    if (drmmode_crtc != NULL)
++	return drmmode_crtc->dpms_mode == DPMSModeOn;
++    else /* We're not in control; bail */
++	return FALSE;
+ }
+ 
+ uint32_t radeon_get_interpolated_vblanks(xf86CrtcPtr crtc)
