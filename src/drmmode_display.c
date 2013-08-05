@@ -1108,6 +1108,8 @@ const char *output_names[] = { "None",
 			       "eDP"
 };
 
+#define NUM_OUTPUT_NAMES (sizeof(output_names) / sizeof(output_names[0]))
+
 static void
 drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dvi, int *num_hdmi)
 {
@@ -1137,30 +1139,43 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dv
 		}
 	}
 
-	/* need to do smart conversion here for compat with non-kms ATI driver */
-	if (koutput->connector_type_id == 1) {
-	    switch(koutput->connector_type) {
-	    case DRM_MODE_CONNECTOR_DVII:
-	    case DRM_MODE_CONNECTOR_DVID:
-	    case DRM_MODE_CONNECTOR_DVIA:
-		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_dvi);
-		(*num_dvi)++;
-		break;
-	    case DRM_MODE_CONNECTOR_HDMIA:
-	    case DRM_MODE_CONNECTOR_HDMIB:
-		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_hdmi);
-		(*num_hdmi)++;
-		break;
-	    case DRM_MODE_CONNECTOR_VGA:
-	    case DRM_MODE_CONNECTOR_DisplayPort:
-		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
-		break;
-	    default:
-		snprintf(name, 32, "%s", output_names[koutput->connector_type]);
-		break;
-	    }
-	} else {
-	    snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
+	if (koutput->connector_type >= NUM_OUTPUT_NAMES)
+		snprintf(name, 32, "Unknown%d-%d", koutput->connector_type,
+			 koutput->connector_type_id - 1);
+#ifdef RADEON_PIXMAP_SHARING
+	else if (pScrn->is_gpu)
+		snprintf(name, 32, "%s-%d-%d",
+			 output_names[koutput->connector_type], pScrn->scrnIndex - GPU_SCREEN_OFFSET + 1,
+			 koutput->connector_type_id - 1);
+#endif
+	else {
+		/* need to do smart conversion here for compat with non-kms ATI driver */
+		if (koutput->connector_type_id == 1) {
+			switch(koutput->connector_type) {
+			case DRM_MODE_CONNECTOR_DVII:
+			case DRM_MODE_CONNECTOR_DVID:
+			case DRM_MODE_CONNECTOR_DVIA:
+				snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_dvi);
+				(*num_dvi)++;
+				break;
+			case DRM_MODE_CONNECTOR_HDMIA:
+			case DRM_MODE_CONNECTOR_HDMIB:
+				snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_hdmi);
+				(*num_hdmi)++;
+				break;
+			case DRM_MODE_CONNECTOR_VGA:
+			case DRM_MODE_CONNECTOR_DisplayPort:
+				snprintf(name, 32, "%s-%d", output_names[koutput->connector_type],
+					 koutput->connector_type_id - 1);
+				break;
+			default:
+				snprintf(name, 32, "%s", output_names[koutput->connector_type]);
+				break;
+			}
+		} else {
+			snprintf(name, 32, "%s-%d", output_names[koutput->connector_type],
+				 koutput->connector_type_id - 1);
+		}
 	}
 
 	if (xf86IsEntityShared(pScrn->entityList[0])) {
