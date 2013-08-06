@@ -8,8 +8,8 @@ Date:   Mon Jul 22 17:02:17 2013 +1000
 
 Index: xf86-video-ati/src/drmmode_display.c
 ===================================================================
---- xf86-video-ati.orig/src/drmmode_display.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/drmmode_display.c	2013-08-02 20:57:42.467265083 +1000
+--- xf86-video-ati.orig/src/drmmode_display.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/drmmode_display.c	2013-08-06 12:20:08.270997173 +1000
 @@ -1887,7 +1887,7 @@
      if (!miCreateDefColormap(pScreen))
          return FALSE;
@@ -21,9 +21,9 @@ Index: xf86-video-ati/src/drmmode_display.c
  #if 0 /* This option messes up text mode! (eich@suse.de) */
 Index: xf86-video-ati/src/radeon.h
 ===================================================================
---- xf86-video-ati.orig/src/radeon.h	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon.h	2013-08-02 20:57:42.467265083 +1000
-@@ -87,6 +87,13 @@
+--- xf86-video-ati.orig/src/radeon.h	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon.h	2013-08-06 12:20:08.270997173 +1000
+@@ -87,6 +87,14 @@
  #include "picturestr.h"
  #endif
  
@@ -31,13 +31,14 @@ Index: xf86-video-ati/src/radeon.h
 +#include "xmir.h"
 +#include "xf86Priv.h"
 +#else
++#define xorgMir 0
 +typedef struct xmir_screen xmir_screen;
 +#endif
 +
  #include "compat-api.h"
  
  #include "simple_list.h"
-@@ -480,9 +487,12 @@
+@@ -480,9 +488,12 @@
      /* Perform vsync'ed SwapBuffers? */
      Bool swapBuffersWait;
  
@@ -52,8 +53,8 @@ Index: xf86-video-ati/src/radeon.h
  /* radeon_accel.c */
 Index: xf86-video-ati/src/radeon_bo_helper.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_bo_helper.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_bo_helper.c	2013-08-02 20:57:42.467265083 +1000
+--- xf86-video-ati.orig/src/radeon_bo_helper.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_bo_helper.c	2013-08-06 12:20:08.270997173 +1000
 @@ -201,19 +201,25 @@
  }
  
@@ -113,8 +114,8 @@ Index: xf86-video-ati/src/radeon_bo_helper.c
  
 Index: xf86-video-ati/src/radeon_bo_helper.h
 ===================================================================
---- xf86-video-ati.orig/src/radeon_bo_helper.h	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_bo_helper.h	2013-08-02 20:57:42.467265083 +1000
+--- xf86-video-ati.orig/src/radeon_bo_helper.h	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_bo_helper.h	2013-08-06 12:20:08.270997173 +1000
 @@ -33,6 +33,7 @@
  
  extern Bool
@@ -126,8 +127,8 @@ Index: xf86-video-ati/src/radeon_bo_helper.h
  #endif /* RADEON_BO_HELPER_H */
 Index: xf86-video-ati/src/radeon_dri2.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_dri2.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_dri2.c	2013-08-02 20:57:42.471265083 +1000
+--- xf86-video-ati.orig/src/radeon_dri2.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_dri2.c	2013-08-06 12:20:08.270997173 +1000
 @@ -1535,6 +1535,18 @@
  
  #endif /* USE_DRI2_SCHEDULING */
@@ -170,8 +171,8 @@ Index: xf86-video-ati/src/radeon_dri2.c
      dri2_info.CreateBuffer2 = radeon_dri2_create_buffer2;
 Index: xf86-video-ati/src/radeon_exa.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_exa.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_exa.c	2013-08-02 20:57:42.471265083 +1000
+--- xf86-video-ati.orig/src/radeon_exa.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_exa.c	2013-08-06 12:20:08.274997173 +1000
 @@ -326,12 +326,12 @@
  Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
  {
@@ -189,8 +190,8 @@ Index: xf86-video-ati/src/radeon_exa.c
  #endif
 Index: xf86-video-ati/src/radeon_glamor.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_glamor.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_glamor.c	2013-08-02 20:57:42.471265083 +1000
+--- xf86-video-ati.orig/src/radeon_glamor.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_glamor.c	2013-08-06 12:20:08.274997173 +1000
 @@ -277,14 +277,15 @@
  	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
  	struct radeon_surface surface;
@@ -212,8 +213,8 @@ Index: xf86-video-ati/src/radeon_glamor.c
  		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 Index: xf86-video-ati/src/radeon_kms.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_kms.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_kms.c	2013-08-02 20:58:45.655262323 +1000
+--- xf86-video-ati.orig/src/radeon_kms.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_kms.c	2013-08-06 12:27:33.602977722 +1000
 @@ -220,7 +220,11 @@
  	return FALSE;
      pScreen->CreateScreenResources = RADEONCreateScreenResources_KMS;
@@ -231,7 +232,6 @@ Index: xf86-video-ati/src/radeon_kms.c
  }
  #endif
  
-+#ifdef XMIR
 +static void
 +radeon_xmir_copy_pixmap_to_mir(PixmapPtr src, int prime_fd)
 +{
@@ -321,6 +321,7 @@ Index: xf86-video-ati/src/radeon_kms.c
 +    xmir_submit_rendering_for_window(win, NULL);
 +}
 +
++#ifdef XMIR
 +static xmir_driver xmir_radeon_driver = {
 +    XMIR_DRIVER_VERSION,
 +    radeon_xmir_buffer_available
@@ -500,8 +501,8 @@ Index: xf86-video-ati/src/radeon_kms.c
  	int c;
 Index: xf86-video-ati/src/radeon_probe.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_probe.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_probe.c	2013-08-02 20:57:42.471265083 +1000
+--- xf86-video-ati.orig/src/radeon_probe.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_probe.c	2013-08-06 12:20:08.274997173 +1000
 @@ -40,6 +40,7 @@
   * KMS support - Dave Airlie <airlied@redhat.com>
   */
@@ -608,8 +609,8 @@ Index: xf86-video-ati/src/radeon_probe.c
  
 Index: xf86-video-ati/src/radeon_video.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_video.c	2013-08-02 20:57:42.475265082 +1000
-+++ xf86-video-ati/src/radeon_video.c	2013-08-02 20:57:42.471265083 +1000
+--- xf86-video-ati.orig/src/radeon_video.c	2013-08-06 12:20:08.282997173 +1000
++++ xf86-video-ati/src/radeon_video.c	2013-08-06 12:20:08.274997173 +1000
 @@ -70,7 +70,10 @@
  Bool radeon_crtc_is_enabled(xf86CrtcPtr crtc)
  {
