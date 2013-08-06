@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:7.1.0+git20130801.g2ae6bb1-0ubuntu4) saucy; urgency=low
+
+  * Fix non-XMir-server-build harder
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Tue, 06 Aug 2013 12:55:01 +1000
+
 xserver-xorg-video-ati (1:7.1.0+git20130801.g2ae6bb1-0ubuntu3) saucy; urgency=low
 
   * xmir.patch: Fix build against Xservers without XMir support
