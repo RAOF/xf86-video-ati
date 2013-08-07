@@ -1,11 +1,11 @@
-xserver-xorg-video-ati (1:7.2.0-0ubuntu1) UNRELEASED; urgency=low
+xserver-xorg-video-ati (1:7.2.0-0ubuntu1) saucy; urgency=low
 
   * Merge new upstream release from unreleased debian-experimental.
   * Remaining changes:
     - Add xmir support.
   * Drop reverse-prime.patch, upstreamed.
 
- -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 07 Aug 2013 12:05:28 +0200
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 07 Aug 2013 12:12:32 +0200
 
 xserver-xorg-video-ati (1:7.2.0-1) UNRELEASED; urgency=low
 
