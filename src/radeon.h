@@ -497,9 +497,6 @@ extern void RADEONWaitForVLine(ScrnInfoPtr pScrn, PixmapPtr pPix,
 			       xf86CrtcPtr crtc, int start, int stop);
 
 
-/* radeon_driver.c */
-extern RADEONEntPtr RADEONEntPriv(ScrnInfoPtr pScrn);
-
 /* radeon_exa.c */
 extern unsigned eg_tile_split(unsigned tile_split);
 extern Bool radeon_transform_is_affine_or_scaled(PictTransformPtr t);
@@ -528,6 +525,7 @@ extern void radeon_ddx_cs_start(ScrnInfoPtr pScrn,
 				int num, const char *file,
 				const char *func, int line);
 void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size);
+extern RADEONEntPtr RADEONEntPriv(ScrnInfoPtr pScrn);
 
 drmVBlankSeqType radeon_populate_vbl_request_type(xf86CrtcPtr crtc);
 
