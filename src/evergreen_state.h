@@ -297,6 +297,8 @@ evergreen_start_3d(ScrnInfoPtr pScrn);
 void
 evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t domain);
 void
+evergreen_set_blend_color(ScrnInfoPtr pScrn, float *color);
+void
 evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix, xf86CrtcPtr crtc, int start, int stop);
 void
 evergreen_set_spi(ScrnInfoPtr pScrn, int vs_export_count, int num_interp);

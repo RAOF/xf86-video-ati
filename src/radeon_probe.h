@@ -105,6 +105,11 @@ typedef enum {
     CHIP_FAMILY_TAHITI,
     CHIP_FAMILY_PITCAIRN,
     CHIP_FAMILY_VERDE,
+    CHIP_FAMILY_OLAND,
+    CHIP_FAMILY_HAINAN,
+    CHIP_FAMILY_BONAIRE,
+    CHIP_FAMILY_KAVERI,
+    CHIP_FAMILY_KABINI,
     CHIP_FAMILY_LAST
 } RADEONChipFamily;
 
@@ -127,7 +132,9 @@ typedef struct
     ScrnInfoPtr pPrimaryScrn;
 
     int fd;                             /* for sharing across zaphod heads   */
+    int fd_ref;
     unsigned long     fd_wakeup_registered; /* server generation for which fd has been registered for wakeup handling */
+    int fd_wakeup_ref;
     int dri2_info_cnt;
 } RADEONEntRec, *RADEONEntPtr;
 

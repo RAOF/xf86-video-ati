@@ -51,9 +51,6 @@
 
 #include "radeon_chipinfo_gen.h"
 
-#define CURSOR_WIDTH	64
-#define CURSOR_HEIGHT	64
-
 #include "radeon_bo_gem.h"
 #include "radeon_cs_gem.h"
 #include "radeon_vbo.h"
@@ -69,7 +66,9 @@ const OptionInfoRec RADEONOptions_KMS[] = {
     { OPTION_COLOR_TILING_2D,"ColorTiling2D",    OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_RENDER_ACCEL,   "RenderAccel",      OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_SUBPIXEL_ORDER, "SubPixelOrder",    OPTV_ANYSTR,  {0}, FALSE },
+#ifdef USE_GLAMOR
     { OPTION_ACCELMETHOD,    "AccelMethod",      OPTV_STRING,  {0}, FALSE },
+#endif
     { OPTION_EXA_VSYNC,      "EXAVSync",         OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_EXA_PIXMAPS,    "EXAPixmaps",	 OPTV_BOOLEAN,   {0}, FALSE },
     { OPTION_ZAPHOD_HEADS,   "ZaphodHeads",      OPTV_STRING,  {0}, FALSE },
@@ -172,6 +171,20 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
 
     info = RADEONPTR(pScrn);
 
+    if (info->dri2.drm_fd > 0) {
+        DevUnion *pPriv;
+        RADEONEntPtr pRADEONEnt;
+        pPriv = xf86GetEntityPrivate(pScrn->entityList[0],
+				     getRADEONEntityIndex());
+
+        pRADEONEnt = pPriv->ptr;
+        pRADEONEnt->fd_ref--;
+        if (!pRADEONEnt->fd_ref) {
+            drmClose(pRADEONEnt->fd);
+            pRADEONEnt->fd = 0;
+        }
+    }
+
     if (info->accel_state) {
 	free(info->accel_state);
 	info->accel_state = NULL;
@@ -244,7 +257,7 @@ redisplay_dirty(ScreenPtr screen, PixmapDirtyUpdatePtr dirty)
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(screen);
 	RegionRec pixregion;
 
-	PixmapRegionInit(&pixregion, dirty->slave_dst->master_pixmap);
+	PixmapRegionInit(&pixregion, dirty->slave_dst);
 	DamageRegionAppend(&dirty->slave_dst->drawable, &pixregion);
 	PixmapSyncDirtyHelper(dirty, &pixregion);
 
@@ -301,6 +314,28 @@ radeon_flush_callback(CallbackListPtr *list,
         radeon_cs_flush_indirect(pScrn);
 	radeon_glamor_flush(pScrn);
     }
+}
+
+static Bool RADEONIsFastFBWorking(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    struct drm_radeon_info ginfo;
+    int r;
+    uint32_t tmp = 0;
+
+#ifndef RADEON_INFO_FASTFB_WORKING
+#define RADEON_INFO_FASTFB_WORKING 0x14
+#endif
+    memset(&ginfo, 0, sizeof(ginfo));
+    ginfo.request = RADEON_INFO_FASTFB_WORKING;
+    ginfo.value = (uintptr_t)&tmp;
+    r = drmCommandWriteRead(info->dri2.drm_fd, DRM_RADEON_INFO, &ginfo, sizeof(ginfo));
+    if (r) {
+	return FALSE;
+    }
+    if (tmp == 1)
+	return TRUE;
+    return FALSE;
 }
 
 static Bool RADEONIsFusionGARTWorking(ScrnInfoPtr pScrn)
@@ -448,6 +483,12 @@ static Bool RADEONPreInitAccel_KMS(ScrnInfoPtr pScrn)
 	return FALSE;
     }
 
+    /* Check whether direct mapping is used for fast fb access*/
+    if (RADEONIsFastFBWorking(pScrn)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Direct mapping of fb aperture is enabled for fast fb access.\n");
+	info->is_fast_fb = TRUE;
+    }
+
     if (xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE) ||
 	(!RADEONIsAccelWorking(pScrn))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -553,6 +594,7 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
 		   " reusing fd for second head\n");
 
 	info->dri2.drm_fd = pRADEONEnt->fd;
+	pRADEONEnt->fd_ref++;
 	goto out;
     }
 
@@ -594,6 +636,7 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
     }
 
     pRADEONEnt->fd = info->dri2.drm_fd;
+    pRADEONEnt->fd_ref = 1;
  out:
     info->drmmode.fd = info->dri2.drm_fd;
     return TRUE;
@@ -723,7 +766,7 @@ static void RADEONSetupCapabilities(ScrnInfoPtr pScrn)
 	if (value & DRM_PRIME_CAP_EXPORT)
 	    pScrn->capabilities |= RR_Capability_SourceOutput | RR_Capability_SinkOffload;
 	if (value & DRM_PRIME_CAP_IMPORT)
-	    pScrn->capabilities |= RR_Capability_SourceOffload;
+	    pScrn->capabilities |= RR_Capability_SourceOffload | RR_Capability_SinkOutput;
     }
 #endif
 }
@@ -817,7 +860,12 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	Bool colorTilingDefault =
 	    xorgGetVersion() >= XORG_VERSION_NUMERIC(1,9,4,901,0) &&
 	    info->ChipFamily >= CHIP_FAMILY_R300 &&
-	    info->ChipFamily <= CHIP_FAMILY_ARUBA;
+	    /* this ARUBA check could be removed sometime after a big mesa release
+	     * with proper bit, in the meantime you need to set tiling option in
+	     * xorg configuration files
+	     */
+	    info->ChipFamily <= CHIP_FAMILY_ARUBA &&
+	    !info->is_fast_fb;
 
 	/* 2D color tiling */
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -895,6 +943,15 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	}
     }
 
+    /* set cursor size */
+    if (info->ChipFamily >= CHIP_FAMILY_BONAIRE) {
+	info->cursor_w = CURSOR_WIDTH_CIK;
+	info->cursor_h = CURSOR_HEIGHT_CIK;
+    } else {
+	info->cursor_w = CURSOR_WIDTH;
+	info->cursor_h = CURSOR_HEIGHT;
+    }
+
     {
 	struct drm_radeon_gem_info mminfo;
 
@@ -913,8 +970,9 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     if (!info->use_glamor) {
 	info->exa_pixmaps = xf86ReturnOptValBool(info->Options,
 						 OPTION_EXA_PIXMAPS,
-						 ((info->vram_size > (32 * 1024 * 1024) &&
-						 info->RenderAccel)));
+						 (info->vram_size > (32 * 1024 * 1024) &&
+						 info->RenderAccel &&
+                                                 !info->is_fast_fb));
 	if (info->exa_pixmaps)
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "EXA: Driver will allow EXA pixmaps in VRAM\n");
@@ -964,7 +1022,10 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
 static Bool RADEONCursorInit_KMS(ScreenPtr pScreen)
 {
-    return xf86_cursors_init (pScreen, CURSOR_WIDTH, CURSOR_HEIGHT,
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
+    RADEONInfoPtr  info  = RADEONPTR(pScrn);
+
+    return xf86_cursors_init (pScreen, info->cursor_w, info->cursor_h,
 			      (HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
 			       HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
 			       HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_1 |
@@ -1063,6 +1124,7 @@ static Bool RADEONCloseScreen_KMS(CLOSE_SCREEN_ARGS_DECL)
 
     drmDropMaster(info->dri2.drm_fd);
 
+    drmmode_fini(pScrn, &info->drmmode);
     if (info->dri2.enabled)
 	radeon_dri2_close_screen(pScreen);
 
@@ -1436,6 +1498,8 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
 		surface.bpe = cpp;
 		surface.nsamples = 1;
 		surface.flags = RADEON_SURF_SCANOUT;
+		/* we are requiring a recent enough libdrm version */
+		surface.flags |= RADEON_SURF_HAS_TILE_MODE_INDEX;
 		surface.flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
 		surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR_ALIGNED, MODE);
 		if (tiling_flags & RADEON_TILING_MICRO) {
@@ -1477,9 +1541,10 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
 		info->front_surface = surface;
 	}
     {
-	int cursor_size = 64 * 4 * 64;
+	int cursor_size;
 	int c;
 
+	cursor_size = info->cursor_w * info->cursor_h * 4;
 	cursor_size = RADEON_ALIGN(cursor_size, RADEON_GPU_PAGE_SIZE);
 	for (c = 0; c < xf86_config->num_crtc; c++) {
 	    /* cursor objects */

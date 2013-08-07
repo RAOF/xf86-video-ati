@@ -180,12 +180,31 @@ Radeon HD 6430/6450/6470/6490
 Radeon HD 6950/6970/6990
 .TP 12
 .B ARUBA
+Radeon HD 7000 series
 .TP 12
 .B TAHITI
+Radeon HD 7900 series
 .TP 12
 .B PITCAIRN
+Radeon HD 7800 series
 .TP 12
 .B VERDE
+Radeon HD 7700 series
+.TP 12
+.B OLAND
+Radeon HD 8000 series
+.TP 12
+.B HAINAN
+Radeon HD 8000 series
+.TP 12
+.B BONAIRE
+Radeon HD 7790 series
+.TP 12
+.B KAVERI
+KAVERI APUs
+.TP 12
+.B KABINI
+KABINI APUs
 .PD
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -228,7 +247,7 @@ The default value is
 for R/RV3XX, R/RV4XX, R/RV5XX, RS6XX, RS740, R/RV6XX, R/RV7XX, RS780, RS880,
 EVERGREEN, CAYMAN, and ARUBA and
 .B off
-for R/RV/RS1XX, R/RV/RS2XX, and RS3XX.
+for R/RV/RS1XX, R/RV/RS2XX, RS3XX, and RS690/RS780/RS880 when fast fb feature is enabled.
 .TP
 .BI "Option \*qColorTiling2D\*q \*q" "boolean" \*q
 The framebuffer can be addressed either in linear, 1D, or 2D tiled modes. 2D tiled mode can
@@ -252,6 +271,8 @@ Chooses between available acceleration architectures.  Valid values are
 and
 .B glamor.
 The default is
+.B glamor
+as of TAHITI, otherwise
 .B EXA.
 
 .PP
@@ -274,7 +295,7 @@ we use a heuristic based on VRAM amount to determine whether to allow EXA
 to use VRAM for non-essential pixmaps.  This option allows us to override the
 heuristic.  The default is
 .B on
-with > 32MB VRAM, off with < 32MB.
+with > 32MB VRAM, off with < 32MB or when fast fb feature is enabled for RS690/RS780/RS880.
 .TP
 .BI "Option \*qSwapbuffersWait\*q \*q" boolean \*q
 This option controls the behavior of glXSwapBuffers and glXCopySubBufferMESA
