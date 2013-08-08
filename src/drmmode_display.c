@@ -52,6 +52,9 @@
 #define DEFAULT_NOMINAL_FRAME_RATE 60
 
 static Bool
+drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height);
+
+static Bool
 RADEONZaphodStringMatches(ScrnInfoPtr pScrn, const char *s, char *output_name)
 {
     int i = 0;
@@ -518,10 +521,16 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 		}
 		crtc->funcs->gamma_set(crtc, crtc->gamma_red, crtc->gamma_green,
 				       crtc->gamma_blue, crtc->gamma_size);
-		
+
 		drmmode_ConvertToKMode(crtc->scrn, &kmode, mode);
 
 		fb_id = drmmode->fb_id;
+#ifdef RADEON_PIXMAP_SHARING
+		if (crtc->randr_crtc && crtc->randr_crtc->scanout_pixmap) {
+			x = drmmode_crtc->scanout_pixmap_x;
+			y = 0;
+		} else
+#endif
 		if (drmmode_crtc->rotate_fb_id) {
 			fb_id = drmmode_crtc->rotate_fb_id;
 			x = y = 0;
@@ -727,6 +736,68 @@ drmmode_crtc_gamma_set(xf86CrtcPtr crtc, uint16_t *red, uint16_t *green,
 			    size, red, green, blue);
 }
 
+#ifdef RADEON_PIXMAP_SHARING
+static Bool
+drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
+{
+	ScreenPtr screen = xf86ScrnToScreen(crtc->scrn);
+	PixmapPtr screenpix = screen->GetScreenPixmap(screen);
+	xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
+	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+	int c, total_width = 0, max_height = 0, this_x = 0;
+
+	if (!ppix) {
+		if (crtc->randr_crtc->scanout_pixmap)
+			PixmapStopDirtyTracking(crtc->randr_crtc->scanout_pixmap, screenpix);
+		drmmode_crtc->scanout_pixmap_x = 0;
+		return TRUE;
+	}
+
+	/* iterate over all the attached crtcs -
+	   work out bounding box */
+	for (c = 0; c < xf86_config->num_crtc; c++) {
+		xf86CrtcPtr iter = xf86_config->crtc[c];
+		if (!iter->enabled && iter != crtc)
+			continue;
+		if (iter == crtc) {
+			this_x = total_width;
+			total_width += ppix->drawable.width;
+			if (max_height < ppix->drawable.height)
+				max_height = ppix->drawable.height;
+		} else {
+			total_width += iter->mode.HDisplay;
+			if (max_height < iter->mode.VDisplay)
+				max_height = iter->mode.VDisplay;
+		}
+#ifndef HAS_DIRTYTRACKING2
+		if (iter != crtc) {
+			ErrorF("Cannot do multiple crtcs without X server dirty tracking 2 interface\n");
+			return FALSE;
+		}
+#endif
+	}
+
+	if (total_width != screenpix->drawable.width ||
+	    max_height != screenpix->drawable.height) {
+		Bool ret;
+		ret = drmmode_xf86crtc_resize(crtc->scrn, total_width, max_height);
+		if (ret == FALSE)
+			return FALSE;
+
+		screenpix = screen->GetScreenPixmap(screen);
+		screen->width = screenpix->drawable.width = total_width;
+		screen->height = screenpix->drawable.height = max_height;
+	}
+	drmmode_crtc->scanout_pixmap_x = this_x;
+#ifdef HAS_DIRTYTRACKING2
+	PixmapStartDirtyTracking2(ppix, screenpix, 0, 0, this_x, 0);
+#else
+	PixmapStartDirtyTracking(ppix, screenpix, 0, 0);
+#endif
+	return TRUE;
+}
+#endif
+
 static const xf86CrtcFuncsRec drmmode_crtc_funcs = {
     .dpms = drmmode_crtc_dpms,
     .set_mode_major = drmmode_set_mode_major,
@@ -741,6 +812,9 @@ static const xf86CrtcFuncsRec drmmode_crtc_funcs = {
     .shadow_allocate = drmmode_crtc_shadow_allocate,
     .shadow_destroy = drmmode_crtc_shadow_destroy,
     .destroy = NULL, /* XXX */
+#ifdef RADEON_PIXMAP_SHARING
+    .set_scanout_pixmap = drmmode_set_scanout_pixmap,
+#endif
 };
 
 int drmmode_get_crtc_id(xf86CrtcPtr crtc)
@@ -1108,6 +1182,8 @@ const char *output_names[] = { "None",
 			       "eDP"
 };
 
+#define NUM_OUTPUT_NAMES (sizeof(output_names) / sizeof(output_names[0]))
+
 static void
 drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dvi, int *num_hdmi)
 {
@@ -1137,30 +1213,43 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dv
 		}
 	}
 
-	/* need to do smart conversion here for compat with non-kms ATI driver */
-	if (koutput->connector_type_id == 1) {
-	    switch(koutput->connector_type) {
-	    case DRM_MODE_CONNECTOR_DVII:
-	    case DRM_MODE_CONNECTOR_DVID:
-	    case DRM_MODE_CONNECTOR_DVIA:
-		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_dvi);
-		(*num_dvi)++;
-		break;
-	    case DRM_MODE_CONNECTOR_HDMIA:
-	    case DRM_MODE_CONNECTOR_HDMIB:
-		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_hdmi);
-		(*num_hdmi)++;
-		break;
-	    case DRM_MODE_CONNECTOR_VGA:
-	    case DRM_MODE_CONNECTOR_DisplayPort:
-		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
-		break;
-	    default:
-		snprintf(name, 32, "%s", output_names[koutput->connector_type]);
-		break;
-	    }
-	} else {
-	    snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
+	if (koutput->connector_type >= NUM_OUTPUT_NAMES)
+		snprintf(name, 32, "Unknown%d-%d", koutput->connector_type,
+			 koutput->connector_type_id - 1);
+#ifdef RADEON_PIXMAP_SHARING
+	else if (pScrn->is_gpu)
+		snprintf(name, 32, "%s-%d-%d",
+			 output_names[koutput->connector_type], pScrn->scrnIndex - GPU_SCREEN_OFFSET + 1,
+			 koutput->connector_type_id - 1);
+#endif
+	else {
+		/* need to do smart conversion here for compat with non-kms ATI driver */
+		if (koutput->connector_type_id == 1) {
+			switch(koutput->connector_type) {
+			case DRM_MODE_CONNECTOR_DVII:
+			case DRM_MODE_CONNECTOR_DVID:
+			case DRM_MODE_CONNECTOR_DVIA:
+				snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_dvi);
+				(*num_dvi)++;
+				break;
+			case DRM_MODE_CONNECTOR_HDMIA:
+			case DRM_MODE_CONNECTOR_HDMIB:
+				snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], *num_hdmi);
+				(*num_hdmi)++;
+				break;
+			case DRM_MODE_CONNECTOR_VGA:
+			case DRM_MODE_CONNECTOR_DisplayPort:
+				snprintf(name, 32, "%s-%d", output_names[koutput->connector_type],
+					 koutput->connector_type_id - 1);
+				break;
+			default:
+				snprintf(name, 32, "%s", output_names[koutput->connector_type]);
+				break;
+			}
+		} else {
+			snprintf(name, 32, "%s-%d", output_names[koutput->connector_type],
+				 koutput->connector_type_id - 1);
+		}
 	}
 
 	if (xf86IsEntityShared(pScrn->entityList[0])) {

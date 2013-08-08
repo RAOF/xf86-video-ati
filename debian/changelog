@@ -1,3 +1,28 @@
+xserver-xorg-video-ati (1:7.2.0-0ubuntu2) saucy; urgency=low
+
+  * Fold in build fixes for non-XMir xservers accidentally dropped in last
+    upload.
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 08 Aug 2013 17:39:51 +1000
+
+xserver-xorg-video-ati (1:7.2.0-0ubuntu1) saucy; urgency=low
+
+  * Merge new upstream release from unreleased debian-experimental.
+  * Remaining changes:
+    - Add xmir support.
+  * Drop reverse-prime.patch, upstreamed.
+
+ -- Maarten Lankhorst <maarten.lankhorst@ubuntu.com>  Wed, 07 Aug 2013 12:12:32 +0200
+
+xserver-xorg-video-ati (1:7.2.0-1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - KMS-only release, only works with linux-any now.
+  * Bump to build against xserver 1.13rc1
+  * Require libdrm 2.4.46
+
+ -- Maarten Lankhorst <maarten.lankhorst@canonical.com>  Mon, 16 Jul 2012 14:29:26 +0200
+
 xserver-xorg-video-ati (1:7.1.0+git20130801.g2ae6bb1-0ubuntu4) saucy; urgency=low
 
   * Fix non-XMir-server-build harder
