@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:7.2.0-0ubuntu3) saucy; urgency=low
+
+  * xmir.patch: Also support 1D tiling. (LP: #1195425)
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 15 Aug 2013 10:31:16 +1000
+
 xserver-xorg-video-ati (1:7.2.0-0ubuntu2) saucy; urgency=low
 
   * Fold in build fixes for non-XMir xservers accidentally dropped in last
