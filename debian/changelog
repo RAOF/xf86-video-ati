@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:7.2.0-0ubuntu3+xmirMM1) saucy; urgency=low
+
+  * Update for new XMir API
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Thu, 22 Aug 2013 14:13:14 +1000
+
 xserver-xorg-video-ati (1:7.2.0-0ubuntu3) saucy; urgency=low
 
   * xmir.patch: Also support 1D tiling. (LP: #1195425)
