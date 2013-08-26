@@ -1,3 +1,9 @@
+xserver-xorg-video-ati (1:7.2.0-0ubuntu3+xmirMM2) saucy; urgency=low
+
+  * Update for newer XMir API
+
+ -- Christopher James Halse Rogers <raof@ubuntu.com>  Sun, 25 Aug 2013 21:16:58 +1000
+
 xserver-xorg-video-ati (1:7.2.0-0ubuntu3+xmirMM1) saucy; urgency=low
 
   * Update for new XMir API
