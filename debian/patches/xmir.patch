@@ -8,8 +8,8 @@ Date:   Mon Jul 22 17:02:17 2013 +1000
 
 Index: xf86-video-ati/src/drmmode_display.c
 ===================================================================
---- xf86-video-ati.orig/src/drmmode_display.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/drmmode_display.c	2013-08-25 21:22:40.384260886 +1000
+--- xf86-video-ati.orig/src/drmmode_display.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/drmmode_display.c	2013-08-26 17:21:49.324840661 +1000
 @@ -1941,7 +1941,7 @@
      if (!miCreateDefColormap(pScreen))
          return FALSE;
@@ -21,8 +21,8 @@ Index: xf86-video-ati/src/drmmode_display.c
  #if 0 /* This option messes up text mode! (eich@suse.de) */
 Index: xf86-video-ati/src/radeon.h
 ===================================================================
---- xf86-video-ati.orig/src/radeon.h	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon.h	2013-08-25 21:22:40.384260886 +1000
+--- xf86-video-ati.orig/src/radeon.h	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon.h	2013-08-26 17:21:49.324840661 +1000
 @@ -87,6 +87,14 @@
  #include "picturestr.h"
  #endif
@@ -53,8 +53,8 @@ Index: xf86-video-ati/src/radeon.h
  /* radeon_accel.c */
 Index: xf86-video-ati/src/radeon_bo_helper.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_bo_helper.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_bo_helper.c	2013-08-25 21:22:40.384260886 +1000
+--- xf86-video-ati.orig/src/radeon_bo_helper.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_bo_helper.c	2013-08-26 17:21:49.328840661 +1000
 @@ -201,19 +201,25 @@
  }
  
@@ -116,8 +116,8 @@ Index: xf86-video-ati/src/radeon_bo_helper.c
  
 Index: xf86-video-ati/src/radeon_bo_helper.h
 ===================================================================
---- xf86-video-ati.orig/src/radeon_bo_helper.h	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_bo_helper.h	2013-08-25 21:22:40.384260886 +1000
+--- xf86-video-ati.orig/src/radeon_bo_helper.h	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_bo_helper.h	2013-08-26 17:21:49.328840661 +1000
 @@ -33,6 +33,7 @@
  
  extern Bool
@@ -129,8 +129,8 @@ Index: xf86-video-ati/src/radeon_bo_helper.h
  #endif /* RADEON_BO_HELPER_H */
 Index: xf86-video-ati/src/radeon_dri2.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_dri2.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_dri2.c	2013-08-25 21:22:40.388260886 +1000
+--- xf86-video-ati.orig/src/radeon_dri2.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_dri2.c	2013-08-26 17:21:49.328840661 +1000
 @@ -1535,6 +1535,18 @@
  
  #endif /* USE_DRI2_SCHEDULING */
@@ -173,8 +173,8 @@ Index: xf86-video-ati/src/radeon_dri2.c
      dri2_info.CreateBuffer2 = radeon_dri2_create_buffer2;
 Index: xf86-video-ati/src/radeon_exa.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_exa.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_exa.c	2013-08-25 21:22:40.388260886 +1000
+--- xf86-video-ati.orig/src/radeon_exa.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_exa.c	2013-08-26 17:21:49.328840661 +1000
 @@ -326,12 +326,12 @@
  Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
  {
@@ -192,8 +192,8 @@ Index: xf86-video-ati/src/radeon_exa.c
  #endif
 Index: xf86-video-ati/src/radeon_glamor.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_glamor.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_glamor.c	2013-08-25 21:22:40.388260886 +1000
+--- xf86-video-ati.orig/src/radeon_glamor.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_glamor.c	2013-08-26 17:21:49.328840661 +1000
 @@ -277,14 +277,15 @@
  	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
  	struct radeon_surface surface;
@@ -215,8 +215,8 @@ Index: xf86-video-ati/src/radeon_glamor.c
  		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 Index: xf86-video-ati/src/radeon_kms.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_kms.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_kms.c	2013-08-25 21:24:12.744261714 +1000
+--- xf86-video-ati.orig/src/radeon_kms.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_kms.c	2013-08-27 11:41:22.442311504 +1000
 @@ -220,7 +220,11 @@
  	return FALSE;
      pScreen->CreateScreenResources = RADEONCreateScreenResources_KMS;
@@ -230,7 +230,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  	return FALSE;
  
      drmmode_uevent_init(pScrn, &info->drmmode);
-@@ -285,6 +289,61 @@
+@@ -285,6 +289,66 @@
  }
  #endif
  
@@ -243,6 +243,7 @@ Index: xf86-video-ati/src/radeon_kms.c
 +    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 +    RADEONInfoPtr info = RADEONPTR(pScrn);
 +    BoxPtr output_box = xmir_window_get_drawable_region(xmir_win);
++    BoxPtr damage_box = RegionExtents(region);
 +    if (info->accel_state->exa) {
 +	PixmapPtr dst;
 +	int ret;
@@ -254,7 +255,7 @@ Index: xf86-video-ati/src/radeon_kms.c
 +
 +	if (!pScreen->ModifyPixmapHeader(dst,
 +					 output_box->x2 - output_box->x1,
-+                     output_box->y2 - output_box->y1,
++					 output_box->y2 - output_box->y1,
 +					 pScrn->depth, pScrn->bitsPerPixel,
 +					 xmir_window_get_stride(xmir_win), NULL))
 +		goto cleanup_dst;
@@ -266,20 +267,24 @@ Index: xf86-video-ati/src/radeon_kms.c
 +						   -1, -1, GXcopy, FB_ALLONES);
 +	if (!ret)
 +	    goto cleanup_dst;
-+	info->accel_state->exa->Copy (dst, output_box->x1, output_box->y1, 0, 0,
++	info->accel_state->exa->Copy (dst, 
++				      damage_box->x1, damage_box->y1,
++				      damage_box->x1 - output_box->x1,
++				      damage_box->y1 - output_box->y1,
 +				      output_box->x2 - output_box->x1,
 +                                      output_box->y2 - output_box->y1);
 +	info->accel_state->exa->DoneCopy (dst);
 +
 +	radeon_cs_flush_indirect(pScrn);
 +
++	xmir_submit_rendering_for_window(xmir_win, region);
 +cleanup_dst:
 +	pScreen->DestroyPixmap(dst);
 +    } else if (0) {
 +	/* TODO: glamor accel */
 +    } else {
 +    /* Software copy; let's just give up */    
-+    }	
++    }
 +}
 +
 +#ifdef XMIR
@@ -292,7 +297,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  static void RADEONBlockHandler_KMS(BLOCKHANDLER_ARGS_DECL)
  {
      SCREEN_PTR(arg);
-@@ -302,6 +361,8 @@
+@@ -302,6 +366,8 @@
  #ifdef RADEON_PIXMAP_SHARING
      radeon_dirty_update(pScreen);
  #endif
@@ -301,7 +306,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  }
  
  static void
-@@ -606,6 +667,24 @@
+@@ -606,6 +672,24 @@
  		      dev->domain, dev->bus, dev->dev, dev->func);
  #endif
  
@@ -326,7 +331,7 @@ Index: xf86-video-ati/src/radeon_kms.c
      info->dri2.drm_fd = drmOpen("radeon", busid);
      if (info->dri2.drm_fd == -1) {
  
-@@ -835,6 +914,14 @@
+@@ -835,6 +919,14 @@
      if (!RADEONPreInitChipType_KMS(pScrn))
          goto fail;
  
@@ -341,7 +346,12 @@ Index: xf86-video-ati/src/radeon_kms.c
      if (radeon_open_drm_master(pScrn) == FALSE) {
  	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
  	goto fail;
-@@ -913,6 +1000,10 @@
+@@ -909,10 +1001,14 @@
+     }
+ 
+     info->swapBuffersWait = xf86ReturnOptValBool(info->Options,
+-						 OPTION_SWAPBUFFERS_WAIT, TRUE);
++						 OPTION_SWAPBUFFERS_WAIT, !xorgMir);
      xf86DrvMsg(pScrn->scrnIndex, X_INFO,
  	       "SwapBuffers wait for vsync: %sabled\n", info->swapBuffersWait ? "en" : "dis");
  
@@ -352,7 +362,7 @@ Index: xf86-video-ati/src/radeon_kms.c
      if (drmmode_pre_init(pScrn, &info->drmmode, pScrn->bitsPerPixel / 8) == FALSE) {
  	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Kernel modesetting setup failed\n");
  	goto fail;
-@@ -922,7 +1013,10 @@
+@@ -922,7 +1018,10 @@
          pRADEONEnt->HasCRTC2 = FALSE;
      else
          pRADEONEnt->HasCRTC2 = TRUE;
@@ -364,7 +374,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  
      /* fix up cloning on rn50 cards
       * since they only have one crtc sometimes the xserver doesn't assign
-@@ -1122,6 +1216,11 @@
+@@ -1122,6 +1221,11 @@
      if (info->accel_state->use_vbos)
          radeon_vbo_free_lists(pScrn);
  
@@ -376,7 +386,7 @@ Index: xf86-video-ati/src/radeon_kms.c
      drmDropMaster(info->dri2.drm_fd);
  
      drmmode_fini(pScrn, &info->drmmode);
-@@ -1157,7 +1256,7 @@
+@@ -1157,7 +1261,7 @@
      int            subPixelOrder = SubPixelUnknown;
      char*          s;
      void *front_ptr;
@@ -385,7 +395,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  
      pScrn->fbOffset = 0;
  
-@@ -1168,7 +1267,8 @@
+@@ -1168,7 +1272,8 @@
  			  pScrn->defaultVisual)) return FALSE;
      miSetPixmapDepths ();
  
@@ -395,7 +405,7 @@ Index: xf86-video-ati/src/radeon_kms.c
      if (ret) {
          ErrorF("Unable to retrieve master\n");
          return FALSE;
-@@ -1185,7 +1285,8 @@
+@@ -1185,7 +1290,8 @@
  		   "failed to initialise GEM buffer manager");
  	return FALSE;
      }
@@ -405,7 +415,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  
      if (!info->csm)
          info->csm = radeon_cs_manager_gem_ctor(info->dri2.drm_fd);
-@@ -1309,7 +1410,10 @@
+@@ -1309,7 +1415,10 @@
      /* Cursor setup */
      miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
  
@@ -417,7 +427,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  	if (RADEONCursorInit_KMS(pScreen)) {
  	}
      }
-@@ -1385,13 +1489,13 @@
+@@ -1385,13 +1494,13 @@
  {
      SCRN_INFO_PTR(arg);
      RADEONInfoPtr  info  = RADEONPTR(pScrn);
@@ -434,7 +444,7 @@ Index: xf86-video-ati/src/radeon_kms.c
      if (ret)
  	ErrorF("Unable to retrieve master\n");
      info->accel_state->XInited3D = FALSE;
-@@ -1399,7 +1503,9 @@
+@@ -1399,7 +1508,9 @@
  
      pScrn->vtSema = TRUE;
  
@@ -445,7 +455,7 @@ Index: xf86-video-ati/src/radeon_kms.c
  	return FALSE;
  
      return TRUE;
-@@ -1540,6 +1646,7 @@
+@@ -1540,6 +1651,7 @@
  		}
  		info->front_surface = surface;
  	}
@@ -455,8 +465,8 @@ Index: xf86-video-ati/src/radeon_kms.c
  	int c;
 Index: xf86-video-ati/src/radeon_probe.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_probe.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_probe.c	2013-08-25 21:22:40.388260886 +1000
+--- xf86-video-ati.orig/src/radeon_probe.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_probe.c	2013-08-26 17:21:49.328840661 +1000
 @@ -40,6 +40,7 @@
   * KMS support - Dave Airlie <airlied@redhat.com>
   */
@@ -563,8 +573,14 @@ Index: xf86-video-ati/src/radeon_probe.c
  
 Index: xf86-video-ati/src/radeon_video.c
 ===================================================================
---- xf86-video-ati.orig/src/radeon_video.c	2013-08-25 21:22:40.392260886 +1000
-+++ xf86-video-ati/src/radeon_video.c	2013-08-25 21:22:40.388260886 +1000
+--- xf86-video-ati.orig/src/radeon_video.c	2013-08-26 17:21:49.328840661 +1000
++++ xf86-video-ati/src/radeon_video.c	2013-08-26 20:38:32.249246511 +1000
+@@ -1,4 +1,4 @@
+-
++	
+ #ifdef HAVE_CONFIG_H
+ #include "config.h"
+ #endif
 @@ -70,7 +70,10 @@
  Bool radeon_crtc_is_enabled(xf86CrtcPtr crtc)
  {
@@ -577,3 +593,13 @@ Index: xf86-video-ati/src/radeon_video.c
  }
  
  uint32_t radeon_get_interpolated_vblanks(xf86CrtcPtr crtc)
+@@ -92,6 +95,9 @@
+     if (!pScrn->vtSema)
+ 	return NULL;
+ 
++    if (xorgMir)
++    	return NULL;
++
+     box.x1 = x1;
+     box.x2 = x2;
+     box.y1 = y1;
