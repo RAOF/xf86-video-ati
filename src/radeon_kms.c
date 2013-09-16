@@ -418,7 +418,7 @@ static Bool RADEONPreInitChipType_KMS(ScrnInfoPtr pScrn)
 	 */
 	PCI_READ_LONG(info->PciInfo, &cmd_stat, PCI_CMD_STAT_REG);
 	if (cmd_stat & RADEON_CAP_LIST) {
-	    uint32_t cap_ptr, cap_id;
+	    uint32_t cap_ptr = 0, cap_id = 0;
 
 	    PCI_READ_LONG(info->PciInfo, &cap_ptr, RADEON_CAPABILITIES_PTR_PCI_CONFIG);
 	    cap_ptr &= RADEON_CAP_PTR_MASK;
